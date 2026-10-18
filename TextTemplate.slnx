@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TextTemplate.Compiler/TextTemplate.Compiler.csproj" />
+    <Project Path="src/TextTemplate.Core/TextTemplate.Core.csproj" />
+    <Project Path="src/TextTemplate.Legacy/TextTemplate.Legacy.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TextTemplate.Tests/TextTemplate.Tests.csproj" />
+  </Folder>
+</Solution>
