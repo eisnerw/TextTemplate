@@ -21,9 +21,9 @@ The preserved original repository is `../texttemplate-editor` (`https://github.c
 | Subtemplate fixtures | `nodeserver/subtemplates.json` |
 | Existing parser tests | `src/test/javascript/` |
 
-An older **C# ANTLR4 implementation** with a handwritten visitor is expected to be recovered separately, possibly from printed listings. Its availability and exact source content have **not yet been verified**. Do not pretend it has been reconstructed.
+An older **C# ANTLR4 implementation** includes handwritten `TextTemplateVisitor.cs` and `Externals.cs`. These cannot currently be exported as electronic source; recovery would require scans of printed listings. Their content has **not yet been reconstructed**. Reconstruction is optional for the initial reference-test milestone, not a blocker.
 
-The original reference repository currently contains TypeScript sources; do not assume the C# visitor is present there.
+The original reference repository currently contains TypeScript sources; do not assume the C# visitor is present there. The repository is stagnant and can be treated as a fixed reference snapshot. Record the source commit, but do not create synchronization machinery.
 
 ## 3. Functional contract
 
@@ -35,7 +35,7 @@ LegacyEvaluate(T, S, D) == Execute(CompileCSharp(Generate(T, S)), D)
 
 Equality initially means **exact output characters**, including indentation, spaces, tabs, line endings, punctuation, and numbering. Errors and edge-case behaviors should also be characterized; do not invent semantics where evidence is missing.
 
-The A/B harness needs to record the **reference evaluator used**, because older C# and existing TypeScript implementations may differ.
+The **initial A-side evaluator is the original TypeScript interpreter running under Node.js**. The A/B harness must record the reference evaluator/version because the older C# and TypeScript implementations may differ.
 
 ## 4. Source-generation boundary
 
@@ -87,7 +87,8 @@ TextTemplate/
 └── reference/
     ├── grammar/                # versioned copies of original grammars
     ├── fixtures/               # input/templates/subtemplates
-    └── legacy-csharp/          # recovered source, once available
+    ├── typescript/             # unchanged reference interpreter and host sources
+    └── legacy-csharp/          # scans and reconstructed source, once available
 ```
 
 This is an initial organization, not a mandate for unnecessary abstractions. **TextTemplate.Core may inform helper implementations, but generated applications must compile without referencing it.**
@@ -117,45 +118,52 @@ Use broad fixtures from `data.json`, `templates.json`, and `subtemplates.json`, 
 
 ### Milestone 0 — Inventory and baseline
 
-- Inspect original lexer/parser grammar and TypeScript interpreter.
-- Identify the invocation API, fixture formats, and expected outputs.
-- Locate/reconstruct the old C# visitor if possible; document what is and is not recovered.
-- Select the authoritative reference for each initial test.
+- Inventory the fixed original repository and record its Git commit.
+- Inspect grammar, interpreter API, original fixtures, callback handling, and existing Node server routes.
+- Preserve unchanged reference copies as appropriate.
 
-### Milestone 1 — C# parsing
+### Milestone 1 — Standalone Node.js reference runner (**first Codex assignment**)
+
+- Invoke the existing `TextTemplateInterpreter.interpret(input, callback, options)` directly from Node.js.
+- Replace browser worker / `ParserFacade` AJAX hosting with a small filesystem-backed callback adapter. Handle `result`, `url`, and `status` messages; preserve callback timing and failure semantics.
+- Examine only the callback-relevant part of `ParserFacade.ts`; Monaco editor support is out of scope.
+- Use the lookup semantics of the existing `nodeserver` routes and original `templates.json`, `subtemplates.json`, and `data.json` fixtures. Check associated-template data, array joining, absent keys, and any shared-subtemplate preprocessing for observable effects.
+- Provide CLI input for a template identifier or template text, data, and fixture location. Write exact rendered output to stdout, diagnostics to stderr, and fail with nonzero exit status on errors.
+- Run real fixtures; record deterministic golden outputs along with inputs and source revision. Do not modify the interpreter, original grammar, or reference repository. Do not implement C# generation in this milestone.
+
+### Milestone 2 — C# parsing
 
 - Generate C# lexer/parser/visitor from the unchanged ANTLR grammar.
 - Parse the original sample corpus and capture syntax diagnostics.
-- Establish parser regression tests before adding code generation.
+- Establish parser regression tests before code generation.
 
-### Milestone 2 — Minimal standalone generation
+### Milestone 3 — Minimal standalone generation
 
 - Generate a simple C# application from a literal-only template.
-- Compile, execute, and compare exact text output.
+- Compile, execute, and compare exact text output against the Node reference.
 - Prove the output project has **no TextTemplate assembly dependency**.
 
-### Milestone 3 — Evaluation semantics
+### Milestone 4 — Evaluation semantics
 
 - Add tokens, contexts, methods, predicates, and subtemplates incrementally.
 - Adapt proven legacy helper algorithms into emitted source when appropriate.
 - Expand A/B cases with each feature.
 
-### Milestone 4 — Hierarchical composition
+### Milestone 5 — Hierarchical composition
 
 - Implement structured, non-streaming composition and its rendering.
 - Validate tabs, newlines, bullets, nesting, numbering, annotations, and precedence against edge cases.
 
-### Milestone 5 — Broad compatibility
+### Milestone 6 — Broad compatibility
 
-- Run the full template and data corpus; systematically classify remaining mismatches.
-- Document intentionally unsupported scenarios, if any, rather than hiding failures.
-- Stabilize emitted source and diagnostics.
+- Run the full template/data corpus; classify remaining mismatches.
+- Optionally reconstruct the printed C# visitor and Externals files and use them as a second reference on disputed behaviors.
+- Document intentionally unsupported scenarios rather than hiding failures.
 
-### Milestone 6 — Editor integration
+### Milestone 7 — Editor integration
 
-- Revisit the Monaco editor after the compiler and compatibility suite are reliable.
-- Integrate with a .NET backend for parsing/generation/testing as needed.
-- Consider optional language improvements only after existing behavior is protected.
+- Revisit Monaco only after the compiler and compatibility suite are reliable.
+- Integrate with a .NET backend as needed, and consider language improvements later.
 
 ## 9. Open design questions
 
