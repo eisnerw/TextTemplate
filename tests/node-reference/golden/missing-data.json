@@ -1,0 +1,27 @@
+{
+  "exitCode": 1,
+  "report": {
+    "type": "result",
+    "result": null,
+    "errors": [],
+    "hoverPositions": null,
+    "debugLog": [],
+    "events": [
+      "status",
+      "status",
+      "url",
+      "status",
+      "status",
+      "status",
+      "result"
+    ],
+    "resources": [
+      {
+        "path": "/data/absent",
+        "data": {
+          "error": "Data absent not found"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "exitCode": 1,
+  "report": {
+    "type": "result",
+    "result": false,
+    "errors": [
+      {
+        "startLine": 1,
+        "endLine": 1,
+        "startCol": 14,
+        "endCol": 14,
+        "message": "invalid regular expression"
+      }
+    ],
+    "hoverPositions": null,
+    "debugLog": [
+      "0\tinvalid regular expression"
+    ],
+    "events": [
+      "status",
+      "status",
+      "result"
+    ],
+    "resources": []
+  }
+}

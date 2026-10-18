@@ -1,0 +1,16 @@
+{
+  "exitCode": 0,
+  "report": {
+    "type": "result",
+    "result": "a\n    b\n",
+    "errors": [],
+    "hoverPositions": null,
+    "debugLog": [],
+    "events": [
+      "status",
+      "status",
+      "result"
+    ],
+    "resources": []
+  }
+}

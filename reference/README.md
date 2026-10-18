@@ -19,10 +19,18 @@ syntax and behavior.
 
 https://github.com/eisnerw/texttemplate-editor
 
-## Legacy C# implementation
+## C# development reference
 
-The `legacy-csharp/` directory is reserved for the original C#
-ANTLR visitor and supporting implementation files, when recovered.
+The unchanged TypeScript interpreter running under Node.js is the authoritative
+behavioral reference for the new C# generator. Develop C# template logic and
+helper algorithms directly from the TypeScript implementation and validate them
+against the Node.js runner using identical templates, subtemplates, and data.
 
-The original C# implementation is intended to serve as the primary
-behavioral reference for the new generator.
+There is no need to recover the old C# implementation or maintain a
+`legacy-csharp/` directory. Generated programs must contain executable
+template-specific C# logic and any necessary helpers as source, and run without
+TextTemplate project assemblies.
+
+See [the Node.js runner documentation](../tools/node-reference/README.md) for
+commands, regression tests, and source provenance, and [DESIGN.md](../DESIGN.md)
+for the development plan.

@@ -21,28 +21,28 @@ The preserved original repository is `../texttemplate-editor` (`https://github.c
 | Subtemplate fixtures | `nodeserver/subtemplates.json` |
 | Existing parser tests | `src/test/javascript/` |
 
-An older **C# ANTLR4 implementation** includes handwritten `TextTemplateVisitor.cs` and `Externals.cs`. These cannot currently be exported as electronic source; recovery would require scans of printed listings. Their content has **not yet been reconstructed**. Reconstruction is optional for the initial reference-test milestone, not a blocker.
+Develop the new C# implementation directly from the **existing TypeScript interpreter and helper code**, including `Externals.ts`. Translate the algorithms needed for generated template logic and emitted helpers, validating their behavior against the Node.js reference runner. Legacy C# source recovery, a `legacy-csharp/` directory, and a `TextTemplate.Legacy` project are not part of the plan.
 
-The original reference repository currently contains TypeScript sources; do not assume the C# visitor is present there. The repository is stagnant and can be treated as a fixed reference snapshot. Record the source commit, but do not create synchronization machinery.
+Treat the original TypeScript sources and grammar as a fixed reference snapshot. Record the source commit, but do not create synchronization machinery.
 
 ## 3. Functional contract
 
-Given a template script `T`, subtemplate definitions `S`, and input data `D`, the new compiler generates C# sources `G(T, S)`; compiling and executing those sources with `D` should produce the same observable result as the chosen legacy evaluator:
+Given a template script `T`, subtemplate definitions `S`, and input data `D`, the new compiler generates C# sources `G(T, S)`; compiling and executing those sources with `D` should produce the same observable result as the unchanged TypeScript evaluator:
 
 ```text
-LegacyEvaluate(T, S, D) == Execute(CompileCSharp(Generate(T, S)), D)
+TypeScriptEvaluate(T, S, D) == Execute(CompileCSharp(Generate(T, S)), D)
 ```
 
 Equality initially means **exact output characters**, including indentation, spaces, tabs, line endings, punctuation, and numbering. Errors and edge-case behaviors should also be characterized; do not invent semantics where evidence is missing.
 
-The **initial A-side evaluator is the original TypeScript interpreter running under Node.js**. The A/B harness must record the reference evaluator/version because the older C# and TypeScript implementations may differ.
+The **authoritative A-side evaluator is the original TypeScript interpreter running under Node.js**. The A/B harness must record its source revision, inputs, and execution context so that comparisons remain reproducible. Preserve JavaScript behavior explicitly where C# defaults differ, including truthiness, missing/null values, coercion, ordering, and formatting.
 
 ## 4. Source-generation boundary
 
 ### Build time
 
 1. Parse existing TextTemplate scripts using the original ANTLR grammar or its faithful C# generated counterpart.
-2. Translate the syntax and observed legacy semantics into C# expressions/statements and supporting types.
+2. Translate the TypeScript implementation’s observed semantics into template-specific C# expressions/statements and supporting types.
 3. Emit readable, deterministic C# source files and any necessary helper source.
 
 ### Runtime
@@ -80,15 +80,13 @@ TextTemplate/
 ├── DESIGN.md
 ├── src/
 │   ├── TextTemplate.Compiler/   # parser integration, semantic analysis, C# emitter
-│   ├── TextTemplate.Legacy/     # recovered reference evaluator, if available
 │   └── TextTemplate.Core/       # development-time abstractions/composition prototypes
 ├── tests/
 │   └── TextTemplate.Tests/      # fixtures and A/B harness
 └── reference/
     ├── grammar/                # versioned copies of original grammars
     ├── fixtures/               # input/templates/subtemplates
-    ├── typescript/             # unchanged reference interpreter and host sources
-    └── legacy-csharp/          # scans and reconstructed source, once available
+    └── typescript/             # unchanged reference interpreter and host sources
 ```
 
 This is an initial organization, not a mandate for unnecessary abstractions. **TextTemplate.Core may inform helper implementations, but generated applications must compile without referencing it.**
@@ -105,7 +103,7 @@ Each fixture should specify:
 
 Test runner procedure:
 
-1. Execute the legacy evaluator and capture its exact output.
+1. Execute the unchanged TypeScript interpreter through the Node.js reference runner and capture its exact output.
 2. Generate C# in a clean temporary output folder.
 3. Compile the generated code as a standalone .NET project **without TextTemplate assembly references**.
 4. Execute generated code using equivalent data.
@@ -146,18 +144,18 @@ Use broad fixtures from `data.json`, `templates.json`, and `subtemplates.json`, 
 ### Milestone 4 — Evaluation semantics
 
 - Add tokens, contexts, methods, predicates, and subtemplates incrementally.
-- Adapt proven legacy helper algorithms into emitted source when appropriate.
+- Translate proven TypeScript helper algorithms into emitted C# source when appropriate, preserving their JavaScript semantics and provenance.
 - Expand A/B cases with each feature.
 
 ### Milestone 5 — Hierarchical composition
 
-- Implement structured, non-streaming composition and its rendering.
+- Translate the TypeScript interpreter’s structured, non-streaming composition and rendering behavior into C#.
 - Validate tabs, newlines, bullets, nesting, numbering, annotations, and precedence against edge cases.
 
 ### Milestone 6 — Broad compatibility
 
 - Run the full template/data corpus; classify remaining mismatches.
-- Optionally reconstruct the printed C# visitor and Externals files and use them as a second reference on disputed behaviors.
+- Resolve disputed behavior by inspecting the TypeScript implementation and adding focused cases to the Node.js reference suite.
 - Document intentionally unsupported scenarios rather than hiding failures.
 
 ### Milestone 7 — Editor integration
@@ -169,13 +167,13 @@ Use broad fixtures from `data.json`, `templates.json`, and `subtemplates.json`, 
 
 Do not resolve these by assumption:
 
-1. Where is the complete legacy C# visitor, and which behaviors differ from TypeScript?
+1. Which JavaScript behaviors require explicit compatibility helpers in C# to preserve the TypeScript interpreter’s results?
 2. What is the precise generated-program entry point and input representation (JSON, typed objects, or both)?
-3. Which composition routines can be copied from the legacy C# implementation and which should be newly generated?
+3. Which TypeScript composition routines should become emitted C# helpers, and which should become template-specific generated logic?
 4. What are the exact scoping rules and evaluation order for `@` annotations?
 5. How are hierarchy, tabs, bullets, and numbered lists represented before rendering?
 6. How should the harness compare errors and other nondeterministic effects?
-7. Which .NET and ANTLR4 versions are required for the recovered C# parser?
+7. Which ANTLR4 tool and C# runtime versions should be used with .NET 10 to preserve the unchanged grammar’s parsing behavior?
 
 ## 10. Working principles
 
@@ -186,3 +184,4 @@ Do not resolve these by assumption:
 - Keep every A/B test independently reproducible.
 - Distinguish build-time tooling from generated runtime code.
 - Avoid pushing or deleting remote branches without explicit user approval.
+ar

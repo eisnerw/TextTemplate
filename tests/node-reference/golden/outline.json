@@ -1,0 +1,64 @@
+{
+  "exitCode": 0,
+  "report": {
+    "type": "result",
+    "result": "People:\n   (0.0) \"JOHNSON, DORIS\" \n      (1.0) Lastname: Johnson   \n      (1.1) FirstName: Doris  \n      (1.2) Pets (3):  \n         (2.0) Domesticated (1): \n            (3.0) a friskie dog named Buddy  \n         (2.1) Non-domesticated (2): \n            (3.0) a nice lion named Ralph\n            (3.1) a nice tiger named Stripes\n      (1.3) Comment: Doris seems to have a good relationship with her pets.\n          She is known to have multiple non-domesticated pets\n\n   (0.1) \"SMITH, JOHN\" \n      (1.0) Lastname: Smith   \n      (1.1) FirstName: John  \n      (1.2) Pets (3):  \n         (2.0) Domesticated (2): \n            (3.0) a friskie dog named Toto\n            (3.1) a fishy cat named Dolly  \n         (2.1) Non-domesticated (1): \n            (3.0) a stripesy zebra named Stripes\n      (1.3) Comment: John mostly likes domesticated pets",
+    "errors": [],
+    "hoverPositions": null,
+    "debugLog": [],
+    "events": [
+      "status",
+      "status",
+      "url",
+      "status",
+      "status",
+      "status",
+      "result"
+    ],
+    "resources": [
+      {
+        "path": "/data/people",
+        "data": [
+          {
+            "firstName": "Doris",
+            "lastName": "Johnson",
+            "pets": [
+              {
+                "type": "dog",
+                "name": "Buddy"
+              },
+              {
+                "type": "lion",
+                "name": "Ralph"
+              },
+              {
+                "type": "tiger",
+                "name": "Stripes"
+              }
+            ],
+            "comment": "Doris seems to have a good relationship with her pets.\nShe is known to have multiple non-domesticated pets"
+          },
+          {
+            "firstName": "John",
+            "lastName": "Smith",
+            "pets": [
+              {
+                "type": "dog",
+                "name": "Toto"
+              },
+              {
+                "type": "cat",
+                "name": "Dolly"
+              },
+              {
+                "type": "zebra",
+                "name": "Stripes"
+              }
+            ],
+            "comment": "John mostly likes domesticated pets"
+          }
+        ]
+      }
+    ]
+  }
+}

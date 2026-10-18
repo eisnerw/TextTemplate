@@ -1,0 +1,16 @@
+{
+  "exitCode": 0,
+  "report": {
+    "type": "result",
+    "result": "Hello Smith, Robert with a dog named Toto, a cat named Dolly and a zebra named Stripes!!",
+    "errors": [],
+    "hoverPositions": null,
+    "debugLog": [],
+    "events": [
+      "status",
+      "status",
+      "result"
+    ],
+    "resources": []
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "exitCode": 0,
+  "report": {
+    "type": "result",
+    "result": "first name:Bill",
+    "errors": [],
+    "hoverPositions": null,
+    "debugLog": [],
+    "events": [
+      "status",
+      "status",
+      "result"
+    ],
+    "resources": []
+  }
+}

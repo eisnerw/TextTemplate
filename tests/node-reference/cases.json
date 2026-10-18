@@ -1,0 +1,120 @@
+[
+  {
+    "id": "simple",
+    "args": [
+      "--template",
+      "simple"
+    ]
+  },
+  {
+    "id": "outline",
+    "args": [
+      "--template",
+      "outline"
+    ]
+  },
+  {
+    "id": "bullets",
+    "args": [
+      "--template",
+      "bullets"
+    ]
+  },
+  {
+    "id": "legacy-tests",
+    "args": [
+      "--template",
+      "tests"
+    ]
+  },
+  {
+    "id": "associated-data-and-includes",
+    "args": [
+      "--template",
+      "simpledata"
+    ]
+  },
+  {
+    "id": "nested-data-override",
+    "args": [
+      "--template",
+      "simpledata",
+      "--data",
+      "nested"
+    ]
+  },
+  {
+    "id": "escaped-data",
+    "args": [
+      "--template",
+      "simpledata",
+      "--data",
+      "escapeTest"
+    ]
+  },
+  {
+    "id": "legacy-doit-mismatch",
+    "args": [
+      "--template-text",
+      "{#doit}"
+    ]
+  },
+  {
+    "id": "missing-subtemplate",
+    "args": [
+      "--template-text",
+      "{#absent}"
+    ]
+  },
+  {
+    "id": "missing-data",
+    "args": [
+      "--template-text",
+      "{'/data/absent':[{firstName}]}"
+    ]
+  },
+  {
+    "id": "invalid-script",
+    "args": [
+      "--template-text",
+      "{"
+    ]
+  },
+  {
+    "id": "missing-value",
+    "args": [
+      "--template-text",
+      "{unknown}",
+      "--data",
+      "nested"
+    ]
+  },
+  {
+    "id": "line-endings",
+    "args": [
+      "--template-text",
+      "a\r\n\tb\n"
+    ]
+  },
+  {
+    "id": "fallback-template",
+    "args": [
+      "--template",
+      "data"
+    ]
+  },
+  {
+    "id": "boolean-result",
+    "args": [
+      "--template-text",
+      "{\"x\".Matches(/x/)}"
+    ]
+  },
+  {
+    "id": "invalid-regex",
+    "args": [
+      "--template-text",
+      "{\"x\".Matches(/(/)}"
+    ]
+  }
+]

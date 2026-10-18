@@ -1,0 +1,33 @@
+{
+  "exitCode": 0,
+  "report": {
+    "type": "result",
+    "result": "Hello Smith, John \"Big John\" with a dog named missing --namex-- THIS IS AN INCLUDED SUBTEMPLATE!!",
+    "errors": [],
+    "hoverPositions": null,
+    "debugLog": [],
+    "events": [
+      "status",
+      "status",
+      "url",
+      "status",
+      "status",
+      "status",
+      "url",
+      "status",
+      "status",
+      "status",
+      "result"
+    ],
+    "resources": [
+      {
+        "path": "/subtemplate/doInclude",
+        "data": "[\nSubtemplates:\n{#a:[THIS IS AN INCLUDED SUBTEMPLATE]}\n].@MissingValue('missing --{key}--')"
+      },
+      {
+        "path": "/subtemplate/xformatPet",
+        "data": "[a {type} named {namex} {#a}]"
+      }
+    ]
+  }
+}
