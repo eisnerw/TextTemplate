@@ -1,0 +1,180 @@
+# TextTemplate — Design and Implementation Plan
+
+## 1. Purpose
+
+TextTemplate is an existing template language whose scripts must continue to work unchanged. This project replaces runtime interpretation with a **source generator** that produces ordinary C# code. The generated code must accept equivalent input data and produce the **same output** as the established TextTemplate evaluator across a broad corpus of scripts and data.
+
+The initial goal is **compatibility, not language redesign**. Future changes to grammar and semantics may be considered after a dependable A/B test suite exists.
+
+## 2. Existing source material
+
+The preserved original repository is `../texttemplate-editor` (`https://github.com/eisnerw/texttemplate-editor`). Useful paths include:
+
+| Reference | Path |
+| --- | --- |
+| Lexer grammar | `src/main/antlr/TextTemplateLexer.g4` |
+| Parser grammar | `src/main/antlr/TextTemplateParser.g4` |
+| TypeScript interpreter | `src/main/typescript/TextTemplateInterpreter.ts` |
+| Parser integration | `src/main/typescript/ParserFacade.ts` |
+| Data fixtures | `nodeserver/data.json` |
+| Template fixtures | `nodeserver/templates.json` |
+| Subtemplate fixtures | `nodeserver/subtemplates.json` |
+| Existing parser tests | `src/test/javascript/` |
+
+An older **C# ANTLR4 implementation** with a handwritten visitor is expected to be recovered separately, possibly from printed listings. Its availability and exact source content have **not yet been verified**. Do not pretend it has been reconstructed.
+
+The original reference repository currently contains TypeScript sources; do not assume the C# visitor is present there.
+
+## 3. Functional contract
+
+Given a template script `T`, subtemplate definitions `S`, and input data `D`, the new compiler generates C# sources `G(T, S)`; compiling and executing those sources with `D` should produce the same observable result as the chosen legacy evaluator:
+
+```text
+LegacyEvaluate(T, S, D) == Execute(CompileCSharp(Generate(T, S)), D)
+```
+
+Equality initially means **exact output characters**, including indentation, spaces, tabs, line endings, punctuation, and numbering. Errors and edge-case behaviors should also be characterized; do not invent semantics where evidence is missing.
+
+The A/B harness needs to record the **reference evaluator used**, because older C# and existing TypeScript implementations may differ.
+
+## 4. Source-generation boundary
+
+### Build time
+
+1. Parse existing TextTemplate scripts using the original ANTLR grammar or its faithful C# generated counterpart.
+2. Translate the syntax and observed legacy semantics into C# expressions/statements and supporting types.
+3. Emit readable, deterministic C# source files and any necessary helper source.
+
+### Runtime
+
+The compiled generated program:
+
+- receives the input data and necessary context;
+- evaluates compiled template-specific logic;
+- builds structured composition results as required;
+- renders the final text;
+- **does not depend on any TextTemplate project DLL** and does not re-parse TextTemplate scripts.
+
+Normal .NET library dependencies are permitted; any external runtime dependency should be deliberate, documented, and minimal. The default design is to **emit helper source code**, not require a TextTemplate runtime NuGet package.
+
+## 5. Semantics that must be preserved
+
+These areas are known to be important, but their precise algorithms must be verified against the reference:
+
+- Context selection and contextual evaluation (including context changes within a template).
+- Embedded expressions, method invocation, and method chaining.
+- Predicates, logical operations, relational operations, conditional expansion and arrows.
+- Named and inline subtemplates, including subtemplate invocation and scoping.
+- Special `@` annotation functions; **scope and execution precedence relative to ordinary methods matter**.
+- Hierarchical **tab-based indentation**, line breaks, bulleting, numbering, and formatting.
+- Non-streaming composition: intermediate structured fragments/tree may be necessary before final rendering.
+- Escaping, empty/missing/null values, conversion, ordering, and error reporting.
+
+Do not optimize away observable behavior. Where the legacy interpreter appears inconsistent, capture the actual result with a regression test before proposing a correction.
+
+## 6. Suggested project layout
+
+```text
+TextTemplate/
+├── AGENTS.md
+├── DESIGN.md
+├── src/
+│   ├── TextTemplate.Compiler/   # parser integration, semantic analysis, C# emitter
+│   ├── TextTemplate.Legacy/     # recovered reference evaluator, if available
+│   └── TextTemplate.Core/       # development-time abstractions/composition prototypes
+├── tests/
+│   └── TextTemplate.Tests/      # fixtures and A/B harness
+└── reference/
+    ├── grammar/                # versioned copies of original grammars
+    ├── fixtures/               # input/templates/subtemplates
+    └── legacy-csharp/          # recovered source, once available
+```
+
+This is an initial organization, not a mandate for unnecessary abstractions. **TextTemplate.Core may inform helper implementations, but generated applications must compile without referencing it.**
+
+## 7. A/B testing design
+
+Each fixture should specify:
+
+- Script or script identifier.
+- Input data (including the shape and type assumptions).
+- Named subtemplate definitions, if applicable.
+- Execution options/context, if any.
+- Reference evaluator and observed output or error.
+
+Test runner procedure:
+
+1. Execute the legacy evaluator and capture its exact output.
+2. Generate C# in a clean temporary output folder.
+3. Compile the generated code as a standalone .NET project **without TextTemplate assembly references**.
+4. Execute generated code using equivalent data.
+5. Compare results and report first mismatch, escaped whitespace, and relevant input identifiers.
+6. Preserve passing cases in CI and rerun the corpus after each compiler change.
+
+Use broad fixtures from `data.json`, `templates.json`, and `subtemplates.json`, augmented by focused tests for indentation, annotation ordering, predicates, context scoping, formatting, and error paths. If repeatability requires stable culture, timezone, or input ordering, control those conditions in **both** executions and record them.
+
+## 8. Incremental milestones
+
+### Milestone 0 — Inventory and baseline
+
+- Inspect original lexer/parser grammar and TypeScript interpreter.
+- Identify the invocation API, fixture formats, and expected outputs.
+- Locate/reconstruct the old C# visitor if possible; document what is and is not recovered.
+- Select the authoritative reference for each initial test.
+
+### Milestone 1 — C# parsing
+
+- Generate C# lexer/parser/visitor from the unchanged ANTLR grammar.
+- Parse the original sample corpus and capture syntax diagnostics.
+- Establish parser regression tests before adding code generation.
+
+### Milestone 2 — Minimal standalone generation
+
+- Generate a simple C# application from a literal-only template.
+- Compile, execute, and compare exact text output.
+- Prove the output project has **no TextTemplate assembly dependency**.
+
+### Milestone 3 — Evaluation semantics
+
+- Add tokens, contexts, methods, predicates, and subtemplates incrementally.
+- Adapt proven legacy helper algorithms into emitted source when appropriate.
+- Expand A/B cases with each feature.
+
+### Milestone 4 — Hierarchical composition
+
+- Implement structured, non-streaming composition and its rendering.
+- Validate tabs, newlines, bullets, nesting, numbering, annotations, and precedence against edge cases.
+
+### Milestone 5 — Broad compatibility
+
+- Run the full template and data corpus; systematically classify remaining mismatches.
+- Document intentionally unsupported scenarios, if any, rather than hiding failures.
+- Stabilize emitted source and diagnostics.
+
+### Milestone 6 — Editor integration
+
+- Revisit the Monaco editor after the compiler and compatibility suite are reliable.
+- Integrate with a .NET backend for parsing/generation/testing as needed.
+- Consider optional language improvements only after existing behavior is protected.
+
+## 9. Open design questions
+
+Do not resolve these by assumption:
+
+1. Where is the complete legacy C# visitor, and which behaviors differ from TypeScript?
+2. What is the precise generated-program entry point and input representation (JSON, typed objects, or both)?
+3. Which composition routines can be copied from the legacy C# implementation and which should be newly generated?
+4. What are the exact scoping rules and evaluation order for `@` annotations?
+5. How are hierarchy, tabs, bullets, and numbered lists represented before rendering?
+6. How should the harness compare errors and other nondeterministic effects?
+7. Which .NET and ANTLR4 versions are required for the recovered C# parser?
+
+## 10. Working principles
+
+- Treat the original scripts as a stable compatibility surface.
+- Preserve the reference repository unchanged.
+- Prefer evidence from execution and tests over inferred semantics.
+- Generate inspectable C# to make debugging straightforward in CodeServer.
+- Keep every A/B test independently reproducible.
+- Distinguish build-time tooling from generated runtime code.
+- Avoid pushing or deleting remote branches without explicit user approval.
