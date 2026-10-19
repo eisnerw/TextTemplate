@@ -1,0 +1,41 @@
+Shows use of bullet styles as well as modular subtemplates, automatic bulleting,`
+and indenting only for multiple values.  You can see different bullet styles `
+by changing the parameter to #showStyles from 1 through 5
+
+{''.#showStyles(1)}
+
+ 
+Subtemplates:
+{#styleNumber:[1]}
+{#showStyles:[People:{#data:[
+   {.}{^.^.$1 = 2->[.0]} {[{ 
+      lastName}{ 
+      firstName.#Prepend(', ')}{    
+      middleName.#Prepend(' ')
+   }].ToUpper().#Quoted()} 
+      {.} Lastname: {lastName.IfMissing('No Last Name')}   
+      {.} FirstName: {firstName}  
+      {.} Pets {pets=>[({pets.Count()}):  
+         {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
+         {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
+   ],[no pets]
+   } //
+].@MissingValue('No Information Provided')}].@Include([{'#style'}{$1}])}
+{#formatPet:[  
+   a {type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')}  `   
+   {type} named {name} 
+]}
+{#Domesticated: [{$0.Where(type.#IsDomesticated())}]}
+{#NonDomesticated: [{$0.Where(!type.#IsDomesticated())}]} 
+{#IsDomesticated:[{$0.Matches('dog','cat')}]}  
+{#Prepend:[{$0->[{$1}{$0}]}]}
+{#Surround:[{$0->[{$1}{$0}{$1}]}]}
+{#Quoted:[{$0->[{$0.#Surround('"')}]}]}
+{#dpetcnt:[{pets.#Domesticated().Count()}]}
+{#ndpetcnt:[{pets.#NonDomesticated().Count()}]}
+{#style1:[].@BulletStyle('I.','(a)','•','i.')}
+{#style2:[].@BulletStyle('1','1.1','1.1.1','1(a)')}
+{#style3:[].@BulletStyle('-')}
+{#style4:[].@BulletStyle('')}
+{#style5:[].@BulletStyle(' I', '•', 'A.', '(1)')}
+{#data:[/data/people]}

@@ -43,17 +43,27 @@ build/lockfile. The original tool/runtime pairing passes the regression suite.
 
 Choose exactly one input:
 
-- --template NAME: resolve a template from templates.json.
+- --template NAME: resolve a template from templates.json, or from
+  templates/NAME.template when --template-root is supplied. Pass the name without
+  the .template extension.
 - --template-file FILE: read exact UTF-8 template text.
 - --template-text TEXT: evaluate the argument as template text.
 
 Optional arguments:
 
 - --data NAME: resolve data from data.json.
-- --data-file FILE: read JSON input data.
+- --data-file FILE: read a JSON value as the input data, not a collection of
+  named data sets. This overrides associated data but does not change the source
+  of /data/NAME resource lookups.
 - --fixtures DIRECTORY: directory containing templates.json, subtemplates.json,
   and data.json. Defaults to this repository's reference/fixtures, independently
-  of the current working directory.
+  of the current working directory. With --template-root, only data.json is
+  loaded from this directory; the two template JSON files are not required.
+- --template-root DIRECTORY: load named templates from DIRECTORY/templates/*.template
+  and shared subtemplates from DIRECTORY/subtemplates/*.template. Both folders
+  must exist (they may be empty). Uses regular files directly in each folder,
+  preserving their UTF-8 text without trimming. No fallback to template JSON
+  occurs when a name is missing. This option works with all three input forms.
 - --debug-level 0|1|2: control legacy console output on stderr. Level 0
   (default) shows errors only; 1 adds warnings; 2 adds debug messages such as
   missing-value and resource-loading traces. This is host console verbosity,
@@ -70,7 +80,11 @@ Optional arguments:
 - --help: print usage.
 
 Explicit data overrides associated template data. With neither data option, a
-named template receives same-named data when the legacy route would supply it.
+named template receives same-named data when the legacy route would supply it,
+in either JSON or file-collection mode. --template-file and --template-text do
+not infer a data name: supply --data or --data-file when needed. --template-file
+also does not infer a sibling subtemplates folder; select it with --template-root.
+Explicit relative paths are resolved against the working directory.
 Each CLI invocation is a fresh process: URL, parse-tree, and subtemplate caches
 cannot leak across cases.
 
@@ -95,6 +109,107 @@ A completed result is retained even when exit code is 1. The legacy Assert metho
 can render "ASSERT FAILURE" with no errors; this remains result text and exit 0.
 In particular, the legacy tests template returns "ALL TESTS PASSED", while the
 separate #doit subtemplate has an observed test-8 mismatch. Both are preserved.
+
+## Commands for each input mode
+
+Run these commands from the repository root. The fixture files have different roles:
+`templates.json` contains template scripts, `subtemplates.json` contains shared
+scripts, and `data.json` contains named input data sets.
+
+### Original JSON collections (default)
+
+```sh
+# Named template with its associated data, if present
+node tools/node-reference/cli.mjs --template simpledata
+# Manual
+node tools/node-reference/cli.mjs --template docs
+# Override associated data with another named input
+node tools/node-reference/cli.mjs --template simpledata --data nested
+# Use different JSON collections
+node tools/node-reference/cli.mjs --template simple --fixtures /path/to/fixtures
+```
+
+### Separate template and subtemplate files
+
+The checked-in layout is:
+
+```text
+reference/
+  templates/
+    startup.template
+    simpledata.template
+    tests.template
+    ...
+  subtemplates/
+    xformatPet.template
+    doInclude.template
+    ...
+  fixtures/
+    data.json
+```
+
+```sh
+# File collections, with automatic same-named data lookup
+node tools/node-reference/cli.mjs --template simpledata --template-root reference
+# Startup page (only present in the file collection)
+node tools/node-reference/cli.mjs --template startup --template-root reference
+# Explicit main file, shared subtemplates from the same root, explicit data
+node tools/node-reference/cli.mjs --template-file reference/templates/simpledata.template --template-root reference --data simpledata
+# Manual from its individual file
+node tools/node-reference/cli.mjs --template-file reference/templates/docs.template --template-root reference
+# Legacy assertions using file collections: expected output ALL TESTS PASSED
+node tools/node-reference/cli.mjs --template tests --template-root reference
+```
+
+For a custom root with the same layout, use both selectors:
+
+```sh
+node tools/node-reference/cli.mjs --template example --template-root /path/to/project --fixtures /path/to/project/fixtures
+```
+
+Shared references such as #xformatPet and @Include('#doInclude') resolve against
+that root's subtemplates folder, including further shared references made by a
+loaded subtemplate. Definitions written inside a template stay in that template
+and retain the interpreter's existing scoping rules. Missing files produce the
+legacy missing-entry diagnostics; the host does not substitute a JSON definition.
+
+### Individual text/file input with JSON shared subtemplates
+
+Omitting --template-root deliberately keeps shared subtemplate lookups in JSON:
+
+```sh
+node tools/node-reference/cli.mjs --template-file reference/templates/simpledata.template --data simpledata
+node tools/node-reference/cli.mjs --template-text 'Hello {firstName}' --data nested
+```
+
+To use a standalone input-data file instead of a named data set:
+
+```sh
+node tools/node-reference/cli.mjs --template-file reference/templates/simpledata.template --template-root reference --data-file /path/to/person.json
+```
+
+Here person.json contains the actual input object (for example, fields firstName,
+lastName, and pets), not a map keyed by a data-set name. Any /data/NAME requests
+inside the template still use the selected fixture directory's data.json.
+
+### Output, diagnostics, and regression tests
+
+```sh
+# Save exact rendered output
+node tools/node-reference/cli.mjs --template startup --template-root reference > /tmp/startup-output.txt
+# Show console debug and callback status on stderr
+node tools/node-reference/cli.mjs --template simpledata --template-root reference --debug-level 2 --status
+# Inspect the result and actual resource responses as JSON
+node tools/node-reference/cli.mjs --template simpledata --template-root reference --report-json
+# Full automated suite, including file-collection comparisons against goldens
+npm test --prefix tools/node-reference
+# Show all CLI switches
+node tools/node-reference/cli.mjs --help
+```
+
+The assertions template is a single legacy test script, not the whole automated
+suite. External-service templates still require unsupported network resources;
+selecting file collections does not enable HTTP access.
 
 ## Callback and lookup compatibility
 

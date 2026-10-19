@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { readFileSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -189,4 +189,50 @@ test('debug levels control stderr without changing evaluation', () => {
     assert.equal(invalid.stdout, '');
     assert.match(invalid.stderr, /--debug-level must be/);
   }
+});
+
+
+for (const item of cases) test('file collections match golden: ' + item.id, () => {
+  const expected = JSON.parse(readFileSync(new URL('golden/' + item.id + '.json', import.meta.url)));
+  const child = run([...item.args, '--template-root', path.join(root, 'reference'), '--report-json']);
+  assert.equal(child.status, expected.exitCode, child.stderr);
+  exact(child.stdout, JSON.stringify(expected.report), item);
+});
+
+test('startup is available by name or individual file in file mode', () => {
+  const source = path.join(root, 'reference');
+  const named = run(['--template', 'startup', '--template-root', source]);
+  const file = run(['--template-file', path.join(source, 'templates/startup.template'), '--template-root', source]);
+  assert.equal(named.status, 0, named.stderr);
+  assert.equal(file.status, 0, file.stderr);
+  assert.match(named.stdout, /Welcome to the TextTemplate documentation and editor/);
+  assert.equal(named.stdout, file.stdout);
+});
+
+test('file mode uses sibling shared files and never falls back to JSON', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'texttemplate-files-'));
+  try {
+    mkdirSync(path.join(dir, 'templates'));
+    mkdirSync(path.join(dir, 'subtemplates'));
+    writeFileSync(path.join(dir, 'templates/simpledata.template'), '{#xformatPet}');
+    writeFileSync(path.join(dir, 'subtemplates/xformatPet.template'), '[File says hello to {firstName}]');
+    writeFileSync(path.join(dir, 'data.json'), JSON.stringify({ simpledata: { firstName: 'FileData' } }));
+    // No templates.json/subtemplates.json: data still comes from --fixtures.
+    const named = run(['--template', 'simpledata', '--template-root', dir, '--fixtures', dir]);
+    assert.equal(named.status, 0, named.stderr);
+    assert.equal(named.stdout, 'File says hello to FileData');
+    const file = run(['--template-file', path.join(dir, 'templates/simpledata.template'), '--template-root', dir, '--data', 'nested']);
+    assert.equal(file.status, 0, file.stderr);
+    assert.equal(file.stdout, 'File says hello to John');
+    // doInclude exists in the built-in JSON; it must not be found in this root.
+    const missing = run(['--template-text', '{#doInclude}', '--template-root', dir]);
+    assert.equal(missing.status, 1);
+    assert.match(missing.stderr, /Subtemplate #doInclude not found/);
+    const missingTemplate = run(['--template', 'simple', '--template-root', dir]);
+    assert.equal(missingTemplate.status, 2);
+    assert.match(missingTemplate.stderr, /Template simple not found/);
+    const absentRoot = run(['--template', 'simple', '--template-root', path.join(dir, 'absent')]);
+    assert.equal(absentRoot.status, 2);
+    assert.match(absentRoot.stderr, /ENOENT/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });

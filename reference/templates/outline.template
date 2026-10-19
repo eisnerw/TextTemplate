@@ -1,0 +1,32 @@
+People:{#data:[
+   {.} {[{ 
+      lastName}{ 
+      firstName.#Prepend(', ')}{    
+      middleName.#Prepend(' ')
+   }].ToUpper().#Quoted()} 
+      {.} Lastname: {lastName.IfMissing('No Last Name')}   
+      {.} FirstName: {firstName}  
+      {.} Pets {pets=>[({pets.Count()}):  
+         {.} Domesticated ({pets.#Domesticated().Count()}): 
+            {.} {pets.#Domesticated():[{#formatPet}]}  
+         {.} Non-domesticated ({pets.#NonDomesticated().Count()}): 
+            {.} {pets.#NonDomesticated():[{#formatPet}]}    
+   ],[no pets]
+   }
+      {.} Comment{comment.Contains("\\n")->[s]}: {comment}  
+].@MultilineStyle('IndentAllButFirst', 'Padded')
+ .@MissingValue('No Information Provided')}       
+ 
+Subtemplates:  
+
+{#formatPet:[  
+   a {type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')}  `   
+   {type} named {name} 
+]}
+{#Domesticated: [{$0.Where(type.#IsDomesticated())}]}
+{#NonDomesticated: [{$0.Where(!type.#IsDomesticated())}]} 
+{#IsDomesticated:[{$0.Matches('dog','cat')}]}  
+{#Prepend:[{$0->[{$1}{$0}]}]}
+{#Surround:[{$0->[{$1}{$0}{$1}]}]}
+{#Quoted:[{$0->[{$0.#Surround('"')}]}]}
+{#data:[/data/people]}

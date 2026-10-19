@@ -8,9 +8,11 @@ globalThis.console = new Console({ stdout: process.stderr, stderr: process.stder
 
 const help = 'Usage: node tools/node-reference/cli.mjs (--template NAME | --template-file FILE | --template-text TEXT)\n'
   + '  [--data NAME | --data-file FILE] [--fixtures DIRECTORY] [--timeout-ms 10000]\n'
+  + '  [--template-root DIRECTORY]\n'
   + '  [--debug-level 0|1|2] [--status] [--report-json]\n'
   + 'Debug levels: 0 errors only (default), 1 warnings, 2 full console debug.\n'
   + 'Default fixtures: reference/fixtures (relative to the runner).\n'
+  + '--template-root uses DIRECTORY/templates and DIRECTORY/subtemplates (*.template), without JSON fallback.\n'
   + 'Explicit data overrides associated data. stdout is exact rendered text.\n'
   + '--report-json instead emits the complete result and resource trace.\n'
   + 'Exit: 0 success, 1 interpreter diagnostics, 2 host/usage failure or timeout.\n';
@@ -19,6 +21,7 @@ try {
   const { values } = parseArgs({ options: {
     template: { type: 'string' }, 'template-file': { type: 'string' }, 'template-text': { type: 'string' },
     data: { type: 'string' }, 'data-file': { type: 'string' }, fixtures: { type: 'string' },
+    'template-root': { type: 'string' },
     'timeout-ms': { type: 'string' }, 'debug-level': { type: 'string' }, status: { type: 'boolean' },
     'report-json': { type: 'boolean' }, help: { type: 'boolean' },
   } });
@@ -36,7 +39,7 @@ try {
     const timeout = Number(values['timeout-ms'] ?? 10000);
     if (!Number.isSafeInteger(timeout) || timeout < 1 || timeout > 2147483647)
       throw new Error('--timeout-ms must be a positive integer <= 2147483647');
-    const fixtures = await loadFixtures(values.fixtures || new URL('../../reference/fixtures/', import.meta.url));
+    const fixtures = await loadFixtures(values.fixtures || new URL('../../reference/fixtures/', import.meta.url), { templateRoot: values['template-root'] });
     let input, data;
     let resourceFailure = false;
     if (values.template !== undefined) {

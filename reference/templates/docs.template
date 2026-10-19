@@ -1,0 +1,20 @@
+                         {'/data/docs':[{#name}{contents:[ //
+
+{.} {#name}{text}{contents->[ //
+   {contents:[{#name}{text}{contents->[ 
+      {contents:[ 
+         {#name}{text}
+      ]}
+   ]}]}]}].@BulletStyle('I.','(a)','•','i.').@MissingValue('')}]}
+
+Subtemplates:
+{#title:[<b>{$0}</b>]}
+{#name:[` // This subtemplate bolds the name and optionally adds text before/after
+{type.Matches('a','The')->[{type} ]}{name.#title()}{type.Case(
+      'dash'," &#8212; "  // "em-dash"
+      ,'comma', ', '
+      ,'a', ''
+      ,'The', ''
+      ,'blank', ' '
+      ,'none', '')}
+]}

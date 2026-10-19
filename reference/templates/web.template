@@ -1,0 +1,54 @@
+Here is an example of tagging and styling using Text Templates:
+{[Hello {'test'.#Style('outlined-red-dots')} `
+{"World".#Style('italic','bold','red')}!!] 
+.#Style('normal','blue').#Tag('h2').#ToHtml()} 
+Here's an example of a ` 
+{
+   'Link'.#Click(
+         'simple'  // the link name
+         ,'Click this to load a simple template'
+         , 'link','italic' // style attributes
+      )
+} you can hover over and click.
+
+{#external}
+Subtemplates:
+{#Style: 
+[<span style="{$1.#StyleCases(
+   $2,$3,$4,$5,$6,$7,$8,$9  
+)}">{$0}</span>]} 
+{#ToHtml:[<pre><span>{$0}</span><pre>]}
+{#Tag:[<{$1}>{$0}</{$1}>]}
+{#Click:[<a title='{$2=>[{$2}],[Click this]}' `
+   onclick="document.location='/#{$1}'; `
+   document.location.reload()">{$0}</a>]
+   .#OptionalStyle('link',$2,$3,$4,$5,$6,$7,$8,$9)}
+{#StyleCases:[ `
+   {$0
+      .Case(
+         'italic','font-style:italic'
+         ,'normal','font-weight:normal;white-space:normal'
+         ,'bold','font-weight:bold'
+         ,'red','color:red'
+         ,'blue','color:blue'
+         ,'black','color:black'
+         ,'outlined-red-dots','outline-color:red;outline-style:dotted'
+         ,'underline','text-decoration: underline'
+         ,'link','text-decoration: underline;color:blue'
+      )
+   };
+   {$1->[{$1.#StyleCases($2,$3,$4,$5,$6,$7,$8,$9)}]}
+]}
+{#OptionalStyle:[{$2=>[
+      {$0.#Style($2,$3,$4,$5,$6,$7,$8,$9)}
+   ],[
+      {$0.#Style($1)}]}
+]}
+{#external:[
+This is an example of an external data source (in this case, Github)
+
+my repos: {'https://api.github.com/users/eisnerw/repos': #formatGitRepos}
+Subtemplates:    
+
+{#formatGitRepos:[- {name}{description->[ ({description})]}]} 
+]}

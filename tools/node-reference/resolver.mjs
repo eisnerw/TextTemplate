@@ -1,9 +1,29 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-export async function loadFixtures(directory) {
+// A selected file root replaces both JSON template collections, with no fallback.
+async function loadTemplateDirectory(directory) {
+  const files = (await readdir(directory, { withFileTypes: true }))
+    .filter(entry => entry.isFile() && entry.name.endsWith('.template'))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const entries = await Promise.all(files.map(async entry => [
+    entry.name.slice(0, -'.template'.length),
+    await readFile(path.join(directory, entry.name), 'utf8'),
+  ]));
+  return Object.fromEntries(entries);
+}
+
+export async function loadFixtures(directory, { templateRoot } = {}) {
   if (directory instanceof URL) directory = fileURLToPath(directory);
+  if (templateRoot !== undefined) {
+    const [templates, subtemplates, data] = await Promise.all([
+      loadTemplateDirectory(path.join(templateRoot, 'templates')),
+      loadTemplateDirectory(path.join(templateRoot, 'subtemplates')),
+      readFile(path.join(directory, 'data.json'), 'utf8').then(JSON.parse),
+    ]);
+    return { templates, subtemplates, data };
+  }
   const entries = await Promise.all(['templates', 'subtemplates', 'data'].map(async name =>
     [name, JSON.parse(await readFile(path.join(directory, name + '.json'), 'utf8'))]));
   return Object.fromEntries(entries);
