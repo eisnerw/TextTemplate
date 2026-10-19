@@ -115,3 +115,16 @@ map of named data sets. Both --data and --data-file override associated data.
 
 See [the full CLI guide](../tools/node-reference/README.md#cli-contract) for setup,
 all input combinations, output behavior, exit codes, and compatibility details.
+
+## Parse the complete file collection with C#
+
+```sh
+dotnet run --project src/TextTemplate.Compiler -- --root reference --output /tmp/texttemplate-trees.json
+```
+
+This produces one map of syntax trees for all `.template` files under `templates/`
+and `subtemplates/`, including inline definitions, reference indexes, and original
+source locations. A syntax error prevents JSON publication. It does not render
+templates; use the Node runner commands above for rendered output. See the
+[compiler guide](../src/TextTemplate.Compiler/README.md) for the JSON structure and
+validation tests.

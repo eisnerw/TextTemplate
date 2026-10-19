@@ -33,7 +33,7 @@ Given a template script `T`, subtemplate definitions `S`, and input data `D`, th
 TypeScriptEvaluate(T, S, D) == Execute(CompileCSharp(Generate(T, S)), D)
 ```
 
-Equality initially means **exact output characters**, including indentation, spaces, tabs, line endings, punctuation, and numbering. Errors and edge-case behaviors should also be characterized; do not invent semantics where evidence is missing.
+Equality initially means **exact output characters**, including indentation, spaces, tabs, line endings, punctuation, and numbering. Valid-script behavior is the initial compatibility requirement. For malformed input, report a reasonable diagnostic with its original source location and stop publication; ANTLR error wording and recovery need not be reproduced. Early releases use texttemplate-editor as the template design studio.
 
 The **authoritative A-side evaluator is the original TypeScript interpreter running under Node.js**. The A/B harness must record its source revision, inputs, and execution context so that comparisons remain reproducible. Preserve JavaScript behavior explicitly where C# defaults differ, including truthiness, missing/null values, coercion, ordering, and formatting.
 
@@ -41,7 +41,7 @@ The **authoritative A-side evaluator is the original TypeScript interpreter runn
 
 ### Build time
 
-1. Parse existing TextTemplate scripts using the original ANTLR grammar or its faithful C# generated counterpart.
+1. Parse existing TextTemplate scripts using a handwritten C# lexer and parser, with the unchanged ANTLR grammar as the syntax specification. ANTLR remains a test oracle, not a C# runtime dependency.
 2. Translate the TypeScript implementation’s observed semantics into template-specific C# expressions/statements and supporting types.
 3. Emit readable, deterministic C# source files and any necessary helper source.
 
@@ -131,9 +131,12 @@ Use broad fixtures from `data.json`, `templates.json`, and `subtemplates.json`, 
 
 ### Milestone 2 — C# parsing
 
-- Generate C# lexer/parser/visitor from the unchanged ANTLR grammar.
-- Parse the original sample corpus and capture syntax diagnostics.
-- Establish parser regression tests before code generation.
+- Implement a handwritten C# lexer and recursive-descent parser against the unchanged grammar.
+- Build typed C# syntax records with original source spans and optional JSON export.
+- Parse the entire root directory’s templates/ and subtemplates/ collections into a deterministic map keyed by relative source path, retaining inline definitions and references.
+- Complete syntax validation before emitting the JSON document; any syntax failure produces diagnostics and no new output. Name binding and dependency validation precede later executable generation.
+- Compare tokens and normalized tree structure against the original JavaScript ANTLR parser, including the real fixture corpus.
+- See [the compiler guide](src/TextTemplate.Compiler/README.md) for commands, JSON schema, and tests.
 
 ### Milestone 3 — Minimal standalone generation
 
@@ -173,7 +176,7 @@ Do not resolve these by assumption:
 4. What are the exact scoping rules and evaluation order for `@` annotations?
 5. How are hierarchy, tabs, bullets, and numbered lists represented before rendering?
 6. How should the harness compare errors and other nondeterministic effects?
-7. Which ANTLR4 tool and C# runtime versions should be used with .NET 10 to preserve the unchanged grammar’s parsing behavior?
+7. How should computed subtemplate references be bound before executable generation? The .NET 10 parser itself has no ANTLR runtime dependency.
 
 ## 10. Working principles
 

@@ -36,7 +36,7 @@ For each A/B case use identical script, subtemplates, data, and relevant executi
 - **B:** Generate C#, compile it as a separate project, run it without TextTemplate assembly references, and capture its output.
 - Compare bytes or characters as appropriate, explicitly including tabs, spaces, CR/LF, indentation, ordering, bullets, and numbering.
 - Record first mismatch with escaped surrounding characters and the test-case inputs.
-- Cover invalid scripts, missing values, exception behavior, and other edge cases as observed rather than guessed.
+- Prioritize valid-script parity; texttemplate-editor is the initial design studio. Syntax errors must identify the original source location and prevent output publication. Exact ANTLR error wording/recovery is not required. Continue characterizing missing values, runtime exceptions, and other observed evaluation behavior.
 - Keep every verified behavior as a regression test. Do not share semantic evaluation code between the reference evaluator and the generated implementation in the A/B harness.
 
 ## Immediate priority: Node.js reference evaluator (Milestone 1)
@@ -54,7 +54,7 @@ For each A/B case use identical script, subtemplates, data, and relevant executi
 
 1. Document observed semantics and uncertainties in `DESIGN.md` or targeted notes.
 2. Freeze verified reference outputs as golden fixtures, recording the interpreter version/source commit and evaluation inputs.
-3. Establish C# parsing from the unchanged grammar.
+3. Implement handwritten C# parsing from the unchanged grammar, without an ANTLR C# runtime dependency. Keep typed syntax records and source spans; export a root-wide JSON map only after all files pass syntax validation.
 4. Implement the smallest generator feature needed for one matching test.
 5. Compile and execute generated standalone C#; compare exact results against the Node reference.
 6. Translate the next required behavior from the TypeScript implementation, add focused regression tests, and repeat against the Node.js reference. Preserve JavaScript semantics explicitly where C# defaults differ.
