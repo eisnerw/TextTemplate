@@ -39,7 +39,8 @@ for the development plan.
 
 - `templates/*.template`: one file per entry in `fixtures/templates.json`, plus `startup.template`.
 - `subtemplates/*.template`: one file per entry in `fixtures/subtemplates.json`.
-- `fixtures/data.json`: input data remains in JSON.
+- `data/*.json`: one input value per named entry in `fixtures/data.json`.
+- `fixtures/data.json`: original named data collection, retained unchanged.
 
 File names preserve the original lookup names. Arrays of template lines are joined
 with LF, exactly as in the legacy routes, without adding a final newline or
@@ -47,6 +48,12 @@ changing indentation. The original JSON fixtures are retained unchanged for the
 Node reference runner and its recorded provenance. Inline subtemplate definitions
 remain inside their owning templates; the subtemplates directory contains the
 separately named shared subtemplates from the JSON collection.
+
+The `data/` directory contains `nested.json`, `escapeTest.json`, `simpledata.json`,
+`people.json`, `events.json`, `docs.json`, and `famousBirthdays.json`. Each file
+contains the entry's object or array directly, without its outer lookup name.
+Values, array order, and string contents are preserved; JSON is pretty-printed.
+These files are derived copies, not replacements for the original fixture database.
 
 `templates/startup.template` is extracted from the default `createEditor([...])` input
 in `../texttemplate-editor/src/main/index.html`. It is the original startup page,
@@ -119,7 +126,7 @@ all input combinations, output behavior, exit codes, and compatibility details.
 ## Parse the complete file collection with C#
 
 ```sh
-dotnet run --project src/TextTemplate.Compiler -- --root reference --output /tmp/texttemplate-trees.json
+dotnet run --project src/TextTemplate.Compiler -- --root reference --format json --output /tmp/texttemplate-trees.json
 ```
 
 This produces one map of syntax trees for all `.template` files under `templates/`
@@ -128,3 +135,44 @@ source locations. A syntax error prevents JSON publication. It does not render
 templates; use the Node runner commands above for rendered output. See the
 [compiler guide](../src/TextTemplate.Compiler/README.md) for the JSON structure and
 validation tests.
+
+The compiler now generates standalone C# by default; use `--format json` for the
+parse-tree map. For example:
+
+```sh
+dotnet run --project src/TextTemplate.Compiler -- --root reference --output /tmp/Generated.cs
+```
+
+The entire collection generates compilable C#, with runtime stubs for unfinished
+execution features. See the [compiler guide](../src/TextTemplate.Compiler/README.md)
+for building, supplying data, execution coverage, and stub behavior.
+
+## Run generated C# with a data file
+
+The generated executable accepts `--data-file FILE`:
+
+```sh
+dotnet run --project src/TextTemplate.Compiler -- --root reference --output Generated
+dotnet build Generated/GeneratedTemplates.csproj
+dotnet run --no-build --project Generated -- --template simpledata --data-file reference/data/nested.json
+```
+
+The template name and data filename are independent. Paths are relative to the
+shell's working directory; no same-name data is selected automatically by generated
+C#. Compilation does not embed the data files, so the same compiled template can
+be run repeatedly with different inputs.
+
+The command above now matches the Node output exactly:
+
+```text
+Hello Smith, John with a dog named missing --namex-- THIS IS AN INCLUDED SUBTEMPLATE!!
+```
+
+Compare it with the unchanged Node evaluator:
+
+```sh
+node tools/node-reference/cli.mjs --template simpledata --template-root reference --data-file reference/data/nested.json
+```
+
+Multi-element array contexts (for example `people.json`) also remain unfinished
+in the generated runtime. These limitations are independent of file loading.

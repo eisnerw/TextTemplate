@@ -1,45 +1,99 @@
-# TextTemplate compiler: parsing phase
+# TextTemplate compiler
 
-The compiler reads an entire root directory, parses its templates and shared
-subtemplates, and emits one JSON document containing a map of parse trees. It
-uses a handwritten C# lexer and recursive-descent parser based on the unchanged
-TextTemplate grammar. The compiler has no ANTLR or Node.js runtime dependency.
-It does not evaluate templates or generate executable template C# yet.
+The compiler parses an entire root directory and generates standalone C# by
+default. Parse-tree JSON is an optional export. The handwritten C# parser uses
+the unchanged grammar and needs neither ANTLR nor Node.js at runtime.
 
-## Run
+## Generate and run
 
 From the repository root:
 
 ```sh
 dotnet build src/TextTemplate.Compiler
-# Parse the complete checked-in collection and write one JSON file
-dotnet run --no-build --project src/TextTemplate.Compiler -- --root reference --output /tmp/texttemplate-trees.json
-# Or write JSON to stdout (build first so build output cannot contaminate it)
-dotnet run --no-build --project src/TextTemplate.Compiler -- --root reference > /tmp/texttemplate-trees.json
-# Usage
-dotnet run --no-build --project src/TextTemplate.Compiler -- --help
+mkdir -p /tmp/texttemplate-example/templates /tmp/texttemplate-example/subtemplates
+printf 'Hello {firstName}!' > /tmp/texttemplate-example/templates/hello.template
+# Emit an editable standalone project (default destination: Generated/):
+dotnet run --no-build --project src/TextTemplate.Compiler -- --root /tmp/texttemplate-example
+# Build and run without referencing any TextTemplate assembly:
+dotnet build Generated/GeneratedTemplates.csproj
+printf '{"firstName":"Ada"}' > /tmp/texttemplate-input.json
+dotnet run --no-build --project Generated -- --template hello --data-file /tmp/texttemplate-input.json
 ```
 
-The root must contain both `templates/` and `subtemplates/`. Each is scanned
-recursively for `.template` files; other extensions and input-data JSON files
-are ignored. Files are decoded as UTF-8. Named shared subtemplates are parsed
-as template expressions, such as `[text].@MissingValue('...')`, not as top-level
-literal text. Inline definitions remain nested inside their owner's tree.
+Generation currently implements a subset of execution semantics. The complete
+reference collection compiles, but templates that reach unfinished features throw
+`NotImplementedException`. Most methods/annotations, inline calls, regexes, bullets, list contexts, and URL
+resolution still have stubs. Supported additions are literal shared `@Include`,
+literal `@MissingValue`, named subtemplate methods with scalar arguments, and
+scalar `Join` (which leaves a scalar unchanged). Exceptions from
+emitted template logic identify the feature and original file, line, and column.
+Stubs do not run their operands; an unselected conditional branch does not throw.
+These are temporary implementation points, not language restrictions or successful
+renderings. Full reference-output parity remains future work.
 
-The compiler parses every file, whether referenced or not. It reports the first
-syntax error in each invalid file with its relative path, original line/column,
-and source excerpt. Any syntax error prevents publication of the JSON document.
-An existing output file remains unchanged on failure; a successful result replaces
-it atomically. Exit codes: 0 success, 1 syntax errors, 2 usage or filesystem/output
-errors. Early releases prioritize valid templates authored in texttemplate-editor;
-ANTLR error wording and recovery are not reproduced.
+Implemented behavior has focused A/B coverage for literals, scalar lookups,
+missing values, whitespace, predicates, arrows, object contexts, and local/shared
+subtemplates. The generated source contains template-specific C# methods and
+helper source, with no runtime parser, syntax tree, or TextTemplate DLL dependency.
+The public API is `GeneratedTemplates.Render(name, JsonElement? data = null)`.
+The executable accepts `--template NAME` and optional `--data-file FILE`; rendered
+text goes exactly to stdout, and execution errors go to stderr with exit code 1.
+
+The original named data collection has also been expanded into
+`reference/data/*.json`. Pass any one of these files with the existing
+`--data-file` option:
+
+```sh
+dotnet run --no-build --project Generated -- \
+  --template simpledata --data-file reference/data/nested.json
+```
+
+Each file contains an input object or array, not the map of all named datasets.
+Data paths are relative to the current working directory, and template and data
+names need not match. Data is loaded at execution time, so changing files requires
+no regeneration. No data file is inferred automatically. The example above now renders:
+
+```text
+Hello Smith, John with a dog named missing --namex-- THIS IS AN INCLUDED SUBTEMPLATE!!
+```
+
+The singleton pet array collapses to an object as in the interpreter. Multi-element
+list contexts, including the three pets in `reference/data/simpledata.json`, are
+still unfinished.
+
+## Compiler options
+
+```sh
+# Default: all templates and subtemplates as standalone C#
+dotnet run --no-build --project src/TextTemplate.Compiler -- --root reference --output Generated
+# Restrict generation to a named template and its discovered shared dependencies
+dotnet run --no-build --project src/TextTemplate.Compiler -- --root reference --template simple --output /tmp/Simple.cs
+# Optional comprehensive parse-tree map
+dotnet run --no-build --project src/TextTemplate.Compiler -- --root reference --format json --output /tmp/texttemplate-trees.json
+# Omit --output for Generated/ (C#) or stdout (JSON)
+# An explicit .cs output path writes a combined standalone source file
+# --format csharp explicitly selects the default; --help lists usage
+```
+
+The root must contain both `templates/` and `subtemplates/`, scanned recursively
+for UTF-8 `.template` files. Shared files are template expressions such as
+`[text].@MissingValue('...')`; inline definitions stay nested in their owner.
+Input-data JSON files are ignored during compilation. `--template` applies only
+to C# generation. All sources undergo syntax validation even when selecting one
+template. Missing names may depend on caller scope and are resolved at execution.
+
+Syntax errors report the relative path, original line/column, and source excerpt,
+and prevent publication. Existing output stays unchanged on failure; successful
+files are replaced atomically one at a time. Directory publication is not transactional on I/O failure. Compiler exit codes are 0 for success, 1 for
+syntax/generation diagnostics, and 2 for usage or filesystem errors. Unfinished
+execution features generate stubs rather than generation diagnostics.
 
 ## JSON and C# model
 
 `TextTemplateCompiler.CompileDirectory(root)` returns a `CompilationResult`.
 Its `Document` is available only when parsing succeeds. Trees are C# records
 (`SyntaxNode` with a `SyntaxKind` enum, child lists, and source spans), consumed
-directly by future generation code. JSON is the export format, not an intermediate
+directly by the C# emitter. JSON is the export format, not an intermediate
 parser dependency.
 
 The JSON document has these fields:
@@ -115,10 +169,10 @@ when a template executes.
 
 Definition/reference lists are occurrence indexes, not a global symbol table:
 source spans and the tree preserve nested scope, duplicates, and call structure.
-Recursive calls remain references, not expanded bodies. This parsing phase does
+Recursive calls remain references, not expanded bodies. Parsing does
 not resolve names, execute includes, fetch URLs, or evaluate computed names.
-Missing references therefore are not syntax errors; binding and complete dependency
-validation must precede future executable code generation. All on-disk sources
+Missing references therefore are not syntax errors; generated named calls resolve
+against the active local scope and shared dictionary at execution. All on-disk sources
 are represented even if no template references them.
 
 ## Validation
@@ -146,3 +200,56 @@ The grammar's syntax is preserved, including its unusual argument grouping and
 operator precedence. Interpreter-specific evaluation and subtemplate preprocessing
 are not replaced by this syntax tree. There is a 256-level parser nesting limit;
 exact invalid-script recovery and advanced editor diagnostics are deferred.
+
+Generation tests also compile all reference sources in an independent .NET project,
+compare focused execution cases against Node, and verify deferred stub failures.
+The standalone execution test removes the input templates before running.
+
+Generated source is intended to be read, edited, and optionally checked in:
+
+- `GeneratedTemplates.cs`: public rendering API and template/shared registries.
+- `Templates/Simple.cs`, etc.: one instance class per top-level template.
+- `Includes/DoInclude.cs`, etc.: one file per statically identified `@Include` unit.
+- `Includes/Common.cs`: other shared units, each retaining its own class scope.
+- `Support/TemplateUnit.cs`: short instance helpers such as `Get`, `Line`, and `InContext`.
+- `Support/EvaluationContext.cs`: inherited contexts and compatibility/composition helpers.
+- `Program.cs`: console host.
+- `GeneratedTemplates.csproj`: standalone .NET 10 executable with explicit source items.
+
+Inline definitions remain private methods in their owner's file, retaining names
+such as `formatPet`. Names contain neither category prefixes nor source coordinates.
+Locations appear in comments/diagnostics. Identifier collisions receive `_2`, `_3`,
+etc.; keyword identifiers are escaped. File/class names are allocated deterministically
+and avoid case-insensitive collisions. Anonymous body methods describe their content.
+
+Simple templates use readable local values and structured interpolated strings:
+
+```csharp
+private object? formatPet()
+{
+    var type = Get("type");
+    var name = Get("name");
+
+    return Line($"a {type} named {name}");
+}
+```
+
+`Line` retains object-valued holes, missing values, and nested fragments until final
+composition; it does not append a newline. Raw multiline strings preserve visible
+layout. Literal expressions are folded into content where equivalent. Nested unfinished
+operations are deferred local functions, with separate receiver/argument expressions.
+No branch or stub operand is eagerly evaluated for the sake of a readable local.
+Child contexts inherit local bindings and data without changing the caller's context.
+See [DESIGN.md](../../DESIGN.md#11-editable-generated-c-layout-and-readability-contract)
+for the full readability contract.
+
+Regeneration overwrites matching files, including edits. Obsolete units and extra
+files remain on disk but are not compiled unless added to the project. For a clean
+regeneration, delete `Generated/` first; this also removes the old
+`templates/Template_*.cs` layout. This repository treats generated output as
+disposable and does not require automatic backups.
+Literal shared `@Include` execution is supported for the characterized subset:
+exported definitions, literal missing-value annotations, and annotation ordering.
+Computed/local includes and other include annotations remain explicit runtime stubs.
+`GenerationResult.Files` exposes the deterministic source map; `Source` retains the
+combined-file form for existing callers.

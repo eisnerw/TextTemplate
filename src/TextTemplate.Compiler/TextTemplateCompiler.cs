@@ -73,13 +73,16 @@ public sealed class TextTemplateCompiler
     }
 
     public static void WriteJson(CompilationDocument document, string output)
+        => WriteText(JsonSerializer.Serialize(document, JsonOptions) + "\n", output);
+
+    public static void WriteText(string content, string output)
     {
         string fullPath = Path.GetFullPath(output);
         Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
         string temporary = fullPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
         {
-            File.WriteAllText(temporary, JsonSerializer.Serialize(document, JsonOptions) + "\n", new UTF8Encoding(false));
+            File.WriteAllText(temporary, content, new UTF8Encoding(false));
             File.Move(temporary, fullPath, true);
         }
         finally { if (File.Exists(temporary)) File.Delete(temporary); }

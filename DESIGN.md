@@ -93,6 +93,14 @@ This is an initial organization, not a mandate for unnecessary abstractions. **T
 
 ## 7. A/B testing design
 
+The named values in `reference/fixtures/data.json` are also available individually
+as `reference/data/NAME.json`. The original collection remains unchanged. Both
+the generated CLI and the Node runner accept `--data-file FILE` containing the
+input value itself. The generated CLI loads that file at runtime, independently
+of the chosen template name; it does not infer associated data or embed the data
+during generation. This input option does not resolve template resource URLs or
+change the execution features currently supported by generated C#.
+
 Each fixture should specify:
 
 - Script or script identifier.
@@ -134,13 +142,15 @@ Use broad fixtures from `data.json`, `templates.json`, and `subtemplates.json`, 
 - Implement a handwritten C# lexer and recursive-descent parser against the unchanged grammar.
 - Build typed C# syntax records with original source spans and optional JSON export.
 - Parse the entire root directory’s templates/ and subtemplates/ collections into a deterministic map keyed by relative source path, retaining inline definitions and references.
-- Complete syntax validation before emitting the JSON document; any syntax failure produces diagnostics and no new output. Name binding and dependency validation precede later executable generation.
+- Complete syntax validation before emitting the JSON document; any syntax failure produces diagnostics and no new output. Named calls retain runtime scope lookup; missing names are not syntax failures.
 - Compare tokens and normalized tree structure against the original JavaScript ANTLR parser, including the real fixture corpus.
 - See [the compiler guide](src/TextTemplate.Compiler/README.md) for commands, JSON schema, and tests.
 
 ### Milestone 3 — Minimal standalone generation
 
-- Generate a simple C# application from a literal-only template.
+- Generate standalone C# by default; retain the comprehensive parse-tree map through `--format json`.
+- Emit explicit runtime `NotImplementedException` stubs for unfinished features rather than rejecting valid templates during generation. Report the feature and template source location when reached; unexecuted branches remain harmless.
+- Compile the entire reference collection and compare supported execution cases against Node.
 - Compile, execute, and compare exact text output against the Node reference.
 - Prove the output project has **no TextTemplate assembly dependency**.
 
@@ -171,7 +181,7 @@ Use broad fixtures from `data.json`, `templates.json`, and `subtemplates.json`, 
 Do not resolve these by assumption:
 
 1. Which JavaScript behaviors require explicit compatibility helpers in C# to preserve the TypeScript interpreter’s results?
-2. What is the precise generated-program entry point and input representation (JSON, typed objects, or both)?
+2. The initial generated API is `GeneratedTemplates.Render(name, JsonElement? data)` with a `--template` / `--data-file` CLI. Should a later API also support typed objects?
 3. Which TypeScript composition routines should become emitted C# helpers, and which should become template-specific generated logic?
 4. What are the exact scoping rules and evaluation order for `@` annotations?
 5. How are hierarchy, tabs, bullets, and numbered lists represented before rendering?
@@ -187,4 +197,110 @@ Do not resolve these by assumption:
 - Keep every A/B test independently reproducible.
 - Distinguish build-time tooling from generated runtime code.
 - Avoid pushing or deleting remote branches without explicit user approval.
-ar
+
+## 11. Editable generated C# layout and readability contract
+
+The output is ordinary C# intended for human maintenance. Readability is an explicit
+acceptance criterion alongside character-for-character compatibility. Generated code
+must reflect template operations rather than the individual nodes of the parser tree.
+
+```text
+Generated/
+    GeneratedTemplates.cs           # Public dispatch and construction
+    Program.cs                      # Console host
+    GeneratedTemplates.csproj        # Standalone project
+    Templates/
+        Wikipedia.cs                # One top-level template per file
+        Simple.cs
+    Includes/
+        DoInclude.cs                # One literal @Include source unit per file
+        Common.cs                   # Other shared units grouped together
+    Support/
+        TemplateUnit.cs             # Short instance helpers: Get, Line, InContext
+        EvaluationContext.cs        # Compatibility and structured composition
+```
+
+Inline definitions stay in their owner's class as private methods; local functions
+are appropriate for deferred operations inside a method. A single partial class was
+an early possibility, not a requirement. Separate instance classes provide independent
+member scopes while sharing small helpers through `TemplateUnit`. Grouped shared units
+retain independent classes so their private definitions cannot leak into each other.
+Literal `@Include` references determine dedicated include files; computed includes
+cannot yet be identified statically. Their execution remains explicitly unfinished.
+
+Preserve template-defined names such as `formatPet`, `getWiki`, and `wikiapi`. Do not
+add `Template_`, `Subtemplate_`, `Define_`, syntax-kind names or source coordinates.
+Use meaningful names for anonymous context bodies, and put source locations in
+comments/diagnostics instead. Sanitize invalid identifier characters, escape C#
+keywords, and allocate `_2`, `_3`, etc. only for actual collisions. Track class member
+names separately from each method's locals/functions; bind each definition to its
+allocated name. Class/file names also avoid case-insensitive collisions.
+
+Small expressions and literals stay inline. They do not get methods merely because
+they are parser nodes. Template content should resemble this generated method:
+
+```csharp
+private object? formatPet()
+{
+    var type = Get("type");
+    var name = Get("name");
+
+    return Line($"a {type} named {name}");
+}
+```
+
+`Line` accepts a custom interpolated-string handler which retains object-valued holes
+and nested fragments. It adds no newline and performs no early string conversion.
+Multiline content uses raw interpolated strings so its whitespace remains visible.
+Local assignments preserve left-to-right evaluation of content holes. Branches,
+logical short-circuiting and unfinished-call operands remain deferred; extracting a
+local must never move evaluation out of its original execution scope. Nested
+unfinished operations use short local functions with locations in their diagnostics,
+instead of deeply nested diagnostic wrappers. Their receiver/arguments remain visible
+for future implementation, but are not executed by a stub.
+
+Child contexts inherit data and local definitions without mutating the caller. They
+share a recursion-depth counter; named definitions execute against the invocation
+context. Runtime name resolution is retained where caller scope can affect binding.
+Literal shared includes, literal missing-value annotations, scalar named-method
+arguments, and scalar Join are now supported as described below. Full hierarchy,
+list contexts, and other unfinished features still have runtime stubs.
+
+C# generation defaults to `Generated/`. Generated sources and their project may be
+checked in. This repository treats `Generated/` as disposable compiler output;
+automatic backups are not required. Regeneration overwrites matching files, including manual edits; obsolete
+files remain on disk but are excluded from the project's explicit compile list. Syntax
+validation completes before publication. Individual writes are atomic, but a directory
+update is not transactional on I/O failure. The deterministic `GenerationResult.Files`
+map and combined `.cs` output are both supported. Tests compile both independently
+of TextTemplate assemblies, compare execution with Node, and check the readability
+contract (including keywords, name collisions, scope isolation and editable output).
+
+## 12. Includes and the simpledata singleton-data path
+
+Source inspection uses `invokeMethods`, `visitNamedSubtemplate`, `callMethod`, and
+`processSubtemplates` in the preserved TypeScript interpreter. Characterization
+cases in `tests/node-reference/include-cases.json` freeze the observed results;
+the independent Node tests and C# A/B tests run the same inputs.
+
+- Literal `@Include('#name')` imports a shared unit before evaluating its receiver.
+  Exported definitions and annotation values are inherited by that receiver's child
+  context and do not replace the surrounding caller's bindings.
+- Annotations in a method chain execute in source order, before ordinary methods
+  or the receiver. A later missing-value annotation overrides an earlier include's
+  replacement, while a later include can override the earlier replacement.
+- Include loading preprocesses a leading `Subtemplates:` section. The emitter
+  projects the already parsed leading marker/definition nodes into a section,
+  matching the legacy include preprocessing without changing lexer/parser syntax.
+- `@MissingValue('text')` attaches the replacement to a missing value at lookup;
+  `{key}` substitutions use the original lookup path. Predicate truth remains false.
+- Named methods evaluate with `$0` as the receiver and `$1`, `$2`, etc. as scalar
+  arguments in a child data context. `^` refers to the caller's data.
+- Legacy `Join` leaves scalar input unchanged. List joining remains unfinished.
+
+The exact `simpledata` / `reference/data/nested.json` invocation and escaped-name
+variant are compared against Node. Singleton arrays use the established legacy
+collapse behavior; multi-element list contexts remain unsupported. Computed/local
+include targets, nonliteral annotation arguments, unsupported include layouts,
+and additional include annotations still fail explicitly when executed. These
+limits must not be mistaken for general annotation or list parity.

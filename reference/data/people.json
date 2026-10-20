@@ -1,0 +1,40 @@
+[
+  {
+    "firstName": "Doris",
+    "lastName": "Johnson",
+    "pets": [
+      {
+        "type": "dog",
+        "name": "Buddy"
+      },
+      {
+        "type": "lion",
+        "name": "Ralph"
+      },
+      {
+        "type": "tiger",
+        "name": "Stripes"
+      }
+    ],
+    "comment": "Doris seems to have a good relationship with her pets.\nShe is known to have multiple non-domesticated pets"
+  },
+  {
+    "firstName": "John",
+    "lastName": "Smith",
+    "pets": [
+      {
+        "type": "dog",
+        "name": "Toto"
+      },
+      {
+        "type": "cat",
+        "name": "Dolly"
+      },
+      {
+        "type": "zebra",
+        "name": "Stripes"
+      }
+    ],
+    "comment": "John mostly likes domesticated pets"
+  }
+]

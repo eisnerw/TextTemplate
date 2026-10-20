@@ -55,7 +55,7 @@ For each A/B case use identical script, subtemplates, data, and relevant executi
 1. Document observed semantics and uncertainties in `DESIGN.md` or targeted notes.
 2. Freeze verified reference outputs as golden fixtures, recording the interpreter version/source commit and evaluation inputs.
 3. Implement handwritten C# parsing from the unchanged grammar, without an ANTLR C# runtime dependency. Keep typed syntax records and source spans; export a root-wide JSON map only after all files pass syntax validation.
-4. Implement the smallest generator feature needed for one matching test.
+4. Generate standalone C# by default, with optional `--format json` tree export. Emit runtime `NotImplementedException` stubs for unfinished execution features, identifying feature and original source location when reached; do not reject valid syntax because a feature is unfinished. Implement each feature against a matching test.
 5. Compile and execute generated standalone C#; compare exact results against the Node reference.
 6. Translate the next required behavior from the TypeScript implementation, add focused regression tests, and repeat against the Node.js reference. Preserve JavaScript semantics explicitly where C# defaults differ.
 
@@ -74,3 +74,26 @@ Make incremental, reviewable changes. Explain significant design decisions befor
 - Do not push, force-push, delete branches, or rewrite Git history without explicit approval.
 - Do not copy credentials, tokens, private keys, old executable artifacts, or unreviewed configuration from the compromised former server.
 - Avoid committing generated build outputs or secrets.
+
+## Generated C# readability contract
+
+Readability is an acceptance criterion alongside behavioral parity. Organize output
+around maintained template operations, not syntax nodes. Follow DESIGN.md section 11:
+
+- One file per top-level template and literal shared `@Include` unit; group other
+  small shared units. Keep inline definitions as private methods/local functions
+  in their owner's file. Put compatibility helpers under `Generated/Support/`.
+- Preserve meaningful definition names (`formatPet`); no `Template_`, `Subtemplate_`,
+  `Define_`, syntax-kind or source-coordinate prefixes/suffixes in generated names.
+  Use deterministic `_2`, `_3` suffixes only for actual collisions, with separate
+  member and local scopes. Handle C# keywords and invalid characters.
+- Use instance methods, inherited child contexts, readable locals (`type`, `name`),
+  and structured interpolated strings (`Line($"a {type} named {name}")`).
+  Literals and simple expressions must not get their own generated methods.
+- Keep source locations in comments or diagnostics. Split complex operations into
+  readable statements/functions without eagerly evaluating deferred branches or
+  annotation/stub operands. Do not flatten structured values into strings early.
+- Generated source may be checked in and edited. Review representative output and
+  maintain naming/layout regressions in addition to independent Node A/B tests.
+- Treat this repository's `Generated/` as disposable compiler output. Regenerate
+  without automatic backups; preserve manual changes only when explicitly requested.

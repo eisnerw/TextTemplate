@@ -1,0 +1,65 @@
+[
+  {
+    "name": "include",
+    "script": "{[{#a}].@Include('#defs')}",
+    "shared": {
+      "defs": "[\nSubtemplates:\n{#a:[Included {firstName}]}]",
+      "missing": "[\nSubtemplates:\n{#a:[{absent}]}].@MissingValue('missing --{key}--')"
+    },
+    "expected": "Included John"
+  },
+  {
+    "name": "scope",
+    "script": "{[{#a}].@Include('#defs')} {#a}\nSubtemplates:\n{#a:[Outer]}",
+    "shared": {
+      "defs": "[\nSubtemplates:\n{#a:[Included {firstName}]}]",
+      "missing": "[\nSubtemplates:\n{#a:[{absent}]}].@MissingValue('missing --{key}--')"
+    },
+    "expected": "Included John Outer"
+  },
+  {
+    "name": "missing",
+    "script": "{[{#a}].@Include('#missing')}\n{absent}\nend",
+    "shared": {
+      "defs": "[\nSubtemplates:\n{#a:[Included {firstName}]}]",
+      "missing": "[\nSubtemplates:\n{#a:[{absent}]}].@MissingValue('missing --{key}--')"
+    },
+    "expected": "missing --absent--\nend"
+  },
+  {
+    "name": "order1",
+    "script": "{[{absent}].@MissingValue('outer').@Include('#missing')}",
+    "shared": {
+      "defs": "[\nSubtemplates:\n{#a:[Included {firstName}]}]",
+      "missing": "[\nSubtemplates:\n{#a:[{absent}]}].@MissingValue('missing --{key}--')"
+    },
+    "expected": "missing --absent--"
+  },
+  {
+    "name": "order2",
+    "script": "{[{absent}].@Include('#missing').@MissingValue('outer')}",
+    "shared": {
+      "defs": "[\nSubtemplates:\n{#a:[Included {firstName}]}]",
+      "missing": "[\nSubtemplates:\n{#a:[{absent}]}].@MissingValue('missing --{key}--')"
+    },
+    "expected": "outer"
+  },
+  {
+    "name": "method",
+    "script": "{'Hello'.#wrap('Ada')}\nSubtemplates:\n{#wrap:[{$0} {$1} {^.firstName}]}",
+    "shared": {
+      "defs": "[\nSubtemplates:\n{#a:[Included {firstName}]}]",
+      "missing": "[\nSubtemplates:\n{#a:[{absent}]}].@MissingValue('missing --{key}--')"
+    },
+    "expected": "Hello Ada John"
+  },
+  {
+    "name": "join",
+    "script": "{'abc'.Join(', ', ' and ')}",
+    "shared": {
+      "defs": "[\nSubtemplates:\n{#a:[Included {firstName}]}]",
+      "missing": "[\nSubtemplates:\n{#a:[{absent}]}].@MissingValue('missing --{key}--')"
+    },
+    "expected": "abc"
+  }
+]

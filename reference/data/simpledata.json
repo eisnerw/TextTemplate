@@ -1,0 +1,18 @@
+{
+  "firstName": "John",
+  "lastName": "Smith",
+  "pets": [
+    {
+      "type": "dog",
+      "name": "Toto"
+    },
+    {
+      "type": "cat",
+      "name": "Dolly"
+    },
+    {
+      "type": "zebra",
+      "name": "Stripes"
+    }
+  ]
+}

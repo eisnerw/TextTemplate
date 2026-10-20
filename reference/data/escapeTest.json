@@ -1,0 +1,10 @@
+{
+  "firstName": "John \"Big John\"",
+  "lastName": "Smith",
+  "pets": [
+    {
+      "type": "dog",
+      "name": "Toto"
+    }
+  ]
+}

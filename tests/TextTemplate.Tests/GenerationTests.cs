@@ -1,0 +1,283 @@
+using System.Diagnostics;
+using System.Text.Json;
+using TextTemplate.Compiler;
+using TextTemplate.Compiler.Generation;
+
+namespace TextTemplate.Tests;
+
+public sealed class GenerationTests
+{
+    private static string Repository()
+    {
+        var path = new DirectoryInfo(AppContext.BaseDirectory);
+        while (path is not null && !File.Exists(Path.Combine(path.FullName, "TextTemplate.slnx"))) path = path.Parent;
+        return path?.FullName ?? throw new InvalidOperationException("Repository not found.");
+    }
+    private static (int Exit, string Output, string Error) Run(string file, string directory, params string[] arguments)
+    {
+        var info = new ProcessStartInfo(file) { WorkingDirectory = directory, RedirectStandardOutput = true, RedirectStandardError = true };
+        info.Environment["TZ"] = "UTC";
+        foreach (string argument in arguments) info.ArgumentList.Add(argument);
+        using var process = Process.Start(info)!;
+        var output = process.StandardOutput.ReadToEndAsync(); var error = process.StandardError.ReadToEndAsync();
+        if (!process.WaitForExit(120000)) { process.Kill(true); throw new Exception("Process timed out: " + file); }
+        return (process.ExitCode, output.GetAwaiter().GetResult(), error.GetAwaiter().GetResult());
+    }
+    private static void Match(string expected, string actual, string name)
+    {
+        if (expected == actual) return;
+        int i = 0; while (i < Math.Min(expected.Length, actual.Length) && expected[i] == actual[i]) i++;
+        Assert.Fail($"{name}: first mismatch at {i}; expected {JsonSerializer.Serialize(expected[Math.Max(0, i - 25)..Math.Min(expected.Length, i + 65)])}; actual {JsonSerializer.Serialize(actual[Math.Max(0, i - 25)..Math.Min(actual.Length, i + 65)])}");
+    }
+
+    [Fact]
+    public void GeneratedProgramRunsIndependentlyAndMatchesNode()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "texttemplate-ab-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            string input = Path.Combine(root, "input"), isolated = Path.Combine(root, "isolated");
+            Directory.CreateDirectory(Path.Combine(input, "templates")); Directory.CreateDirectory(Path.Combine(input, "subtemplates"));
+            Directory.CreateDirectory(isolated);
+            var cases = new Dictionary<string, string>
+            {
+                ["greeting"] = "Hello {firstName}!",
+                ["a-b"] = "Hyphen",
+                ["aB"] = "Collision",
+                ["class"] = "Keyword",
+                ["StringComparer"] = "Runtime name collision",
+                ["a_b"] = "Underscore",
+                ["1class"] = "Digit",
+                ["café"] = "Unicode",
+                ["whitespace"] = "// first comment\nHello\r\n\t{firstName}`\n again\n",
+                ["missing"] = "before\nremove {absent} suffix\nafter\n{empty}\n{nil}\nend",
+                ["numbers"] = "{zero},{negative},{decimalValue},{small},{large},{yes},{no}",
+                ["predicates"] = "{firstName=>[yes],[no]} {no=>[yes],[no]} {zero=>[yes],[no]} {absent=>[yes],[no]}",
+                ["arrows"] = "before {absent->[hidden]} after\nremove {absent=>[hidden]} line\nend",
+                ["logical"] = "{firstName & !absent} {(zero=0) | no} {absent|no&yes}",
+                ["relations"] = "{decimalValue=1} {absent=other} {firstName!=absent} {zero<negative} {firstName>\"A\"}",
+                ["quotes"] = "{\"line\\nnext\"} {\"quote\\\" and \\u263a\"} {'it\\'s'}",
+                ["context"] = "{person:[{name} / {^.firstName}]} {person.name}",
+                ["jsonContext"] = "{'{\"firstName\":\"Local\"}':[Hi {firstName}]}",
+                ["fallback"] = "{absent:[not used],[fallback]}",
+                ["subtemplates"] = "{#local} {#shared}\nSubtemplates:\n{#local:[Local {firstName}]}",
+                ["nestedScope"] = "{#outer}\nSubtemplates:\n{#outer:[{#inner}\nSubtemplates:\n{#inner:[Inside {firstName}]}]}",
+                ["inheritedLocals"] = "{person:[{#local} / {^.firstName}]} {firstName}\nSubtemplates:\n{#local:[{name}]}",
+                ["scopeIsolation"] = "{#outer} {#local}\nSubtemplates:\n{#local:[Root {firstName}]}\n{#outer:[{person:[{#local}]}\nSubtemplates:\n{#local:[Inner {name}]}]}",
+                ["rawQuotes"] = "Quotes \"\"\"\n\t{firstName}\n\nEnd\n",
+                ["nameCollisions"] = "{#Render} {#Get} {#class} {firstName} {firstName}\nSubtemplates:\n{#Render:[Render]}\n{#Get:[Get]}\n{#class:[Keyword]}",
+                ["keywordContext"] = "{person:[{class}]}",
+                ["literalDelimiters"] = "{\"{{{{ }}}} \\\"\\\"\\\"\\\"\"}\n{firstName}\n",
+                ["emptyInline"] = "a{:[]}b"
+            };
+            using var includeCases = JsonDocument.Parse(File.ReadAllText(Path.Combine(Repository(), "tests/node-reference/include-cases.json")));
+            foreach (var item in includeCases.RootElement.EnumerateArray())
+            {
+                cases["include-" + item.GetProperty("name").GetString()!] = item.GetProperty("script").GetString()!;
+                foreach (var shared in item.GetProperty("shared").EnumerateObject())
+                    File.WriteAllText(Path.Combine(input, "subtemplates", shared.Name + ".template"), shared.Value.GetString());
+            }
+            foreach (var (name, text) in cases) File.WriteAllText(Path.Combine(input, "templates", name + ".template"), text);
+            File.WriteAllText(Path.Combine(input, "subtemplates", "shared.template"), "[Shared {person.name}]");
+            string data = """{"firstName":"Ada","person":{"name":"Grace","class":"Example"},"zero":0,"negative":-2,"decimalValue":1.8,"small":1e-7,"large":1e21,"yes":true,"no":false,"empty":"","nil":null}""";
+            string dataFile = Path.Combine(isolated, "input.json"); File.WriteAllText(dataFile, data);
+            var expected = new Dictionary<string, string>();
+            foreach (string name in cases.Keys)
+            {
+                var reference = Run("node", Repository(), "tools/node-reference/cli.mjs", "--template", name, "--template-root", input, "--data-file", dataFile);
+                Assert.True(reference.Exit == 0, name + ": " + reference.Error);
+                expected[name] = reference.Output;
+            }
+            var parsed = new TextTemplateCompiler().CompileDirectory(input);
+            Assert.True(parsed.Success, string.Join("\n", parsed.Diagnostics));
+            var generated = new CSharpEmitter().Generate(parsed.Document!);
+            Assert.True(generated.Success, string.Join("\n", generated.Diagnostics));
+            Assert.DoesNotContain("SyntaxNode", generated.Source);
+            Assert.DoesNotMatch(@"\bEvaluate\d+\b", generated.Source!);
+            Assert.Contains("internal sealed class Greeting", generated.Source);
+            Assert.Contains("internal object? Render()", generated.Source);
+            Assert.Contains("Line($\"Hello {firstName}!\")", generated.Source);
+            Assert.Contains("private object? local()", generated.Source);
+            Assert.DoesNotMatch(@"\b(?:Template_|Subtemplate_|Define_|InlineTemplate_L)\w*", generated.Source!);
+            Assert.DoesNotMatch(@"\b\w+_L\d+_C\d+\b", generated.Source!);
+            Assert.Contains("var firstName = Get(\"firstName\");", generated.Source);
+            Assert.Contains("private object? @class()", generated.Source);
+            Assert.Contains("private object? Render_2()", generated.Source);
+            Assert.Contains("Templates/AB_2.cs", generated.Files.Keys);
+            Assert.Contains("Includes/Common.cs", generated.Files.Keys);
+            Assert.Contains("internal sealed class Shared", generated.Source);
+            Assert.Equal(generated.Source, new CSharpEmitter().Generate(parsed.Document!).Source);
+            Assert.DoesNotContain("TextTemplate.Compiler.Parsing", generated.Source);
+            Assert.Equal(generated.Files.Keys, new CSharpEmitter().Generate(parsed.Document!).Files.Keys);
+            foreach (var (path, content) in generated.Files)
+            {
+                string target = Path.Combine(isolated, path);
+                Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                File.WriteAllText(target, content);
+            }
+            File.WriteAllText(Path.Combine(isolated, "Standalone.csproj"), """<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable></PropertyGroup></Project>""");
+            var build = Run("dotnet", isolated, "build", "Standalone.csproj", "--nologo", "-o", "bin-output");
+            Assert.True(build.Exit == 0, build.Output + build.Error);
+            // Execution cannot read the templates: only generated code and supplied data remain.
+            Directory.Delete(input, true);
+            foreach (var name in cases.Keys)
+            {
+                var actual = Run("dotnet", isolated, "bin-output/Standalone.dll", "--template", name, "--data-file", dataFile);
+                Assert.True(actual.Exit == 0, name + ": " + actual.Error);
+                Match(expected[name], actual.Output, name);
+            }
+            var deps = File.ReadAllText(Path.Combine(isolated, "bin-output", "Standalone.deps.json"));
+            Assert.DoesNotContain("TextTemplate", deps);
+            // Extracted data files are actual input values, not the named fixture database.
+            foreach (string dataName in new[] { "nested", "escapeTest", "simpledata" })
+            {
+                string fixture = Path.Combine(Repository(), "reference", "data", dataName + ".json");
+                var reference = Run("node", Repository(), "tools/node-reference/cli.mjs",
+                    "--template-text", cases["greeting"], "--data-file", fixture);
+                var actual = Run("dotnet", isolated, "bin-output/Standalone.dll",
+                    "--template", "greeting", "--data-file", fixture);
+                Assert.True(reference.Exit == 0, reference.Error);
+                Assert.True(actual.Exit == 0, actual.Error);
+                Match(reference.Output, actual.Output, "greeting with " + fixture);
+            }
+            // Unsupported runtime data shapes fail explicitly instead of pretending to match.
+            File.WriteAllText(dataFile, "[{\"firstName\":\"A\"},{\"firstName\":\"B\"}]");
+            var list = Run("dotnet", isolated, "bin-output/Standalone.dll", "--template", "greeting", "--data-file", dataFile);
+            Assert.Equal(1, list.Exit); Assert.Equal("", list.Output); Assert.Contains("list contexts", list.Error);
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void EntireReferenceBuildsAndStubsFailOnlyWhenReached()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "texttemplate-stubs-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            var parsed = new TextTemplateCompiler().CompileDirectory(Path.Combine(Repository(), "reference"));
+            Assert.True(parsed.Success, string.Join("\n", parsed.Diagnostics));
+            var generated = new CSharpEmitter().Generate(parsed.Document!);
+            Assert.True(generated.Success, string.Join("\n", generated.Diagnostics));
+            Assert.Contains("Includes/DoInclude.cs", generated.Files.Keys);
+            Assert.Contains("Includes/Common.cs", generated.Files.Keys);
+            string wikipedia = generated.Files["Templates/Wikipedia.cs"];
+            Assert.Contains("private object? getWiki()", wikipedia);
+            Assert.DoesNotContain("EvaluationContext.At(", wikipedia);
+            Assert.Contains("object? applyReplace()", wikipedia);
+            Assert.Contains("var extract = Get(\"key.extract\");", wikipedia);
+            File.WriteAllText(Path.Combine(root, "Generated.cs"), generated.Source);
+            File.WriteAllText(Path.Combine(root, "Standalone.csproj"), """<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><StartupObject>Probe</StartupObject></PropertyGroup></Project>""");
+            // Compile every legacy template and subtemplate, including unfinished features.
+            File.WriteAllText(Path.Combine(root, "Probe.cs"), """
+                using System;
+                public static class Probe {
+                    public static void Main(string[] args) {
+                        if (args.Length > 0) { Environment.ExitCode = GeneratedTemplateProgram.Main(args); return; }
+                        try { GeneratedTemplates.Render("startup"); }
+                        catch (NotImplementedException e) { Console.Write(e.Message); }
+                    }
+                }
+                """);
+            var build = Run("dotnet", root, "build", "--nologo", "-o", "output");
+            Assert.True(build.Exit == 0, build.Output + build.Error);
+            foreach (string dataName in new[] { "nested", "escapeTest" })
+            {
+                string dataFile = Path.Combine(Repository(), "reference/data", dataName + ".json");
+                var reference = Run("node", Repository(), "tools/node-reference/cli.mjs", "--template", "simpledata", "--template-root", "reference", "--data-file", dataFile);
+                var actual = Run("dotnet", root, "output/Standalone.dll", "--template", "simpledata", "--data-file", dataFile);
+                Assert.True(reference.Exit == 0, reference.Error);
+                Assert.True(actual.Exit == 0, actual.Error);
+                Match(reference.Output, actual.Output, "simpledata with " + dataName);
+            }
+            string input = Path.Combine(root, "input");
+            Directory.CreateDirectory(Path.Combine(input, "templates"));
+            Directory.CreateDirectory(Path.Combine(input, "subtemplates"));
+            File.WriteAllText(Path.Combine(input, "templates", "safe.template"), "{absent=>[{value.ToUpper()}],[safe]}");
+            File.WriteAllText(Path.Combine(input, "templates", "stub.template"), "{value.ToUpper()}");
+            generated = new CSharpEmitter().Generate(new TextTemplateCompiler().CompileDirectory(input).Document!);
+            File.WriteAllText(Path.Combine(root, "Generated.cs"), generated.Source);
+            File.WriteAllText(Path.Combine(root, "Probe.cs"), """
+                using System;
+                public static class Probe {
+                    public static void Main() {
+                        Console.WriteLine(GeneratedTemplates.Render("safe"));
+                        try { GeneratedTemplates.Render("stub"); }
+                        catch (NotImplementedException e) { Console.Write(e.Message); }
+                    }
+                }
+                """);
+            build = Run("dotnet", root, "build", "--nologo", "-o", "output");
+            Assert.True(build.Exit == 0, build.Output + build.Error);
+            var result = Run("dotnet", root, "output/Standalone.dll");
+            Assert.Equal(0, result.Exit);
+            Assert.StartsWith("safe\n", result.Output);
+            Assert.Contains("templates/stub.template:1:", result.Output);
+            Assert.Contains("Call ToUpper", result.Output);
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void DirectoryProjectIsEditableAndSyntaxFailurePreservesFiles()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "texttemplate-directory-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(root, "templates"));
+            Directory.CreateDirectory(Path.Combine(root, "subtemplates"));
+            File.WriteAllText(Path.Combine(root, "templates", "hello.template"), "Hello {firstName}!");
+            File.WriteAllText(Path.Combine(root, "templates", "other.template"), "Other");
+            string output = Path.Combine(root, "Generated");
+            Assert.Equal(0, Program.Main(["--root", root, "--output", output]));
+            string unit = Path.Combine(output, "Templates", "Hello.cs");
+            File.WriteAllText(unit, File.ReadAllText(unit).Replace("Hello ", "Welcome "));
+            var build = Run("dotnet", output, "build", "--nologo");
+            Assert.True(build.Exit == 0, build.Output + build.Error);
+            string data = Path.Combine(root, "input.json");
+            File.WriteAllText(data, """{"firstName":"Ada"}""");
+            var result = Run("dotnet", output, "bin/Debug/net10.0/GeneratedTemplates.dll", "--template", "hello", "--data-file", data);
+            Assert.Equal(0, result.Exit);
+            Assert.Equal("Welcome Ada!", result.Output);
+            var original = Directory.GetFiles(output, "*.cs", SearchOption.AllDirectories).ToDictionary(path => path, File.ReadAllText);
+            File.WriteAllText(Path.Combine(root, "templates", "bad.template"), "{");
+            Assert.Equal(1, Program.Main(["--root", root, "--output", output]));
+            foreach (var (path, content) in original) Assert.Equal(content, File.ReadAllText(path));
+            File.Delete(Path.Combine(root, "templates", "bad.template"));
+            Assert.Equal(0, Program.Main(["--root", root, "--template", "hello", "--output", output]));
+            Assert.DoesNotContain("Other.cs", File.ReadAllText(Path.Combine(output, "GeneratedTemplates.csproj")));
+            Assert.True(File.Exists(Path.Combine(output, "Templates", "Other.cs")));
+            build = Run("dotnet", output, "build", "--nologo");
+            Assert.True(build.Exit == 0, build.Output + build.Error);
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void DefaultIsCSharpJsonIsOptionalAndSyntaxFailureIsNotPublished()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "texttemplate-emitter-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(root, "templates")); Directory.CreateDirectory(Path.Combine(root, "subtemplates"));
+            File.WriteAllText(Path.Combine(root, "templates", "hello.template"), "Hello {firstName}");
+            string output = Path.Combine(root, "Generated.cs");
+            Assert.Equal(0, Program.Main(["--root", root, "--output", output]));
+            Assert.Contains("public static class GeneratedTemplates", File.ReadAllText(output));
+            string json = Path.Combine(root, "trees.json");
+            Assert.Equal(0, Program.Main(["--root", root, "--format", "json", "--output", json]));
+            Assert.True(JsonDocument.Parse(File.ReadAllText(json)).RootElement.GetProperty("sources").TryGetProperty("templates/hello.template", out _));
+            byte[] original = File.ReadAllBytes(output);
+            File.WriteAllText(Path.Combine(root, "templates", "unsupported.template"), "{firstName.ToUpper()}");
+            Assert.Equal(0, Program.Main(["--root", root, "--output", output]));
+            Assert.Contains("Call ToUpper", File.ReadAllText(output));
+            Assert.Equal(0, Program.Main(["--root", root, "--template", "hello", "--output", output]));
+            Assert.Equal(original, File.ReadAllBytes(output));
+            File.WriteAllText(Path.Combine(root, "templates", "unsupported.template"), "{");
+            Assert.Equal(1, Program.Main(["--root", root, "--template", "hello", "--output", output]));
+            Assert.Equal(original, File.ReadAllBytes(output));
+        }
+        finally { Directory.Delete(root, true); }
+    }
+}

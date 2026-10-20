@@ -159,7 +159,7 @@ public sealed class ParserTests
             Assert.True(first.Success);
             Assert.Equal(new[] { "subtemplates/same.template", "templates/nested/same.template" }, first.Document!.Sources.Keys);
             string output = Path.Combine(dir, "trees.json");
-            Assert.Equal(0, Program.Main(["--root", dir, "--output", output]));
+            Assert.Equal(0, Program.Main(["--root", dir, "--format", "json", "--output", output]));
             byte[] before = File.ReadAllBytes(output);
             TextTemplateCompiler.WriteJson(compiler.CompileDirectory(dir).Document!, output);
             Assert.Equal(before, File.ReadAllBytes(output));
@@ -167,10 +167,10 @@ public sealed class ParserTests
             File.WriteAllText(Path.Combine(dir, "subtemplates", "bad.template"), "[unterminated");
             var failed = compiler.CompileDirectory(dir);
             Assert.False(failed.Success); Assert.Null(failed.Document); Assert.Equal(2, failed.Diagnostics.Count);
-            Assert.Equal(1, Program.Main(["--root", dir, "--output", output]));
+            Assert.Equal(1, Program.Main(["--root", dir, "--format", "json", "--output", output]));
             Assert.Equal(before, File.ReadAllBytes(output));
             string absent = Path.Combine(dir, "absent.json");
-            Assert.Equal(1, Program.Main(["--root", dir, "--output", absent]));
+            Assert.Equal(1, Program.Main(["--root", dir, "--format", "json", "--output", absent]));
             Assert.False(File.Exists(absent));
         }
         finally { Directory.Delete(dir, true); }

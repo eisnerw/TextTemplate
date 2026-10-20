@@ -1,0 +1,281 @@
+// Scalar execution and structured composition adapted from TextTemplateInterpreter.ts
+// (eisnerw/texttemplate-editor, Apache-2.0, ccedefd87b012ff1173ee2f43323b6eb7c8bd268).
+// Emitted as source: no compiler, parser, or TextTemplate assembly is needed at runtime.
+internal sealed class EvaluationContext
+{
+    internal sealed class Data(Dictionary<string, object?> values, Data? parent)
+    {
+        internal Dictionary<string, object?> Values { get; } = values;
+        internal Data? Parent { get; } = parent;
+    }
+    // TODO: implement each feature at its emitted call site. Keep operands deferred:
+    // annotations and short-circuiting must not evaluate receiver/arguments prematurely.
+    internal static object? NotImplemented(string feature, params Func<object?>[] operands)
+        => throw new NotImplementedException("Execution is not implemented yet: " + feature);
+    internal static object? At(string location, Func<object?> action)
+    {
+        try { return action(); }
+        catch (NotImplementedException error) when (!error.Data.Contains("TemplateLocation"))
+        {
+            var located = new NotImplementedException(location + ": " + error.Message, error);
+            located.Data["TemplateLocation"] = location;
+            throw located;
+        }
+    }
+    internal sealed record Missing(string Key, string? Replacement = null);
+    private string? missingText;
+    private Missing MissingValue(string key) => new(key, missingText?.Replace("{key}", key));
+    internal readonly Data? Current;
+    internal readonly Dictionary<string, Func<EvaluationContext, object?>> Shared;
+    internal Dictionary<string, Func<EvaluationContext, object?>> Locals = new(StringComparer.Ordinal);
+    private sealed class CallDepth { internal int Value; }
+    private readonly CallDepth recursion = new();
+
+    private EvaluationContext(EvaluationContext parent, Data? current)
+    {
+        Current = current;
+        Shared = parent.Shared;
+        Locals = new(parent.Locals, StringComparer.Ordinal);
+        recursion = parent.recursion;
+        missingText = parent.missingText;
+    }
+
+    [System.Runtime.CompilerServices.InterpolatedStringHandler]
+    internal struct StructuredText
+    {
+        private readonly List<object?> fragments;
+        public StructuredText(int literalLength, int formattedCount) => fragments = new();
+        public void AppendLiteral(string text) => fragments.Add(text);
+        public void AppendFormatted(object? value) => fragments.Add(value);
+        internal object?[] ToFragments() => fragments.ToArray();
+    }
+    internal static object?[] Text(StructuredText text) => text.ToFragments();
+
+    internal EvaluationContext(JsonElement? data, Dictionary<string, Func<EvaluationContext, object?>> shared)
+    {
+        Shared = shared;
+        if (data.HasValue && data.Value.ValueKind != JsonValueKind.Null) Current = ReadData(data.Value, null);
+    }
+    private static Data ReadData(JsonElement value, Data? parent)
+    {
+        // The legacy TemplateData constructor collapses single-element arrays.
+        if (value.ValueKind == JsonValueKind.Array && value.GetArrayLength() == 1) return ReadData(value[0], parent);
+        if (value.ValueKind != JsonValueKind.Object)
+            throw new NotImplementedException("This initial generated runtime requires object data contexts; list contexts are not implemented yet.");
+        var data = new Data(new(StringComparer.Ordinal), parent);
+        foreach (var property in value.EnumerateObject())
+            data.Values[property.Name] = property.Value.Clone();
+        return data;
+    }
+    internal object? Lookup(string path)
+    {
+        var parts = path.Split('.');
+        object? value = Current;
+        for (int i = 0; i < parts.Length; i++)
+        {
+            if (value is not Data data) return MissingValue(path);
+            if (data.Values.TryGetValue(parts[i], out var found)) value = Materialize(found, data);
+            else if (parts[i] == "*") value = data;
+            else if (parts[i] == "^") value = data.Parent ?? data;
+            else return MissingValue(path);
+        }
+        if (value is string text) return text.Length == 0 ? MissingValue(path) : text.Replace("\r", "");
+        return value;
+    }
+    private static object? Materialize(object? value, Data parent)
+    {
+        if (value is not JsonElement json) return value;
+        return json.ValueKind switch
+        {
+            JsonValueKind.String => json.GetString(),
+            JsonValueKind.Number => json.GetDouble(),
+            JsonValueKind.True => true, JsonValueKind.False => false, JsonValueKind.Null => null,
+            JsonValueKind.Array when json.GetArrayLength() == 0 => new Missing("list"),
+            JsonValueKind.Object or JsonValueKind.Array => ReadData(json, parent),
+            _ => null
+        };
+    }
+    internal object? Context(object? value, Func<EvaluationContext, object?> body, Func<object?>? fallback = null)
+    {
+        value = Intermediate(value);
+        if (value is string text)
+        {
+            if (text.StartsWith('/') || text.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                throw new NotImplementedException("Resource data contexts are not implemented in the initial generated runtime.");
+            if (!text.StartsWith('{') && !text.StartsWith('[')) return text;
+            using var parsed = JsonDocument.Parse(text);
+            value = ReadData(parsed.RootElement, Current);
+        }
+        if (value is Missing) return fallback is null ? value : fallback();
+        if (value is not Data) throw new NotImplementedException("Expected an object data context.");
+        return body(new EvaluationContext(this, (Data)value));
+    }
+    // Adapted from invokeMethods, visitNamedSubtemplate and callMethod in the preserved interpreter.
+    // Annotations run before their receiver, with exported include definitions scoped to that call.
+    internal EvaluationContext Define(Dictionary<string, Func<EvaluationContext, object?>> definitions)
+    {
+        var child = new EvaluationContext(this, Current);
+        foreach (var entry in definitions) child.Locals[entry.Key] = entry.Value;
+        return child;
+    }
+    internal EvaluationContext WithMissingValue(string replacement)
+    {
+        var child = new EvaluationContext(this, Current);
+        child.missingText = replacement;
+        return child;
+    }
+    internal object? Annotate(Func<EvaluationContext, EvaluationContext>[] annotations, Func<EvaluationContext, object?> body)
+    {
+        var child = new EvaluationContext(this, Current);
+        foreach (var annotation in annotations) child = annotation(child);
+        return body(child);
+    }
+    internal EvaluationContext Include(string name, Func<EvaluationContext, EvaluationContext> load)
+    {
+        if (Locals.ContainsKey(name)) throw new NotImplementedException("Locally bound include units are not implemented yet: " + name);
+        if (++recursion.Value > 20) { recursion.Value--; throw new InvalidOperationException("Include recursion exceeds 20 levels."); }
+        try { return load(new EvaluationContext(this, Current)); }
+        finally { recursion.Value--; }
+    }
+    internal object? CallNamed(string name, object? value, params object?[] arguments)
+    {
+        value = Intermediate(value);
+        if (value is Data) throw new NotImplementedException("Object receivers for named methods are not implemented yet.");
+        var data = new Data(new(StringComparer.Ordinal), Current);
+        data.Values["$0"] = value;
+        for (int i = 0; i < arguments.Length; i++)
+        {
+            object? argument = Intermediate(arguments[i]);
+            if (argument is Data) throw new NotImplementedException("Object arguments for named methods are not implemented yet.");
+            if (argument is not Missing) data.Values["$" + (i + 1)] = argument;
+        }
+        return new EvaluationContext(this, data).Named(name);
+    }
+    internal static object? JoinScalar(object? value, params object?[] arguments)
+    {
+        if (arguments.Length > 2) throw new NotImplementedException("Join with more than two arguments is not implemented.");
+        value = Intermediate(value);
+        if (value is Data) throw new NotImplementedException("Join on list/object values is not implemented yet.");
+        // Legacy Join leaves a scalar unchanged; separators apply only to lists.
+        return value;
+    }
+    internal object? Scope(Dictionary<string, Func<EvaluationContext, object?>> definitions, Func<EvaluationContext, object?> body)
+    {
+        var child = new EvaluationContext(this, Current);
+        foreach (var entry in definitions) child.Locals[entry.Key] = entry.Value;
+        return body(child);
+    }
+    internal object? Named(string name)
+    {
+        if (!Locals.TryGetValue(name, out var method) && !Shared.TryGetValue(name, out method))
+            throw new InvalidOperationException("Subtemplate #" + name + " not found.");
+        if (++recursion.Value > 20) { recursion.Value--; throw new InvalidOperationException("Subtemplate recursion exceeds 20 levels."); }
+        try { return method(this); }
+        finally { recursion.Value--; }
+    }
+    internal static object? Intermediate(object? value) => value is object?[] ? Compose(value) : value;
+    internal static bool Condition(object? value)
+    {
+        value = Intermediate(value);
+        return value switch { null or Missing => false, string text => text.Length > 0,
+            bool flag => flag, double number => number != 0 && !double.IsNaN(number), _ => true };
+    }
+    internal static bool Compare(object? left, string operation, object? right)
+    {
+        left = Intermediate(left); right = Intermediate(right);
+        bool lm = left is null or Missing, rm = right is null or Missing;
+        // Preserve the legacy missing-value comparison behavior, including its unusual cases.
+        if (lm) return rm || operation == "!=";
+        if (rm) return operation == "!=";
+        string a = Scalar(left!), b = Scalar(right!);
+        const string numeric = @"^[-+]?(\d+|\d+\.\d*|\d*\.\d+)$";
+        int order;
+        if (Regex.IsMatch(a.Trim(), numeric) && Regex.IsMatch(b.Trim(), numeric))
+        {
+            double x = ParseInteger(a), y = ParseInteger(b);
+            if (double.IsNaN(x) || double.IsNaN(y)) return operation == "!=";
+            order = x.CompareTo(y);
+        }
+        else order = string.CompareOrdinal(a, b);
+        return operation switch { "=" or "==" => order == 0, "!=" => order != 0, ">" => order > 0,
+            "<" => order < 0, ">=" => order >= 0, "<=" => order <= 0, _ => throw new InvalidOperationException(operation) };
+    }
+    internal static double ParseInteger(string text)
+    {
+        var match = Regex.Match(text.TrimStart(), @"^[+-]?\d+");
+        return match.Success ? double.Parse(match.Value, CultureInfo.InvariantCulture) : double.NaN;
+    }
+    internal static string Scalar(object value) => value switch
+    {
+        string text => text, bool flag => flag ? "true" : "false",
+        double number => NumberText(number),
+        _ => throw new NotImplementedException("Non-scalar composition requires list/data formatting, which is not implemented yet.")
+    };
+    private static string NumberText(double number)
+    {
+        string text = number.ToString("R", CultureInfo.InvariantCulture);
+        if (number == 0) return "0";
+        int e = text.IndexOf('E');
+        if (e < 0) return text;
+        int exponent = int.Parse(text[(e + 1)..], CultureInfo.InvariantCulture);
+        if (exponent >= -6 && exponent < 21) return number.ToString("0.####################", CultureInfo.InvariantCulture);
+        return text[..e] + "e" + (exponent >= 0 ? "+" : "-") + Math.Abs(exponent).ToString(CultureInfo.InvariantCulture);
+    }
+    // Retain the fragment hierarchy until rendering; a missing value removes its entire line.
+    internal static string? Compose(object? value)
+    {
+        var lines = new List<string> { "" };
+        bool skipping = false;
+        void Visit(object? item)
+        {
+            if (item is object?[] sequence) { foreach (var child in sequence) Visit(child); return; }
+            if (item is Missing missing) item = missing.Replacement;
+            if (item is null) { lines[^1] = ""; skipping = true; return; }
+            var parts = Scalar(item).Split('\n');
+            for (int i = 0; i < parts.Length; i++)
+            {
+                if (i == 0 && skipping)
+                {
+                    if (parts.Length == 1) return;
+                    skipping = false;
+                }
+                else
+                {
+                    lines[^1] += parts[i];
+                    if (i < parts.Length - 1) lines.Add("");
+                }
+            }
+        }
+        Visit(value);
+        if (skipping)
+        {
+            if (lines.Count == 1) return null;
+            lines.RemoveAt(lines.Count - 1);
+        }
+        return string.Join("\n", lines);
+    }
+}
+
+public static class GeneratedTemplateProgram
+{
+    public static int Main(string[] args)
+    {
+        try
+        {
+            string? template = null, dataFile = null;
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (args[i] == "--template" && template is null && i + 1 < args.Length) template = args[++i];
+                else if (args[i] == "--data-file" && dataFile is null && i + 1 < args.Length) dataFile = args[++i];
+                else if (args[i] == "--help") { Console.WriteLine("Usage: --template NAME [--data-file FILE]"); return 0; }
+                else throw new ArgumentException("Unknown or incomplete argument: " + args[i]);
+            }
+            if (template is null) throw new ArgumentException("Specify --template NAME.");
+            using var data = dataFile is null ? null : JsonDocument.Parse(File.ReadAllText(dataFile));
+            string result = GeneratedTemplates.Render(template, data?.RootElement);
+            Console.Write(result);
+            return 0;
+        }
+        catch (Exception error) { Console.Error.WriteLine(error.Message); return 1; }
+    }
+}
