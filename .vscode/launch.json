@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Generated: simpledata with nested data",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "Build Generated (Debug)",
+      "program": "${workspaceFolder}/Generated/bin/Debug/net10.0/GeneratedTemplates.dll",
+      "args": [
+        "--template",
+        "simpledata",
+        "--data-file",
+        "reference/data/nested.json"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "internalConsole",
+      "stopAtEntry": false,
+      "justMyCode": true
+    }
+  ]
+}

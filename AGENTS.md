@@ -93,6 +93,8 @@ around maintained template operations, not syntax nodes. Follow DESIGN.md sectio
 - Keep source locations in comments or diagnostics. Split complex operations into
   readable statements/functions without eagerly evaluating deferred branches or
   annotation/stub operands. Do not flatten structured values into strings early.
+- Generated method comments show the original template fragment, preserving its
+  layout, followed by its source location. Locations alone are not sufficient.
 - Generated source may be checked in and edited. Review representative output and
   maintain naming/layout regressions in addition to independent Node A/B tests.
 - Treat this repository's `Generated/` as disposable compiler output. Regenerate

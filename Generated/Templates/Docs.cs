@@ -9,7 +9,28 @@ using System.Text.RegularExpressions;
 
 internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
 {
-    // templates/docs.template:1:1
+    // Template:
+    //                          {'/data/docs':[{#name}{contents:[ //
+    //
+    // {.} {#name}{text}{contents->[ //
+    //    {contents:[{#name}{text}{contents->[ 
+    //       {contents:[ 
+    //          {#name}{text}
+    //       ]}
+    //    ]}]}]}].@BulletStyle('I.','(a)','•','i.').@MissingValue('')}]}
+    //
+    // Subtemplates:
+    // {#title:[<b>{$0}</b>]}
+    // {#name:[` // This subtemplate bolds the name and optionally adds text before/after
+    // {type.Matches('a','The')->[{type} ]}{name.#title()}{type.Case(
+    //       'dash'," &#8212; "  // "em-dash"
+    //       ,'comma', ', '
+    //       ,'a', ''
+    //       ,'The', ''
+    //       ,'blank', ' '
+    //       ,'none', '')}
+    // ]}
+    // Source: "templates/docs.template":1:1
     internal object? Render()
     {
         return WithDefinitions(
@@ -21,17 +42,37 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
             child => new Docs(child).renderDocs());
     }
 
-    // templates/docs.template:12:8
+    // Template:
+    // [` // This subtemplate bolds the name and optionally adds text before/after
+    // {type.Matches('a','The')->[{type} ]}{name.#title()}{type.Case(
+    //       'dash'," &#8212; "  // "em-dash"
+    //       ,'comma', ', '
+    //       ,'a', ''
+    //       ,'The', ''
+    //       ,'blank', ' '
+    //       ,'none', '')}
+    // ]
+    // Source: "templates/docs.template":12:8
     private object? name()
     {
-        // templates/docs.template:13:2
+        // Template:
+        // type.Matches('a','The')
+        // Source: "templates/docs.template":13:2
         object? applyMatches() => Unsupported(
             "Call Matches",
             "templates/docs.template:13:2",
             () => Get("type"),
             () => new object?[] { "a", "The" });
 
-        // templates/docs.template:13:53
+        // Template:
+        // type.Case(
+        //       'dash'," &#8212; "  // "em-dash"
+        //       ,'comma', ', '
+        //       ,'a', ''
+        //       ,'The', ''
+        //       ,'blank', ' '
+        //       ,'none', '')
+        // Source: "templates/docs.template":13:53
         object? applyCase() => Unsupported(
             "Call Case",
             "templates/docs.template:13:53",
@@ -45,7 +86,9 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
         return Line($"{choice}{title}{@case}");
     }
 
-    // templates/docs.template:13:27
+    // Template:
+    // [{type} ]
+    // Source: "templates/docs.template":13:27
     private object? renderType()
     {
         var type = Get("type");
@@ -53,7 +96,9 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
         return Line($"{type} ");
     }
 
-    // templates/docs.template:11:9
+    // Template:
+    // [<b>{$0}</b>]
+    // Source: "templates/docs.template":11:9
     private object? title()
     {
         var item0 = Get("$0");
@@ -61,7 +106,16 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
         return Line($"<b>{item0}</b>");
     }
 
-    // templates/docs.template:1:40
+    // Template:
+    // [{#name}{contents:[ //
+    //
+    // {.} {#name}{text}{contents->[ //
+    //    {contents:[{#name}{text}{contents->[ 
+    //       {contents:[ 
+    //          {#name}{text}
+    //       ]}
+    //    ]}]}]}].@BulletStyle('I.','(a)','•','i.').@MissingValue('')}]
+    // Source: "templates/docs.template":1:40
     private object? renderName()
     {
         var name = Named("name");
@@ -70,17 +124,44 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
         return Line($"{name}{contents}");
     }
 
-    // templates/docs.template:1:58
+    // Template:
+    // [ //
+    //
+    // {.} {#name}{text}{contents->[ //
+    //    {contents:[{#name}{text}{contents->[ 
+    //       {contents:[ 
+    //          {#name}{text}
+    //       ]}
+    //    ]}]}]}].@BulletStyle('I.','(a)','•','i.').@MissingValue('')
+    // Source: "templates/docs.template":1:58
     private object? renderMissingValue()
     {
-        // templates/docs.template:1:58
+        // Template:
+        // [ //
+        //
+        // {.} {#name}{text}{contents->[ //
+        //    {contents:[{#name}{text}{contents->[ 
+        //       {contents:[ 
+        //          {#name}{text}
+        //       ]}
+        //    ]}]}]}].@BulletStyle('I.','(a)','•','i.')
+        // Source: "templates/docs.template":1:58
         object? applyBulletStyle() => Unsupported(
             "Call @BulletStyle",
             "templates/docs.template:1:58",
             () => this.renderName_2(),
             () => new object?[] { "I.", "(a)", "•", "i." });
 
-        // templates/docs.template:1:58
+        // Template:
+        // [ //
+        //
+        // {.} {#name}{text}{contents->[ //
+        //    {contents:[{#name}{text}{contents->[ 
+        //       {contents:[ 
+        //          {#name}{text}
+        //       ]}
+        //    ]}]}]}].@BulletStyle('I.','(a)','•','i.').@MissingValue('')
+        // Source: "templates/docs.template":1:58
         object? applyMissingValue() => Unsupported(
             "Call @MissingValue",
             "templates/docs.template:1:58",
@@ -90,10 +171,21 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
         return applyMissingValue();
     }
 
-    // templates/docs.template:1:58
+    // Template:
+    // [ //
+    //
+    // {.} {#name}{text}{contents->[ //
+    //    {contents:[{#name}{text}{contents->[ 
+    //       {contents:[ 
+    //          {#name}{text}
+    //       ]}
+    //    ]}]}]}]
+    // Source: "templates/docs.template":1:58
     private object? renderName_2()
     {
-        // templates/docs.template:3:1
+        // Template:
+        // {.}
+        // Source: "templates/docs.template":3:1
         object? bullet() => Unsupported(
             "Bullet {.}",
             "templates/docs.template:3:1");
@@ -110,7 +202,14 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
             """);
     }
 
-    // templates/docs.template:3:29
+    // Template:
+    // [ //
+    //    {contents:[{#name}{text}{contents->[ 
+    //       {contents:[ 
+    //          {#name}{text}
+    //       ]}
+    //    ]}]}]
+    // Source: "templates/docs.template":3:29
     private object? renderContent()
     {
         var contents = InContext(Get("contents"), child => new Docs(child).renderName_3());
@@ -121,7 +220,13 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
             """);
     }
 
-    // templates/docs.template:4:14
+    // Template:
+    // [{#name}{text}{contents->[ 
+    //       {contents:[ 
+    //          {#name}{text}
+    //       ]}
+    //    ]}]
+    // Source: "templates/docs.template":4:14
     private object? renderName_3()
     {
         var name = Named("name");
@@ -131,7 +236,13 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
         return Line($"{name}{text}{choice}");
     }
 
-    // templates/docs.template:4:39
+    // Template:
+    // [ 
+    //       {contents:[ 
+    //          {#name}{text}
+    //       ]}
+    //    ]
+    // Source: "templates/docs.template":4:39
     private object? renderContent_2()
     {
         var contents = InContext(Get("contents"), child => new Docs(child).renderName_4());
@@ -139,7 +250,11 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
         return Line($"{contents}");
     }
 
-    // templates/docs.template:5:17
+    // Template:
+    // [ 
+    //          {#name}{text}
+    //       ]
+    // Source: "templates/docs.template":5:17
     private object? renderName_4()
     {
         var name = Named("name");

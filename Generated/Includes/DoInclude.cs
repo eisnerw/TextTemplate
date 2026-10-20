@@ -9,7 +9,12 @@ using System.Text.RegularExpressions;
 
 internal sealed class DoInclude(EvaluationContext context) : TemplateUnit(context)
 {
-    // subtemplates/doInclude.template:1:1
+    // Template:
+    // [
+    // Subtemplates:
+    // {#a:[THIS IS AN INCLUDED SUBTEMPLATE]}
+    // ].@MissingValue('missing --{key}--')
+    // Source: "subtemplates/doInclude.template":1:1
     internal object? Render()
     {
         var missingValue = Annotate(
@@ -22,7 +27,12 @@ internal sealed class DoInclude(EvaluationContext context) : TemplateUnit(contex
         return Line($"{missingValue}");
     }
 
-    // subtemplates/doInclude.template:1:1
+    // Template:
+    // [
+    // Subtemplates:
+    // {#a:[THIS IS AN INCLUDED SUBTEMPLATE]}
+    // ]
+    // Source: "subtemplates/doInclude.template":1:1
     private object? renderSubtemplates()
     {
         var a = InContext(Named("a"), child => new DoInclude(child).a());
@@ -33,7 +43,9 @@ internal sealed class DoInclude(EvaluationContext context) : TemplateUnit(contex
             """);
     }
 
-    // subtemplates/doInclude.template:3:5
+    // Template:
+    // [THIS IS AN INCLUDED SUBTEMPLATE]
+    // Source: "subtemplates/doInclude.template":3:5
     private object? a()
     {
         return Line($"THIS IS AN INCLUDED SUBTEMPLATE");

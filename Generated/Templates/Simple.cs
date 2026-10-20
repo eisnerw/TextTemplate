@@ -9,7 +9,24 @@ using System.Text.RegularExpressions;
 
 internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
 {
-    // templates/simple.template:1:1
+    // Template:
+    // // data context:
+    // {'{"firstName": "Robert", "lastName": "Smith", "pets":[
+    // {"type":"dog", "name": "Toto"}
+    // ,{"type":"cat", "name": "Dolly"}
+    // ,{"type":"zebra", "name": "Stripes"}
+    // ]}':
+    // // Template:
+    // [{"Hello"} {lastName}, {firstName} with {pets=>
+    //    [{pets:#formatPet.#anded()}]
+    //    ,[no pets]
+    // }!!]}
+    //
+    // Subtemplates:
+    //
+    // {#formatPet:[a {type} named {name}]}
+    // {#anded:[{$0.Join(', ',' and ')}]}
+    // Source: "templates/simple.template":1:1
     internal object? Render()
     {
         return WithDefinitions(
@@ -21,7 +38,9 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
             child => new Simple(child).renderSimple());
     }
 
-    // templates/simple.template:16:9
+    // Template:
+    // [{$0.Join(', ',' and ')}]
+    // Source: "templates/simple.template":16:9
     private object? anded()
     {
         var join = Join(Get("$0"), ", ", " and ");
@@ -29,7 +48,9 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
         return Line($"{join}");
     }
 
-    // templates/simple.template:15:13
+    // Template:
+    // [a {type} named {name}]
+    // Source: "templates/simple.template":15:13
     private object? formatPet()
     {
         var type = Get("type");
@@ -38,7 +59,12 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
         return Line($"a {type} named {name}");
     }
 
-    // templates/simple.template:8:1
+    // Template:
+    // [{"Hello"} {lastName}, {firstName} with {pets=>
+    //    [{pets:#formatPet.#anded()}]
+    //    ,[no pets]
+    // }!!]
+    // Source: "templates/simple.template":8:1
     private object? renderContent()
     {
         var lastName = Get("lastName");
@@ -48,7 +74,9 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
         return Line($"Hello {lastName}, {firstName} with {choice}!!");
     }
 
-    // templates/simple.template:9:4
+    // Template:
+    // [{pets:#formatPet.#anded()}]
+    // Source: "templates/simple.template":9:4
     private object? renderContent_2()
     {
         var pets = InContext(Get("pets"), child => new Simple(child).renderAnded());
@@ -56,7 +84,9 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
         return Line($"{pets}");
     }
 
-    // templates/simple.template:9:11
+    // Template:
+    // #formatPet.#anded()
+    // Source: "templates/simple.template":9:11
     private object? renderAnded()
     {
         return CallNamed("anded", Named("formatPet"));

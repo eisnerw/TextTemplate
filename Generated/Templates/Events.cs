@@ -9,7 +9,27 @@ using System.Text.RegularExpressions;
 
 internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
 {
-    // templates/events.template:1:1
+    // Template:
+    // // {'/data/events':[{^.ToJson()}]} /* uncomment this line to see the raw data */
+    // {^.GroupBy(start.ToDate('YYYY-MM-DDT00:00:00'), 'group', 'start'):[ `
+    // {start.ToUpper()} 
+    //    {group.OrderBy(start.ToDate('HHmm')):[{start.#formatTimes(end)}: {summary} 
+    //       {.} Notes: {description}
+    //       {.} Location {location}]}
+    // ].@DateTest(/(star|end)/i).@BulletStyle('•').@DateFormat('dddd MMM D')}
+    // Subtemplates:
+    // {#SameDay:[{$0.ToDate('YYYYMMDD') = $1.ToDate('YYYYMMDD')}]}
+    // {#SameAMPM:[{$0.ToDate('a') = $1.ToDate('a') & $0.#SameDay($1)}]}
+    // {#onHour:[{$0.ToDate('mm') = '00'}]}
+    // {#formatTimes:[
+    //    {
+    //    // Don't put am/pm for the start time if on the hour and same as end
+    //    $0.ToDate([h{!$0.#onHour()->[:mm]}{!$0.#SameAMPM($1)->[a]}])
+    //    }-{
+    //    !$1.#SameDay($0)->[{$1.ToDate().ToUpper()} at ]}{$1.ToDate('h:mma')
+    //    }
+    // ]}
+    // Source: "templates/events.template":1:1
     internal object? Render()
     {
         return WithDefinitions(
@@ -23,17 +43,30 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
             child => new Events(child).renderEvents());
     }
 
-    // templates/events.template:12:15
+    // Template:
+    // [
+    //    {
+    //    // Don't put am/pm for the start time if on the hour and same as end
+    //    $0.ToDate([h{!$0.#onHour()->[:mm]}{!$0.#SameAMPM($1)->[a]}])
+    //    }-{
+    //    !$1.#SameDay($0)->[{$1.ToDate().ToUpper()} at ]}{$1.ToDate('h:mma')
+    //    }
+    // ]
+    // Source: "templates/events.template":12:15
     private object? formatTimes()
     {
-        // templates/events.template:15:4
+        // Template:
+        // $0.ToDate([h{!$0.#onHour()->[:mm]}{!$0.#SameAMPM($1)->[a]}])
+        // Source: "templates/events.template":15:4
         object? applyToDate() => Unsupported(
             "Call ToDate",
             "templates/events.template:15:4",
             () => Get("$0"),
             () => new object?[] { this.renderChoice() });
 
-        // templates/events.template:17:53
+        // Template:
+        // $1.ToDate('h:mma')
+        // Source: "templates/events.template":17:53
         object? applyToDate_2() => Unsupported(
             "Call ToDate",
             "templates/events.template:17:53",
@@ -47,16 +80,22 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
         return Line($"{toDate}-{choice}{toDate_2}");
     }
 
-    // templates/events.template:17:22
+    // Template:
+    // [{$1.ToDate().ToUpper()} at ]
+    // Source: "templates/events.template":17:22
     private object? renderToUpper_2()
     {
-        // templates/events.template:17:24
+        // Template:
+        // $1.ToDate()
+        // Source: "templates/events.template":17:24
         object? applyToDate() => Unsupported(
             "Call ToDate",
             "templates/events.template:17:24",
             () => Get("$1"));
 
-        // templates/events.template:17:24
+        // Template:
+        // $1.ToDate().ToUpper()
+        // Source: "templates/events.template":17:24
         object? applyToUpper() => Unsupported(
             "Call ToUpper",
             "templates/events.template:17:24",
@@ -67,7 +106,9 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
         return Line($"{toUpper} at ");
     }
 
-    // templates/events.template:15:14
+    // Template:
+    // [h{!$0.#onHour()->[:mm]}{!$0.#SameAMPM($1)->[a]}]
+    // Source: "templates/events.template":15:14
     private object? renderChoice()
     {
         object? choice = (!(EvaluationContext.Condition(CallNamed("onHour", Get("$0")))) ? Line($":mm") : "");
@@ -76,10 +117,14 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
         return Line($"h{choice}{choice_2}");
     }
 
-    // templates/events.template:11:10
+    // Template:
+    // [{$0.ToDate('mm') = '00'}]
+    // Source: "templates/events.template":11:10
     private object? onHour()
     {
-        // templates/events.template:11:12
+        // Template:
+        // $0.ToDate('mm')
+        // Source: "templates/events.template":11:12
         object? applyToDate() => Unsupported(
             "Call ToDate",
             "templates/events.template:11:12",
@@ -91,17 +136,23 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
         return Line($"{content}");
     }
 
-    // templates/events.template:10:12
+    // Template:
+    // [{$0.ToDate('a') = $1.ToDate('a') & $0.#SameDay($1)}]
+    // Source: "templates/events.template":10:12
     private object? SameAMPM()
     {
-        // templates/events.template:10:14
+        // Template:
+        // $0.ToDate('a')
+        // Source: "templates/events.template":10:14
         object? applyToDate() => Unsupported(
             "Call ToDate",
             "templates/events.template:10:14",
             () => Get("$0"),
             () => new object?[] { "a" });
 
-        // templates/events.template:10:31
+        // Template:
+        // $1.ToDate('a')
+        // Source: "templates/events.template":10:31
         object? applyToDate_2() => Unsupported(
             "Call ToDate",
             "templates/events.template:10:31",
@@ -113,17 +164,23 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
         return Line($"{content}");
     }
 
-    // templates/events.template:9:11
+    // Template:
+    // [{$0.ToDate('YYYYMMDD') = $1.ToDate('YYYYMMDD')}]
+    // Source: "templates/events.template":9:11
     private object? SameDay()
     {
-        // templates/events.template:9:13
+        // Template:
+        // $0.ToDate('YYYYMMDD')
+        // Source: "templates/events.template":9:13
         object? applyToDate() => Unsupported(
             "Call ToDate",
             "templates/events.template:9:13",
             () => Get("$0"),
             () => new object?[] { "YYYYMMDD" });
 
-        // templates/events.template:9:37
+        // Template:
+        // $1.ToDate('YYYYMMDD')
+        // Source: "templates/events.template":9:37
         object? applyToDate_2() => Unsupported(
             "Call ToDate",
             "templates/events.template:9:37",
@@ -135,29 +192,59 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
         return Line($"{content}");
     }
 
-    // templates/events.template:2:67
+    // Template:
+    // [ `
+    // {start.ToUpper()} 
+    //    {group.OrderBy(start.ToDate('HHmm')):[{start.#formatTimes(end)}: {summary} 
+    //       {.} Notes: {description}
+    //       {.} Location {location}]}
+    // ].@DateTest(/(star|end)/i).@BulletStyle('•').@DateFormat('dddd MMM D')
+    // Source: "templates/events.template":2:67
     private object? renderDateFormat()
     {
-        // templates/events.template:7:13
+        // Template:
+        // /(star|end)/i
+        // Source: "templates/events.template":7:13
         object? pattern() => Unsupported(
             "Regex /(star|end)/i",
             "templates/events.template:7:13");
 
-        // templates/events.template:2:67
+        // Template:
+        // [ `
+        // {start.ToUpper()} 
+        //    {group.OrderBy(start.ToDate('HHmm')):[{start.#formatTimes(end)}: {summary} 
+        //       {.} Notes: {description}
+        //       {.} Location {location}]}
+        // ].@DateTest(/(star|end)/i)
+        // Source: "templates/events.template":2:67
         object? applyDateTest() => Unsupported(
             "Call @DateTest",
             "templates/events.template:2:67",
             () => this.renderToUpper(),
             () => new object?[] { pattern() });
 
-        // templates/events.template:2:67
+        // Template:
+        // [ `
+        // {start.ToUpper()} 
+        //    {group.OrderBy(start.ToDate('HHmm')):[{start.#formatTimes(end)}: {summary} 
+        //       {.} Notes: {description}
+        //       {.} Location {location}]}
+        // ].@DateTest(/(star|end)/i).@BulletStyle('•')
+        // Source: "templates/events.template":2:67
         object? applyBulletStyle() => Unsupported(
             "Call @BulletStyle",
             "templates/events.template:2:67",
             () => applyDateTest(),
             () => new object?[] { "•" });
 
-        // templates/events.template:2:67
+        // Template:
+        // [ `
+        // {start.ToUpper()} 
+        //    {group.OrderBy(start.ToDate('HHmm')):[{start.#formatTimes(end)}: {summary} 
+        //       {.} Notes: {description}
+        //       {.} Location {location}]}
+        // ].@DateTest(/(star|end)/i).@BulletStyle('•').@DateFormat('dddd MMM D')
+        // Source: "templates/events.template":2:67
         object? applyDateFormat() => Unsupported(
             "Call @DateFormat",
             "templates/events.template:2:67",
@@ -167,23 +254,36 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
         return applyDateFormat();
     }
 
-    // templates/events.template:2:67
+    // Template:
+    // [ `
+    // {start.ToUpper()} 
+    //    {group.OrderBy(start.ToDate('HHmm')):[{start.#formatTimes(end)}: {summary} 
+    //       {.} Notes: {description}
+    //       {.} Location {location}]}
+    // ]
+    // Source: "templates/events.template":2:67
     private object? renderToUpper()
     {
-        // templates/events.template:3:2
+        // Template:
+        // start.ToUpper()
+        // Source: "templates/events.template":3:2
         object? applyToUpper() => Unsupported(
             "Call ToUpper",
             "templates/events.template:3:2",
             () => Get("start"));
 
-        // templates/events.template:4:19
+        // Template:
+        // start.ToDate('HHmm')
+        // Source: "templates/events.template":4:19
         object? applyToDate() => Unsupported(
             "Call ToDate",
             "templates/events.template:4:19",
             () => Get("start"),
             () => new object?[] { "HHmm" });
 
-        // templates/events.template:4:5
+        // Template:
+        // group.OrderBy(start.ToDate('HHmm'))
+        // Source: "templates/events.template":4:5
         object? applyOrderBy() => Unsupported(
             "Call OrderBy",
             "templates/events.template:4:5",
@@ -199,15 +299,23 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
             """);
     }
 
-    // templates/events.template:4:41
+    // Template:
+    // [{start.#formatTimes(end)}: {summary} 
+    //       {.} Notes: {description}
+    //       {.} Location {location}]
+    // Source: "templates/events.template":4:41
     private object? renderFormatTimes()
     {
-        // templates/events.template:5:1
+        // Template:
+        //       {.}
+        // Source: "templates/events.template":5:1
         object? bullet() => Unsupported(
             "Bullet       {.}",
             "templates/events.template:5:1");
 
-        // templates/events.template:6:1
+        // Template:
+        //       {.}
+        // Source: "templates/events.template":6:1
         object? bullet_2() => Unsupported(
             "Bullet       {.}",
             "templates/events.template:6:1");
@@ -228,14 +336,18 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
 
     private object? renderEvents()
     {
-        // templates/events.template:2:12
+        // Template:
+        // start.ToDate('YYYY-MM-DDT00:00:00')
+        // Source: "templates/events.template":2:12
         object? applyToDate() => Unsupported(
             "Call ToDate",
             "templates/events.template:2:12",
             () => Get("start"),
             () => new object?[] { "YYYY-MM-DDT00:00:00" });
 
-        // templates/events.template:2:2
+        // Template:
+        // ^.GroupBy(start.ToDate('YYYY-MM-DDT00:00:00'), 'group', 'start')
+        // Source: "templates/events.template":2:2
         object? applyGroupBy() => Unsupported(
             "Call GroupBy",
             "templates/events.template:2:2",

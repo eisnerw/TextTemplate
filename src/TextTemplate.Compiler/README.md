@@ -39,6 +39,13 @@ The public API is `GeneratedTemplates.Render(name, JsonElement? data = null)`.
 The executable accepts `--template NAME` and optional `--data-file FILE`; rendered
 text goes exactly to stdout, and execution errors go to stderr with exit code 1.
 
+For debugging, runtime data, evaluation contexts, missing values, and structured
+text expose `ToString()` summaries and `DebuggerDisplay` attributes. Data summaries
+show JSON-like stored values without evaluating templates or traversing parents.
+Previews limit nesting to four levels, collections to eight entries, and strings
+to 160 characters; expand `Values` and `Parent` in the debugger for full details.
+These diagnostic summaries are separate from template rendering.
+
 The original named data collection has also been expanded into
 `reference/data/*.json`. Pass any one of these files with the existing
 `--data-file` option:
@@ -218,7 +225,9 @@ Generated source is intended to be read, edited, and optionally checked in:
 
 Inline definitions remain private methods in their owner's file, retaining names
 such as `formatPet`. Names contain neither category prefixes nor source coordinates.
-Locations appear in comments/diagnostics. Identifier collisions receive `_2`, `_3`,
+Comments show the original template fragment above each generated method or
+deferred operation, followed by its source location; diagnostics retain locations.
+Identifier collisions receive `_2`, `_3`,
 etc.; keyword identifiers are escaped. File/class names are allocated deterministically
 and avoid case-insensitive collisions. Anonymous body methods describe their content.
 

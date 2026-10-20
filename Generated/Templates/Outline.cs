@@ -9,7 +9,40 @@ using System.Text.RegularExpressions;
 
 internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
 {
-    // templates/outline.template:1:1
+    // Template:
+    // People:{#data:[
+    //    {.} {[{ 
+    //       lastName}{ 
+    //       firstName.#Prepend(', ')}{    
+    //       middleName.#Prepend(' ')
+    //    }].ToUpper().#Quoted()} 
+    //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
+    //       {.} FirstName: {firstName}  
+    //       {.} Pets {pets=>[({pets.Count()}):  
+    //          {.} Domesticated ({pets.#Domesticated().Count()}): 
+    //             {.} {pets.#Domesticated():[{#formatPet}]}  
+    //          {.} Non-domesticated ({pets.#NonDomesticated().Count()}): 
+    //             {.} {pets.#NonDomesticated():[{#formatPet}]}    
+    //    ],[no pets]
+    //    }
+    //       {.} Comment{comment.Contains("\\n")->[s]}: {comment}  
+    // ].@MultilineStyle('IndentAllButFirst', 'Padded')
+    //  .@MissingValue('No Information Provided')}       
+    //  
+    // Subtemplates:  
+    //
+    // {#formatPet:[  
+    //    a {type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')}  `   
+    //    {type} named {name} 
+    // ]}
+    // {#Domesticated: [{$0.Where(type.#IsDomesticated())}]}
+    // {#NonDomesticated: [{$0.Where(!type.#IsDomesticated())}]} 
+    // {#IsDomesticated:[{$0.Matches('dog','cat')}]}  
+    // {#Prepend:[{$0->[{$1}{$0}]}]}
+    // {#Surround:[{$0->[{$1}{$0}{$1}]}]}
+    // {#Quoted:[{$0->[{$0.#Surround('"')}]}]}
+    // {#data:[/data/people]}
+    // Source: "templates/outline.template":1:1
     internal object? Render()
     {
         return WithDefinitions(
@@ -27,13 +60,17 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
             child => new Outline(child).renderOutline());
     }
 
-    // templates/outline.template:32:8
+    // Template:
+    // [/data/people]
+    // Source: "templates/outline.template":32:8
     private object? data()
     {
         return Line($"/data/people");
     }
 
-    // templates/outline.template:31:10
+    // Template:
+    // [{$0->[{$0.#Surround('"')}]}]
+    // Source: "templates/outline.template":31:10
     private object? Quoted()
     {
         object? choice = (EvaluationContext.Condition(Get("$0")) ? this.renderSurround() : "");
@@ -41,7 +78,9 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         return Line($"{choice}");
     }
 
-    // templates/outline.template:31:16
+    // Template:
+    // [{$0.#Surround('"')}]
+    // Source: "templates/outline.template":31:16
     private object? renderSurround()
     {
         var surround = CallNamed("Surround", Get("$0"), "\"");
@@ -49,7 +88,9 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         return Line($"{surround}");
     }
 
-    // templates/outline.template:30:12
+    // Template:
+    // [{$0->[{$1}{$0}{$1}]}]
+    // Source: "templates/outline.template":30:12
     private object? Surround()
     {
         object? choice = (EvaluationContext.Condition(Get("$0")) ? this.renderItem1_2() : "");
@@ -57,7 +98,9 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         return Line($"{choice}");
     }
 
-    // templates/outline.template:30:18
+    // Template:
+    // [{$1}{$0}{$1}]
+    // Source: "templates/outline.template":30:18
     private object? renderItem1_2()
     {
         var item1 = Get("$1");
@@ -67,7 +110,9 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         return Line($"{item1}{item0}{item1_2}");
     }
 
-    // templates/outline.template:29:11
+    // Template:
+    // [{$0->[{$1}{$0}]}]
+    // Source: "templates/outline.template":29:11
     private object? Prepend()
     {
         object? choice = (EvaluationContext.Condition(Get("$0")) ? this.renderItem1() : "");
@@ -75,7 +120,9 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         return Line($"{choice}");
     }
 
-    // templates/outline.template:29:17
+    // Template:
+    // [{$1}{$0}]
+    // Source: "templates/outline.template":29:17
     private object? renderItem1()
     {
         var item1 = Get("$1");
@@ -84,10 +131,14 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         return Line($"{item1}{item0}");
     }
 
-    // templates/outline.template:28:18
+    // Template:
+    // [{$0.Matches('dog','cat')}]
+    // Source: "templates/outline.template":28:18
     private object? IsDomesticated()
     {
-        // templates/outline.template:28:20
+        // Template:
+        // $0.Matches('dog','cat')
+        // Source: "templates/outline.template":28:20
         object? applyMatches() => Unsupported(
             "Call Matches",
             "templates/outline.template:28:20",
@@ -99,10 +150,14 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         return Line($"{matches}");
     }
 
-    // templates/outline.template:27:20
+    // Template:
+    // [{$0.Where(!type.#IsDomesticated())}]
+    // Source: "templates/outline.template":27:20
     private object? NonDomesticated()
     {
-        // templates/outline.template:27:22
+        // Template:
+        // $0.Where(!type.#IsDomesticated())
+        // Source: "templates/outline.template":27:22
         object? applyWhere() => Unsupported(
             "Call Where",
             "templates/outline.template:27:22",
@@ -114,10 +169,14 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         return Line($"{where}");
     }
 
-    // templates/outline.template:26:17
+    // Template:
+    // [{$0.Where(type.#IsDomesticated())}]
+    // Source: "templates/outline.template":26:17
     private object? Domesticated()
     {
-        // templates/outline.template:26:19
+        // Template:
+        // $0.Where(type.#IsDomesticated())
+        // Source: "templates/outline.template":26:19
         object? applyWhere() => Unsupported(
             "Call Where",
             "templates/outline.template:26:19",
@@ -129,10 +188,17 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         return Line($"{where}");
     }
 
-    // templates/outline.template:22:13
+    // Template:
+    // [  
+    //    a {type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')}  `   
+    //    {type} named {name} 
+    // ]
+    // Source: "templates/outline.template":22:13
     private object? formatPet()
     {
-        // templates/outline.template:23:7
+        // Template:
+        // type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')
+        // Source: "templates/outline.template":23:7
         object? applyCase() => Unsupported(
             "Call Case",
             "templates/outline.template:23:7",
@@ -146,10 +212,14 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         return Line($"a {@case} {type} named {name}");
     }
 
-    // templates/outline.template:23:25
+    // Template:
+    // [{[{name}y].ToLower()}]
+    // Source: "templates/outline.template":23:25
     private object? renderToLower()
     {
-        // templates/outline.template:23:27
+        // Template:
+        // [{name}y].ToLower()
+        // Source: "templates/outline.template":23:27
         object? applyToLower() => Unsupported(
             "Call ToLower",
             "templates/outline.template:23:27",
@@ -160,7 +230,9 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         return Line($"{toLower}");
     }
 
-    // templates/outline.template:23:27
+    // Template:
+    // [{name}y]
+    // Source: "templates/outline.template":23:27
     private object? renderName()
     {
         var name = Get("name");
@@ -168,17 +240,73 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         return Line($"{name}y");
     }
 
-    // templates/outline.template:1:15
+    // Template:
+    // [
+    //    {.} {[{ 
+    //       lastName}{ 
+    //       firstName.#Prepend(', ')}{    
+    //       middleName.#Prepend(' ')
+    //    }].ToUpper().#Quoted()} 
+    //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
+    //       {.} FirstName: {firstName}  
+    //       {.} Pets {pets=>[({pets.Count()}):  
+    //          {.} Domesticated ({pets.#Domesticated().Count()}): 
+    //             {.} {pets.#Domesticated():[{#formatPet}]}  
+    //          {.} Non-domesticated ({pets.#NonDomesticated().Count()}): 
+    //             {.} {pets.#NonDomesticated():[{#formatPet}]}    
+    //    ],[no pets]
+    //    }
+    //       {.} Comment{comment.Contains("\\n")->[s]}: {comment}  
+    // ].@MultilineStyle('IndentAllButFirst', 'Padded')
+    //  .@MissingValue('No Information Provided')
+    // Source: "templates/outline.template":1:15
     private object? renderMissingValue()
     {
-        // templates/outline.template:1:15
+        // Template:
+        // [
+        //    {.} {[{ 
+        //       lastName}{ 
+        //       firstName.#Prepend(', ')}{    
+        //       middleName.#Prepend(' ')
+        //    }].ToUpper().#Quoted()} 
+        //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
+        //       {.} FirstName: {firstName}  
+        //       {.} Pets {pets=>[({pets.Count()}):  
+        //          {.} Domesticated ({pets.#Domesticated().Count()}): 
+        //             {.} {pets.#Domesticated():[{#formatPet}]}  
+        //          {.} Non-domesticated ({pets.#NonDomesticated().Count()}): 
+        //             {.} {pets.#NonDomesticated():[{#formatPet}]}    
+        //    ],[no pets]
+        //    }
+        //       {.} Comment{comment.Contains("\\n")->[s]}: {comment}  
+        // ].@MultilineStyle('IndentAllButFirst', 'Padded')
+        // Source: "templates/outline.template":1:15
         object? applyMultilineStyle() => Unsupported(
             "Call @MultilineStyle",
             "templates/outline.template:1:15",
             () => this.renderQuoted(),
             () => new object?[] { "IndentAllButFirst", "Padded" });
 
-        // templates/outline.template:1:15
+        // Template:
+        // [
+        //    {.} {[{ 
+        //       lastName}{ 
+        //       firstName.#Prepend(', ')}{    
+        //       middleName.#Prepend(' ')
+        //    }].ToUpper().#Quoted()} 
+        //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
+        //       {.} FirstName: {firstName}  
+        //       {.} Pets {pets=>[({pets.Count()}):  
+        //          {.} Domesticated ({pets.#Domesticated().Count()}): 
+        //             {.} {pets.#Domesticated():[{#formatPet}]}  
+        //          {.} Non-domesticated ({pets.#NonDomesticated().Count()}): 
+        //             {.} {pets.#NonDomesticated():[{#formatPet}]}    
+        //    ],[no pets]
+        //    }
+        //       {.} Comment{comment.Contains("\\n")->[s]}: {comment}  
+        // ].@MultilineStyle('IndentAllButFirst', 'Padded')
+        //  .@MissingValue('No Information Provided')
+        // Source: "templates/outline.template":1:15
         object? applyMissingValue() => Unsupported(
             "Call @MissingValue",
             "templates/outline.template:1:15",
@@ -188,48 +316,86 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         return applyMissingValue();
     }
 
-    // templates/outline.template:1:15
+    // Template:
+    // [
+    //    {.} {[{ 
+    //       lastName}{ 
+    //       firstName.#Prepend(', ')}{    
+    //       middleName.#Prepend(' ')
+    //    }].ToUpper().#Quoted()} 
+    //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
+    //       {.} FirstName: {firstName}  
+    //       {.} Pets {pets=>[({pets.Count()}):  
+    //          {.} Domesticated ({pets.#Domesticated().Count()}): 
+    //             {.} {pets.#Domesticated():[{#formatPet}]}  
+    //          {.} Non-domesticated ({pets.#NonDomesticated().Count()}): 
+    //             {.} {pets.#NonDomesticated():[{#formatPet}]}    
+    //    ],[no pets]
+    //    }
+    //       {.} Comment{comment.Contains("\\n")->[s]}: {comment}  
+    // ]
+    // Source: "templates/outline.template":1:15
     private object? renderQuoted()
     {
-        // templates/outline.template:2:4
+        // Template:
+        // {.}
+        // Source: "templates/outline.template":2:4
         object? bullet() => Unsupported(
             "Bullet {.}",
             "templates/outline.template:2:4");
 
-        // templates/outline.template:2:9
+        // Template:
+        // [{ 
+        //       lastName}{ 
+        //       firstName.#Prepend(', ')}{    
+        //       middleName.#Prepend(' ')
+        //    }].ToUpper()
+        // Source: "templates/outline.template":2:9
         object? applyToUpper() => Unsupported(
             "Call ToUpper",
             "templates/outline.template:2:9",
             () => this.renderLastName());
 
-        // templates/outline.template:7:1
+        // Template:
+        //       {.}
+        // Source: "templates/outline.template":7:1
         object? bullet_2() => Unsupported(
             "Bullet       {.}",
             "templates/outline.template:7:1");
 
-        // templates/outline.template:7:22
+        // Template:
+        // lastName.IfMissing('No Last Name')
+        // Source: "templates/outline.template":7:22
         object? applyIfMissing() => Unsupported(
             "Call IfMissing",
             "templates/outline.template:7:22",
             () => Get("lastName"),
             () => new object?[] { "No Last Name" });
 
-        // templates/outline.template:8:1
+        // Template:
+        //       {.}
+        // Source: "templates/outline.template":8:1
         object? bullet_3() => Unsupported(
             "Bullet       {.}",
             "templates/outline.template:8:1");
 
-        // templates/outline.template:9:1
+        // Template:
+        //       {.}
+        // Source: "templates/outline.template":9:1
         object? bullet_4() => Unsupported(
             "Bullet       {.}",
             "templates/outline.template:9:1");
 
-        // templates/outline.template:16:1
+        // Template:
+        //       {.}
+        // Source: "templates/outline.template":16:1
         object? bullet_5() => Unsupported(
             "Bullet       {.}",
             "templates/outline.template:16:1");
 
-        // templates/outline.template:16:19
+        // Template:
+        // comment.Contains("\\n")
+        // Source: "templates/outline.template":16:19
         object? applyContains() => Unsupported(
             "Call Contains",
             "templates/outline.template:16:19",
@@ -257,43 +423,64 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
             """);
     }
 
-    // templates/outline.template:9:23
+    // Template:
+    // [({pets.Count()}):  
+    //          {.} Domesticated ({pets.#Domesticated().Count()}): 
+    //             {.} {pets.#Domesticated():[{#formatPet}]}  
+    //          {.} Non-domesticated ({pets.#NonDomesticated().Count()}): 
+    //             {.} {pets.#NonDomesticated():[{#formatPet}]}    
+    //    ]
+    // Source: "templates/outline.template":9:23
     private object? renderCount()
     {
-        // templates/outline.template:9:26
+        // Template:
+        // pets.Count()
+        // Source: "templates/outline.template":9:26
         object? applyCount() => Unsupported(
             "Call Count",
             "templates/outline.template:9:26",
             () => Get("pets"));
 
-        // templates/outline.template:10:1
+        // Template:
+        //          {.}
+        // Source: "templates/outline.template":10:1
         object? bullet() => Unsupported(
             "Bullet          {.}",
             "templates/outline.template:10:1");
 
-        // templates/outline.template:10:29
+        // Template:
+        // pets.#Domesticated().Count()
+        // Source: "templates/outline.template":10:29
         object? applyCount_2() => Unsupported(
             "Call Count",
             "templates/outline.template:10:29",
             () => CallNamed("Domesticated", Get("pets")));
 
-        // templates/outline.template:11:1
+        // Template:
+        //             {.}
+        // Source: "templates/outline.template":11:1
         object? bullet_2() => Unsupported(
             "Bullet             {.}",
             "templates/outline.template:11:1");
 
-        // templates/outline.template:12:1
+        // Template:
+        //          {.}
+        // Source: "templates/outline.template":12:1
         object? bullet_3() => Unsupported(
             "Bullet          {.}",
             "templates/outline.template:12:1");
 
-        // templates/outline.template:12:33
+        // Template:
+        // pets.#NonDomesticated().Count()
+        // Source: "templates/outline.template":12:33
         object? applyCount_3() => Unsupported(
             "Call Count",
             "templates/outline.template:12:33",
             () => CallNamed("NonDomesticated", Get("pets")));
 
-        // templates/outline.template:13:1
+        // Template:
+        //             {.}
+        // Source: "templates/outline.template":13:1
         object? bullet_4() => Unsupported(
             "Bullet             {.}",
             "templates/outline.template:13:1");
@@ -317,7 +504,9 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
             """);
     }
 
-    // templates/outline.template:13:42
+    // Template:
+    // [{#formatPet}]
+    // Source: "templates/outline.template":13:42
     private object? renderFormatPet_2()
     {
         var formatPet = Named("formatPet");
@@ -325,7 +514,9 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         return Line($"{formatPet}");
     }
 
-    // templates/outline.template:11:39
+    // Template:
+    // [{#formatPet}]
+    // Source: "templates/outline.template":11:39
     private object? renderFormatPet()
     {
         var formatPet = Named("formatPet");
@@ -333,7 +524,13 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         return Line($"{formatPet}");
     }
 
-    // templates/outline.template:2:9
+    // Template:
+    // [{ 
+    //       lastName}{ 
+    //       firstName.#Prepend(', ')}{    
+    //       middleName.#Prepend(' ')
+    //    }]
+    // Source: "templates/outline.template":2:9
     private object? renderLastName()
     {
         var lastName = Get("lastName");

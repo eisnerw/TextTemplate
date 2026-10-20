@@ -9,7 +9,199 @@ using System.Text.RegularExpressions;
 
 internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
 {
-    // templates/startup.template:1:1
+    // Template:
+    //                              The TextTemplate Language
+    //
+    // {#overview}
+    //
+    // Subtemplates:
+    // {#overview:[`
+    // {.} Introduction
+    //
+    // {#intro}
+    //
+    //    {
+    //       '{"first":"Hello", "second":"World"}':
+    //       [Interpolation example: {first} {second}!!]
+    //    }
+    //
+    // {#goals}
+    //
+    // Notice that if you expand the folded lines in the TextTemplate Editor in the left pane, `
+    // you'll see text that is similar to this output.  That is because `
+    // this documentation is actually a "live" rendering of the texttemplate language input `
+    // in the editor.  If you change the text in the editor, `
+    // the documentation will change.  The editor can be a playground for `
+    // trying out examples of the language and developing templates.  Look through the
+    // TextTemplate source for the following paragraphs in the editor to see the language `
+    // in action
+    //
+    // While the TextTemplate language is similar to other string interpolation notations, it `
+    // has a number of unique features including:
+    //
+    //    {.} Automatic composition of multi-valued data into {
+    //    // this is the data
+    //    '{"pets":[ 
+    //       {"type":"cat"}
+    //       ,{"type":"dog"}
+    //       ,{"type":"tiger"}
+    //    ]}':
+    //    // this is the template
+    //    ["anded" phrases (e.g., "{pets:[{type}s].Join(', ',' and ')}") or bulleted `
+    //     lists
+    //     {pets:[
+    //        {.} {type}s]}].@BulletStyle('-')} 
+    //
+    //    {.} Control over the detection of {'{"test":"value"}':
+    //     [{test->[available]} values and replacement of `
+    //     {unavailable}].@MissingValue('missing')} values
+    //
+    //    {.} A rich set of methods that can perform string`
+    //       {'replacing'.Replace('ing','ement')}, `
+    //       {' trimming '.Trim()}, extract {' substringy'.Substr(1,9)}s, do `
+    //       {'padding'.Align(9,'C','-')}, `
+    //        change the {'case'.ToUpper()} of data, `
+    //       {'true'.Matches('yes','1',/True/i)=>[test],[fail]} data for  `
+    //       multiple criteria including matching regular expressions, `
+    //       count and compare {'{"element1":"multiple","element2":"values"}':
+    //          [{element1.LessThan([{element2}])->[{element1} {element2}]}]} and `
+    //          "@" (annotation) methods that can control template behavior
+    //
+    //    {.} Modularity through the use of {#subexample}
+    //       
+    //    {.} Data manipulation methods that allow data to be selected, ordered and `
+    //       grouped like the following example that selects and `
+    //       groups the birthdays of a few individuals `
+    //       from 1500 records of external data based on birth day and astrological sign:
+    //          {#externalData.Where(dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D')
+    //             .GroupBy(sign, 'group'):[{sign} 
+    //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
+    //                .@DateFormat('M/D/YYYY')
+    //                .@DateTest(/^d/i)}
+    //
+    //    {.} Date recognition and formatting methods that can use a single `
+    //      date, e.g., `
+    //        {#externalData.Where(dob.Substr(0,7) = '1967-10'):["{dob}", to `
+    //        show that {fname} {lname} was born in `
+    //        the month of {dob.ToDate('MMMM')} in `
+    //         {dob.ToDate('YYYY')} on {dob.ToDate('dddd')} the `
+    //         {dob.ToDate('do')}]}
+    //
+    //    {.} Data encoding that can be used to insure that data being templated `
+    //        for output as html, xml or uri's can be properly escaped, e.g., `
+    //        "{'{"data":"Joan\'s <data>"}':[{data}].@EncodeDataFor('html')
+    //           .EncodeFor('html')}"
+    //
+    //    {.} The ability to check for "falsiness", where, for example, the string "0" `
+    //        can be interpreted as false to show that`
+    //        {#externalData.Where(dob.Substr(5,5) = '01-25'): 
+    //        [{#deadoralive.@Falsy(/^0$/)}].Join(', ',' and ')}
+    //
+    //    {.} and, finally, as can be seen from this document, automatically `
+    //       bulleted and numbered outlining
+    //
+    // {.} Acknowledgements
+    //
+    // This project is based on a number of powerful opens-source technologies, without `
+    // which it would not have been possible.  These include:
+    //
+    //      {.} {'Microsoft\'s Monaco Editor'
+    //           .#Click('github.com/microsoft/monaco-editor')} the powerful `
+    //           open source Visual Studio that supports syntax colorizing, error `
+    //           reporting, folding, and so many more features
+    //      {.} {'ANTLR (ANother Tool for Language Recognition)'
+    //          .#Click('www.antlr.org/','click to go to the ANTLR website')} `
+    //           the open source lexer and parser technology that provides `
+    //           the foundation for processing the TextTemplate language
+    //      {.} {'The "calc-monaco-editor" project'
+    //          .#Click('github.com/Strumenta/calc-monaco-editor')} `
+    //           Federico Tomassetti's merging of ANTLR4 with Monaco that `
+    //           is described in this {'article'.#Click(
+    //                'tomassetti.me/writing-a-browser-based-editor-using-monaco-and-antlr/'
+    //                ,'Click to go to the article')}
+    //      {.} {'Moment.js'
+    //           .#Click('momentjs.com','Click to go to the website')} an open-source `
+    //           library for date formatting
+    //      
+    // {.} Documentation
+    //
+    // The TextTemplate language is documented using `
+    //      a "live" template-based web page  `
+    //      {'here'.#Click('/load/docs','Click to see the documentation using TextTemplate')}`
+    //      or if you prefer, you can view an HTML version rendered on the server `
+    //      {'here'.#Click('/runonserver/docs','Click to see the documentation rendered on the server')}.  Note  `
+    //      that any of the demo templates can be rendered on the server using the path `
+    //      '/runonserver/{'['}template name{']'}' as in `
+    //      {'/runonserver/events'.#Click('/runonserver/events','Click to see the events template')}.
+    //
+    // {#examples}
+    //
+    // {#notes}
+    //
+    //
+    // ].@BulletStyle('I.','(a)','•','1.').@BulletMode('explicit')}
+    // {#intro:[Welcome to the TextTemplate documentation and editor.  TextTemplate is a `
+    // declarative domain-specific language `
+    // for specifying string-interpolated templates.  It supports concise expressions `
+    // that can specify formatting, data manipulation, logic and layout in order to `
+    // facilitate the design and maintenance of code that transforms data into text.
+    //
+    // TextTemplate templates merge strings (templates) with data, typically JSON, to compose `
+    // interpolated and formatted output strings.  For `
+    // example, with data such as {'{"first":"Hello", "second":"World!!}'} and a `
+    // template like {'[Interpolation example: {first} {second}!!]'}, the language will `
+    // produce:]}
+    // {#goals:[The goals of the project (not necessarily achieved with version 1) are to create a language  `
+    // that is:
+    //
+    // 	{.} Concise, through the use of language constructs and default processing that `
+    // 		eliminate unnecessary verbiage
+    // 	{.} Readable, through the use of familiar syntax, properly-named methods, and `
+    // 		flexible comments and whitespace
+    // 	{.} Intuitive, through a highly generalized implementation such that once the `
+    // 		basic concepts of the language ` 
+    // 		are grasped for simple operations, performing more advanced operations `
+    // 		should not require unique or specialized knowledge
+    // 	{.} Consistent, through an implementation that avoids, wherever possible, special `
+    // 		cases and restrictions
+    // 	{.} Rich, through the anticipation and implementation of a wide range of methods and `
+    // 		operators that perform typical as well as `
+    // 	    extraordinary manipulations
+    // 	{.} Documented, through content that includes adequate examples to demonstrate the concepts
+    // 	{.} Universal, through multiple implementations in a variety of computer languages, `
+    // 	    starting with JavaScript/Typescript, followed by Java, C# and others]}
+    // {#subexample:[subtemplates that can replace repeated expressions, `
+    //       be shared, be used as functions, replace conditional expressions as `
+    //       well as method arguments]}
+    // {#deadoralive:[{fname} {lname} is {isAlive=>[alive],[dead]}]}
+    // {#Click:[<a title='{$2=>[{$2}],[Click to see the Github project]}' `
+    //    style="font-style:italic;text-decoration: underline;cursor: pointer" `
+    //    href="{!$1.StartsWith('/')->[https:{'//'}]}{$1}">{$0}</a>]}
+    // {#examples:[`
+    // {.} Examples
+    //
+    // The following examples illustrate various aspects of the TextTemplate language:
+    //
+    //    {.} {'A simple template'.#Click('/load/simple','Simple template')}
+    //    {.} {'A demonstration of outlining'.#Click('/load/outline','Outline template')}
+    //    {.} {'A demonstration of bullets'.#Click('/load/bullets','Bullets template')}
+    //    {.} {'Use of Assert() for validating template output'.#Click('/load/tests','Tests template')}
+    //    {.} {'Some interesting ways of using TextTemplate with the web'.#Click('/load/web','Web template')}
+    //    {.} {'Date manipulation for a "To Do" list'.#Click('/load/events','Events template')}
+    //    {.} {'A demonstration of grouping and order'.#Click('/load/birthdays','Birthdays template')}
+    //    {.} {'Experimental application of a computed url to call ElasticSearch'.#Click('/load/elastic','Calling elastic')}
+    // ]}
+    // {#notes:[Note: This software is copyrighted and `
+    // {'licensed'.#Click(
+    // 'https://github.com/eisnerw/texttemplate-editor/blob/texttemplate-editor/LICENSE.txt', 
+    // 'Click to see the license')} under the MIT license.  The `
+    // software is beta and therefore subject to change.  In `
+    // its current state, it is primarily useful for refining the language, `
+    // building a reference implementation, and receiving feedback.  As `
+    // noted above, implementations in other languages are anticipated.  The `
+    // author welcomes comments, criticisms and suggestions.  ]}
+    // {#externalData:[{'/data/famousBirthdays'}]}
+    // Source: "templates/startup.template":1:1
     internal object? Render()
     {
         return WithDefinitions(
@@ -28,13 +220,25 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             child => new Startup(child).renderStartup());
     }
 
-    // templates/startup.template:191:16
+    // Template:
+    // [{'/data/famousBirthdays'}]
+    // Source: "templates/startup.template":191:16
     private object? externalData()
     {
         return Line($"/data/famousBirthdays");
     }
 
-    // templates/startup.template:182:9
+    // Template:
+    // [Note: This software is copyrighted and `
+    // {'licensed'.#Click(
+    // 'https://github.com/eisnerw/texttemplate-editor/blob/texttemplate-editor/LICENSE.txt', 
+    // 'Click to see the license')} under the MIT license.  The `
+    // software is beta and therefore subject to change.  In `
+    // its current state, it is primarily useful for refining the language, `
+    // building a reference implementation, and receiving feedback.  As `
+    // noted above, implementations in other languages are anticipated.  The `
+    // author welcomes comments, criticisms and suggestions.  ]
+    // Source: "templates/startup.template":182:9
     private object? notes()
     {
         var click = CallNamed("Click", "licensed", "https://github.com/eisnerw/texttemplate-editor/blob/texttemplate-editor/LICENSE.txt", "Click to see the license");
@@ -42,50 +246,83 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         return Line($"Note: This software is copyrighted and {click} under the MIT license.  The software is beta and therefore subject to change.  In its current state, it is primarily useful for refining the language, building a reference implementation, and receiving feedback.  As noted above, implementations in other languages are anticipated.  The author welcomes comments, criticisms and suggestions.  ");
     }
 
-    // templates/startup.template:168:12
+    // Template:
+    // [`
+    // {.} Examples
+    //
+    // The following examples illustrate various aspects of the TextTemplate language:
+    //
+    //    {.} {'A simple template'.#Click('/load/simple','Simple template')}
+    //    {.} {'A demonstration of outlining'.#Click('/load/outline','Outline template')}
+    //    {.} {'A demonstration of bullets'.#Click('/load/bullets','Bullets template')}
+    //    {.} {'Use of Assert() for validating template output'.#Click('/load/tests','Tests template')}
+    //    {.} {'Some interesting ways of using TextTemplate with the web'.#Click('/load/web','Web template')}
+    //    {.} {'Date manipulation for a "To Do" list'.#Click('/load/events','Events template')}
+    //    {.} {'A demonstration of grouping and order'.#Click('/load/birthdays','Birthdays template')}
+    //    {.} {'Experimental application of a computed url to call ElasticSearch'.#Click('/load/elastic','Calling elastic')}
+    // ]
+    // Source: "templates/startup.template":168:12
     private object? examples()
     {
-        // templates/startup.template:169:1
+        // Template:
+        // {.}
+        // Source: "templates/startup.template":169:1
         object? bullet() => Unsupported(
             "Bullet {.}",
             "templates/startup.template:169:1");
 
-        // templates/startup.template:173:1
+        // Template:
+        //    {.}
+        // Source: "templates/startup.template":173:1
         object? bullet_2() => Unsupported(
             "Bullet    {.}",
             "templates/startup.template:173:1");
 
-        // templates/startup.template:174:1
+        // Template:
+        //    {.}
+        // Source: "templates/startup.template":174:1
         object? bullet_3() => Unsupported(
             "Bullet    {.}",
             "templates/startup.template:174:1");
 
-        // templates/startup.template:175:1
+        // Template:
+        //    {.}
+        // Source: "templates/startup.template":175:1
         object? bullet_4() => Unsupported(
             "Bullet    {.}",
             "templates/startup.template:175:1");
 
-        // templates/startup.template:176:1
+        // Template:
+        //    {.}
+        // Source: "templates/startup.template":176:1
         object? bullet_5() => Unsupported(
             "Bullet    {.}",
             "templates/startup.template:176:1");
 
-        // templates/startup.template:177:1
+        // Template:
+        //    {.}
+        // Source: "templates/startup.template":177:1
         object? bullet_6() => Unsupported(
             "Bullet    {.}",
             "templates/startup.template:177:1");
 
-        // templates/startup.template:178:1
+        // Template:
+        //    {.}
+        // Source: "templates/startup.template":178:1
         object? bullet_7() => Unsupported(
             "Bullet    {.}",
             "templates/startup.template:178:1");
 
-        // templates/startup.template:179:1
+        // Template:
+        //    {.}
+        // Source: "templates/startup.template":179:1
         object? bullet_8() => Unsupported(
             "Bullet    {.}",
             "templates/startup.template:179:1");
 
-        // templates/startup.template:180:1
+        // Template:
+        //    {.}
+        // Source: "templates/startup.template":180:1
         object? bullet_9() => Unsupported(
             "Bullet    {.}",
             "templates/startup.template:180:1");
@@ -124,10 +361,16 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             """);
     }
 
-    // templates/startup.template:165:9
+    // Template:
+    // [<a title='{$2=>[{$2}],[Click to see the Github project]}' `
+    //    style="font-style:italic;text-decoration: underline;cursor: pointer" `
+    //    href="{!$1.StartsWith('/')->[https:{'//'}]}{$1}">{$0}</a>]
+    // Source: "templates/startup.template":165:9
     private object? Click()
     {
-        // templates/startup.template:167:12
+        // Template:
+        // $1.StartsWith('/')
+        // Source: "templates/startup.template":167:12
         object? applyStartsWith() => Unsupported(
             "Call StartsWith",
             "templates/startup.template:167:12",
@@ -142,7 +385,9 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         return Line($"<a title='{choice}' style=\"font-style:italic;text-decoration: underline;cursor: pointer\" href=\"{choice_2}{item1}\">{item0}</a>");
     }
 
-    // templates/startup.template:165:25
+    // Template:
+    // [{$2}]
+    // Source: "templates/startup.template":165:25
     private object? renderItem2()
     {
         var item2 = Get("$2");
@@ -150,7 +395,9 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         return Line($"{item2}");
     }
 
-    // templates/startup.template:164:15
+    // Template:
+    // [{fname} {lname} is {isAlive=>[alive],[dead]}]
+    // Source: "templates/startup.template":164:15
     private object? deadoralive()
     {
         var fname = Get("fname");
@@ -160,46 +407,84 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         return Line($"{fname} {lname} is {choice}");
     }
 
-    // templates/startup.template:161:14
+    // Template:
+    // [subtemplates that can replace repeated expressions, `
+    //       be shared, be used as functions, replace conditional expressions as `
+    //       well as method arguments]
+    // Source: "templates/startup.template":161:14
     private object? subexample()
     {
         return Line($"subtemplates that can replace repeated expressions, be shared, be used as functions, replace conditional expressions as well as method arguments");
     }
 
-    // templates/startup.template:142:9
+    // Template:
+    // [The goals of the project (not necessarily achieved with version 1) are to create a language  `
+    // that is:
+    //
+    // 	{.} Concise, through the use of language constructs and default processing that `
+    // 		eliminate unnecessary verbiage
+    // 	{.} Readable, through the use of familiar syntax, properly-named methods, and `
+    // 		flexible comments and whitespace
+    // 	{.} Intuitive, through a highly generalized implementation such that once the `
+    // 		basic concepts of the language ` 
+    // 		are grasped for simple operations, performing more advanced operations `
+    // 		should not require unique or specialized knowledge
+    // 	{.} Consistent, through an implementation that avoids, wherever possible, special `
+    // 		cases and restrictions
+    // 	{.} Rich, through the anticipation and implementation of a wide range of methods and `
+    // 		operators that perform typical as well as `
+    // 	    extraordinary manipulations
+    // 	{.} Documented, through content that includes adequate examples to demonstrate the concepts
+    // 	{.} Universal, through multiple implementations in a variety of computer languages, `
+    // 	    starting with JavaScript/Typescript, followed by Java, C# and others]
+    // Source: "templates/startup.template":142:9
     private object? goals()
     {
-        // templates/startup.template:145:1
+        // Template:
+        // 	{.}
+        // Source: "templates/startup.template":145:1
         object? bullet() => Unsupported(
             "Bullet     {.}",
             "templates/startup.template:145:1");
 
-        // templates/startup.template:147:1
+        // Template:
+        // 	{.}
+        // Source: "templates/startup.template":147:1
         object? bullet_2() => Unsupported(
             "Bullet     {.}",
             "templates/startup.template:147:1");
 
-        // templates/startup.template:149:1
+        // Template:
+        // 	{.}
+        // Source: "templates/startup.template":149:1
         object? bullet_3() => Unsupported(
             "Bullet     {.}",
             "templates/startup.template:149:1");
 
-        // templates/startup.template:153:1
+        // Template:
+        // 	{.}
+        // Source: "templates/startup.template":153:1
         object? bullet_4() => Unsupported(
             "Bullet     {.}",
             "templates/startup.template:153:1");
 
-        // templates/startup.template:155:1
+        // Template:
+        // 	{.}
+        // Source: "templates/startup.template":155:1
         object? bullet_5() => Unsupported(
             "Bullet     {.}",
             "templates/startup.template:155:1");
 
-        // templates/startup.template:158:1
+        // Template:
+        // 	{.}
+        // Source: "templates/startup.template":158:1
         object? bullet_6() => Unsupported(
             "Bullet     {.}",
             "templates/startup.template:158:1");
 
-        // templates/startup.template:159:1
+        // Template:
+        // 	{.}
+        // Source: "templates/startup.template":159:1
         object? bullet_7() => Unsupported(
             "Bullet     {.}",
             "templates/startup.template:159:1");
@@ -225,7 +510,19 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             """);
     }
 
-    // templates/startup.template:131:9
+    // Template:
+    // [Welcome to the TextTemplate documentation and editor.  TextTemplate is a `
+    // declarative domain-specific language `
+    // for specifying string-interpolated templates.  It supports concise expressions `
+    // that can specify formatting, data manipulation, logic and layout in order to `
+    // facilitate the design and maintenance of code that transforms data into text.
+    //
+    // TextTemplate templates merge strings (templates) with data, typically JSON, to compose `
+    // interpolated and formatted output strings.  For `
+    // example, with data such as {'{"first":"Hello", "second":"World!!}'} and a `
+    // template like {'[Interpolation example: {first} {second}!!]'}, the language will `
+    // produce:]
+    // Source: "templates/startup.template":131:9
     private object? intro()
     {
         return Line($$"""
@@ -235,17 +532,395 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             """);
     }
 
-    // templates/startup.template:6:12
+    // Template:
+    // [`
+    // {.} Introduction
+    //
+    // {#intro}
+    //
+    //    {
+    //       '{"first":"Hello", "second":"World"}':
+    //       [Interpolation example: {first} {second}!!]
+    //    }
+    //
+    // {#goals}
+    //
+    // Notice that if you expand the folded lines in the TextTemplate Editor in the left pane, `
+    // you'll see text that is similar to this output.  That is because `
+    // this documentation is actually a "live" rendering of the texttemplate language input `
+    // in the editor.  If you change the text in the editor, `
+    // the documentation will change.  The editor can be a playground for `
+    // trying out examples of the language and developing templates.  Look through the
+    // TextTemplate source for the following paragraphs in the editor to see the language `
+    // in action
+    //
+    // While the TextTemplate language is similar to other string interpolation notations, it `
+    // has a number of unique features including:
+    //
+    //    {.} Automatic composition of multi-valued data into {
+    //    // this is the data
+    //    '{"pets":[ 
+    //       {"type":"cat"}
+    //       ,{"type":"dog"}
+    //       ,{"type":"tiger"}
+    //    ]}':
+    //    // this is the template
+    //    ["anded" phrases (e.g., "{pets:[{type}s].Join(', ',' and ')}") or bulleted `
+    //     lists
+    //     {pets:[
+    //        {.} {type}s]}].@BulletStyle('-')} 
+    //
+    //    {.} Control over the detection of {'{"test":"value"}':
+    //     [{test->[available]} values and replacement of `
+    //     {unavailable}].@MissingValue('missing')} values
+    //
+    //    {.} A rich set of methods that can perform string`
+    //       {'replacing'.Replace('ing','ement')}, `
+    //       {' trimming '.Trim()}, extract {' substringy'.Substr(1,9)}s, do `
+    //       {'padding'.Align(9,'C','-')}, `
+    //        change the {'case'.ToUpper()} of data, `
+    //       {'true'.Matches('yes','1',/True/i)=>[test],[fail]} data for  `
+    //       multiple criteria including matching regular expressions, `
+    //       count and compare {'{"element1":"multiple","element2":"values"}':
+    //          [{element1.LessThan([{element2}])->[{element1} {element2}]}]} and `
+    //          "@" (annotation) methods that can control template behavior
+    //
+    //    {.} Modularity through the use of {#subexample}
+    //       
+    //    {.} Data manipulation methods that allow data to be selected, ordered and `
+    //       grouped like the following example that selects and `
+    //       groups the birthdays of a few individuals `
+    //       from 1500 records of external data based on birth day and astrological sign:
+    //          {#externalData.Where(dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D')
+    //             .GroupBy(sign, 'group'):[{sign} 
+    //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
+    //                .@DateFormat('M/D/YYYY')
+    //                .@DateTest(/^d/i)}
+    //
+    //    {.} Date recognition and formatting methods that can use a single `
+    //      date, e.g., `
+    //        {#externalData.Where(dob.Substr(0,7) = '1967-10'):["{dob}", to `
+    //        show that {fname} {lname} was born in `
+    //        the month of {dob.ToDate('MMMM')} in `
+    //         {dob.ToDate('YYYY')} on {dob.ToDate('dddd')} the `
+    //         {dob.ToDate('do')}]}
+    //
+    //    {.} Data encoding that can be used to insure that data being templated `
+    //        for output as html, xml or uri's can be properly escaped, e.g., `
+    //        "{'{"data":"Joan\'s <data>"}':[{data}].@EncodeDataFor('html')
+    //           .EncodeFor('html')}"
+    //
+    //    {.} The ability to check for "falsiness", where, for example, the string "0" `
+    //        can be interpreted as false to show that`
+    //        {#externalData.Where(dob.Substr(5,5) = '01-25'): 
+    //        [{#deadoralive.@Falsy(/^0$/)}].Join(', ',' and ')}
+    //
+    //    {.} and, finally, as can be seen from this document, automatically `
+    //       bulleted and numbered outlining
+    //
+    // {.} Acknowledgements
+    //
+    // This project is based on a number of powerful opens-source technologies, without `
+    // which it would not have been possible.  These include:
+    //
+    //      {.} {'Microsoft\'s Monaco Editor'
+    //           .#Click('github.com/microsoft/monaco-editor')} the powerful `
+    //           open source Visual Studio that supports syntax colorizing, error `
+    //           reporting, folding, and so many more features
+    //      {.} {'ANTLR (ANother Tool for Language Recognition)'
+    //          .#Click('www.antlr.org/','click to go to the ANTLR website')} `
+    //           the open source lexer and parser technology that provides `
+    //           the foundation for processing the TextTemplate language
+    //      {.} {'The "calc-monaco-editor" project'
+    //          .#Click('github.com/Strumenta/calc-monaco-editor')} `
+    //           Federico Tomassetti's merging of ANTLR4 with Monaco that `
+    //           is described in this {'article'.#Click(
+    //                'tomassetti.me/writing-a-browser-based-editor-using-monaco-and-antlr/'
+    //                ,'Click to go to the article')}
+    //      {.} {'Moment.js'
+    //           .#Click('momentjs.com','Click to go to the website')} an open-source `
+    //           library for date formatting
+    //      
+    // {.} Documentation
+    //
+    // The TextTemplate language is documented using `
+    //      a "live" template-based web page  `
+    //      {'here'.#Click('/load/docs','Click to see the documentation using TextTemplate')}`
+    //      or if you prefer, you can view an HTML version rendered on the server `
+    //      {'here'.#Click('/runonserver/docs','Click to see the documentation rendered on the server')}.  Note  `
+    //      that any of the demo templates can be rendered on the server using the path `
+    //      '/runonserver/{'['}template name{']'}' as in `
+    //      {'/runonserver/events'.#Click('/runonserver/events','Click to see the events template')}.
+    //
+    // {#examples}
+    //
+    // {#notes}
+    //
+    //
+    // ].@BulletStyle('I.','(a)','•','1.').@BulletMode('explicit')
+    // Source: "templates/startup.template":6:12
     private object? overview()
     {
-        // templates/startup.template:6:12
+        // Template:
+        // [`
+        // {.} Introduction
+        //
+        // {#intro}
+        //
+        //    {
+        //       '{"first":"Hello", "second":"World"}':
+        //       [Interpolation example: {first} {second}!!]
+        //    }
+        //
+        // {#goals}
+        //
+        // Notice that if you expand the folded lines in the TextTemplate Editor in the left pane, `
+        // you'll see text that is similar to this output.  That is because `
+        // this documentation is actually a "live" rendering of the texttemplate language input `
+        // in the editor.  If you change the text in the editor, `
+        // the documentation will change.  The editor can be a playground for `
+        // trying out examples of the language and developing templates.  Look through the
+        // TextTemplate source for the following paragraphs in the editor to see the language `
+        // in action
+        //
+        // While the TextTemplate language is similar to other string interpolation notations, it `
+        // has a number of unique features including:
+        //
+        //    {.} Automatic composition of multi-valued data into {
+        //    // this is the data
+        //    '{"pets":[ 
+        //       {"type":"cat"}
+        //       ,{"type":"dog"}
+        //       ,{"type":"tiger"}
+        //    ]}':
+        //    // this is the template
+        //    ["anded" phrases (e.g., "{pets:[{type}s].Join(', ',' and ')}") or bulleted `
+        //     lists
+        //     {pets:[
+        //        {.} {type}s]}].@BulletStyle('-')} 
+        //
+        //    {.} Control over the detection of {'{"test":"value"}':
+        //     [{test->[available]} values and replacement of `
+        //     {unavailable}].@MissingValue('missing')} values
+        //
+        //    {.} A rich set of methods that can perform string`
+        //       {'replacing'.Replace('ing','ement')}, `
+        //       {' trimming '.Trim()}, extract {' substringy'.Substr(1,9)}s, do `
+        //       {'padding'.Align(9,'C','-')}, `
+        //        change the {'case'.ToUpper()} of data, `
+        //       {'true'.Matches('yes','1',/True/i)=>[test],[fail]} data for  `
+        //       multiple criteria including matching regular expressions, `
+        //       count and compare {'{"element1":"multiple","element2":"values"}':
+        //          [{element1.LessThan([{element2}])->[{element1} {element2}]}]} and `
+        //          "@" (annotation) methods that can control template behavior
+        //
+        //    {.} Modularity through the use of {#subexample}
+        //       
+        //    {.} Data manipulation methods that allow data to be selected, ordered and `
+        //       grouped like the following example that selects and `
+        //       groups the birthdays of a few individuals `
+        //       from 1500 records of external data based on birth day and astrological sign:
+        //          {#externalData.Where(dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D')
+        //             .GroupBy(sign, 'group'):[{sign} 
+        //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
+        //                .@DateFormat('M/D/YYYY')
+        //                .@DateTest(/^d/i)}
+        //
+        //    {.} Date recognition and formatting methods that can use a single `
+        //      date, e.g., `
+        //        {#externalData.Where(dob.Substr(0,7) = '1967-10'):["{dob}", to `
+        //        show that {fname} {lname} was born in `
+        //        the month of {dob.ToDate('MMMM')} in `
+        //         {dob.ToDate('YYYY')} on {dob.ToDate('dddd')} the `
+        //         {dob.ToDate('do')}]}
+        //
+        //    {.} Data encoding that can be used to insure that data being templated `
+        //        for output as html, xml or uri's can be properly escaped, e.g., `
+        //        "{'{"data":"Joan\'s <data>"}':[{data}].@EncodeDataFor('html')
+        //           .EncodeFor('html')}"
+        //
+        //    {.} The ability to check for "falsiness", where, for example, the string "0" `
+        //        can be interpreted as false to show that`
+        //        {#externalData.Where(dob.Substr(5,5) = '01-25'): 
+        //        [{#deadoralive.@Falsy(/^0$/)}].Join(', ',' and ')}
+        //
+        //    {.} and, finally, as can be seen from this document, automatically `
+        //       bulleted and numbered outlining
+        //
+        // {.} Acknowledgements
+        //
+        // This project is based on a number of powerful opens-source technologies, without `
+        // which it would not have been possible.  These include:
+        //
+        //      {.} {'Microsoft\'s Monaco Editor'
+        //           .#Click('github.com/microsoft/monaco-editor')} the powerful `
+        //           open source Visual Studio that supports syntax colorizing, error `
+        //           reporting, folding, and so many more features
+        //      {.} {'ANTLR (ANother Tool for Language Recognition)'
+        //          .#Click('www.antlr.org/','click to go to the ANTLR website')} `
+        //           the open source lexer and parser technology that provides `
+        //           the foundation for processing the TextTemplate language
+        //      {.} {'The "calc-monaco-editor" project'
+        //          .#Click('github.com/Strumenta/calc-monaco-editor')} `
+        //           Federico Tomassetti's merging of ANTLR4 with Monaco that `
+        //           is described in this {'article'.#Click(
+        //                'tomassetti.me/writing-a-browser-based-editor-using-monaco-and-antlr/'
+        //                ,'Click to go to the article')}
+        //      {.} {'Moment.js'
+        //           .#Click('momentjs.com','Click to go to the website')} an open-source `
+        //           library for date formatting
+        //      
+        // {.} Documentation
+        //
+        // The TextTemplate language is documented using `
+        //      a "live" template-based web page  `
+        //      {'here'.#Click('/load/docs','Click to see the documentation using TextTemplate')}`
+        //      or if you prefer, you can view an HTML version rendered on the server `
+        //      {'here'.#Click('/runonserver/docs','Click to see the documentation rendered on the server')}.  Note  `
+        //      that any of the demo templates can be rendered on the server using the path `
+        //      '/runonserver/{'['}template name{']'}' as in `
+        //      {'/runonserver/events'.#Click('/runonserver/events','Click to see the events template')}.
+        //
+        // {#examples}
+        //
+        // {#notes}
+        //
+        //
+        // ].@BulletStyle('I.','(a)','•','1.')
+        // Source: "templates/startup.template":6:12
         object? applyBulletStyle() => Unsupported(
             "Call @BulletStyle",
             "templates/startup.template:6:12",
             () => this.renderIntro(),
             () => new object?[] { "I.", "(a)", "•", "1." });
 
-        // templates/startup.template:6:12
+        // Template:
+        // [`
+        // {.} Introduction
+        //
+        // {#intro}
+        //
+        //    {
+        //       '{"first":"Hello", "second":"World"}':
+        //       [Interpolation example: {first} {second}!!]
+        //    }
+        //
+        // {#goals}
+        //
+        // Notice that if you expand the folded lines in the TextTemplate Editor in the left pane, `
+        // you'll see text that is similar to this output.  That is because `
+        // this documentation is actually a "live" rendering of the texttemplate language input `
+        // in the editor.  If you change the text in the editor, `
+        // the documentation will change.  The editor can be a playground for `
+        // trying out examples of the language and developing templates.  Look through the
+        // TextTemplate source for the following paragraphs in the editor to see the language `
+        // in action
+        //
+        // While the TextTemplate language is similar to other string interpolation notations, it `
+        // has a number of unique features including:
+        //
+        //    {.} Automatic composition of multi-valued data into {
+        //    // this is the data
+        //    '{"pets":[ 
+        //       {"type":"cat"}
+        //       ,{"type":"dog"}
+        //       ,{"type":"tiger"}
+        //    ]}':
+        //    // this is the template
+        //    ["anded" phrases (e.g., "{pets:[{type}s].Join(', ',' and ')}") or bulleted `
+        //     lists
+        //     {pets:[
+        //        {.} {type}s]}].@BulletStyle('-')} 
+        //
+        //    {.} Control over the detection of {'{"test":"value"}':
+        //     [{test->[available]} values and replacement of `
+        //     {unavailable}].@MissingValue('missing')} values
+        //
+        //    {.} A rich set of methods that can perform string`
+        //       {'replacing'.Replace('ing','ement')}, `
+        //       {' trimming '.Trim()}, extract {' substringy'.Substr(1,9)}s, do `
+        //       {'padding'.Align(9,'C','-')}, `
+        //        change the {'case'.ToUpper()} of data, `
+        //       {'true'.Matches('yes','1',/True/i)=>[test],[fail]} data for  `
+        //       multiple criteria including matching regular expressions, `
+        //       count and compare {'{"element1":"multiple","element2":"values"}':
+        //          [{element1.LessThan([{element2}])->[{element1} {element2}]}]} and `
+        //          "@" (annotation) methods that can control template behavior
+        //
+        //    {.} Modularity through the use of {#subexample}
+        //       
+        //    {.} Data manipulation methods that allow data to be selected, ordered and `
+        //       grouped like the following example that selects and `
+        //       groups the birthdays of a few individuals `
+        //       from 1500 records of external data based on birth day and astrological sign:
+        //          {#externalData.Where(dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D')
+        //             .GroupBy(sign, 'group'):[{sign} 
+        //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
+        //                .@DateFormat('M/D/YYYY')
+        //                .@DateTest(/^d/i)}
+        //
+        //    {.} Date recognition and formatting methods that can use a single `
+        //      date, e.g., `
+        //        {#externalData.Where(dob.Substr(0,7) = '1967-10'):["{dob}", to `
+        //        show that {fname} {lname} was born in `
+        //        the month of {dob.ToDate('MMMM')} in `
+        //         {dob.ToDate('YYYY')} on {dob.ToDate('dddd')} the `
+        //         {dob.ToDate('do')}]}
+        //
+        //    {.} Data encoding that can be used to insure that data being templated `
+        //        for output as html, xml or uri's can be properly escaped, e.g., `
+        //        "{'{"data":"Joan\'s <data>"}':[{data}].@EncodeDataFor('html')
+        //           .EncodeFor('html')}"
+        //
+        //    {.} The ability to check for "falsiness", where, for example, the string "0" `
+        //        can be interpreted as false to show that`
+        //        {#externalData.Where(dob.Substr(5,5) = '01-25'): 
+        //        [{#deadoralive.@Falsy(/^0$/)}].Join(', ',' and ')}
+        //
+        //    {.} and, finally, as can be seen from this document, automatically `
+        //       bulleted and numbered outlining
+        //
+        // {.} Acknowledgements
+        //
+        // This project is based on a number of powerful opens-source technologies, without `
+        // which it would not have been possible.  These include:
+        //
+        //      {.} {'Microsoft\'s Monaco Editor'
+        //           .#Click('github.com/microsoft/monaco-editor')} the powerful `
+        //           open source Visual Studio that supports syntax colorizing, error `
+        //           reporting, folding, and so many more features
+        //      {.} {'ANTLR (ANother Tool for Language Recognition)'
+        //          .#Click('www.antlr.org/','click to go to the ANTLR website')} `
+        //           the open source lexer and parser technology that provides `
+        //           the foundation for processing the TextTemplate language
+        //      {.} {'The "calc-monaco-editor" project'
+        //          .#Click('github.com/Strumenta/calc-monaco-editor')} `
+        //           Federico Tomassetti's merging of ANTLR4 with Monaco that `
+        //           is described in this {'article'.#Click(
+        //                'tomassetti.me/writing-a-browser-based-editor-using-monaco-and-antlr/'
+        //                ,'Click to go to the article')}
+        //      {.} {'Moment.js'
+        //           .#Click('momentjs.com','Click to go to the website')} an open-source `
+        //           library for date formatting
+        //      
+        // {.} Documentation
+        //
+        // The TextTemplate language is documented using `
+        //      a "live" template-based web page  `
+        //      {'here'.#Click('/load/docs','Click to see the documentation using TextTemplate')}`
+        //      or if you prefer, you can view an HTML version rendered on the server `
+        //      {'here'.#Click('/runonserver/docs','Click to see the documentation rendered on the server')}.  Note  `
+        //      that any of the demo templates can be rendered on the server using the path `
+        //      '/runonserver/{'['}template name{']'}' as in `
+        //      {'/runonserver/events'.#Click('/runonserver/events','Click to see the events template')}.
+        //
+        // {#examples}
+        //
+        // {#notes}
+        //
+        //
+        // ].@BulletStyle('I.','(a)','•','1.').@BulletMode('explicit')
+        // Source: "templates/startup.template":6:12
         object? applyBulletMode() => Unsupported(
             "Call @BulletMode",
             "templates/startup.template:6:12",
@@ -255,186 +930,375 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         return applyBulletMode();
     }
 
-    // templates/startup.template:6:12
+    // Template:
+    // [`
+    // {.} Introduction
+    //
+    // {#intro}
+    //
+    //    {
+    //       '{"first":"Hello", "second":"World"}':
+    //       [Interpolation example: {first} {second}!!]
+    //    }
+    //
+    // {#goals}
+    //
+    // Notice that if you expand the folded lines in the TextTemplate Editor in the left pane, `
+    // you'll see text that is similar to this output.  That is because `
+    // this documentation is actually a "live" rendering of the texttemplate language input `
+    // in the editor.  If you change the text in the editor, `
+    // the documentation will change.  The editor can be a playground for `
+    // trying out examples of the language and developing templates.  Look through the
+    // TextTemplate source for the following paragraphs in the editor to see the language `
+    // in action
+    //
+    // While the TextTemplate language is similar to other string interpolation notations, it `
+    // has a number of unique features including:
+    //
+    //    {.} Automatic composition of multi-valued data into {
+    //    // this is the data
+    //    '{"pets":[ 
+    //       {"type":"cat"}
+    //       ,{"type":"dog"}
+    //       ,{"type":"tiger"}
+    //    ]}':
+    //    // this is the template
+    //    ["anded" phrases (e.g., "{pets:[{type}s].Join(', ',' and ')}") or bulleted `
+    //     lists
+    //     {pets:[
+    //        {.} {type}s]}].@BulletStyle('-')} 
+    //
+    //    {.} Control over the detection of {'{"test":"value"}':
+    //     [{test->[available]} values and replacement of `
+    //     {unavailable}].@MissingValue('missing')} values
+    //
+    //    {.} A rich set of methods that can perform string`
+    //       {'replacing'.Replace('ing','ement')}, `
+    //       {' trimming '.Trim()}, extract {' substringy'.Substr(1,9)}s, do `
+    //       {'padding'.Align(9,'C','-')}, `
+    //        change the {'case'.ToUpper()} of data, `
+    //       {'true'.Matches('yes','1',/True/i)=>[test],[fail]} data for  `
+    //       multiple criteria including matching regular expressions, `
+    //       count and compare {'{"element1":"multiple","element2":"values"}':
+    //          [{element1.LessThan([{element2}])->[{element1} {element2}]}]} and `
+    //          "@" (annotation) methods that can control template behavior
+    //
+    //    {.} Modularity through the use of {#subexample}
+    //       
+    //    {.} Data manipulation methods that allow data to be selected, ordered and `
+    //       grouped like the following example that selects and `
+    //       groups the birthdays of a few individuals `
+    //       from 1500 records of external data based on birth day and astrological sign:
+    //          {#externalData.Where(dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D')
+    //             .GroupBy(sign, 'group'):[{sign} 
+    //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
+    //                .@DateFormat('M/D/YYYY')
+    //                .@DateTest(/^d/i)}
+    //
+    //    {.} Date recognition and formatting methods that can use a single `
+    //      date, e.g., `
+    //        {#externalData.Where(dob.Substr(0,7) = '1967-10'):["{dob}", to `
+    //        show that {fname} {lname} was born in `
+    //        the month of {dob.ToDate('MMMM')} in `
+    //         {dob.ToDate('YYYY')} on {dob.ToDate('dddd')} the `
+    //         {dob.ToDate('do')}]}
+    //
+    //    {.} Data encoding that can be used to insure that data being templated `
+    //        for output as html, xml or uri's can be properly escaped, e.g., `
+    //        "{'{"data":"Joan\'s <data>"}':[{data}].@EncodeDataFor('html')
+    //           .EncodeFor('html')}"
+    //
+    //    {.} The ability to check for "falsiness", where, for example, the string "0" `
+    //        can be interpreted as false to show that`
+    //        {#externalData.Where(dob.Substr(5,5) = '01-25'): 
+    //        [{#deadoralive.@Falsy(/^0$/)}].Join(', ',' and ')}
+    //
+    //    {.} and, finally, as can be seen from this document, automatically `
+    //       bulleted and numbered outlining
+    //
+    // {.} Acknowledgements
+    //
+    // This project is based on a number of powerful opens-source technologies, without `
+    // which it would not have been possible.  These include:
+    //
+    //      {.} {'Microsoft\'s Monaco Editor'
+    //           .#Click('github.com/microsoft/monaco-editor')} the powerful `
+    //           open source Visual Studio that supports syntax colorizing, error `
+    //           reporting, folding, and so many more features
+    //      {.} {'ANTLR (ANother Tool for Language Recognition)'
+    //          .#Click('www.antlr.org/','click to go to the ANTLR website')} `
+    //           the open source lexer and parser technology that provides `
+    //           the foundation for processing the TextTemplate language
+    //      {.} {'The "calc-monaco-editor" project'
+    //          .#Click('github.com/Strumenta/calc-monaco-editor')} `
+    //           Federico Tomassetti's merging of ANTLR4 with Monaco that `
+    //           is described in this {'article'.#Click(
+    //                'tomassetti.me/writing-a-browser-based-editor-using-monaco-and-antlr/'
+    //                ,'Click to go to the article')}
+    //      {.} {'Moment.js'
+    //           .#Click('momentjs.com','Click to go to the website')} an open-source `
+    //           library for date formatting
+    //      
+    // {.} Documentation
+    //
+    // The TextTemplate language is documented using `
+    //      a "live" template-based web page  `
+    //      {'here'.#Click('/load/docs','Click to see the documentation using TextTemplate')}`
+    //      or if you prefer, you can view an HTML version rendered on the server `
+    //      {'here'.#Click('/runonserver/docs','Click to see the documentation rendered on the server')}.  Note  `
+    //      that any of the demo templates can be rendered on the server using the path `
+    //      '/runonserver/{'['}template name{']'}' as in `
+    //      {'/runonserver/events'.#Click('/runonserver/events','Click to see the events template')}.
+    //
+    // {#examples}
+    //
+    // {#notes}
+    //
+    //
+    // ]
+    // Source: "templates/startup.template":6:12
     private object? renderIntro()
     {
-        // templates/startup.template:7:1
+        // Template:
+        // {.}
+        // Source: "templates/startup.template":7:1
         object? bullet() => Unsupported(
             "Bullet {.}",
             "templates/startup.template:7:1");
 
-        // templates/startup.template:30:1
+        // Template:
+        //    {.}
+        // Source: "templates/startup.template":30:1
         object? bullet_2() => Unsupported(
             "Bullet    {.}",
             "templates/startup.template:30:1");
 
-        // templates/startup.template:43:1
+        // Template:
+        //    {.}
+        // Source: "templates/startup.template":43:1
         object? bullet_3() => Unsupported(
             "Bullet    {.}",
             "templates/startup.template:43:1");
 
-        // templates/startup.template:47:1
+        // Template:
+        //    {.}
+        // Source: "templates/startup.template":47:1
         object? bullet_4() => Unsupported(
             "Bullet    {.}",
             "templates/startup.template:47:1");
 
-        // templates/startup.template:48:8
+        // Template:
+        // 'replacing'.Replace('ing','ement')
+        // Source: "templates/startup.template":48:8
         object? applyReplace() => Unsupported(
             "Call Replace",
             "templates/startup.template:48:8",
             () => "replacing",
             () => new object?[] { "ing", "ement" });
 
-        // templates/startup.template:49:8
+        // Template:
+        // ' trimming '.Trim()
+        // Source: "templates/startup.template":49:8
         object? applyTrim() => Unsupported(
             "Call Trim",
             "templates/startup.template:49:8",
             () => " trimming ");
 
-        // templates/startup.template:49:39
+        // Template:
+        // ' substringy'.Substr(1,9)
+        // Source: "templates/startup.template":49:39
         object? applySubstr() => Unsupported(
             "Call Substr",
             "templates/startup.template:49:39",
             () => " substringy",
             () => new object?[] { EvaluationContext.ParseInteger("1"), EvaluationContext.ParseInteger("9") });
 
-        // templates/startup.template:50:8
+        // Template:
+        // 'padding'.Align(9,'C','-')
+        // Source: "templates/startup.template":50:8
         object? applyAlign() => Unsupported(
             "Call Align",
             "templates/startup.template:50:8",
             () => "padding",
             () => new object?[] { EvaluationContext.ParseInteger("9"), "C", "-" });
 
-        // templates/startup.template:51:20
+        // Template:
+        // 'case'.ToUpper()
+        // Source: "templates/startup.template":51:20
         object? applyToUpper() => Unsupported(
             "Call ToUpper",
             "templates/startup.template:51:20",
             () => "case");
 
-        // templates/startup.template:52:33
+        // Template:
+        // /True/i
+        // Source: "templates/startup.template":52:33
         object? pattern() => Unsupported(
             "Regex /True/i",
             "templates/startup.template:52:33");
 
-        // templates/startup.template:52:8
+        // Template:
+        // 'true'.Matches('yes','1',/True/i)
+        // Source: "templates/startup.template":52:8
         object? applyMatches() => Unsupported(
             "Call Matches",
             "templates/startup.template:52:8",
             () => "true",
             () => new object?[] { "yes", "1", pattern() });
 
-        // templates/startup.template:58:1
+        // Template:
+        //    {.}
+        // Source: "templates/startup.template":58:1
         object? bullet_5() => Unsupported(
             "Bullet    {.}",
             "templates/startup.template:58:1");
 
-        // templates/startup.template:60:1
+        // Template:
+        //    {.}
+        // Source: "templates/startup.template":60:1
         object? bullet_6() => Unsupported(
             "Bullet    {.}",
             "templates/startup.template:60:1");
 
-        // templates/startup.template:64:31
+        // Template:
+        // dob.ToDate('DD')
+        // Source: "templates/startup.template":64:31
         object? applyToDate() => Unsupported(
             "Call ToDate",
             "templates/startup.template:64:31",
             () => Get("dob"),
             () => new object?[] { "DD" });
 
-        // templates/startup.template:64:55
+        // Template:
+        // lname.Substr(0,1)
+        // Source: "templates/startup.template":64:55
         object? applySubstr_2() => Unsupported(
             "Call Substr",
             "templates/startup.template:64:55",
             () => Get("lname"),
             () => new object?[] { EvaluationContext.ParseInteger("0"), EvaluationContext.ParseInteger("1") });
 
-        // templates/startup.template:64:11
+        // Template:
+        // #externalData.Where(dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D')
+        // Source: "templates/startup.template":64:11
         object? applyWhere() => Unsupported(
             "Call Where",
             "templates/startup.template:64:11",
             () => Named("externalData"),
             () => new object?[] { (EvaluationContext.Compare(applyToDate(), "=", "27") && EvaluationContext.Compare(applySubstr_2(), "=", "D")) });
 
-        // templates/startup.template:64:11
+        // Template:
+        // #externalData.Where(dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D')
+        //             .GroupBy(sign, 'group')
+        // Source: "templates/startup.template":64:11
         object? applyGroupBy() => Unsupported(
             "Call GroupBy",
             "templates/startup.template:64:11",
             () => applyWhere(),
             () => new object?[] { Get("sign"), "group" });
 
-        // templates/startup.template:70:1
+        // Template:
+        //    {.}
+        // Source: "templates/startup.template":70:1
         object? bullet_7() => Unsupported(
             "Bullet    {.}",
             "templates/startup.template:70:1");
 
-        // templates/startup.template:72:29
+        // Template:
+        // dob.Substr(0,7)
+        // Source: "templates/startup.template":72:29
         object? applySubstr_3() => Unsupported(
             "Call Substr",
             "templates/startup.template:72:29",
             () => Get("dob"),
             () => new object?[] { EvaluationContext.ParseInteger("0"), EvaluationContext.ParseInteger("7") });
 
-        // templates/startup.template:72:9
+        // Template:
+        // #externalData.Where(dob.Substr(0,7) = '1967-10')
+        // Source: "templates/startup.template":72:9
         object? applyWhere_2() => Unsupported(
             "Call Where",
             "templates/startup.template:72:9",
             () => Named("externalData"),
             () => new object?[] { EvaluationContext.Compare(applySubstr_3(), "=", "1967-10") });
 
-        // templates/startup.template:78:1
+        // Template:
+        //    {.}
+        // Source: "templates/startup.template":78:1
         object? bullet_8() => Unsupported(
             "Bullet    {.}",
             "templates/startup.template:78:1");
 
-        // templates/startup.template:83:1
+        // Template:
+        //    {.}
+        // Source: "templates/startup.template":83:1
         object? bullet_9() => Unsupported(
             "Bullet    {.}",
             "templates/startup.template:83:1");
 
-        // templates/startup.template:85:29
+        // Template:
+        // dob.Substr(5,5)
+        // Source: "templates/startup.template":85:29
         object? applySubstr_4() => Unsupported(
             "Call Substr",
             "templates/startup.template:85:29",
             () => Get("dob"),
             () => new object?[] { EvaluationContext.ParseInteger("5"), EvaluationContext.ParseInteger("5") });
 
-        // templates/startup.template:85:9
+        // Template:
+        // #externalData.Where(dob.Substr(5,5) = '01-25')
+        // Source: "templates/startup.template":85:9
         object? applyWhere_3() => Unsupported(
             "Call Where",
             "templates/startup.template:85:9",
             () => Named("externalData"),
             () => new object?[] { EvaluationContext.Compare(applySubstr_4(), "=", "01-25") });
 
-        // templates/startup.template:88:1
+        // Template:
+        //    {.}
+        // Source: "templates/startup.template":88:1
         object? bullet_10() => Unsupported(
             "Bullet    {.}",
             "templates/startup.template:88:1");
 
-        // templates/startup.template:91:1
+        // Template:
+        // {.}
+        // Source: "templates/startup.template":91:1
         object? bullet_11() => Unsupported(
             "Bullet {.}",
             "templates/startup.template:91:1");
 
-        // templates/startup.template:96:1
+        // Template:
+        //      {.}
+        // Source: "templates/startup.template":96:1
         object? bullet_12() => Unsupported(
             "Bullet      {.}",
             "templates/startup.template:96:1");
 
-        // templates/startup.template:100:1
+        // Template:
+        //      {.}
+        // Source: "templates/startup.template":100:1
         object? bullet_13() => Unsupported(
             "Bullet      {.}",
             "templates/startup.template:100:1");
 
-        // templates/startup.template:104:1
+        // Template:
+        //      {.}
+        // Source: "templates/startup.template":104:1
         object? bullet_14() => Unsupported(
             "Bullet      {.}",
             "templates/startup.template:104:1");
 
-        // templates/startup.template:110:1
+        // Template:
+        //      {.}
+        // Source: "templates/startup.template":110:1
         object? bullet_15() => Unsupported(
             "Bullet      {.}",
             "templates/startup.template:110:1");
 
-        // templates/startup.template:114:1
+        // Template:
+        // {.}
+        // Source: "templates/startup.template":114:1
         object? bullet_16() => Unsupported(
             "Bullet {.}",
             "templates/startup.template:114:1");
@@ -537,21 +1401,29 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             """);
     }
 
-    // templates/startup.template:86:8
+    // Template:
+    // [{#deadoralive.@Falsy(/^0$/)}].Join(', ',' and ')
+    // Source: "templates/startup.template":86:8
     private object? renderJoin_2()
     {
         return Join(this.renderFalsy(), ", ", " and ");
     }
 
-    // templates/startup.template:86:8
+    // Template:
+    // [{#deadoralive.@Falsy(/^0$/)}]
+    // Source: "templates/startup.template":86:8
     private object? renderFalsy()
     {
-        // templates/startup.template:86:30
+        // Template:
+        // /^0$/
+        // Source: "templates/startup.template":86:30
         object? pattern() => Unsupported(
             "Regex /^0$/",
             "templates/startup.template:86:30");
 
-        // templates/startup.template:86:10
+        // Template:
+        // #deadoralive.@Falsy(/^0$/)
+        // Source: "templates/startup.template":86:10
         object? applyFalsy() => Unsupported(
             "Call @Falsy",
             "templates/startup.template:86:10",
@@ -563,17 +1435,25 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         return Line($"{falsy}");
     }
 
-    // templates/startup.template:80:38
+    // Template:
+    // [{data}].@EncodeDataFor('html')
+    //           .EncodeFor('html')
+    // Source: "templates/startup.template":80:38
     private object? renderEncodeFor()
     {
-        // templates/startup.template:80:38
+        // Template:
+        // [{data}].@EncodeDataFor('html')
+        // Source: "templates/startup.template":80:38
         object? applyEncodeDataFor() => Unsupported(
             "Call @EncodeDataFor",
             "templates/startup.template:80:38",
             () => this.renderData(),
             () => new object?[] { "html" });
 
-        // templates/startup.template:80:38
+        // Template:
+        // [{data}].@EncodeDataFor('html')
+        //           .EncodeFor('html')
+        // Source: "templates/startup.template":80:38
         object? applyEncodeFor() => Unsupported(
             "Call EncodeFor",
             "templates/startup.template:80:38",
@@ -583,7 +1463,9 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         return applyEncodeFor();
     }
 
-    // templates/startup.template:80:38
+    // Template:
+    // [{data}]
+    // Source: "templates/startup.template":80:38
     private object? renderData()
     {
         var data = Get("data");
@@ -591,31 +1473,45 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         return Line($"{data}");
     }
 
-    // templates/startup.template:72:58
+    // Template:
+    // ["{dob}", to `
+    //        show that {fname} {lname} was born in `
+    //        the month of {dob.ToDate('MMMM')} in `
+    //         {dob.ToDate('YYYY')} on {dob.ToDate('dddd')} the `
+    //         {dob.ToDate('do')}]
+    // Source: "templates/startup.template":72:58
     private object? renderDob()
     {
-        // templates/startup.template:74:22
+        // Template:
+        // dob.ToDate('MMMM')
+        // Source: "templates/startup.template":74:22
         object? applyToDate() => Unsupported(
             "Call ToDate",
             "templates/startup.template:74:22",
             () => Get("dob"),
             () => new object?[] { "MMMM" });
 
-        // templates/startup.template:75:10
+        // Template:
+        // dob.ToDate('YYYY')
+        // Source: "templates/startup.template":75:10
         object? applyToDate_2() => Unsupported(
             "Call ToDate",
             "templates/startup.template:75:10",
             () => Get("dob"),
             () => new object?[] { "YYYY" });
 
-        // templates/startup.template:75:34
+        // Template:
+        // dob.ToDate('dddd')
+        // Source: "templates/startup.template":75:34
         object? applyToDate_3() => Unsupported(
             "Call ToDate",
             "templates/startup.template:75:34",
             () => Get("dob"),
             () => new object?[] { "dddd" });
 
-        // templates/startup.template:76:10
+        // Template:
+        // dob.ToDate('do')
+        // Source: "templates/startup.template":76:10
         object? applyToDate_4() => Unsupported(
             "Call ToDate",
             "templates/startup.template:76:10",
@@ -633,22 +1529,38 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         return Line($"\"{dob}\", to show that {fname} {lname} was born in the month of {toDate} in {toDate_2} on {toDate_3} the {toDate_4}");
     }
 
-    // templates/startup.template:65:37
+    // Template:
+    // [{sign} 
+    //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
+    //                .@DateFormat('M/D/YYYY')
+    //                .@DateTest(/^d/i)
+    // Source: "templates/startup.template":65:37
     private object? renderDateTest()
     {
-        // templates/startup.template:65:37
+        // Template:
+        // [{sign} 
+        //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
+        //                .@DateFormat('M/D/YYYY')
+        // Source: "templates/startup.template":65:37
         object? applyDateFormat() => Unsupported(
             "Call @DateFormat",
             "templates/startup.template:65:37",
             () => this.renderSign(),
             () => new object?[] { "M/D/YYYY" });
 
-        // templates/startup.template:68:27
+        // Template:
+        // /^d/i
+        // Source: "templates/startup.template":68:27
         object? pattern() => Unsupported(
             "Regex /^d/i",
             "templates/startup.template:68:27");
 
-        // templates/startup.template:65:37
+        // Template:
+        // [{sign} 
+        //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
+        //                .@DateFormat('M/D/YYYY')
+        //                .@DateTest(/^d/i)
+        // Source: "templates/startup.template":65:37
         object? applyDateTest() => Unsupported(
             "Call @DateTest",
             "templates/startup.template:65:37",
@@ -658,10 +1570,15 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         return applyDateTest();
     }
 
-    // templates/startup.template:65:37
+    // Template:
+    // [{sign} 
+    //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
+    // Source: "templates/startup.template":65:37
     private object? renderSign()
     {
-        // templates/startup.template:66:13
+        // Template:
+        // group.OrderBy(lname)
+        // Source: "templates/startup.template":66:13
         object? applyOrderBy() => Unsupported(
             "Call OrderBy",
             "templates/startup.template:66:13",
@@ -677,7 +1594,9 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             """);
     }
 
-    // templates/startup.template:66:34
+    // Template:
+    // [{fname} {lname} ({dob})]
+    // Source: "templates/startup.template":66:34
     private object? renderFname()
     {
         var fname = Get("fname");
@@ -687,10 +1606,14 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         return Line($"{fname} {lname} ({dob})");
     }
 
-    // templates/startup.template:55:10
+    // Template:
+    // [{element1.LessThan([{element2}])->[{element1} {element2}]}]
+    // Source: "templates/startup.template":55:10
     private object? renderChoice_2()
     {
-        // templates/startup.template:55:12
+        // Template:
+        // element1.LessThan([{element2}])
+        // Source: "templates/startup.template":55:12
         object? applyLessThan() => Unsupported(
             "Call LessThan",
             "templates/startup.template:55:12",
@@ -702,7 +1625,9 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         return Line($"{choice}");
     }
 
-    // templates/startup.template:55:45
+    // Template:
+    // [{element1} {element2}]
+    // Source: "templates/startup.template":55:45
     private object? renderElement1()
     {
         var element1 = Get("element1");
@@ -711,7 +1636,9 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         return Line($"{element1} {element2}");
     }
 
-    // templates/startup.template:55:30
+    // Template:
+    // [{element2}]
+    // Source: "templates/startup.template":55:30
     private object? renderElement2()
     {
         var element2 = Get("element2");
@@ -719,7 +1646,10 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         return Line($"{element2}");
     }
 
-    // templates/startup.template:44:5
+    // Template:
+    // [{test->[available]} values and replacement of `
+    //     {unavailable}].@MissingValue('missing')
+    // Source: "templates/startup.template":44:5
     private object? renderMissingValue()
     {
         return Annotate(
@@ -730,7 +1660,10 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             child => new Startup(child).renderChoice());
     }
 
-    // templates/startup.template:44:5
+    // Template:
+    // [{test->[available]} values and replacement of `
+    //     {unavailable}]
+    // Source: "templates/startup.template":44:5
     private object? renderChoice()
     {
         object? choice = (EvaluationContext.Condition(Get("test")) ? Line($"available") : "");
@@ -739,10 +1672,20 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         return Line($"{choice} values and replacement of {unavailable}");
     }
 
-    // templates/startup.template:38:4
+    // Template:
+    // ["anded" phrases (e.g., "{pets:[{type}s].Join(', ',' and ')}") or bulleted `
+    //     lists
+    //     {pets:[
+    //        {.} {type}s]}].@BulletStyle('-')
+    // Source: "templates/startup.template":38:4
     private object? renderBulletStyle()
     {
-        // templates/startup.template:38:4
+        // Template:
+        // ["anded" phrases (e.g., "{pets:[{type}s].Join(', ',' and ')}") or bulleted `
+        //     lists
+        //     {pets:[
+        //        {.} {type}s]}].@BulletStyle('-')
+        // Source: "templates/startup.template":38:4
         object? applyBulletStyle() => Unsupported(
             "Call @BulletStyle",
             "templates/startup.template:38:4",
@@ -752,7 +1695,12 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         return applyBulletStyle();
     }
 
-    // templates/startup.template:38:4
+    // Template:
+    // ["anded" phrases (e.g., "{pets:[{type}s].Join(', ',' and ')}") or bulleted `
+    //     lists
+    //     {pets:[
+    //        {.} {type}s]}]
+    // Source: "templates/startup.template":38:4
     private object? renderAndedPhrasesEGO()
     {
         var pets = InContext(Get("pets"), child => new Startup(child).renderJoin());
@@ -764,10 +1712,15 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             """);
     }
 
-    // templates/startup.template:40:11
+    // Template:
+    // [
+    //        {.} {type}s]
+    // Source: "templates/startup.template":40:11
     private object? renderType_2()
     {
-        // templates/startup.template:41:8
+        // Template:
+        // {.}
+        // Source: "templates/startup.template":41:8
         object? bullet() => Unsupported(
             "Bullet {.}",
             "templates/startup.template:41:8");
@@ -778,13 +1731,17 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         return Line($"{content} {type}s");
     }
 
-    // templates/startup.template:38:35
+    // Template:
+    // [{type}s].Join(', ',' and ')
+    // Source: "templates/startup.template":38:35
     private object? renderJoin()
     {
         return Join(this.renderType(), ", ", " and ");
     }
 
-    // templates/startup.template:38:35
+    // Template:
+    // [{type}s]
+    // Source: "templates/startup.template":38:35
     private object? renderType()
     {
         var type = Get("type");
@@ -792,7 +1749,9 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         return Line($"{type}s");
     }
 
-    // templates/startup.template:13:7
+    // Template:
+    // [Interpolation example: {first} {second}!!]
+    // Source: "templates/startup.template":13:7
     private object? renderFirst()
     {
         var first = Get("first");

@@ -231,7 +231,10 @@ cannot yet be identified statically. Their execution remains explicitly unfinish
 Preserve template-defined names such as `formatPet`, `getWiki`, and `wikiapi`. Do not
 add `Template_`, `Subtemplate_`, `Define_`, syntax-kind names or source coordinates.
 Use meaningful names for anonymous context bodies, and put source locations in
-comments/diagnostics instead. Sanitize invalid identifier characters, escape C#
+comments/diagnostics instead. Method and deferred-operation comments show the
+original template fragment first, preserving its layout, followed by the source
+location. These comments are documentation only, never runtime interpretation
+input. Sanitize invalid identifier characters, escape C#
 keywords, and allocate `_2`, `_3`, etc. only for actual collisions. Track class member
 names separately from each method's locals/functions; bind each definition to its
 allocated name. Class/file names also avoid case-insensitive collisions.

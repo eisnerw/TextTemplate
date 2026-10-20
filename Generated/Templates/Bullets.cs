@@ -9,7 +9,49 @@ using System.Text.RegularExpressions;
 
 internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
 {
-    // templates/bullets.template:1:1
+    // Template:
+    // Shows use of bullet styles as well as modular subtemplates, automatic bulleting,`
+    // and indenting only for multiple values.  You can see different bullet styles `
+    // by changing the parameter to #showStyles from 1 through 5
+    //
+    // {''.#showStyles(1)}
+    //
+    //  
+    // Subtemplates:
+    // {#styleNumber:[1]}
+    // {#showStyles:[People:{#data:[
+    //    {.}{^.^.$1 = 2->[.0]} {[{ 
+    //       lastName}{ 
+    //       firstName.#Prepend(', ')}{    
+    //       middleName.#Prepend(' ')
+    //    }].ToUpper().#Quoted()} 
+    //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
+    //       {.} FirstName: {firstName}  
+    //       {.} Pets {pets=>[({pets.Count()}):  
+    //          {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
+    //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
+    //    ],[no pets]
+    //    } //
+    // ].@MissingValue('No Information Provided')}].@Include([{'#style'}{$1}])}
+    // {#formatPet:[  
+    //    a {type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')}  `   
+    //    {type} named {name} 
+    // ]}
+    // {#Domesticated: [{$0.Where(type.#IsDomesticated())}]}
+    // {#NonDomesticated: [{$0.Where(!type.#IsDomesticated())}]} 
+    // {#IsDomesticated:[{$0.Matches('dog','cat')}]}  
+    // {#Prepend:[{$0->[{$1}{$0}]}]}
+    // {#Surround:[{$0->[{$1}{$0}{$1}]}]}
+    // {#Quoted:[{$0->[{$0.#Surround('"')}]}]}
+    // {#dpetcnt:[{pets.#Domesticated().Count()}]}
+    // {#ndpetcnt:[{pets.#NonDomesticated().Count()}]}
+    // {#style1:[].@BulletStyle('I.','(a)','•','i.')}
+    // {#style2:[].@BulletStyle('1','1.1','1.1.1','1(a)')}
+    // {#style3:[].@BulletStyle('-')}
+    // {#style4:[].@BulletStyle('')}
+    // {#style5:[].@BulletStyle(' I', '•', 'A.', '(1)')}
+    // {#data:[/data/people]}
+    // Source: "templates/bullets.template":1:1
     internal object? Render()
     {
         return WithDefinitions(
@@ -36,16 +78,22 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
             child => new Bullets(child).renderBullets());
     }
 
-    // templates/bullets.template:41:8
+    // Template:
+    // [/data/people]
+    // Source: "templates/bullets.template":41:8
     private object? data()
     {
         return Line($"/data/people");
     }
 
-    // templates/bullets.template:40:10
+    // Template:
+    // [].@BulletStyle(' I', '•', 'A.', '(1)')
+    // Source: "templates/bullets.template":40:10
     private object? style5()
     {
-        // templates/bullets.template:40:10
+        // Template:
+        // [].@BulletStyle(' I', '•', 'A.', '(1)')
+        // Source: "templates/bullets.template":40:10
         object? applyBulletStyle() => Unsupported(
             "Call @BulletStyle",
             "templates/bullets.template:40:10",
@@ -55,10 +103,14 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return applyBulletStyle();
     }
 
-    // templates/bullets.template:39:10
+    // Template:
+    // [].@BulletStyle('')
+    // Source: "templates/bullets.template":39:10
     private object? style4()
     {
-        // templates/bullets.template:39:10
+        // Template:
+        // [].@BulletStyle('')
+        // Source: "templates/bullets.template":39:10
         object? applyBulletStyle() => Unsupported(
             "Call @BulletStyle",
             "templates/bullets.template:39:10",
@@ -68,10 +120,14 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return applyBulletStyle();
     }
 
-    // templates/bullets.template:38:10
+    // Template:
+    // [].@BulletStyle('-')
+    // Source: "templates/bullets.template":38:10
     private object? style3()
     {
-        // templates/bullets.template:38:10
+        // Template:
+        // [].@BulletStyle('-')
+        // Source: "templates/bullets.template":38:10
         object? applyBulletStyle() => Unsupported(
             "Call @BulletStyle",
             "templates/bullets.template:38:10",
@@ -81,10 +137,14 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return applyBulletStyle();
     }
 
-    // templates/bullets.template:37:10
+    // Template:
+    // [].@BulletStyle('1','1.1','1.1.1','1(a)')
+    // Source: "templates/bullets.template":37:10
     private object? style2()
     {
-        // templates/bullets.template:37:10
+        // Template:
+        // [].@BulletStyle('1','1.1','1.1.1','1(a)')
+        // Source: "templates/bullets.template":37:10
         object? applyBulletStyle() => Unsupported(
             "Call @BulletStyle",
             "templates/bullets.template:37:10",
@@ -94,10 +154,14 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return applyBulletStyle();
     }
 
-    // templates/bullets.template:36:10
+    // Template:
+    // [].@BulletStyle('I.','(a)','•','i.')
+    // Source: "templates/bullets.template":36:10
     private object? style1()
     {
-        // templates/bullets.template:36:10
+        // Template:
+        // [].@BulletStyle('I.','(a)','•','i.')
+        // Source: "templates/bullets.template":36:10
         object? applyBulletStyle() => Unsupported(
             "Call @BulletStyle",
             "templates/bullets.template:36:10",
@@ -107,10 +171,14 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return applyBulletStyle();
     }
 
-    // templates/bullets.template:35:12
+    // Template:
+    // [{pets.#NonDomesticated().Count()}]
+    // Source: "templates/bullets.template":35:12
     private object? ndpetcnt()
     {
-        // templates/bullets.template:35:14
+        // Template:
+        // pets.#NonDomesticated().Count()
+        // Source: "templates/bullets.template":35:14
         object? applyCount() => Unsupported(
             "Call Count",
             "templates/bullets.template:35:14",
@@ -121,10 +189,14 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return Line($"{count}");
     }
 
-    // templates/bullets.template:34:11
+    // Template:
+    // [{pets.#Domesticated().Count()}]
+    // Source: "templates/bullets.template":34:11
     private object? dpetcnt()
     {
-        // templates/bullets.template:34:13
+        // Template:
+        // pets.#Domesticated().Count()
+        // Source: "templates/bullets.template":34:13
         object? applyCount() => Unsupported(
             "Call Count",
             "templates/bullets.template:34:13",
@@ -135,7 +207,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return Line($"{count}");
     }
 
-    // templates/bullets.template:33:10
+    // Template:
+    // [{$0->[{$0.#Surround('"')}]}]
+    // Source: "templates/bullets.template":33:10
     private object? Quoted()
     {
         object? choice = (EvaluationContext.Condition(Get("$0")) ? this.renderSurround() : "");
@@ -143,7 +217,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return Line($"{choice}");
     }
 
-    // templates/bullets.template:33:16
+    // Template:
+    // [{$0.#Surround('"')}]
+    // Source: "templates/bullets.template":33:16
     private object? renderSurround()
     {
         var surround = CallNamed("Surround", Get("$0"), "\"");
@@ -151,7 +227,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return Line($"{surround}");
     }
 
-    // templates/bullets.template:32:12
+    // Template:
+    // [{$0->[{$1}{$0}{$1}]}]
+    // Source: "templates/bullets.template":32:12
     private object? Surround()
     {
         object? choice = (EvaluationContext.Condition(Get("$0")) ? this.renderItem1_2() : "");
@@ -159,7 +237,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return Line($"{choice}");
     }
 
-    // templates/bullets.template:32:18
+    // Template:
+    // [{$1}{$0}{$1}]
+    // Source: "templates/bullets.template":32:18
     private object? renderItem1_2()
     {
         var item1 = Get("$1");
@@ -169,7 +249,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return Line($"{item1}{item0}{item1_2}");
     }
 
-    // templates/bullets.template:31:11
+    // Template:
+    // [{$0->[{$1}{$0}]}]
+    // Source: "templates/bullets.template":31:11
     private object? Prepend()
     {
         object? choice = (EvaluationContext.Condition(Get("$0")) ? this.renderItem1() : "");
@@ -177,7 +259,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return Line($"{choice}");
     }
 
-    // templates/bullets.template:31:17
+    // Template:
+    // [{$1}{$0}]
+    // Source: "templates/bullets.template":31:17
     private object? renderItem1()
     {
         var item1 = Get("$1");
@@ -186,10 +270,14 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return Line($"{item1}{item0}");
     }
 
-    // templates/bullets.template:30:18
+    // Template:
+    // [{$0.Matches('dog','cat')}]
+    // Source: "templates/bullets.template":30:18
     private object? IsDomesticated()
     {
-        // templates/bullets.template:30:20
+        // Template:
+        // $0.Matches('dog','cat')
+        // Source: "templates/bullets.template":30:20
         object? applyMatches() => Unsupported(
             "Call Matches",
             "templates/bullets.template:30:20",
@@ -201,10 +289,14 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return Line($"{matches}");
     }
 
-    // templates/bullets.template:29:20
+    // Template:
+    // [{$0.Where(!type.#IsDomesticated())}]
+    // Source: "templates/bullets.template":29:20
     private object? NonDomesticated()
     {
-        // templates/bullets.template:29:22
+        // Template:
+        // $0.Where(!type.#IsDomesticated())
+        // Source: "templates/bullets.template":29:22
         object? applyWhere() => Unsupported(
             "Call Where",
             "templates/bullets.template:29:22",
@@ -216,10 +308,14 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return Line($"{where}");
     }
 
-    // templates/bullets.template:28:17
+    // Template:
+    // [{$0.Where(type.#IsDomesticated())}]
+    // Source: "templates/bullets.template":28:17
     private object? Domesticated()
     {
-        // templates/bullets.template:28:19
+        // Template:
+        // $0.Where(type.#IsDomesticated())
+        // Source: "templates/bullets.template":28:19
         object? applyWhere() => Unsupported(
             "Call Where",
             "templates/bullets.template:28:19",
@@ -231,10 +327,17 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return Line($"{where}");
     }
 
-    // templates/bullets.template:24:13
+    // Template:
+    // [  
+    //    a {type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')}  `   
+    //    {type} named {name} 
+    // ]
+    // Source: "templates/bullets.template":24:13
     private object? formatPet()
     {
-        // templates/bullets.template:25:7
+        // Template:
+        // type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')
+        // Source: "templates/bullets.template":25:7
         object? applyCase() => Unsupported(
             "Call Case",
             "templates/bullets.template:25:7",
@@ -248,10 +351,14 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return Line($"a {@case} {type} named {name}");
     }
 
-    // templates/bullets.template:25:25
+    // Template:
+    // [{[{name}y].ToLower()}]
+    // Source: "templates/bullets.template":25:25
     private object? renderToLower()
     {
-        // templates/bullets.template:25:27
+        // Template:
+        // [{name}y].ToLower()
+        // Source: "templates/bullets.template":25:27
         object? applyToLower() => Unsupported(
             "Call ToLower",
             "templates/bullets.template:25:27",
@@ -262,7 +369,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return Line($"{toLower}");
     }
 
-    // templates/bullets.template:25:27
+    // Template:
+    // [{name}y]
+    // Source: "templates/bullets.template":25:27
     private object? renderName()
     {
         var name = Get("name");
@@ -270,10 +379,40 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return Line($"{name}y");
     }
 
-    // templates/bullets.template:10:14
+    // Template:
+    // [People:{#data:[
+    //    {.}{^.^.$1 = 2->[.0]} {[{ 
+    //       lastName}{ 
+    //       firstName.#Prepend(', ')}{    
+    //       middleName.#Prepend(' ')
+    //    }].ToUpper().#Quoted()} 
+    //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
+    //       {.} FirstName: {firstName}  
+    //       {.} Pets {pets=>[({pets.Count()}):  
+    //          {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
+    //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
+    //    ],[no pets]
+    //    } //
+    // ].@MissingValue('No Information Provided')}].@Include([{'#style'}{$1}])
+    // Source: "templates/bullets.template":10:14
     private object? showStyles()
     {
-        // templates/bullets.template:10:14
+        // Template:
+        // [People:{#data:[
+        //    {.}{^.^.$1 = 2->[.0]} {[{ 
+        //       lastName}{ 
+        //       firstName.#Prepend(', ')}{    
+        //       middleName.#Prepend(' ')
+        //    }].ToUpper().#Quoted()} 
+        //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
+        //       {.} FirstName: {firstName}  
+        //       {.} Pets {pets=>[({pets.Count()}):  
+        //          {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
+        //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
+        //    ],[no pets]
+        //    } //
+        // ].@MissingValue('No Information Provided')}].@Include([{'#style'}{$1}])
+        // Source: "templates/bullets.template":10:14
         object? applyInclude() => Unsupported(
             "Call @Include",
             "templates/bullets.template:10:14",
@@ -283,7 +422,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return applyInclude();
     }
 
-    // templates/bullets.template:23:55
+    // Template:
+    // [{'#style'}{$1}]
+    // Source: "templates/bullets.template":23:55
     private object? renderContent()
     {
         var item1 = Get("$1");
@@ -291,7 +432,22 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return Line($"#style{item1}");
     }
 
-    // templates/bullets.template:10:14
+    // Template:
+    // [People:{#data:[
+    //    {.}{^.^.$1 = 2->[.0]} {[{ 
+    //       lastName}{ 
+    //       firstName.#Prepend(', ')}{    
+    //       middleName.#Prepend(' ')
+    //    }].ToUpper().#Quoted()} 
+    //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
+    //       {.} FirstName: {firstName}  
+    //       {.} Pets {pets=>[({pets.Count()}):  
+    //          {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
+    //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
+    //    ],[no pets]
+    //    } //
+    // ].@MissingValue('No Information Provided')}]
+    // Source: "templates/bullets.template":10:14
     private object? renderPeople()
     {
         var data = InContext(Named("data"), child => new Bullets(child).renderMissingValue());
@@ -299,7 +455,22 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return Line($"People:{data}");
     }
 
-    // templates/bullets.template:10:29
+    // Template:
+    // [
+    //    {.}{^.^.$1 = 2->[.0]} {[{ 
+    //       lastName}{ 
+    //       firstName.#Prepend(', ')}{    
+    //       middleName.#Prepend(' ')
+    //    }].ToUpper().#Quoted()} 
+    //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
+    //       {.} FirstName: {firstName}  
+    //       {.} Pets {pets=>[({pets.Count()}):  
+    //          {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
+    //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
+    //    ],[no pets]
+    //    } //
+    // ].@MissingValue('No Information Provided')
+    // Source: "templates/bullets.template":10:29
     private object? renderMissingValue()
     {
         return Annotate(
@@ -310,38 +481,69 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
             child => new Bullets(child).renderChoice());
     }
 
-    // templates/bullets.template:10:29
+    // Template:
+    // [
+    //    {.}{^.^.$1 = 2->[.0]} {[{ 
+    //       lastName}{ 
+    //       firstName.#Prepend(', ')}{    
+    //       middleName.#Prepend(' ')
+    //    }].ToUpper().#Quoted()} 
+    //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
+    //       {.} FirstName: {firstName}  
+    //       {.} Pets {pets=>[({pets.Count()}):  
+    //          {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
+    //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
+    //    ],[no pets]
+    //    } //
+    // ]
+    // Source: "templates/bullets.template":10:29
     private object? renderChoice()
     {
-        // templates/bullets.template:11:4
+        // Template:
+        // {.}
+        // Source: "templates/bullets.template":11:4
         object? bullet() => Unsupported(
             "Bullet {.}",
             "templates/bullets.template:11:4");
 
-        // templates/bullets.template:11:27
+        // Template:
+        // [{ 
+        //       lastName}{ 
+        //       firstName.#Prepend(', ')}{    
+        //       middleName.#Prepend(' ')
+        //    }].ToUpper()
+        // Source: "templates/bullets.template":11:27
         object? applyToUpper() => Unsupported(
             "Call ToUpper",
             "templates/bullets.template:11:27",
             () => this.renderLastName());
 
-        // templates/bullets.template:16:1
+        // Template:
+        //       {.}
+        // Source: "templates/bullets.template":16:1
         object? bullet_2() => Unsupported(
             "Bullet       {.}",
             "templates/bullets.template:16:1");
 
-        // templates/bullets.template:16:22
+        // Template:
+        // lastName.IfMissing('No Last Name')
+        // Source: "templates/bullets.template":16:22
         object? applyIfMissing() => Unsupported(
             "Call IfMissing",
             "templates/bullets.template:16:22",
             () => Get("lastName"),
             () => new object?[] { "No Last Name" });
 
-        // templates/bullets.template:17:1
+        // Template:
+        //       {.}
+        // Source: "templates/bullets.template":17:1
         object? bullet_3() => Unsupported(
             "Bullet       {.}",
             "templates/bullets.template:17:1");
 
-        // templates/bullets.template:18:1
+        // Template:
+        //       {.}
+        // Source: "templates/bullets.template":18:1
         object? bullet_4() => Unsupported(
             "Bullet       {.}",
             "templates/bullets.template:18:1");
@@ -364,21 +566,32 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
             """);
     }
 
-    // templates/bullets.template:18:23
+    // Template:
+    // [({pets.Count()}):  
+    //          {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
+    //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
+    //    ]
+    // Source: "templates/bullets.template":18:23
     private object? renderCount()
     {
-        // templates/bullets.template:18:26
+        // Template:
+        // pets.Count()
+        // Source: "templates/bullets.template":18:26
         object? applyCount() => Unsupported(
             "Call Count",
             "templates/bullets.template:18:26",
             () => Get("pets"));
 
-        // templates/bullets.template:19:1
+        // Template:
+        //          {.}
+        // Source: "templates/bullets.template":19:1
         object? bullet() => Unsupported(
             "Bullet          {.}",
             "templates/bullets.template:19:1");
 
-        // templates/bullets.template:20:1
+        // Template:
+        //          {.}
+        // Source: "templates/bullets.template":20:1
         object? bullet_2() => Unsupported(
             "Bullet          {.}",
             "templates/bullets.template:20:1");
@@ -398,7 +611,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
             """);
     }
 
-    // templates/bullets.template:20:89
+    // Template:
+    // [{#formatPet}]
+    // Source: "templates/bullets.template":20:89
     private object? renderFormatPet_2()
     {
         var formatPet = Named("formatPet");
@@ -406,7 +621,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return Line($"{formatPet}");
     }
 
-    // templates/bullets.template:20:46
+    // Template:
+    // [({#ndpetcnt})]
+    // Source: "templates/bullets.template":20:46
     private object? renderNdpetcnt()
     {
         var ndpetcnt = Named("ndpetcnt");
@@ -414,7 +631,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return Line($"({ndpetcnt})");
     }
 
-    // templates/bullets.template:19:81
+    // Template:
+    // [{#formatPet}]
+    // Source: "templates/bullets.template":19:81
     private object? renderFormatPet()
     {
         var formatPet = Named("formatPet");
@@ -422,7 +641,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return Line($"{formatPet}");
     }
 
-    // templates/bullets.template:19:41
+    // Template:
+    // [ ({#dpetcnt})]
+    // Source: "templates/bullets.template":19:41
     private object? renderDpetcnt()
     {
         var dpetcnt = Named("dpetcnt");
@@ -430,7 +651,13 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return Line($" ({dpetcnt})");
     }
 
-    // templates/bullets.template:11:27
+    // Template:
+    // [{ 
+    //       lastName}{ 
+    //       firstName.#Prepend(', ')}{    
+    //       middleName.#Prepend(' ')
+    //    }]
+    // Source: "templates/bullets.template":11:27
     private object? renderLastName()
     {
         var lastName = Get("lastName");
@@ -440,7 +667,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return Line($"{lastName}{prepend}{prepend_2}");
     }
 
-    // templates/bullets.template:9:15
+    // Template:
+    // [1]
+    // Source: "templates/bullets.template":9:15
     private object? styleNumber()
     {
         return Line($"1");

@@ -1,13 +1,75 @@
 // Scalar execution and structured composition adapted from TextTemplateInterpreter.ts
 // (eisnerw/texttemplate-editor, Apache-2.0, ccedefd87b012ff1173ee2f43323b6eb7c8bd268).
 // Emitted as source: no compiler, parser, or TextTemplate assembly is needed at runtime.
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 internal sealed class EvaluationContext
 {
+    [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
     internal sealed class Data(Dictionary<string, object?> values, Data? parent)
     {
         internal Dictionary<string, object?> Values { get; } = values;
         internal Data? Parent { get; } = parent;
+        public override string ToString() => DebugSummary(this);
     }
+    // Debug summaries inspect stored values only: no lookup, rendering, callbacks,
+    // or parent traversal. Bound depth and collection size for large/cyclic data.
+    private static string DebugSummary(object? value)
+    {
+        object? Preview(object? item, int depth)
+        {
+            if (item is null) return null;
+            if (depth >= 4) return "…";
+            if (item is Data data) return ObjectPreview(data.Values, depth);
+            if (item is Missing missing) return missing.ToString();
+            if (item is string text) return text.Length <= 160 ? text : text[..160] + "…";
+            if (item is JsonElement json)
+                return json.ValueKind switch
+                {
+                    JsonValueKind.Object => ObjectPreview(Properties(json), depth),
+                    JsonValueKind.Array => ArrayPreview(Elements(json), depth),
+                    JsonValueKind.String => Preview(json.GetString(), depth),
+                    JsonValueKind.Undefined => "<undefined>",
+                    _ => json
+                };
+            if (item is object?[] array) return ArrayPreview(array, depth);
+            return item is bool or double or int or long ? item : "<" + item.GetType().Name + ">";
+        }
+        Dictionary<string, object?> ObjectPreview(IEnumerable<KeyValuePair<string, object?>> entries, int depth)
+        {
+            var result = new Dictionary<string, object?>(StringComparer.Ordinal);
+            foreach (var entry in entries)
+            {
+                if (result.Count == 8) { result["…"] = "more properties"; break; }
+                result[entry.Key] = Preview(entry.Value, depth + 1);
+            }
+            return result;
+        }
+        List<object?> ArrayPreview(IEnumerable<object?> entries, int depth)
+        {
+            var result = new List<object?>();
+            foreach (var entry in entries)
+            {
+                if (result.Count == 8) { result.Add("…"); break; }
+                result.Add(Preview(entry, depth + 1));
+            }
+            return result;
+        }
+        static IEnumerable<KeyValuePair<string, object?>> Properties(JsonElement json)
+        {
+            foreach (var property in json.EnumerateObject()) yield return new(property.Name, property.Value);
+        }
+        static IEnumerable<object?> Elements(JsonElement json)
+        {
+            foreach (var element in json.EnumerateArray()) yield return element;
+        }
+        return JsonSerializer.Serialize(Preview(value, 0), new JsonSerializerOptions
+        {
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowNamedFloatingPointLiterals
+        });
+    }
+    public override string ToString()
+        => $"Context {DebugSummary(Current)} (locals: {Locals.Count}, shared: {Shared.Count})";
     // TODO: implement each feature at its emitted call site. Keep operands deferred:
     // annotations and short-circuiting must not evaluate receiver/arguments prematurely.
     internal static object? NotImplemented(string feature, params Func<object?>[] operands)
@@ -22,7 +84,13 @@ internal sealed class EvaluationContext
             throw located;
         }
     }
-    internal sealed record Missing(string Key, string? Replacement = null);
+    [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+    internal sealed record Missing(string Key, string? Replacement = null)
+    {
+        public override string ToString() => Replacement is null
+            ? $"Missing({JsonSerializer.Serialize(Key)})"
+            : $"Missing({JsonSerializer.Serialize(Key)}, replacement: {JsonSerializer.Serialize(Replacement)})";
+    }
     private string? missingText;
     private Missing MissingValue(string key) => new(key, missingText?.Replace("{key}", key));
     internal readonly Data? Current;
@@ -41,6 +109,7 @@ internal sealed class EvaluationContext
     }
 
     [System.Runtime.CompilerServices.InterpolatedStringHandler]
+    [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
     internal struct StructuredText
     {
         private readonly List<object?> fragments;
@@ -48,6 +117,7 @@ internal sealed class EvaluationContext
         public void AppendLiteral(string text) => fragments.Add(text);
         public void AppendFormatted(object? value) => fragments.Add(value);
         internal object?[] ToFragments() => fragments.ToArray();
+        public override string ToString() => DebugSummary(fragments?.ToArray());
     }
     internal static object?[] Text(StructuredText text) => text.ToFragments();
 

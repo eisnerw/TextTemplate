@@ -9,7 +9,17 @@ using System.Text.RegularExpressions;
 
 internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(context)
 {
-    // templates/simpledata.template:1:1
+    // Template:
+    // {"Hello"} {lastName}, {firstName} with {pets=>
+    //    [{pets:#xformatPet.#anded()}].@Include('#doInclude')
+    //    ,[no pets]
+    // }!!
+    //
+    // Subtemplates:
+    //
+    // {#formatPet:[a {type} named {name}]}
+    // {#anded:[{$0.Join(', ',' and ')}]}
+    // Source: "templates/simpledata.template":1:1
     internal object? Render()
     {
         return WithDefinitions(
@@ -21,7 +31,9 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
             child => new Simpledata(child).renderSimpledata());
     }
 
-    // templates/simpledata.template:9:9
+    // Template:
+    // [{$0.Join(', ',' and ')}]
+    // Source: "templates/simpledata.template":9:9
     private object? anded()
     {
         var join = Join(Get("$0"), ", ", " and ");
@@ -29,7 +41,9 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
         return Line($"{join}");
     }
 
-    // templates/simpledata.template:8:13
+    // Template:
+    // [a {type} named {name}]
+    // Source: "templates/simpledata.template":8:13
     private object? formatPet()
     {
         var type = Get("type");
@@ -38,7 +52,9 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
         return Line($"a {type} named {name}");
     }
 
-    // templates/simpledata.template:2:4
+    // Template:
+    // [{pets:#xformatPet.#anded()}]
+    // Source: "templates/simpledata.template":2:4
     private object? renderContent()
     {
         var pets = InContext(Get("pets"), child => new Simpledata(child).renderAnded());
@@ -46,7 +62,9 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
         return Line($"{pets}");
     }
 
-    // templates/simpledata.template:2:11
+    // Template:
+    // #xformatPet.#anded()
+    // Source: "templates/simpledata.template":2:11
     private object? renderAnded()
     {
         return CallNamed("anded", Named("xformatPet"));

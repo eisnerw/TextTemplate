@@ -9,7 +9,62 @@ using System.Text.RegularExpressions;
 
 internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
 {
-    // templates/web.template:1:1
+    // Template:
+    // Here is an example of tagging and styling using Text Templates:
+    // {[Hello {'test'.#Style('outlined-red-dots')} `
+    // {"World".#Style('italic','bold','red')}!!] 
+    // .#Style('normal','blue').#Tag('h2').#ToHtml()} 
+    // Here's an example of a ` 
+    // {
+    //    'Link'.#Click(
+    //          'simple'  // the link name
+    //          ,'Click this to load a simple template'
+    //          , 'link','italic' // style attributes
+    //       )
+    // } you can hover over and click.
+    //
+    // {#external}
+    // Subtemplates:
+    // {#Style: 
+    // [<span style="{$1.#StyleCases(
+    //    $2,$3,$4,$5,$6,$7,$8,$9  
+    // )}">{$0}</span>]} 
+    // {#ToHtml:[<pre><span>{$0}</span><pre>]}
+    // {#Tag:[<{$1}>{$0}</{$1}>]}
+    // {#Click:[<a title='{$2=>[{$2}],[Click this]}' `
+    //    onclick="document.location='/#{$1}'; `
+    //    document.location.reload()">{$0}</a>]
+    //    .#OptionalStyle('link',$2,$3,$4,$5,$6,$7,$8,$9)}
+    // {#StyleCases:[ `
+    //    {$0
+    //       .Case(
+    //          'italic','font-style:italic'
+    //          ,'normal','font-weight:normal;white-space:normal'
+    //          ,'bold','font-weight:bold'
+    //          ,'red','color:red'
+    //          ,'blue','color:blue'
+    //          ,'black','color:black'
+    //          ,'outlined-red-dots','outline-color:red;outline-style:dotted'
+    //          ,'underline','text-decoration: underline'
+    //          ,'link','text-decoration: underline;color:blue'
+    //       )
+    //    };
+    //    {$1->[{$1.#StyleCases($2,$3,$4,$5,$6,$7,$8,$9)}]}
+    // ]}
+    // {#OptionalStyle:[{$2=>[
+    //       {$0.#Style($2,$3,$4,$5,$6,$7,$8,$9)}
+    //    ],[
+    //       {$0.#Style($1)}]}
+    // ]}
+    // {#external:[
+    // This is an example of an external data source (in this case, Github)
+    //
+    // my repos: {'https://api.github.com/users/eisnerw/repos': #formatGitRepos}
+    // Subtemplates:    
+    //
+    // {#formatGitRepos:[- {name}{description->[ ({description})]}]} 
+    // ]}
+    // Source: "templates/web.template":1:1
     internal object? Render()
     {
         return WithDefinitions(
@@ -26,7 +81,16 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
             child => new Web(child).renderWeb());
     }
 
-    // templates/web.template:47:12
+    // Template:
+    // [
+    // This is an example of an external data source (in this case, Github)
+    //
+    // my repos: {'https://api.github.com/users/eisnerw/repos': #formatGitRepos}
+    // Subtemplates:    
+    //
+    // {#formatGitRepos:[- {name}{description->[ ({description})]}]} 
+    // ]
+    // Source: "templates/web.template":47:12
     private object? external()
     {
         return WithDefinitions(
@@ -37,7 +101,9 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
             child => new Web(child).externalContent());
     }
 
-    // templates/web.template:53:18
+    // Template:
+    // [- {name}{description->[ ({description})]}]
+    // Source: "templates/web.template":53:18
     private object? formatGitRepos()
     {
         var name = Get("name");
@@ -46,7 +112,9 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
         return Line($"- {name}{choice}");
     }
 
-    // templates/web.template:53:41
+    // Template:
+    // [ ({description})]
+    // Source: "templates/web.template":53:41
     private object? renderDescription()
     {
         var description = Get("description");
@@ -54,13 +122,21 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
         return Line($" ({description})");
     }
 
-    // templates/web.template:50:58
+    // Template:
+    // #formatGitRepos
+    // Source: "templates/web.template":50:58
     private object? renderFormatGitRepos()
     {
         return Named("formatGitRepos");
     }
 
-    // templates/web.template:42:17
+    // Template:
+    // [{$2=>[
+    //       {$0.#Style($2,$3,$4,$5,$6,$7,$8,$9)}
+    //    ],[
+    //       {$0.#Style($1)}]}
+    // ]
+    // Source: "templates/web.template":42:17
     private object? OptionalStyle()
     {
         object? choice = (EvaluationContext.Condition(Get("$2")) ? this.renderStyle_2() : this.renderStyle_3());
@@ -68,7 +144,10 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
         return Line($"{choice}");
     }
 
-    // templates/web.template:44:6
+    // Template:
+    // [
+    //       {$0.#Style($1)}]
+    // Source: "templates/web.template":44:6
     private object? renderStyle_3()
     {
         var style = CallNamed("Style", Get("$0"), Get("$1"));
@@ -76,7 +155,11 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
         return Line($"{style}");
     }
 
-    // templates/web.template:42:23
+    // Template:
+    // [
+    //       {$0.#Style($2,$3,$4,$5,$6,$7,$8,$9)}
+    //    ]
+    // Source: "templates/web.template":42:23
     private object? renderStyle_2()
     {
         var style = CallNamed("Style", Get("$0"), Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9"));
@@ -84,10 +167,40 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
         return Line($"{style}");
     }
 
-    // templates/web.template:26:14
+    // Template:
+    // [ `
+    //    {$0
+    //       .Case(
+    //          'italic','font-style:italic'
+    //          ,'normal','font-weight:normal;white-space:normal'
+    //          ,'bold','font-weight:bold'
+    //          ,'red','color:red'
+    //          ,'blue','color:blue'
+    //          ,'black','color:black'
+    //          ,'outlined-red-dots','outline-color:red;outline-style:dotted'
+    //          ,'underline','text-decoration: underline'
+    //          ,'link','text-decoration: underline;color:blue'
+    //       )
+    //    };
+    //    {$1->[{$1.#StyleCases($2,$3,$4,$5,$6,$7,$8,$9)}]}
+    // ]
+    // Source: "templates/web.template":26:14
     private object? StyleCases()
     {
-        // templates/web.template:27:5
+        // Template:
+        // $0
+        //       .Case(
+        //          'italic','font-style:italic'
+        //          ,'normal','font-weight:normal;white-space:normal'
+        //          ,'bold','font-weight:bold'
+        //          ,'red','color:red'
+        //          ,'blue','color:blue'
+        //          ,'black','color:black'
+        //          ,'outlined-red-dots','outline-color:red;outline-style:dotted'
+        //          ,'underline','text-decoration: underline'
+        //          ,'link','text-decoration: underline;color:blue'
+        //       )
+        // Source: "templates/web.template":27:5
         object? applyCase() => Unsupported(
             "Call Case",
             "templates/web.template:27:5",
@@ -103,7 +216,9 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
             """);
     }
 
-    // templates/web.template:40:9
+    // Template:
+    // [{$1.#StyleCases($2,$3,$4,$5,$6,$7,$8,$9)}]
+    // Source: "templates/web.template":40:9
     private object? renderStyleCases()
     {
         var styleCases = CallNamed("StyleCases", Get("$1"), Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9"));
@@ -111,13 +226,22 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
         return Line($"{styleCases}");
     }
 
-    // templates/web.template:22:9
+    // Template:
+    // [<a title='{$2=>[{$2}],[Click this]}' `
+    //    onclick="document.location='/#{$1}'; `
+    //    document.location.reload()">{$0}</a>]
+    //    .#OptionalStyle('link',$2,$3,$4,$5,$6,$7,$8,$9)
+    // Source: "templates/web.template":22:9
     private object? Click()
     {
         return CallNamed("OptionalStyle", this.renderChoice(), "link", Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9"));
     }
 
-    // templates/web.template:22:9
+    // Template:
+    // [<a title='{$2=>[{$2}],[Click this]}' `
+    //    onclick="document.location='/#{$1}'; `
+    //    document.location.reload()">{$0}</a>]
+    // Source: "templates/web.template":22:9
     private object? renderChoice()
     {
         object? choice = (EvaluationContext.Condition(Get("$2")) ? this.renderItem2() : Line($"Click this"));
@@ -127,7 +251,9 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
         return Line($"<a title='{choice}' onclick=\"document.location='/#{item1}'; document.location.reload()\">{item0}</a>");
     }
 
-    // templates/web.template:22:25
+    // Template:
+    // [{$2}]
+    // Source: "templates/web.template":22:25
     private object? renderItem2()
     {
         var item2 = Get("$2");
@@ -135,7 +261,9 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
         return Line($"{item2}");
     }
 
-    // templates/web.template:21:7
+    // Template:
+    // [<{$1}>{$0}</{$1}>]
+    // Source: "templates/web.template":21:7
     private object? Tag()
     {
         var item1 = Get("$1");
@@ -145,7 +273,9 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
         return Line($"<{item1}>{item0}</{item1_2}>");
     }
 
-    // templates/web.template:20:10
+    // Template:
+    // [<pre><span>{$0}</span><pre>]
+    // Source: "templates/web.template":20:10
     private object? ToHtml()
     {
         var item0 = Get("$0");
@@ -153,7 +283,11 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
         return Line($"<pre><span>{item0}</span><pre>");
     }
 
-    // templates/web.template:17:1
+    // Template:
+    // [<span style="{$1.#StyleCases(
+    //    $2,$3,$4,$5,$6,$7,$8,$9  
+    // )}">{$0}</span>]
+    // Source: "templates/web.template":17:1
     private object? Style()
     {
         var styleCases = CallNamed("StyleCases", Get("$1"), Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9"));
@@ -162,7 +296,10 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
         return Line($"<span style=\"{styleCases}\">{item0}</span>");
     }
 
-    // templates/web.template:2:2
+    // Template:
+    // [Hello {'test'.#Style('outlined-red-dots')} `
+    // {"World".#Style('italic','bold','red')}!!]
+    // Source: "templates/web.template":2:2
     private object? renderStyle()
     {
         var style = CallNamed("Style", "test", "outlined-red-dots");

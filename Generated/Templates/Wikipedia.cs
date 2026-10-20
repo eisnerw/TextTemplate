@@ -9,7 +9,14 @@ using System.Text.RegularExpressions;
 
 internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(context)
 {
-    // templates/wikipedia.template:1:1
+    // Template:
+    //  {'Paul Simon'.#getWiki()}
+    //
+    // Subtemplates:
+    // {#getWiki:[{#Wiki:[{key.extract}]}]}
+    // {#Wiki:[{#wikiapi:[{query.pages:[{*.ToJson().Replace(/"\d+"/,'"key"')}]}]}]}
+    // {#wikiapi:[{'https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exintro=&titles='}{$0}]}
+    // Source: "templates/wikipedia.template":1:1
     internal object? Render()
     {
         return WithDefinitions(
@@ -22,7 +29,9 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
             child => new Wikipedia(child).renderWikipedia());
     }
 
-    // templates/wikipedia.template:6:11
+    // Template:
+    // [{'https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exintro=&titles='}{$0}]
+    // Source: "templates/wikipedia.template":6:11
     private object? wikiapi()
     {
         var item0 = Get("$0");
@@ -30,7 +39,9 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
         return Line($"https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exintro=&titles={item0}");
     }
 
-    // templates/wikipedia.template:5:8
+    // Template:
+    // [{#wikiapi:[{query.pages:[{*.ToJson().Replace(/"\d+"/,'"key"')}]}]}]
+    // Source: "templates/wikipedia.template":5:8
     private object? Wiki()
     {
         var wikiapi = InContext(Named("wikiapi"), child => new Wikipedia(child).renderContent());
@@ -38,7 +49,9 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
         return Line($"{wikiapi}");
     }
 
-    // templates/wikipedia.template:5:19
+    // Template:
+    // [{query.pages:[{*.ToJson().Replace(/"\d+"/,'"key"')}]}]
+    // Source: "templates/wikipedia.template":5:19
     private object? renderContent()
     {
         var pages = InContext(Get("query.pages"), child => new Wikipedia(child).renderReplace());
@@ -46,21 +59,29 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
         return Line($"{pages}");
     }
 
-    // templates/wikipedia.template:5:33
+    // Template:
+    // [{*.ToJson().Replace(/"\d+"/,'"key"')}]
+    // Source: "templates/wikipedia.template":5:33
     private object? renderReplace()
     {
-        // templates/wikipedia.template:5:35
+        // Template:
+        // *.ToJson()
+        // Source: "templates/wikipedia.template":5:35
         object? applyToJson() => Unsupported(
             "Call ToJson",
             "templates/wikipedia.template:5:35",
             () => Get("*"));
 
-        // templates/wikipedia.template:5:54
+        // Template:
+        // /"\d+"/
+        // Source: "templates/wikipedia.template":5:54
         object? pattern() => Unsupported(
             "Regex /\"\\d+\"/",
             "templates/wikipedia.template:5:54");
 
-        // templates/wikipedia.template:5:35
+        // Template:
+        // *.ToJson().Replace(/"\d+"/,'"key"')
+        // Source: "templates/wikipedia.template":5:35
         object? applyReplace() => Unsupported(
             "Call Replace",
             "templates/wikipedia.template:5:35",
@@ -72,7 +93,9 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
         return Line($"{replace}");
     }
 
-    // templates/wikipedia.template:4:11
+    // Template:
+    // [{#Wiki:[{key.extract}]}]
+    // Source: "templates/wikipedia.template":4:11
     private object? getWiki()
     {
         var wiki = InContext(Named("Wiki"), child => new Wikipedia(child).renderExtract());
@@ -80,7 +103,9 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
         return Line($"{wiki}");
     }
 
-    // templates/wikipedia.template:4:19
+    // Template:
+    // [{key.extract}]
+    // Source: "templates/wikipedia.template":4:19
     private object? renderExtract()
     {
         var extract = Get("key.extract");

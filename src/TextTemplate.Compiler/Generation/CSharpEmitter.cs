@@ -292,12 +292,28 @@ public sealed class CSharpEmitter
         current = new MethodBody();
         string expression = Expression(node, source);
         string access = ReferenceEquals(node, source.Tree) ? "internal" : "private";
-        string method = "    // " + source.Category + "/" + source.Name.Replace("\n", " ").Replace("\r", " ") +
-            ".template:" + node.Span.Line + ":" + node.Span.Column + "\n" +
+        string method = SourceComment(node, source, "    ") +
             "    " + access + " object? " + name + "()\n    {\n" + Body(expression) + "    }\n\n";
         bodies.Insert(0, method);
         current = previous;
         return name;
+    }
+
+    private static string SourceComment(SyntaxNode node, ParsedSource source, string indent)
+    {
+        // Read the original span, not reconstructed tokens: retain the author's
+        // quoting, indentation and template syntax. Prefix every C# line terminator
+        // so even template text containing comment delimiters stays a comment.
+        string text = source.Text.Substring(node.Span.Offset, node.Span.Length)
+            .Replace("\r\n", "\n").Replace('\r', '\n')
+            .Replace('\u0085', '\n').Replace('\u2028', '\n').Replace('\u2029', '\n');
+        var comment = new StringBuilder(indent + "// Template:\n");
+        foreach (string line in text.Split('\n'))
+            comment.Append(indent).Append("//").Append(line.Length == 0 ? "" : " " + line).Append('\n');
+        string path = source.Category + "/" + source.Name + ".template";
+        comment.Append(indent).Append("// Source: ").Append(Quote(path))
+            .Append(':').Append(node.Span.Line).Append(':').Append(node.Span.Column).Append('\n');
+        return comment.ToString();
     }
 
     private string Body(string expression)
@@ -371,7 +387,7 @@ public sealed class CSharpEmitter
             string function = Unique(operation, current.Names);
             // Local functions retain lazy operand evaluation, including nested unsupported calls.
             var operands = node.Children.Select(child => "() => " + Call(child)).ToList();
-            current.Functions.Add("        // " + location + "\n        object? " + function + "() => Unsupported(\n" +
+            current.Functions.Add(SourceComment(node, source, "        ") + "        object? " + function + "() => Unsupported(\n" +
                 "            " + Quote(node.Kind + (node.Value is null ? "" : " " + node.Value)) + ",\n" +
                 "            " + Quote(location) + (operands.Count == 0 ? "" : ",\n            " + string.Join(",\n            ", operands)) + ");\n\n");
             return function + "()";
