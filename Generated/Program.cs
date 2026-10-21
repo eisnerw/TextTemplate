@@ -22,7 +22,7 @@ public static class GeneratedTemplateProgram
                 else throw new ArgumentException("Unknown or incomplete argument: " + args[i]);
             }
             if (template is null) throw new ArgumentException("Specify --template NAME.");
-            using var data = dataFile is null ? null : JsonDocument.Parse(File.ReadAllText(dataFile));
+            using JsonDocument? data = dataFile is null ? null : JsonDocument.Parse(File.ReadAllText(dataFile));
             string result = GeneratedTemplates.Render(template, data?.RootElement);
             Console.Write(result);
             return 0;

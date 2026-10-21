@@ -20,23 +20,18 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
     // {#formatPet:[a {type} named {name}]}
     // {#anded:[{$0.Join(', ',' and ')}]}
     // Source: "templates/simpledata.template":1:1
-    internal object? Render()
+    internal object?[] Evaluate()
     {
-        return WithDefinitions(
-            new Dictionary<string, Func<EvaluationContext, object?>>(StringComparer.Ordinal)
-            {
-                ["formatPet"] = scope => scope.Each(child => new Simpledata(child).formatPet()),
-                ["anded"] = scope => scope.Each(child => new Simpledata(child).anded())
-            },
-            child => new Simpledata(child).renderSimpledata());
+        return WithDefinitions(defineSubtemplates,
+            definitionContext => new Simpledata(definitionContext).renderSimpledata());
     }
 
     // Template:
     // [{$0.Join(', ',' and ')}]
     // Source: "templates/simpledata.template":9:9
-    private object? anded()
+    private object?[] anded()
     {
-        var join = Join(Receiver(child => child.Lookup("$0")), ", ", " and ");
+        object? join = Join(MethodInput("$0"), ", ", " and ");
 
         return Line($"{join}");
     }
@@ -44,10 +39,10 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
     // Template:
     // [a {type} named {name}]
     // Source: "templates/simpledata.template":8:13
-    private object? formatPet()
+    private object?[] formatPet()
     {
-        var type = Get("type");
-        var name = Get("name");
+        object? type = Get("type");
+        object? name = Get("name");
 
         return Line($"a {type} named {name}");
     }
@@ -55,9 +50,9 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
     // Template:
     // [{pets:#xformatPet.#anded()}]
     // Source: "templates/simpledata.template":2:4
-    private object? renderContent()
+    private object?[] renderContent()
     {
-        var pets = InContext(Get("pets"), child => new Simpledata(child).renderAnded());
+        object? pets = InContext(Get("pets"), dataContext => new Simpledata(dataContext).renderAnded());
 
         return Line($"{pets}");
     }
@@ -67,21 +62,46 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
     // Source: "templates/simpledata.template":2:11
     private object? renderAnded()
     {
-        return CallNamed("anded", Receiver(child => child.Named("xformatPet")));
+        return ApplySubtemplate("anded", SubtemplateInput("xformatPet"));
     }
 
-    private object? renderSimpledata()
+    // Template:
+    //
+    //
+    // Subtemplates:
+    //
+    // {#formatPet:[a {type} named {name}]}
+    // {#anded:[{$0.Join(', ',' and ')}]}
+    // Source: "templates/simpledata.template":4:4
+    private void defineSubtemplates(SubtemplateDefinitions definitions)
     {
-        var lastName = Get("lastName");
-        var firstName = Get("firstName");
-        object? choice = (EvaluationContext.Condition(Get("pets")) ? Annotate(
+        definitions.Add("formatPet", definitionContext => definitionContext.Each(itemContext => new Simpledata(itemContext).formatPet()));
+        definitions.Add("anded", definitionContext => definitionContext.Each(itemContext => new Simpledata(itemContext).anded()));
+    }
+
+    // Template:
+    // {"Hello"} {lastName}, {firstName} with {pets=>
+    //    [{pets:#xformatPet.#anded()}].@Include('#doInclude')
+    //    ,[no pets]
+    // }!!
+    //
+    // Subtemplates:
+    //
+    // {#formatPet:[a {type} named {name}]}
+    // {#anded:[{$0.Join(', ',' and ')}]}
+    // Source: "templates/simpledata.template":1:1
+    private object?[] renderSimpledata()
+    {
+        object? lastName = Get("lastName");
+        object? firstName = Get("firstName");
+        object? petsResult = (IsTruthy("pets") ? Annotate(
             new Func<EvaluationContext, EvaluationContext>[]
             {
-                child => child.Include("doInclude", imported => new DoInclude(imported).Import())
+                annotatedContext => annotatedContext.Include("doInclude", includedContext => new DoInclude(includedContext).Import())
             },
-            scope => scope.Each(child => new Simpledata(child).renderContent())) : Each(child => Line($"no pets")));
+            annotatedContext => annotatedContext.Each(itemContext => new Simpledata(itemContext).renderContent())) : Each(itemContext => Line($"no pets")));
 
-        return Line($"Hello {lastName}, {firstName} with {choice}!!");
+        return Line($"Hello {lastName}, {firstName} with {petsResult}!!");
     }
 
 }

@@ -11,31 +11,31 @@ public static class GeneratedTemplates
 {
     private static readonly Dictionary<string, Func<EvaluationContext, object?>> Templates = new(StringComparer.Ordinal)
     {
-        ["birthdays"] = context => new Birthdays(context).Render(),
-        ["bullets"] = context => new Bullets(context).Render(),
-        ["docs"] = context => new Docs(context).Render(),
-        ["elastic"] = context => new Elastic(context).Render(),
-        ["events"] = context => new Events(context).Render(),
-        ["outline"] = context => new Outline(context).Render(),
-        ["simple"] = context => new Simple(context).Render(),
-        ["simpledata"] = context => new Simpledata(context).Render(),
-        ["startup"] = context => new Startup(context).Render(),
-        ["tests"] = context => new Tests(context).Render(),
-        ["web"] = context => new Web(context).Render(),
-        ["wikipedia"] = context => new Wikipedia(context).Render(),
+        ["birthdays"] = context => new Birthdays(context).Evaluate(),
+        ["bullets"] = context => new Bullets(context).Evaluate(),
+        ["docs"] = context => new Docs(context).Evaluate(),
+        ["elastic"] = context => new Elastic(context).Evaluate(),
+        ["events"] = context => new Events(context).Evaluate(),
+        ["outline"] = context => new Outline(context).Evaluate(),
+        ["simple"] = context => new Simple(context).Evaluate(),
+        ["simpledata"] = context => new Simpledata(context).Evaluate(),
+        ["startup"] = context => new Startup(context).Evaluate(),
+        ["tests"] = context => new Tests(context).Evaluate(),
+        ["web"] = context => new Web(context).Evaluate(),
+        ["wikipedia"] = context => new Wikipedia(context).Evaluate(),
     };
     private static readonly Dictionary<string, Func<EvaluationContext, object?>> Shared = new(StringComparer.Ordinal)
     {
-        ["doInclude"] = context => new DoInclude(context).Render(),
-        ["doit"] = context => new Doit(context).Render(),
-        ["formatGitRepos"] = context => new FormatGitRepos(context).Render(),
-        ["formatGitReposAnded"] = context => new FormatGitReposAnded(context).Render(),
-        ["xformatPet"] = context => new XformatPet(context).Render(),
-        ["xformatPets"] = context => new XformatPets(context).Render(),
+        ["doInclude"] = context => new DoInclude(context).Evaluate(),
+        ["doit"] = context => new Doit(context).Evaluate(),
+        ["formatGitRepos"] = context => new FormatGitRepos(context).Evaluate(),
+        ["formatGitReposAnded"] = context => new FormatGitReposAnded(context).Evaluate(),
+        ["xformatPet"] = context => new XformatPet(context).Evaluate(),
+        ["xformatPets"] = context => new XformatPets(context).Evaluate(),
     };
     public static string Render(string name, JsonElement? data = null)
     {
-        if (!Templates.TryGetValue(name, out var template)) throw new ArgumentException("Unknown template: " + name);
+        if (!Templates.TryGetValue(name, out Func<EvaluationContext, object?>? template)) throw new ArgumentException("Unknown template: " + name);
         return (string)EvaluationContext.At("templates/" + name + ".template:1:1", () => EvaluationContext.Compose(template(new EvaluationContext(data, Shared))) ?? "")!;
     }
 

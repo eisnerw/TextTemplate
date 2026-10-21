@@ -15,14 +15,14 @@ internal sealed class DoInclude(EvaluationContext context) : TemplateUnit(contex
     // {#a:[]}
     // ].@MissingValue('missing --{key}--')
     // Source: "subtemplates/doInclude.template":1:1
-    internal object? Render()
+    internal object?[] Evaluate()
     {
-        var missingValue = Annotate(
+        object? missingValue = Annotate(
             new Func<EvaluationContext, EvaluationContext>[]
             {
-                child => child.WithMissingValue("missing --{key}--")
+                annotatedContext => annotatedContext.WithMissingValue("missing --{key}--")
             },
-            scope => scope.Each(child => new DoInclude(child).renderSubtemplates()));
+            annotatedContext => annotatedContext.Each(itemContext => new DoInclude(itemContext).renderSubtemplates()));
 
         return Line($"{missingValue}");
     }
@@ -33,9 +33,9 @@ internal sealed class DoInclude(EvaluationContext context) : TemplateUnit(contex
     // {#a:[]}
     // ]
     // Source: "subtemplates/doInclude.template":1:1
-    private object? renderSubtemplates()
+    private object?[] renderSubtemplates()
     {
-        var a = InContext(Each(child => child.Named("a")), scope => scope.Each(child => new DoInclude(child).a()));
+        object? a = InContext(Each(itemContext => itemContext.Named("a")), dataContext => dataContext.Each(itemContext => new DoInclude(itemContext).a()));
 
         return Line($$"""
             Subtemplates:
@@ -46,18 +46,25 @@ internal sealed class DoInclude(EvaluationContext context) : TemplateUnit(contex
     // Template:
     // []
     // Source: "subtemplates/doInclude.template":3:5
-    private object? a()
+    private object?[] a()
     {
         return Line($"");
     }
 
+    // Template:
+    // [
+    // Subtemplates:
+    // {#a:[]}
+    // ]
+    // Source: "subtemplates/doInclude.template":1:1
+    private void defineIncludedSubtemplates(SubtemplateDefinitions definitions)
+    {
+        definitions.Add("a", definitionContext => new DoInclude(definitionContext).a());
+    }
+
     internal EvaluationContext Import()
     {
-        var included = Context.Define(
-            new Dictionary<string, Func<EvaluationContext, object?>>(StringComparer.Ordinal)
-            {
-                ["a"] = child => new DoInclude(child).a()
-            });
+        EvaluationContext included = DefineSubtemplates(defineIncludedSubtemplates);
         included = included.WithMissingValue("missing --{key}--");
         return included;
     }

@@ -33,26 +33,17 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // {#ungrouped:[{'/data/famousBirthdays'.OrderBy(lname.ToUpper()):
     //    [{#name} {#date} {sign}{!isAlive->[ (dead)]}]}]}
     // Source: "templates/birthdays.template":1:1
-    internal object? Render()
+    internal object?[] Evaluate()
     {
-        return WithDefinitions(
-            new Dictionary<string, Func<EvaluationContext, object?>>(StringComparer.Ordinal)
-            {
-                ["grouping"] = child => new Birthdays(child).grouping(),
-                ["byDate"] = scope => scope.Each(child => new Birthdays(child).byDate()),
-                ["bySign"] = scope => scope.Each(child => new Birthdays(child).bySign()),
-                ["name"] = scope => scope.Each(child => new Birthdays(child).name()),
-                ["date"] = scope => scope.Each(child => new Birthdays(child).date()),
-                ["ungrouped"] = scope => scope.Each(child => new Birthdays(child).ungrouped())
-            },
-            child => new Birthdays(child).renderBirthdays());
+        return WithDefinitions(defineSubtemplates,
+            definitionContext => new Birthdays(definitionContext).renderBirthdays());
     }
 
     // Template:
     // [{'/data/famousBirthdays'.OrderBy(lname.ToUpper()):
     //    [{#name} {#date} {sign}{!isAlive->[ (dead)]}]}]
     // Source: "templates/birthdays.template":21:13
-    private object? ungrouped()
+    private object?[] ungrouped()
     {
         // Template:
         // lname.ToUpper()
@@ -71,7 +62,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
             () => "/data/famousBirthdays",
             () => new object?[] { applyToUpper() });
 
-        var orderBy = InContext(applyOrderBy(), scope => scope.Each(child => new Birthdays(child).renderName_2()));
+        object? orderBy = InContext(applyOrderBy(), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderName_2()));
 
         return Line($"{orderBy}");
     }
@@ -79,12 +70,12 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Template:
     // [{#name} {#date} {sign}{!isAlive->[ (dead)]}]
     // Source: "templates/birthdays.template":22:4
-    private object? renderName_2()
+    private object?[] renderName_2()
     {
-        var name = Each(child => child.Named("name"));
-        var date = Each(child => child.Named("date"));
-        var sign = Get("sign");
-        object? choice = (!(EvaluationContext.Condition(Get("isAlive"))) ? Each(child => Line($" (dead)")) : "");
+        object? name = Each(itemContext => itemContext.Named("name"));
+        object? date = Each(itemContext => itemContext.Named("date"));
+        object? sign = Get("sign");
+        object? choice = (!(IsTruthy("isAlive")) ? Each(itemContext => Line($" (dead)")) : "");
 
         return Line($"{name} {date} {sign}{choice}");
     }
@@ -92,7 +83,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Template:
     // [({dob.ToDate()})]
     // Source: "templates/birthdays.template":20:8
-    private object? date()
+    private object?[] date()
     {
         // Template:
         // dob.ToDate()
@@ -102,7 +93,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
             "templates/birthdays.template:20:11",
             () => Get("dob"));
 
-        var toDate = applyToDate();
+        object? toDate = applyToDate();
 
         return Line($"({toDate})");
     }
@@ -110,20 +101,20 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Template:
     // [{fname->[{fname} ]}{lname}]
     // Source: "templates/birthdays.template":19:8
-    private object? name()
+    private object?[] name()
     {
-        object? choice = (EvaluationContext.Condition(Get("fname")) ? Each(child => new Birthdays(child).renderFname_2()) : "");
-        var lname = Get("lname");
+        object? fnameResult = (IsTruthy("fname") ? Each(itemContext => new Birthdays(itemContext).renderFname_2()) : "");
+        object? lname = Get("lname");
 
-        return Line($"{choice}{lname}");
+        return Line($"{fnameResult}{lname}");
     }
 
     // Template:
     // [{fname} ]
     // Source: "templates/birthdays.template":19:17
-    private object? renderFname_2()
+    private object?[] renderFname_2()
     {
-        var fname = Get("fname");
+        object? fname = Get("fname");
 
         return Line($"{fname} ");
     }
@@ -136,7 +127,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     //           .OrderBy(dob, 'A'):
     //                [{fname->[{fname} ]}{lname} {#date}]}]}]}]
     // Source: "templates/birthdays.template":13:10
-    private object? bySign()
+    private object?[] bySign()
     {
         // Template:
         // '/data/famousBirthdays'.GroupBy(sign, 'group')
@@ -147,7 +138,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
             () => "/data/famousBirthdays",
             () => new object?[] { Get("sign"), "group" });
 
-        var groupBy = InContext(applyGroupBy(), scope => scope.Each(child => new Birthdays(child).renderSign()));
+        object? groupBy = InContext(applyGroupBy(), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderSign()));
 
         return Line($"{groupBy}");
     }
@@ -159,7 +150,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     //           .OrderBy(dob, 'A'):
     //                [{fname->[{fname} ]}{lname} {#date}]}]}]
     // Source: "templates/birthdays.template":14:6
-    private object? renderSign()
+    private object?[] renderSign()
     {
         // Template:
         // dob.ToDate('yyyy')
@@ -189,8 +180,8 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
             () => applyGroupBy(),
             () => new object?[] { Get("year"), "D" });
 
-        var sign = Get("sign");
-        var orderBy = InContext(applyOrderBy(), scope => scope.Each(child => new Birthdays(child).renderYear()));
+        object? sign = Get("sign");
+        object? orderBy = InContext(applyOrderBy(), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderYear()));
 
         return Line($"{sign}{orderBy}");
     }
@@ -201,7 +192,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     //           .OrderBy(dob, 'A'):
     //                [{fname->[{fname} ]}{lname} {#date}]}]
     // Source: "templates/birthdays.template":15:30
-    private object? renderYear()
+    private object?[] renderYear()
     {
         // Template:
         // yeargroup
@@ -213,8 +204,8 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
             () => Get("yeargroup"),
             () => new object?[] { Get("dob"), "A" });
 
-        var year = Get("year");
-        var orderBy = InContext(applyOrderBy(), scope => scope.Each(child => new Birthdays(child).renderChoice()));
+        object? year = Get("year");
+        object? orderBy = InContext(applyOrderBy(), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderFnameResult()));
 
         return Line($$"""
             {{year}}
@@ -225,21 +216,21 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Template:
     // [{fname->[{fname} ]}{lname} {#date}]
     // Source: "templates/birthdays.template":18:16
-    private object? renderChoice()
+    private object?[] renderFnameResult()
     {
-        object? choice = (EvaluationContext.Condition(Get("fname")) ? Each(child => new Birthdays(child).renderFname()) : "");
-        var lname = Get("lname");
-        var date = Each(child => child.Named("date"));
+        object? fnameResult = (IsTruthy("fname") ? Each(itemContext => new Birthdays(itemContext).renderFname()) : "");
+        object? lname = Get("lname");
+        object? date = Each(itemContext => itemContext.Named("date"));
 
-        return Line($"{choice}{lname} {date}");
+        return Line($"{fnameResult}{lname} {date}");
     }
 
     // Template:
     // [{fname} ]
     // Source: "templates/birthdays.template":18:25
-    private object? renderFname()
+    private object?[] renderFname()
     {
-        var fname = Get("fname");
+        object? fname = Get("fname");
 
         return Line($"{fname} ");
     }
@@ -253,7 +244,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     //           .OrderBy(dob, 'D'):
     //                [{#name} {#date}]}]}]}]
     // Source: "templates/birthdays.template":6:10
-    private object? byDate()
+    private object?[] byDate()
     {
         // Template:
         // '/data/famousBirthdays'.Where(!isAlive)
@@ -262,7 +253,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
             "Call Where",
             "templates/birthdays.template:6:12",
             () => "/data/famousBirthdays",
-            () => new object?[] { !(EvaluationContext.Condition(Get("isAlive"))) });
+            () => new object?[] { !(IsTruthy("isAlive")) });
 
         // Template:
         // dob.ToDate('MM')
@@ -282,7 +273,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
             () => applyWhere(),
             () => new object?[] { applyToDate(), "group", "month" });
 
-        var groupBy = InContext(applyGroupBy(), scope => scope.Each(child => new Birthdays(child).renderToDate()));
+        object? groupBy = InContext(applyGroupBy(), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderToDate()));
 
         return Line($"{groupBy}");
     }
@@ -295,7 +286,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     //           .OrderBy(dob, 'D'):
     //                [{#name} {#date}]}]}]
     // Source: "templates/birthdays.template":7:6
-    private object? renderToDate()
+    private object?[] renderToDate()
     {
         // Template:
         // [2020-{month}-01].ToDate('MMMM')
@@ -303,7 +294,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
         object? applyToDate() => Unsupported(
             "Call ToDate",
             "templates/birthdays.template:7:8",
-            () => Each(child => new Birthdays(child).renderMonth()),
+            () => Each(itemContext => new Birthdays(itemContext).renderMonth()),
             () => new object?[] { "MMMM" });
 
         // Template:
@@ -334,8 +325,8 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
             () => applyGroupBy(),
             () => new object?[] { Get("day") });
 
-        var toDate = applyToDate();
-        var orderBy = InContext(applyOrderBy(), scope => scope.Each(child => new Birthdays(child).renderDay()));
+        object? toDate = applyToDate();
+        object? orderBy = InContext(applyOrderBy(), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderDay()));
 
         return Line($"{toDate}{orderBy}");
     }
@@ -346,7 +337,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     //           .OrderBy(dob, 'D'):
     //                [{#name} {#date}]}]
     // Source: "templates/birthdays.template":9:25
-    private object? renderDay()
+    private object?[] renderDay()
     {
         // Template:
         // daygroup
@@ -358,8 +349,8 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
             () => Get("daygroup"),
             () => new object?[] { Get("dob"), "D" });
 
-        var day = Get("day");
-        var orderBy = InContext(applyOrderBy(), scope => scope.Each(child => new Birthdays(child).renderName()));
+        object? day = Get("day");
+        object? orderBy = InContext(applyOrderBy(), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderName()));
 
         return Line($$"""
             {{day}}
@@ -370,10 +361,10 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Template:
     // [{#name} {#date}]
     // Source: "templates/birthdays.template":12:16
-    private object? renderName()
+    private object?[] renderName()
     {
-        var name = Each(child => child.Named("name"));
-        var date = Each(child => child.Named("date"));
+        object? name = Each(itemContext => itemContext.Named("name"));
+        object? date = Each(itemContext => itemContext.Named("date"));
 
         return Line($"{name} {date}");
     }
@@ -381,9 +372,9 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Template:
     // [2020-{month}-01]
     // Source: "templates/birthdays.template":7:8
-    private object? renderMonth()
+    private object?[] renderMonth()
     {
-        var month = Get("month");
+        object? month = Get("month");
 
         return Line($"2020-{month}-01");
     }
@@ -406,7 +397,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
         object? applyFalsy() => Unsupported(
             "Call @Falsy",
             "templates/birthdays.template:5:12",
-            () => Each(child => new Birthdays(child).renderCase()),
+            () => Each(itemContext => new Birthdays(itemContext).renderCase()),
             () => new object?[] { pattern() });
 
         return applyFalsy();
@@ -415,7 +406,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Template:
     // [{$0.Case(3,[{#ungrouped}],2,[{#bySign}],[{#byDate}])}]
     // Source: "templates/birthdays.template":5:12
-    private object? renderCase()
+    private object?[] renderCase()
     {
         // Template:
         // $0.Case(3,[{#ungrouped}],2,[{#bySign}],[{#byDate}])
@@ -424,9 +415,9 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
             "Call Case",
             "templates/birthdays.template:5:14",
             () => Get("$0"),
-            () => new object?[] { EvaluationContext.ParseInteger("3"), Each(child => new Birthdays(child).renderUngrouped()), EvaluationContext.ParseInteger("2"), Each(child => new Birthdays(child).renderBySign()), Each(child => new Birthdays(child).renderByDate()) });
+            () => new object?[] { EvaluationContext.ParseInteger("3"), Each(itemContext => new Birthdays(itemContext).renderUngrouped()), EvaluationContext.ParseInteger("2"), Each(itemContext => new Birthdays(itemContext).renderBySign()), Each(itemContext => new Birthdays(itemContext).renderByDate()) });
 
-        var @case = applyCase();
+        object? @case = applyCase();
 
         return Line($"{@case}");
     }
@@ -434,9 +425,9 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Template:
     // [{#byDate}]
     // Source: "templates/birthdays.template":5:53
-    private object? renderByDate()
+    private object?[] renderByDate()
     {
-        var byDate = Each(child => child.Named("byDate"));
+        object? byDate = Each(itemContext => itemContext.Named("byDate"));
 
         return Line($"{byDate}");
     }
@@ -444,9 +435,9 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Template:
     // [{#bySign}]
     // Source: "templates/birthdays.template":5:41
-    private object? renderBySign()
+    private object?[] renderBySign()
     {
-        var bySign = Each(child => child.Named("bySign"));
+        object? bySign = Each(itemContext => itemContext.Named("bySign"));
 
         return Line($"{bySign}");
     }
@@ -454,16 +445,72 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Template:
     // [{#ungrouped}]
     // Source: "templates/birthdays.template":5:24
-    private object? renderUngrouped()
+    private object?[] renderUngrouped()
     {
-        var ungrouped = Each(child => child.Named("ungrouped"));
+        object? ungrouped = Each(itemContext => itemContext.Named("ungrouped"));
 
         return Line($"{ungrouped}");
     }
 
-    private object? renderBirthdays()
+    // Template:
+    //  
+    // Subtemplates:
+    // {#grouping:[{$0.Case(3,[{#ungrouped}],2,[{#bySign}],[{#byDate}])}].@Falsy(/^0$/)}
+    // {#byDate:[{'/data/famousBirthdays'.Where(!isAlive).GroupBy(dob.ToDate('MM'),'group','month'):
+    //      [{[2020-{month}-01].ToDate('MMMM')}{ // using the date formatter for the month
+    //         group.GroupBy(dob.ToDate('DD'),'daygroup','day')
+    //           .OrderBy(day):[{day}
+    //      {daygroup
+    //           .OrderBy(dob, 'D'):
+    //                [{#name} {#date}]}]}]}]}
+    // {#bySign:[{'/data/famousBirthdays'.GroupBy(sign, 'group'):
+    //      [{sign}{group.GroupBy(dob.ToDate('yyyy'),'yeargroup','year')
+    //           .OrderBy(year,'D'):[{year}
+    //      {yeargroup
+    //           .OrderBy(dob, 'A'):
+    //                [{fname->[{fname} ]}{lname} {#date}]}]}]}]}
+    // {#name:[{fname->[{fname} ]}{lname}]}               
+    // {#date:[({dob.ToDate()})]}
+    // {#ungrouped:[{'/data/famousBirthdays'.OrderBy(lname.ToUpper()):
+    //    [{#name} {#date} {sign}{!isAlive->[ (dead)]}]}]}
+    // Source: "templates/birthdays.template":3:18
+    private void defineSubtemplates(SubtemplateDefinitions definitions)
     {
-        var grouping = CallNamed("grouping", Receiver(child => "1"));
+        definitions.Add("grouping", definitionContext => new Birthdays(definitionContext).grouping());
+        definitions.Add("byDate", definitionContext => definitionContext.Each(itemContext => new Birthdays(itemContext).byDate()));
+        definitions.Add("bySign", definitionContext => definitionContext.Each(itemContext => new Birthdays(itemContext).bySign()));
+        definitions.Add("name", definitionContext => definitionContext.Each(itemContext => new Birthdays(itemContext).name()));
+        definitions.Add("date", definitionContext => definitionContext.Each(itemContext => new Birthdays(itemContext).date()));
+        definitions.Add("ungrouped", definitionContext => definitionContext.Each(itemContext => new Birthdays(itemContext).ungrouped()));
+    }
+
+    // Template:
+    // // change the '1' to '2' to see grouping by astrological sign and year
+    // // '3' to see ungrouped data
+    // {'1'.#grouping()} 
+    // Subtemplates:
+    // {#grouping:[{$0.Case(3,[{#ungrouped}],2,[{#bySign}],[{#byDate}])}].@Falsy(/^0$/)}
+    // {#byDate:[{'/data/famousBirthdays'.Where(!isAlive).GroupBy(dob.ToDate('MM'),'group','month'):
+    //      [{[2020-{month}-01].ToDate('MMMM')}{ // using the date formatter for the month
+    //         group.GroupBy(dob.ToDate('DD'),'daygroup','day')
+    //           .OrderBy(day):[{day}
+    //      {daygroup
+    //           .OrderBy(dob, 'D'):
+    //                [{#name} {#date}]}]}]}]}
+    // {#bySign:[{'/data/famousBirthdays'.GroupBy(sign, 'group'):
+    //      [{sign}{group.GroupBy(dob.ToDate('yyyy'),'yeargroup','year')
+    //           .OrderBy(year,'D'):[{year}
+    //      {yeargroup
+    //           .OrderBy(dob, 'A'):
+    //                [{fname->[{fname} ]}{lname} {#date}]}]}]}]}
+    // {#name:[{fname->[{fname} ]}{lname}]}               
+    // {#date:[({dob.ToDate()})]}
+    // {#ungrouped:[{'/data/famousBirthdays'.OrderBy(lname.ToUpper()):
+    //    [{#name} {#date} {sign}{!isAlive->[ (dead)]}]}]}
+    // Source: "templates/birthdays.template":1:1
+    private object?[] renderBirthdays()
+    {
+        object? grouping = ApplySubtemplate("grouping", MethodInput(itemContext => "1"));
 
         return Line($$"""
             

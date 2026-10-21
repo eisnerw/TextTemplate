@@ -20,7 +20,7 @@ public sealed class CSharpEmitter
     private readonly Dictionary<string, string> sharedUnits = new(StringComparer.Ordinal);
     private sealed class MethodBody
     {
-        internal readonly HashSet<string> Names = new(StringComparer.Ordinal) { "context", "child", "Get", "Line", "Named", "Unsupported", "InContext", "WithDefinitions" };
+        internal readonly HashSet<string> Names = new(StringComparer.Ordinal) { "context", "itemContext", "dataContext", "definitionContext", "annotatedContext", "includedContext", "Get", "Line", "Named", "Unsupported", "InContext", "WithDefinitions", "MethodInput", "IsTruthy", "SubtemplateInput", "ApplySubtemplate", "SubtemplateDefinitions", "DefineSubtemplates" };
         internal readonly List<string> Statements = new();
         internal readonly List<string> Functions = new();
     }
@@ -67,9 +67,9 @@ public sealed class CSharpEmitter
         var mainMap = new List<string>(); var sharedMap = new List<string>();
         var unitNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "GeneratedTemplates", "EvaluationContext", "TemplateUnit", "GeneratedTemplateProgram", "Common",
+            "GeneratedTemplates", "EvaluationContext", "TemplateUnit", "SubtemplateDefinitions", "GeneratedTemplateProgram", "Common",
             "System", "StringComparer", "StringComparison", "JsonElement", "JsonDocument", "JsonValueKind",
-            "Dictionary", "List", "Func", "Regex", "CultureInfo", "Math", "Console", "File",
+            "Dictionary", "List", "Func", "Action", "Regex", "CultureInfo", "Math", "Console", "File",
             "Exception", "ArgumentException", "InvalidOperationException", "NotImplementedException"
         };
         var units = selected.ToDictionary(pair => pair.Key, pair => Unique(NamePart(pair.Value.Name, upper: true), unitNames), StringComparer.Ordinal);
@@ -81,7 +81,7 @@ public sealed class CSharpEmitter
             bodies.Clear();
             methodNames.Clear();
             unitName = units[key];
-            methodNames.UnionWith(new[] { unitName, "Get", "Line", "Named", "InContext", "WithDefinitions", "Unsupported", "Annotate", "CallNamed", "Join", "Import", "Context", "Each", "Receiver" });
+            methodNames.UnionWith(new[] { unitName, "Get", "Line", "Named", "InContext", "WithDefinitions", "Unsupported", "Annotate", "Join", "Import", "Context", "Each", "MethodInput", "IsTruthy", "SubtemplateInput", "ApplySubtemplate", "SubtemplateDefinitions", "DefineSubtemplates" });
             IndexDefinitions(source.Tree);
             if (source.Category == "subtemplates" && includes.Contains(source.Name)) EmitImport(source);
             string method = Emit(source.Tree, source);
@@ -100,7 +100,7 @@ public sealed class CSharpEmitter
             "    private static readonly Dictionary<string, Func<EvaluationContext, object?>> Templates = new(StringComparer.Ordinal)\n    {\n" + string.Join("\n", mainMap) + "\n    };\n" +
             "    private static readonly Dictionary<string, Func<EvaluationContext, object?>> Shared = new(StringComparer.Ordinal)\n    {\n" + string.Join("\n", sharedMap) + "\n    };\n" +
             "    public static string Render(string name, JsonElement? data = null)\n    {\n" +
-            "        if (!Templates.TryGetValue(name, out var template)) throw new ArgumentException(\"Unknown template: \" + name);\n" +
+            "        if (!Templates.TryGetValue(name, out Func<EvaluationContext, object?>? template)) throw new ArgumentException(\"Unknown template: \" + name);\n" +
             "        return (string)EvaluationContext.At(\"templates/\" + name + \".template:1:1\", () => EvaluationContext.Compose(template(new EvaluationContext(data, Shared))) ?? \"\")!;\n    }\n\n" + "}\n");
         int programStart = runtime.IndexOf("public static class GeneratedTemplateProgram", StringComparison.Ordinal);
         files.Add("Support/EvaluationContext.cs", Header + runtime[..programStart]);
@@ -126,17 +126,36 @@ public sealed class CSharpEmitter
             protected EvaluationContext Context => context;
             protected object? Annotate(Func<EvaluationContext, EvaluationContext>[] annotations, Func<EvaluationContext, object?> body)
                 => context.Annotate(annotations, body);
-            protected object? CallNamed(string name, object? value, params object?[] arguments) => context.CallNamed(name, value, arguments);
+            protected object? ApplySubtemplate(string name, object? value, params object?[] arguments) => context.CallNamed(name, value, arguments);
             protected static object? Join(object? value, params object?[] arguments) => EvaluationContext.JoinValues(value, arguments);
             protected object? Each(Func<EvaluationContext, object?> body) => context.Each(body);
-            protected object? Receiver(Func<EvaluationContext, object?> body) => context.Receiver(body);
+            // Collect method input in each current item context before invoking the method.
+            protected object? MethodInput(Func<EvaluationContext, object?> body) => context.Receiver(body);
+            protected object? MethodInput(string path) => MethodInput(itemContext => itemContext.Lookup(path));
+            protected object? SubtemplateInput(string name) => MethodInput(itemContext => itemContext.Named(name));
+            // Apply legacy truth rules to a lookup without converting its value to text.
+            protected bool IsTruthy(string path) => EvaluationContext.Condition(Get(path));
             protected object? Get(string path) => context.Lookup(path);
             protected object? Named(string name) => context.Named(name);
             protected static object?[] Line(EvaluationContext.StructuredText text) => EvaluationContext.Text(text);
             protected object? InContext(object? value, Func<EvaluationContext, object?> body, Func<object?>? fallback = null)
                 => context.Context(value, body, fallback);
-            protected object? WithDefinitions(Dictionary<string, Func<EvaluationContext, object?>> definitions, Func<EvaluationContext, object?> body)
-                => context.Scope(definitions, body);
+            // Registration creates bindings only; bodies run later in the caller's context.
+            protected sealed class SubtemplateDefinitions
+            {
+                internal Dictionary<string, Func<EvaluationContext, object?>> Bindings { get; } = new(StringComparer.Ordinal);
+                public void Add(string name, Func<EvaluationContext, object?> body) => Bindings[name] = body;
+            }
+            private static SubtemplateDefinitions Register(Action<SubtemplateDefinitions> register)
+            {
+                SubtemplateDefinitions definitions = new();
+                register(definitions);
+                return definitions;
+            }
+            protected TResult WithDefinitions<TResult>(Action<SubtemplateDefinitions> register, Func<EvaluationContext, TResult> body)
+                => context.Scope(Register(register).Bindings, body);
+            protected EvaluationContext DefineSubtemplates(Action<SubtemplateDefinitions> register)
+                => context.Define(Register(register).Bindings);
             protected static object? Unsupported(string feature, string location, params Func<object?>[] operands)
                 => EvaluationContext.At(location, () => EvaluationContext.NotImplemented(feature, operands));
         }
@@ -151,14 +170,14 @@ public sealed class CSharpEmitter
         return calls;
     }
 
-    private string? Annotation(SyntaxNode call, string context = "child", bool lambda = true)
+    private string? Annotation(SyntaxNode call, string context = "annotatedContext", bool lambda = true)
     {
         var args = call.Children.Skip(1).SelectMany(child => child.Children).ToList();
         if (args.Count != 1 || args[0].Kind != SyntaxKind.String) return null;
         string value = DecodeString(args[0].Value!);
-        if (call.Value == "@MissingValue") return (lambda ? "child => " : "") + context + ".WithMissingValue(" + Quote(value) + ")";
+        if (call.Value == "@MissingValue") return (lambda ? context + " => " : "") + context + ".WithMissingValue(" + Quote(value) + ")";
         if (call.Value == "@Include" && value.StartsWith('#') && sharedUnits.TryGetValue(value[1..], out string? unit))
-            return (lambda ? "child => " : "") + context + ".Include(" + Quote(value[1..]) + ", imported => new " + unit + "(imported).Import())";
+            return (lambda ? context + " => " : "") + context + ".Include(" + Quote(value[1..]) + ", includedContext => new " + unit + "(includedContext).Import())";
         return null;
     }
 
@@ -197,23 +216,36 @@ public sealed class CSharpEmitter
         }
         receiver = receiver with { Children = children };
         IndexDefinitions(receiver);
-        var bindings = children.Where(child => child.Kind == SyntaxKind.SubtemplateSection).SelectMany(child => child.Children)
-            .Where(child => child.Kind == SyntaxKind.Context && child.Value == "explicit" && child.Children[0].Kind == SyntaxKind.NamedSubtemplate)
-            .GroupBy(child => child.Children[0].Value!, StringComparer.Ordinal).Select(group => group.Last())
-            .Select(definition => "[" + Quote(definition.Children[0].Value!) + "] = child => new " + unitName + "(child)." + Emit(definition.Children[1], source) + "()").ToList();
+        var definitionsToExport = children.Where(child => child.Kind == SyntaxKind.SubtemplateSection).SelectMany(child => child.Children)
+            .Where(child => child.Kind == SyntaxKind.Context && child.Value == "explicit" && child.Children[0].Kind == SyntaxKind.NamedSubtemplate);
+        string registration = EmitDefinitions(receiver, definitionsToExport, source,
+            definition => "definitionContext => new " + unitName + "(definitionContext)." + Emit(definition, source) + "()",
+            "defineIncludedSubtemplates");
         // Definitions are exported, and annotations configure the caller before its receiver runs.
         var content = receiver with { Children = children.Where(child => child.Kind != SyntaxKind.SubtemplateSection).ToArray() };
         // Include output is discarded. Literal-only content needs no generated method;
         // expressions still execute, including any deferred feature failures.
         string? render = content.Children.All(IsLiteral) ? null : Emit(content, source);
-        var import = new StringBuilder("    internal EvaluationContext Import()\n    {\n        var included = Context.Define(\n            new Dictionary<string, Func<EvaluationContext, object?>>(StringComparer.Ordinal)\n            {\n                ");
-        import.Append(string.Join(",\n                ", bindings)).Append("\n            });\n");
+        var import = new StringBuilder("    internal EvaluationContext Import()\n    {\n        EvaluationContext included = DefineSubtemplates(" + registration + ");\n");
         foreach (var call in calls)
             import.Append("        included = ").Append(Annotation(call, "included", false)).Append(";\n");
         if (render is not null)
             import.Append("        _ = new ").Append(unitName).Append("(included).").Append(render).Append("();\n");
         import.Append("        return included;\n    }\n\n");
         bodies.Append(import);
+    }
+
+    private string EmitDefinitions(SyntaxNode owner, IEnumerable<SyntaxNode> definitions, ParsedSource source,
+        Func<SyntaxNode, string> callback, string hint)
+    {
+        string name = Unique(hint, methodNames);
+        var registrations = definitions.GroupBy(n => n.Children[0].Value!, StringComparer.Ordinal).Select(group => group.Last())
+            .Select(n => "        definitions.Add(" + Quote(n.Children[0].Value!) + ", " + callback(n.Children[1]) + ");").ToList();
+        foreach (SyntaxNode section in owner.Children.Where(child => child.Kind == SyntaxKind.SubtemplateSection))
+            bodies.Append(SourceComment(section, source, "    "));
+        bodies.Append("    private void ").Append(name).Append("(SubtemplateDefinitions definitions)\n    {\n")
+            .Append(string.Join("\n", registrations)).Append("\n    }\n\n");
+        return name;
     }
 
     private static IEnumerable<string> IncludeNames(SyntaxNode node)
@@ -263,7 +295,8 @@ public sealed class CSharpEmitter
         if (node.Kind == SyntaxKind.NamedSubtemplate) return NamePart(node.Value!);
         if (node.Kind is SyntaxKind.Context or SyntaxKind.ContextWithFallback) return Hint(node.Children[0]);
         if (node.Kind == SyntaxKind.Call) return NamePart(node.Value!.TrimStart('@', '#'));
-        if (node.Kind is SyntaxKind.Arrow or SyntaxKind.ThinArrow) return "choice";
+        if (node.Kind is SyntaxKind.Arrow or SyntaxKind.ThinArrow)
+            return node.Children[0].Kind == SyntaxKind.Identifier ? Hint(node.Children[0]) + "Result" : "choice";
         return "content";
     }
 
@@ -279,10 +312,47 @@ public sealed class CSharpEmitter
 
     private string MethodName(SyntaxNode node, ParsedSource source)
     {
-        string name = ReferenceEquals(node, source.Tree) ? "Render"
+        string name = ReferenceEquals(node, source.Tree) ? "Evaluate"
             : definitionNames.TryGetValue(node, out var definition) ? NamePart(definition)
             : "render" + NamePart(Hint(node), upper: true);
         return Unique(name, methodNames);
+    }
+
+    // Match the emitted operation's return type, not the eventual rendered text.
+    // Inline calls go through Each: their result can be a fragment array, list, or missing value.
+    private static string ExpressionType(SyntaxNode node, bool asCall = false)
+    {
+        if (asCall && node.Kind == SyntaxKind.InlineTemplate) return "object?";
+        switch (node.Kind)
+        {
+            case SyntaxKind.Text: case SyntaxKind.Whitespace: case SyntaxKind.NewLine:
+            case SyntaxKind.Continuation: case SyntaxKind.String:
+                return "string";
+            case SyntaxKind.Number:
+                return "double";
+            case SyntaxKind.Group: case SyntaxKind.Not: case SyntaxKind.Logical: case SyntaxKind.Relational:
+                return "bool";
+            case SyntaxKind.Template: case SyntaxKind.SharedTemplate: case SyntaxKind.InlineTemplate:
+            case SyntaxKind.Arguments:
+                return "object?[]";
+            case SyntaxKind.Interpolation:
+                return ExpressionType(node.Children[0], asCall: true);
+            case SyntaxKind.Context: case SyntaxKind.ContextWithFallback:
+                return node.Value == "implicit" ? ExpressionType(node.Children[0], asCall: true) : "object?";
+            case SyntaxKind.Arrow: case SyntaxKind.ThinArrow:
+                string whenTrue = ExpressionType(node.Children[1], asCall: true);
+                string? whenFalse = node.Children.Count > 2 ? ExpressionType(node.Children[2], asCall: true)
+                    : node.Kind == SyntaxKind.ThinArrow ? "string" : null;
+                if (whenFalse is null) return whenTrue.EndsWith('?') ? whenTrue : whenTrue + "?";
+                if (whenTrue == whenFalse) return whenTrue;
+                // A nullable branch and its nonnullable counterpart retain their underlying type.
+                if (whenTrue == whenFalse + "?") return whenTrue;
+                if (whenFalse == whenTrue + "?") return whenFalse;
+                return "object?";
+            default:
+                // Lookups, dynamic calls and unfinished operations have no narrower proven type.
+                return "object?";
+        }
     }
 
     private string Emit(SyntaxNode node, ParsedSource source)
@@ -295,7 +365,7 @@ public sealed class CSharpEmitter
         string expression = Expression(node, source);
         string access = ReferenceEquals(node, source.Tree) ? "internal" : "private";
         string method = SourceComment(node, source, "    ") +
-            "    " + access + " object? " + name + "()\n    {\n" + Body(expression) + "    }\n\n";
+            "    " + access + " " + ExpressionType(node) + " " + name + "()\n    {\n" + Body(expression) + "    }\n\n";
         bodies.Insert(0, method);
         current = previous;
         return name;
@@ -370,20 +440,21 @@ public sealed class CSharpEmitter
         string Call(SyntaxNode child) => child.Kind == SyntaxKind.InlineTemplate
             ? "Each(" + RawChild(child) + ")" : child.Kind is SyntaxKind.Template or SyntaxKind.SharedTemplate
             ? "this." + Emit(child, source) + "()" : Expression(child, source);
-        string RawChild(SyntaxNode child) => child.Kind switch
+        string RawChild(SyntaxNode child, string context = "itemContext") => child.Kind switch
         {
-            SyntaxKind.Identifier when !child.Value!.StartsWith('@') => "child => child.Lookup(" + Quote(child.Value) + ")",
-            SyntaxKind.NamedSubtemplate => "child => child.Named(" + Quote(child.Value!) + ")",
-            SyntaxKind.String => "child => " + Quote(DecodeString(child.Value!)),
-            SyntaxKind.Number => "child => EvaluationContext.ParseInteger(" + Quote(child.Value!) + ")",
-            _ when IsLiteralBody(child) && !definitionNames.ContainsKey(child) => "child => " + InterpolatedText(child.Children, _ => throw new InvalidOperationException()),
-            _ => "child => new " + unitName + "(child)." + Emit(child, source) + "()"
+            SyntaxKind.Identifier when !child.Value!.StartsWith('@') => context + " => " + context + ".Lookup(" + Quote(child.Value) + ")",
+            SyntaxKind.NamedSubtemplate => context + " => " + context + ".Named(" + Quote(child.Value!) + ")",
+            SyntaxKind.String => context + " => " + Quote(DecodeString(child.Value!)),
+            SyntaxKind.Number => context + " => EvaluationContext.ParseInteger(" + Quote(child.Value!) + ")",
+            _ when IsLiteralBody(child) && !definitionNames.ContainsKey(child) => context + " => " + InterpolatedText(child.Children, _ => throw new InvalidOperationException()),
+            _ => context + " => new " + unitName + "(" + context + ")." + Emit(child, source) + "()"
         };
-        string InChild(SyntaxNode child) => child.Kind is SyntaxKind.InlineTemplate or SyntaxKind.NamedSubtemplate
-            ? "scope => scope.Each(" + RawChild(child) + ")" : RawChild(child);
+        string InChild(SyntaxNode child, string context = "dataContext") => child.Kind is SyntaxKind.InlineTemplate or SyntaxKind.NamedSubtemplate
+            ? context + " => " + context + ".Each(" + RawChild(child) + ")" : RawChild(child, context);
         string Predicate(SyntaxNode child) => child.Kind switch
         {
             SyntaxKind.Relational or SyntaxKind.Logical or SyntaxKind.Not or SyntaxKind.Group => Call(child),
+            SyntaxKind.Identifier when !child.Value!.StartsWith('@') => "IsTruthy(" + Quote(child.Value) + ")",
             _ => "EvaluationContext.Condition(" + Call(child) + ")"
         };
         string location = source.Category + "/" + source.Name + ".template:" + node.Span.Line + ":" + node.Span.Column;
@@ -416,24 +487,21 @@ public sealed class CSharpEmitter
                 {
                     string value = Call(child);
                     string local = Unique(LocalName(Hint(child)), current.Names);
-                    var valueNode = child;
-                    while (valueNode.Kind == SyntaxKind.Interpolation || valueNode.Kind == SyntaxKind.Context && valueNode.Value == "implicit")
-                        valueNode = valueNode.Children[0];
-                    string declaration = valueNode.Kind is SyntaxKind.Arrow or SyntaxKind.ThinArrow ? "object? " : "var ";
-                    current.Statements.Add(declaration + local + " = " + value + ";");
+                    current.Statements.Add(ExpressionType(child, asCall: true) + " " + local + " = " + value + ";");
                     return local;
                 });
                 var definitions = node.Children.Where(n => n.Kind == SyntaxKind.SubtemplateSection)
                     .SelectMany(n => n.Children).Where(n => n.Kind == SyntaxKind.Context && n.Value == "explicit" && n.Children[0].Kind == SyntaxKind.NamedSubtemplate).ToList();
                 if (definitions.Count > 0)
                 {
-                    var bindings = definitions.GroupBy(n => n.Children[0].Value!, StringComparer.Ordinal).Select(g => g.Last())
-                        .Select(n => $"[{Quote(n.Children[0].Value!)}] = {InChild(n.Children[1])}");
+                    string registration = EmitDefinitions(node, definitions, source,
+                        definition => InChild(definition, "definitionContext"),
+                        ReferenceEquals(node, source.Tree) ? "defineSubtemplates" : methods[node] + "Definitions");
                     string contentName = Unique(ReferenceEquals(node, source.Tree) ? "render" + unitName : methods[node] + "Content", methodNames);
-                    bodies.Append("    private object? ").Append(contentName).Append("()\n    {\n").Append(Body(expression)).Append("    }\n\n");
+                    bodies.Append(SourceComment(node, source, "    ")).Append("    private object?[] ").Append(contentName)
+                        .Append("()\n    {\n").Append(Body(expression)).Append("    }\n\n");
                     current = new MethodBody();
-                    expression = "WithDefinitions(\n            new Dictionary<string, Func<EvaluationContext, object?>>(StringComparer.Ordinal)\n            {\n                " +
-                        string.Join(",\n                ", bindings) + "\n            },\n            child => new " + unitName + "(child)." + contentName + "())";
+                    expression = "WithDefinitions(" + registration + ",\n            definitionContext => new " + unitName + "(definitionContext)." + contentName + "())";
                 }
                 break;
             case SyntaxKind.Text: case SyntaxKind.Whitespace: case SyntaxKind.NewLine:
@@ -442,7 +510,7 @@ public sealed class CSharpEmitter
             case SyntaxKind.Interpolation: expression = Call(node.Children[0]); break;
             case SyntaxKind.Identifier:
                 expression = node.Value!.StartsWith('@') ? Stub() : "Get(" + Quote(node.Value!) + ")"; break;
-            case SyntaxKind.NamedSubtemplate: expression = "Each(child => child.Named(" + Quote(node.Value!) + "))"; break;
+            case SyntaxKind.NamedSubtemplate: expression = "Each(itemContext => itemContext.Named(" + Quote(node.Value!) + "))"; break;
             case SyntaxKind.String:
                 expression = Quote(DecodeString(node.Value!)); break;
             case SyntaxKind.Number: expression = "EvaluationContext.ParseInteger(" + Quote(node.Value!) + ")"; break;
@@ -473,14 +541,18 @@ public sealed class CSharpEmitter
                     {
                         var body = WithoutAnnotations(node);
                         expression = "Annotate(\n            new Func<EvaluationContext, EvaluationContext>[]\n            {\n                " +
-                            string.Join(",\n                ", annotations.Select(call => Annotation(call))) + "\n            },\n            " + InChild(body) + ")";
+                            string.Join(",\n                ", annotations.Select(call => Annotation(call))) + "\n            },\n            " + InChild(body, "annotatedContext") + ")";
                     }
                 }
                 else if (node.Value!.StartsWith('#') || node.Value == "Join")
                 {
                     string arguments = string.Join(", ", node.Children.Skip(1).SelectMany(child => child.Children).Select(Call));
-                    expression = (node.Value == "Join" ? "Join(" : "CallNamed(" + Quote(node.Value[1..]) + ", ") +
-                        (node.Children[0].Kind == SyntaxKind.Call || receiver.Value?.StartsWith('^') == true ? Call(node.Children[0]) : "Receiver(" + RawChild(node.Children[0]) + ")") + (arguments.Length == 0 ? "" : ", " + arguments) + ")";
+                    expression = (node.Value == "Join" ? "Join(" : "ApplySubtemplate(" + Quote(node.Value[1..]) + ", ") +
+                        (node.Children[0].Kind == SyntaxKind.Call || receiver.Value?.StartsWith('^') == true ? Call(node.Children[0]) : node.Children[0].Kind == SyntaxKind.Identifier && !node.Children[0].Value!.StartsWith('@')
+                            ? "MethodInput(" + Quote(node.Children[0].Value!) + ")"
+                            : node.Children[0].Kind == SyntaxKind.NamedSubtemplate
+                            ? "SubtemplateInput(" + Quote(node.Children[0].Value!) + ")"
+                            : "MethodInput(" + RawChild(node.Children[0]) + ")") + (arguments.Length == 0 ? "" : ", " + arguments) + ")";
                 }
                 else expression = Stub();
                 break;

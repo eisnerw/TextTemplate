@@ -13,17 +13,36 @@ internal abstract class TemplateUnit(EvaluationContext context)
     protected EvaluationContext Context => context;
     protected object? Annotate(Func<EvaluationContext, EvaluationContext>[] annotations, Func<EvaluationContext, object?> body)
         => context.Annotate(annotations, body);
-    protected object? CallNamed(string name, object? value, params object?[] arguments) => context.CallNamed(name, value, arguments);
+    protected object? ApplySubtemplate(string name, object? value, params object?[] arguments) => context.CallNamed(name, value, arguments);
     protected static object? Join(object? value, params object?[] arguments) => EvaluationContext.JoinValues(value, arguments);
     protected object? Each(Func<EvaluationContext, object?> body) => context.Each(body);
-    protected object? Receiver(Func<EvaluationContext, object?> body) => context.Receiver(body);
+    // Collect method input in each current item context before invoking the method.
+    protected object? MethodInput(Func<EvaluationContext, object?> body) => context.Receiver(body);
+    protected object? MethodInput(string path) => MethodInput(itemContext => itemContext.Lookup(path));
+    protected object? SubtemplateInput(string name) => MethodInput(itemContext => itemContext.Named(name));
+    // Apply legacy truth rules to a lookup without converting its value to text.
+    protected bool IsTruthy(string path) => EvaluationContext.Condition(Get(path));
     protected object? Get(string path) => context.Lookup(path);
     protected object? Named(string name) => context.Named(name);
     protected static object?[] Line(EvaluationContext.StructuredText text) => EvaluationContext.Text(text);
     protected object? InContext(object? value, Func<EvaluationContext, object?> body, Func<object?>? fallback = null)
         => context.Context(value, body, fallback);
-    protected object? WithDefinitions(Dictionary<string, Func<EvaluationContext, object?>> definitions, Func<EvaluationContext, object?> body)
-        => context.Scope(definitions, body);
+    // Registration creates bindings only; bodies run later in the caller's context.
+    protected sealed class SubtemplateDefinitions
+    {
+        internal Dictionary<string, Func<EvaluationContext, object?>> Bindings { get; } = new(StringComparer.Ordinal);
+        public void Add(string name, Func<EvaluationContext, object?> body) => Bindings[name] = body;
+    }
+    private static SubtemplateDefinitions Register(Action<SubtemplateDefinitions> register)
+    {
+        SubtemplateDefinitions definitions = new();
+        register(definitions);
+        return definitions;
+    }
+    protected TResult WithDefinitions<TResult>(Action<SubtemplateDefinitions> register, Func<EvaluationContext, TResult> body)
+        => context.Scope(Register(register).Bindings, body);
+    protected EvaluationContext DefineSubtemplates(Action<SubtemplateDefinitions> register)
+        => context.Define(Register(register).Bindings);
     protected static object? Unsupported(string feature, string location, params Func<object?>[] operands)
         => EvaluationContext.At(location, () => EvaluationContext.NotImplemented(feature, operands));
 }

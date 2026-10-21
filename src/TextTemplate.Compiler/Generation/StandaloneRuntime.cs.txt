@@ -40,8 +40,8 @@ internal sealed class EvaluationContext
         }
         Dictionary<string, object?> ObjectPreview(IEnumerable<KeyValuePair<string, object?>> entries, int depth)
         {
-            var result = new Dictionary<string, object?>(StringComparer.Ordinal);
-            foreach (var entry in entries)
+            Dictionary<string, object?> result = new Dictionary<string, object?>(StringComparer.Ordinal);
+            foreach (KeyValuePair<string, object?> entry in entries)
             {
                 if (result.Count == 8) { result["…"] = "more properties"; break; }
                 result[entry.Key] = Preview(entry.Value, depth + 1);
@@ -50,8 +50,8 @@ internal sealed class EvaluationContext
         }
         List<object?> ArrayPreview(IEnumerable<object?> entries, int depth)
         {
-            var result = new List<object?>();
-            foreach (var entry in entries)
+            List<object?> result = new List<object?>();
+            foreach (object? entry in entries)
             {
                 if (result.Count == 8) { result.Add("…"); break; }
                 result.Add(Preview(entry, depth + 1));
@@ -60,11 +60,11 @@ internal sealed class EvaluationContext
         }
         static IEnumerable<KeyValuePair<string, object?>> Properties(JsonElement json)
         {
-            foreach (var property in json.EnumerateObject()) yield return new(property.Name, property.Value);
+            foreach (JsonProperty property in json.EnumerateObject()) yield return new(property.Name, property.Value);
         }
         static IEnumerable<object?> Elements(JsonElement json)
         {
-            foreach (var element in json.EnumerateArray()) yield return element;
+            foreach (JsonElement element in json.EnumerateArray()) yield return element;
         }
         return JsonSerializer.Serialize(Preview(value, 0), new JsonSerializerOptions
         {
@@ -83,7 +83,7 @@ internal sealed class EvaluationContext
         try { return action(); }
         catch (NotImplementedException error) when (!error.Data.Contains("TemplateLocation"))
         {
-            var located = new NotImplementedException(location + ": " + error.Message, error);
+            NotImplementedException located = new NotImplementedException(location + ": " + error.Message, error);
             located.Data["TemplateLocation"] = location;
             throw located;
         }
@@ -134,15 +134,15 @@ internal sealed class EvaluationContext
     {
         // The legacy TemplateData constructor collapses single-element arrays.
         if (value.ValueKind == JsonValueKind.Array && value.GetArrayLength() == 1) return ReadData(value[0], parent);
-        var data = new Data(new(StringComparer.Ordinal), parent);
+        Data data = new Data(new(StringComparer.Ordinal), parent);
         if (value.ValueKind == JsonValueKind.Array)
         {
             data.Items = new();
-            foreach (var item in value.EnumerateArray()) data.Items.Add(ReadData(item, data));
+            foreach (JsonElement item in value.EnumerateArray()) data.Items.Add(ReadData(item, data));
         }
         else if (value.ValueKind == JsonValueKind.Object)
         {
-            foreach (var property in value.EnumerateObject())
+            foreach (JsonProperty property in value.EnumerateObject())
                 if (property.Value.ValueKind != JsonValueKind.Array || property.Value.GetArrayLength() != 0)
                     data.Values[property.Name] = property.Value.Clone();
         }
@@ -157,15 +157,15 @@ internal sealed class EvaluationContext
             int dot = key.IndexOf('.');
             string head = dot < 0 ? key : key[..dot];
             object? value;
-            if (data.Values.TryGetValue(head, out var found)) value = Materialize(found, data);
+            if (data.Values.TryGetValue(head, out object? found)) value = Materialize(found, data);
             else if (head == "*") value = data;
             else if (head == "^") value = data.Parent ?? data;
             else if (data.Items is not null)
             {
-                var values = new List<object?>();
-                foreach (var item in data.Items)
+                List<object?> values = new List<object?>();
+                foreach (Data item in data.Items)
                 {
-                    var candidate = Find(item, key);
+                    object? candidate = Find(item, key);
                     if (Condition(candidate)) values.Add(candidate);
                 }
                 return values.Count switch { 0 => MissingValue(path), 1 => values[0], _ => ScalarData(values) };
@@ -179,13 +179,13 @@ internal sealed class EvaluationContext
     }
     private static Data ScalarData(List<object?> values)
     {
-        var data = new Data(new(StringComparer.Ordinal), null) { Items = new() };
-        foreach (var value in values)
+        Data data = new Data(new(StringComparer.Ordinal), null) { Items = new() };
+        foreach (object? value in values)
         {
             if (value is Data child) data.Items.Add(child);
             else
             {
-                var item = new Data(new(StringComparer.Ordinal), data);
+                Data item = new Data(new(StringComparer.Ordinal), data);
                 if (value is string) item.Values["_"] = value;
                 data.Items.Add(item);
             }
@@ -219,10 +219,10 @@ internal sealed class EvaluationContext
     internal object? Each(Func<EvaluationContext, object?> body)
     {
         if (Current?.Items is not { } items) return body(this);
-        var results = new List<object?>();
-        foreach (var item in items)
+        List<object?> results = new List<object?>();
+        foreach (Data item in items)
         {
-            var result = body(new EvaluationContext(this, item));
+            object? result = body(new EvaluationContext(this, item));
             if (Compose(result) is not null) results.Add(result);
         }
         return results.Count switch { 0 => MissingValue("list"), 1 => results[0], _ => new RenderedList(results) };
@@ -230,8 +230,8 @@ internal sealed class EvaluationContext
     internal object? Receiver(Func<EvaluationContext, object?> body)
     {
         if (Current?.Items is not { } items) return body(this);
-        var results = new List<object?>();
-        foreach (var item in items) results.Add(Intermediate(body(new EvaluationContext(this, item))));
+        List<object?> results = new List<object?>();
+        foreach (Data item in items) results.Add(Intermediate(body(new EvaluationContext(this, item))));
         return new Arguments(results);
     }
     internal object? Context(object? value, Func<EvaluationContext, object?> body, Func<object?>? fallback = null)
@@ -242,7 +242,7 @@ internal sealed class EvaluationContext
             if (text.StartsWith('/') || text.StartsWith("http", StringComparison.OrdinalIgnoreCase))
                 throw new NotImplementedException("Resource data contexts are not implemented in the initial generated runtime.");
             if (!text.StartsWith('{') && !text.StartsWith('[')) return text;
-            using var parsed = JsonDocument.Parse(text);
+            using JsonDocument parsed = JsonDocument.Parse(text);
             value = ReadData(parsed.RootElement, Current);
         }
         if (value is Missing) return fallback is null ? value : fallback();
@@ -253,20 +253,20 @@ internal sealed class EvaluationContext
     // Annotations run before their receiver, with exported include definitions scoped to that call.
     internal EvaluationContext Define(Dictionary<string, Func<EvaluationContext, object?>> definitions)
     {
-        var child = new EvaluationContext(this, Current);
-        foreach (var entry in definitions) child.Locals[entry.Key] = entry.Value;
+        EvaluationContext child = new EvaluationContext(this, Current);
+        foreach (KeyValuePair<string, Func<EvaluationContext, object?>> entry in definitions) child.Locals[entry.Key] = entry.Value;
         return child;
     }
     internal EvaluationContext WithMissingValue(string replacement)
     {
-        var child = new EvaluationContext(this, Current);
+        EvaluationContext child = new EvaluationContext(this, Current);
         child.missingText = replacement;
         return child;
     }
     internal object? Annotate(Func<EvaluationContext, EvaluationContext>[] annotations, Func<EvaluationContext, object?> body)
     {
-        var child = new EvaluationContext(this, Current);
-        foreach (var annotation in annotations) child = annotation(child);
+        EvaluationContext child = new EvaluationContext(this, Current);
+        foreach (Func<EvaluationContext, EvaluationContext> annotation in annotations) child = annotation(child);
         return body(child);
     }
     internal EvaluationContext Include(string name, Func<EvaluationContext, EvaluationContext> load)
@@ -280,7 +280,7 @@ internal sealed class EvaluationContext
     {
         value = Intermediate(value);
         if (value is Data) throw new NotImplementedException("Object receivers for named methods are not implemented yet.");
-        var data = new Data(new(StringComparer.Ordinal), Current);
+        Data data = new Data(new(StringComparer.Ordinal), Current);
         data.Values["$0"] = value;
         for (int i = 0; i < arguments.Length; i++)
         {
@@ -299,30 +299,30 @@ internal sealed class EvaluationContext
         {
             if (data.Items is null) throw new NotImplementedException("Join requires a scalar list.");
             items = new();
-            foreach (var item in data.Items)
+            foreach (Data item in data.Items)
             {
-                if (!item.Values.TryGetValue("_", out var scalar) || !Condition(scalar))
+                if (!item.Values.TryGetValue("_", out object? scalar) || !Condition(scalar))
                     throw new NotImplementedException("Join requires a scalar list.");
                 items.Add(scalar);
             }
         }
         if (items is null) return value;
-        var kept = new List<string>();
-        foreach (var item in items) if (Condition(item)) kept.Add(Compose(item) ?? "");
+        List<string> kept = new List<string>();
+        foreach (object? item in items) if (Condition(item)) kept.Add(Compose(item) ?? "");
         string separator = arguments.Length > 0 ? Compose(arguments[0]) ?? "" : ", ";
         string lastSeparator = arguments.Length > 1 ? Compose(arguments[1]) ?? "" : separator;
         if (kept.Count < 2) return string.Join("", kept);
         return string.Join(separator, kept.GetRange(0, kept.Count - 1)) + lastSeparator + kept[^1];
     }
-    internal object? Scope(Dictionary<string, Func<EvaluationContext, object?>> definitions, Func<EvaluationContext, object?> body)
+    internal TResult Scope<TResult>(Dictionary<string, Func<EvaluationContext, object?>> definitions, Func<EvaluationContext, TResult> body)
     {
-        var child = new EvaluationContext(this, Current);
-        foreach (var entry in definitions) child.Locals[entry.Key] = entry.Value;
+        EvaluationContext child = new EvaluationContext(this, Current);
+        foreach (KeyValuePair<string, Func<EvaluationContext, object?>> entry in definitions) child.Locals[entry.Key] = entry.Value;
         return body(child);
     }
     internal object? Named(string name)
     {
-        if (!Locals.TryGetValue(name, out var method) && !Shared.TryGetValue(name, out method))
+        if (!Locals.TryGetValue(name, out Func<EvaluationContext, object?>? method) && !Shared.TryGetValue(name, out method))
             throw new InvalidOperationException("Subtemplate #" + name + " not found.");
         if (++recursion.Value > 20) { recursion.Value--; throw new InvalidOperationException("Subtemplate recursion exceeds 20 levels."); }
         try { return method(this); }
@@ -357,7 +357,7 @@ internal sealed class EvaluationContext
     }
     internal static double ParseInteger(string text)
     {
-        var match = Regex.Match(text.TrimStart(), @"^[+-]?\d+");
+        Match match = Regex.Match(text.TrimStart(), @"^[+-]?\d+");
         return match.Success ? double.Parse(match.Value, CultureInfo.InvariantCulture) : double.NaN;
     }
     internal static string Scalar(object value) => value switch
@@ -379,11 +379,11 @@ internal sealed class EvaluationContext
     // Retain the fragment hierarchy until rendering; a missing value removes its entire line.
     internal static string? Compose(object? value)
     {
-        var lines = new List<string> { "" };
+        List<string> lines = new List<string> { "" };
         bool skipping = false;
         void Visit(object? item, string? indent = null)
         {
-            if (item is object?[] sequence) { foreach (var child in sequence) Visit(child, indent); return; }
+            if (item is object?[] sequence) { foreach (object? child in sequence) Visit(child, indent); return; }
             if (item is Arguments arguments) item = new RenderedList(arguments.Items);
             if (item is RenderedList rendered)
             {
@@ -397,7 +397,7 @@ internal sealed class EvaluationContext
                 if (incomplete) nextIndent = indent;
                 else if (lastIndent == lines[^1]) { nextIndent = lastIndent; incomplete = true; }
                 bool first = true;
-                foreach (var child in rendered.Items)
+                foreach (object? child in rendered.Items)
                 {
                     object? content = child;
                     if (preview.StartsWith('\n')) nextIndent = indent;
@@ -416,20 +416,20 @@ internal sealed class EvaluationContext
             {
                 if (data.Items is not null)
                 {
-                    var scalars = new List<string>();
-                    foreach (var child in data.Items)
+                    List<string> scalars = new List<string>();
+                    foreach (Data child in data.Items)
                     {
-                        if (!child.Values.TryGetValue("_", out var scalar) || !Condition(scalar))
+                        if (!child.Values.TryGetValue("_", out object? scalar) || !Condition(scalar))
                             throw new NotImplementedException("Non-scalar data formatting is not implemented yet.");
                         scalars.Add(Scalar(scalar!));
                     }
                     item = string.Join(", ", scalars);
                 }
-                else if (data.Values.TryGetValue("_", out var scalar) && Condition(scalar)) item = scalar;
+                else if (data.Values.TryGetValue("_", out object? scalar) && Condition(scalar)) item = scalar;
             }
             if (item is Missing missing) item = missing.Replacement;
             if (item is null) { lines[^1] = ""; skipping = true; return; }
-            var parts = Scalar(item).Split('\n');
+            string[] parts = Scalar(item).Split('\n');
             for (int i = 0; i < parts.Length; i++)
             {
                 if (i == 0 && skipping)
@@ -469,7 +469,7 @@ public static class GeneratedTemplateProgram
                 else throw new ArgumentException("Unknown or incomplete argument: " + args[i]);
             }
             if (template is null) throw new ArgumentException("Specify --template NAME.");
-            using var data = dataFile is null ? null : JsonDocument.Parse(File.ReadAllText(dataFile));
+            using JsonDocument? data = dataFile is null ? null : JsonDocument.Parse(File.ReadAllText(dataFile));
             string result = GeneratedTemplates.Render(template, data?.RootElement);
             Console.Write(result);
             return 0;

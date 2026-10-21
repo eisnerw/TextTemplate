@@ -43,27 +43,16 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // {#Quoted:[{$0->[{$0.#Surround('"')}]}]}
     // {#data:[/data/people]}
     // Source: "templates/outline.template":1:1
-    internal object? Render()
+    internal object?[] Evaluate()
     {
-        return WithDefinitions(
-            new Dictionary<string, Func<EvaluationContext, object?>>(StringComparer.Ordinal)
-            {
-                ["formatPet"] = scope => scope.Each(child => new Outline(child).formatPet()),
-                ["Domesticated"] = scope => scope.Each(child => new Outline(child).Domesticated()),
-                ["NonDomesticated"] = scope => scope.Each(child => new Outline(child).NonDomesticated()),
-                ["IsDomesticated"] = scope => scope.Each(child => new Outline(child).IsDomesticated()),
-                ["Prepend"] = scope => scope.Each(child => new Outline(child).Prepend()),
-                ["Surround"] = scope => scope.Each(child => new Outline(child).Surround()),
-                ["Quoted"] = scope => scope.Each(child => new Outline(child).Quoted()),
-                ["data"] = scope => scope.Each(child => new Outline(child).data())
-            },
-            child => new Outline(child).renderOutline());
+        return WithDefinitions(defineSubtemplates,
+            definitionContext => new Outline(definitionContext).renderOutline());
     }
 
     // Template:
     // [/data/people]
     // Source: "templates/outline.template":32:8
-    private object? data()
+    private object?[] data()
     {
         return Line($"/data/people");
     }
@@ -71,19 +60,19 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0->[{$0.#Surround('"')}]}]
     // Source: "templates/outline.template":31:10
-    private object? Quoted()
+    private object?[] Quoted()
     {
-        object? choice = (EvaluationContext.Condition(Get("$0")) ? Each(child => new Outline(child).renderSurround()) : "");
+        object? item0Result = (IsTruthy("$0") ? Each(itemContext => new Outline(itemContext).renderSurround()) : "");
 
-        return Line($"{choice}");
+        return Line($"{item0Result}");
     }
 
     // Template:
     // [{$0.#Surround('"')}]
     // Source: "templates/outline.template":31:16
-    private object? renderSurround()
+    private object?[] renderSurround()
     {
-        var surround = CallNamed("Surround", Receiver(child => child.Lookup("$0")), "\"");
+        object? surround = ApplySubtemplate("Surround", MethodInput("$0"), "\"");
 
         return Line($"{surround}");
     }
@@ -91,21 +80,21 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0->[{$1}{$0}{$1}]}]
     // Source: "templates/outline.template":30:12
-    private object? Surround()
+    private object?[] Surround()
     {
-        object? choice = (EvaluationContext.Condition(Get("$0")) ? Each(child => new Outline(child).renderItem1_2()) : "");
+        object? item0Result = (IsTruthy("$0") ? Each(itemContext => new Outline(itemContext).renderItem1_2()) : "");
 
-        return Line($"{choice}");
+        return Line($"{item0Result}");
     }
 
     // Template:
     // [{$1}{$0}{$1}]
     // Source: "templates/outline.template":30:18
-    private object? renderItem1_2()
+    private object?[] renderItem1_2()
     {
-        var item1 = Get("$1");
-        var item0 = Get("$0");
-        var item1_2 = Get("$1");
+        object? item1 = Get("$1");
+        object? item0 = Get("$0");
+        object? item1_2 = Get("$1");
 
         return Line($"{item1}{item0}{item1_2}");
     }
@@ -113,20 +102,20 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0->[{$1}{$0}]}]
     // Source: "templates/outline.template":29:11
-    private object? Prepend()
+    private object?[] Prepend()
     {
-        object? choice = (EvaluationContext.Condition(Get("$0")) ? Each(child => new Outline(child).renderItem1()) : "");
+        object? item0Result = (IsTruthy("$0") ? Each(itemContext => new Outline(itemContext).renderItem1()) : "");
 
-        return Line($"{choice}");
+        return Line($"{item0Result}");
     }
 
     // Template:
     // [{$1}{$0}]
     // Source: "templates/outline.template":29:17
-    private object? renderItem1()
+    private object?[] renderItem1()
     {
-        var item1 = Get("$1");
-        var item0 = Get("$0");
+        object? item1 = Get("$1");
+        object? item0 = Get("$0");
 
         return Line($"{item1}{item0}");
     }
@@ -134,7 +123,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0.Matches('dog','cat')}]
     // Source: "templates/outline.template":28:18
-    private object? IsDomesticated()
+    private object?[] IsDomesticated()
     {
         // Template:
         // $0.Matches('dog','cat')
@@ -145,7 +134,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
             () => Get("$0"),
             () => new object?[] { "dog", "cat" });
 
-        var matches = applyMatches();
+        object? matches = applyMatches();
 
         return Line($"{matches}");
     }
@@ -153,7 +142,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0.Where(!type.#IsDomesticated())}]
     // Source: "templates/outline.template":27:20
-    private object? NonDomesticated()
+    private object?[] NonDomesticated()
     {
         // Template:
         // $0.Where(!type.#IsDomesticated())
@@ -162,9 +151,9 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
             "Call Where",
             "templates/outline.template:27:22",
             () => Get("$0"),
-            () => new object?[] { !(EvaluationContext.Condition(CallNamed("IsDomesticated", Receiver(child => child.Lookup("type"))))) });
+            () => new object?[] { !(EvaluationContext.Condition(ApplySubtemplate("IsDomesticated", MethodInput("type")))) });
 
-        var where = applyWhere();
+        object? where = applyWhere();
 
         return Line($"{where}");
     }
@@ -172,7 +161,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0.Where(type.#IsDomesticated())}]
     // Source: "templates/outline.template":26:17
-    private object? Domesticated()
+    private object?[] Domesticated()
     {
         // Template:
         // $0.Where(type.#IsDomesticated())
@@ -181,9 +170,9 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
             "Call Where",
             "templates/outline.template:26:19",
             () => Get("$0"),
-            () => new object?[] { CallNamed("IsDomesticated", Receiver(child => child.Lookup("type"))) });
+            () => new object?[] { ApplySubtemplate("IsDomesticated", MethodInput("type")) });
 
-        var where = applyWhere();
+        object? where = applyWhere();
 
         return Line($"{where}");
     }
@@ -194,7 +183,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     //    {type} named {name} 
     // ]
     // Source: "templates/outline.template":22:13
-    private object? formatPet()
+    private object?[] formatPet()
     {
         // Template:
         // type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')
@@ -203,11 +192,11 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
             "Call Case",
             "templates/outline.template:23:7",
             () => Get("type"),
-            () => new object?[] { "zebra", Each(child => new Outline(child).renderToLower()), "dog", "friskie", "cat", "fishy", "nice" });
+            () => new object?[] { "zebra", Each(itemContext => new Outline(itemContext).renderToLower()), "dog", "friskie", "cat", "fishy", "nice" });
 
-        var @case = applyCase();
-        var type = Get("type");
-        var name = Get("name");
+        object? @case = applyCase();
+        object? type = Get("type");
+        object? name = Get("name");
 
         return Line($"a {@case} {type} named {name}");
     }
@@ -215,7 +204,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{[{name}y].ToLower()}]
     // Source: "templates/outline.template":23:25
-    private object? renderToLower()
+    private object?[] renderToLower()
     {
         // Template:
         // [{name}y].ToLower()
@@ -223,9 +212,9 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         object? applyToLower() => Unsupported(
             "Call ToLower",
             "templates/outline.template:23:27",
-            () => Each(child => new Outline(child).renderName()));
+            () => Each(itemContext => new Outline(itemContext).renderName()));
 
-        var toLower = applyToLower();
+        object? toLower = applyToLower();
 
         return Line($"{toLower}");
     }
@@ -233,9 +222,9 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{name}y]
     // Source: "templates/outline.template":23:27
-    private object? renderName()
+    private object?[] renderName()
     {
-        var name = Get("name");
+        object? name = Get("name");
 
         return Line($"{name}y");
     }
@@ -284,7 +273,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         object? applyMultilineStyle() => Unsupported(
             "Call @MultilineStyle",
             "templates/outline.template:1:15",
-            () => Each(child => new Outline(child).renderQuoted()),
+            () => Each(itemContext => new Outline(itemContext).renderQuoted()),
             () => new object?[] { "IndentAllButFirst", "Padded" });
 
         // Template:
@@ -335,7 +324,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     //       {.} Comment{comment.Contains("\\n")->[s]}: {comment}  
     // ]
     // Source: "templates/outline.template":1:15
-    private object? renderQuoted()
+    private object?[] renderQuoted()
     {
         // Template:
         // {.}
@@ -354,7 +343,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         object? applyToUpper() => Unsupported(
             "Call ToUpper",
             "templates/outline.template:2:9",
-            () => Each(child => new Outline(child).renderLastName()));
+            () => Each(itemContext => new Outline(itemContext).renderLastName()));
 
         // Template:
         //       {.}
@@ -402,24 +391,24 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
             () => Get("comment"),
             () => new object?[] { "\\n" });
 
-        var content = bullet();
-        var quoted = CallNamed("Quoted", applyToUpper());
-        var content_2 = bullet_2();
-        var ifMissing = applyIfMissing();
-        var content_3 = bullet_3();
-        var firstName = Get("firstName");
-        var content_4 = bullet_4();
-        object? choice = (EvaluationContext.Condition(Get("pets")) ? Each(child => new Outline(child).renderCount()) : Each(child => Line($"no pets")));
-        var content_5 = bullet_5();
-        object? choice_2 = (EvaluationContext.Condition(applyContains()) ? Each(child => Line($"s")) : "");
-        var comment = Get("comment");
+        object? content = bullet();
+        object? quoted = ApplySubtemplate("Quoted", applyToUpper());
+        object? content_2 = bullet_2();
+        object? ifMissing = applyIfMissing();
+        object? content_3 = bullet_3();
+        object? firstName = Get("firstName");
+        object? content_4 = bullet_4();
+        object? petsResult = (IsTruthy("pets") ? Each(itemContext => new Outline(itemContext).renderCount()) : Each(itemContext => Line($"no pets")));
+        object? content_5 = bullet_5();
+        object? choice = (EvaluationContext.Condition(applyContains()) ? Each(itemContext => Line($"s")) : "");
+        object? comment = Get("comment");
 
         return Line($$"""
             {{content}} {{quoted}} 
             {{content_2}} Lastname: {{ifMissing}}   
             {{content_3}} FirstName: {{firstName}}  
-            {{content_4}} Pets {{choice}}
-            {{content_5}} Comment{{choice_2}}: {{comment}}
+            {{content_4}} Pets {{petsResult}}
+            {{content_5}} Comment{{choice}}: {{comment}}
             """);
     }
 
@@ -431,7 +420,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     //             {.} {pets.#NonDomesticated():[{#formatPet}]}    
     //    ]
     // Source: "templates/outline.template":9:23
-    private object? renderCount()
+    private object?[] renderCount()
     {
         // Template:
         // pets.Count()
@@ -454,7 +443,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         object? applyCount_2() => Unsupported(
             "Call Count",
             "templates/outline.template:10:29",
-            () => CallNamed("Domesticated", Receiver(child => child.Lookup("pets"))));
+            () => ApplySubtemplate("Domesticated", MethodInput("pets")));
 
         // Template:
         //             {.}
@@ -476,7 +465,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         object? applyCount_3() => Unsupported(
             "Call Count",
             "templates/outline.template:12:33",
-            () => CallNamed("NonDomesticated", Receiver(child => child.Lookup("pets"))));
+            () => ApplySubtemplate("NonDomesticated", MethodInput("pets")));
 
         // Template:
         //             {.}
@@ -485,15 +474,15 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
             "Bullet             {.}",
             "templates/outline.template:13:1");
 
-        var count = applyCount();
-        var content = bullet();
-        var count_2 = applyCount_2();
-        var content_2 = bullet_2();
-        var domesticated = InContext(CallNamed("Domesticated", Receiver(child => child.Lookup("pets"))), scope => scope.Each(child => new Outline(child).renderFormatPet()));
-        var content_3 = bullet_3();
-        var count_3 = applyCount_3();
-        var content_4 = bullet_4();
-        var nonDomesticated = InContext(CallNamed("NonDomesticated", Receiver(child => child.Lookup("pets"))), scope => scope.Each(child => new Outline(child).renderFormatPet_2()));
+        object? count = applyCount();
+        object? content = bullet();
+        object? count_2 = applyCount_2();
+        object? content_2 = bullet_2();
+        object? domesticated = InContext(ApplySubtemplate("Domesticated", MethodInput("pets")), dataContext => dataContext.Each(itemContext => new Outline(itemContext).renderFormatPet()));
+        object? content_3 = bullet_3();
+        object? count_3 = applyCount_3();
+        object? content_4 = bullet_4();
+        object? nonDomesticated = InContext(ApplySubtemplate("NonDomesticated", MethodInput("pets")), dataContext => dataContext.Each(itemContext => new Outline(itemContext).renderFormatPet_2()));
 
         return Line($$"""
             ({{count}}):  
@@ -507,9 +496,9 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{#formatPet}]
     // Source: "templates/outline.template":13:42
-    private object? renderFormatPet_2()
+    private object?[] renderFormatPet_2()
     {
-        var formatPet = Each(child => child.Named("formatPet"));
+        object? formatPet = Each(itemContext => itemContext.Named("formatPet"));
 
         return Line($"{formatPet}");
     }
@@ -517,9 +506,9 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{#formatPet}]
     // Source: "templates/outline.template":11:39
-    private object? renderFormatPet()
+    private object?[] renderFormatPet()
     {
-        var formatPet = Each(child => child.Named("formatPet"));
+        object? formatPet = Each(itemContext => itemContext.Named("formatPet"));
 
         return Line($"{formatPet}");
     }
@@ -531,18 +520,81 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     //       middleName.#Prepend(' ')
     //    }]
     // Source: "templates/outline.template":2:9
-    private object? renderLastName()
+    private object?[] renderLastName()
     {
-        var lastName = Get("lastName");
-        var prepend = CallNamed("Prepend", Receiver(child => child.Lookup("firstName")), ", ");
-        var prepend_2 = CallNamed("Prepend", Receiver(child => child.Lookup("middleName")), " ");
+        object? lastName = Get("lastName");
+        object? prepend = ApplySubtemplate("Prepend", MethodInput("firstName"), ", ");
+        object? prepend_2 = ApplySubtemplate("Prepend", MethodInput("middleName"), " ");
 
         return Line($"{lastName}{prepend}{prepend_2}");
     }
 
-    private object? renderOutline()
+    // Template:
+    //        
+    //  
+    // Subtemplates:  
+    //
+    // {#formatPet:[  
+    //    a {type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')}  `   
+    //    {type} named {name} 
+    // ]}
+    // {#Domesticated: [{$0.Where(type.#IsDomesticated())}]}
+    // {#NonDomesticated: [{$0.Where(!type.#IsDomesticated())}]} 
+    // {#IsDomesticated:[{$0.Matches('dog','cat')}]}  
+    // {#Prepend:[{$0->[{$1}{$0}]}]}
+    // {#Surround:[{$0->[{$1}{$0}{$1}]}]}
+    // {#Quoted:[{$0->[{$0.#Surround('"')}]}]}
+    // {#data:[/data/people]}
+    // Source: "templates/outline.template":18:44
+    private void defineSubtemplates(SubtemplateDefinitions definitions)
     {
-        var data = InContext(Each(child => child.Named("data")), child => new Outline(child).renderMissingValue());
+        definitions.Add("formatPet", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).formatPet()));
+        definitions.Add("Domesticated", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).Domesticated()));
+        definitions.Add("NonDomesticated", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).NonDomesticated()));
+        definitions.Add("IsDomesticated", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).IsDomesticated()));
+        definitions.Add("Prepend", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).Prepend()));
+        definitions.Add("Surround", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).Surround()));
+        definitions.Add("Quoted", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).Quoted()));
+        definitions.Add("data", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).data()));
+    }
+
+    // Template:
+    // People:{#data:[
+    //    {.} {[{ 
+    //       lastName}{ 
+    //       firstName.#Prepend(', ')}{    
+    //       middleName.#Prepend(' ')
+    //    }].ToUpper().#Quoted()} 
+    //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
+    //       {.} FirstName: {firstName}  
+    //       {.} Pets {pets=>[({pets.Count()}):  
+    //          {.} Domesticated ({pets.#Domesticated().Count()}): 
+    //             {.} {pets.#Domesticated():[{#formatPet}]}  
+    //          {.} Non-domesticated ({pets.#NonDomesticated().Count()}): 
+    //             {.} {pets.#NonDomesticated():[{#formatPet}]}    
+    //    ],[no pets]
+    //    }
+    //       {.} Comment{comment.Contains("\\n")->[s]}: {comment}  
+    // ].@MultilineStyle('IndentAllButFirst', 'Padded')
+    //  .@MissingValue('No Information Provided')}       
+    //  
+    // Subtemplates:  
+    //
+    // {#formatPet:[  
+    //    a {type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')}  `   
+    //    {type} named {name} 
+    // ]}
+    // {#Domesticated: [{$0.Where(type.#IsDomesticated())}]}
+    // {#NonDomesticated: [{$0.Where(!type.#IsDomesticated())}]} 
+    // {#IsDomesticated:[{$0.Matches('dog','cat')}]}  
+    // {#Prepend:[{$0->[{$1}{$0}]}]}
+    // {#Surround:[{$0->[{$1}{$0}{$1}]}]}
+    // {#Quoted:[{$0->[{$0.#Surround('"')}]}]}
+    // {#data:[/data/people]}
+    // Source: "templates/outline.template":1:1
+    private object?[] renderOutline()
+    {
+        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => new Outline(dataContext).renderMissingValue());
 
         return Line($"People:{data}");
     }

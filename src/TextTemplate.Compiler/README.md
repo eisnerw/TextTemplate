@@ -37,6 +37,11 @@ missing values, whitespace, predicates, arrows, object contexts, and local/share
 subtemplates. The generated source contains template-specific C# methods and
 helper source, with no runtime parser, syntax tree, or TextTemplate DLL dependency.
 The public API is `GeneratedTemplates.Render(name, JsonElement? data = null)`.
+Each generated template exposes an internal `Evaluate()` method that returns
+structured content; the public API composes that content into the final string.
+Generated lookups use `IsTruthy(path)` for legacy truth checks and
+`MethodInput(path)` to collect a method input across current item contexts.
+Complex method inputs use the deferred `MethodInput(itemContext => ...)` overload.
 The executable accepts `--template NAME` and optional `--data-file FILE`; rendered
 text goes exactly to stdout, and execution errors go to stderr with exit code 1.
 
@@ -232,6 +237,15 @@ Generated source is intended to be read, edited, and optionally checked in:
 - `Program.cs`: console host.
 - `GeneratedTemplates.csproj`: standalone .NET 10 executable with explicit source items.
 
+Subtemplate calls read as `ApplySubtemplate("anded", SubtemplateInput("formatPet"))`.
+`SubtemplateInput` collects the named subtemplate's results in the current item
+contexts; `ApplySubtemplate` preserves dynamic lookup and argument binding.
+Definition registration lives in separate methods using `definitions.Add(...)`.
+`WithDefinitions` creates the same inherited scope when the body is reached;
+registration stores callbacks without evaluating the subtemplates. Included
+units use separate registration methods with their original evaluation rules.
+Conditional results use a data-derived name such as `petsResult` when available.
+
 Inline definitions remain private methods in their owner's file, retaining names
 such as `formatPet`. Names contain neither category prefixes nor source coordinates.
 Comments show the original template fragment above each generated method or
@@ -240,13 +254,19 @@ Identifier collisions receive `_2`, `_3`,
 etc.; keyword identifiers are escaped. File/class names are allocated deterministically
 and avoid case-insensitive collisions. Anonymous body methods describe their content.
 
+Generated locals and method returns use their proven C# types: `bool` for predicates,
+`double` for numbers, `string` for text, and `object?[]` for structured fragments.
+Conditional branches retain their common type and become nullable when needed.
+Dynamic lookups, list evaluation, and unfinished operations retain `object?`;
+the generator does not assume a type from sample data.
+
 Simple templates use readable local values and structured interpolated strings:
 
 ```csharp
-private object? formatPet()
+private object?[] formatPet()
 {
-    var type = Get("type");
-    var name = Get("name");
+    object? type = Get("type");
+    object? name = Get("name");
 
     return Line($"a {type} named {name}");
 }
@@ -258,6 +278,9 @@ layout. Literal expressions are folded into content where equivalent. Nested unf
 operations are deferred local functions, with separate receiver/argument expressions.
 No branch or stub operand is eagerly evaluated for the sake of a readable local.
 Child contexts inherit local bindings and data without changing the caller's context.
+Generated callbacks name their context by role: `itemContext` for per-item evaluation,
+`dataContext` for data contexts, `definitionContext` for definition scopes,
+`annotatedContext` for annotations, and `includedContext` for included units.
 See [DESIGN.md](../../DESIGN.md#11-editable-generated-c-layout-and-readability-contract)
 for the full readability contract.
 

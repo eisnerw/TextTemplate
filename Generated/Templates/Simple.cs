@@ -27,23 +27,18 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
     // {#formatPet:[a {type} named {name}]}
     // {#anded:[{$0.Join(', ',' and ')}]}
     // Source: "templates/simple.template":1:1
-    internal object? Render()
+    internal object?[] Evaluate()
     {
-        return WithDefinitions(
-            new Dictionary<string, Func<EvaluationContext, object?>>(StringComparer.Ordinal)
-            {
-                ["formatPet"] = scope => scope.Each(child => new Simple(child).formatPet()),
-                ["anded"] = scope => scope.Each(child => new Simple(child).anded())
-            },
-            child => new Simple(child).renderSimple());
+        return WithDefinitions(defineSubtemplates,
+            definitionContext => new Simple(definitionContext).renderSimple());
     }
 
     // Template:
     // [{$0.Join(', ',' and ')}]
     // Source: "templates/simple.template":16:9
-    private object? anded()
+    private object?[] anded()
     {
-        var join = Join(Receiver(child => child.Lookup("$0")), ", ", " and ");
+        object? join = Join(MethodInput("$0"), ", ", " and ");
 
         return Line($"{join}");
     }
@@ -51,10 +46,10 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [a {type} named {name}]
     // Source: "templates/simple.template":15:13
-    private object? formatPet()
+    private object?[] formatPet()
     {
-        var type = Get("type");
-        var name = Get("name");
+        object? type = Get("type");
+        object? name = Get("name");
 
         return Line($"a {type} named {name}");
     }
@@ -65,21 +60,21 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
     //    ,[no pets]
     // }!!]
     // Source: "templates/simple.template":8:1
-    private object? renderContent()
+    private object?[] renderContent()
     {
-        var lastName = Get("lastName");
-        var firstName = Get("firstName");
-        object? choice = (EvaluationContext.Condition(Get("pets")) ? Each(child => new Simple(child).renderContent_2()) : Each(child => Line($"no pets")));
+        object? lastName = Get("lastName");
+        object? firstName = Get("firstName");
+        object? petsResult = (IsTruthy("pets") ? Each(itemContext => new Simple(itemContext).renderContent_2()) : Each(itemContext => Line($"no pets")));
 
-        return Line($"Hello {lastName}, {firstName} with {choice}!!");
+        return Line($"Hello {lastName}, {firstName} with {petsResult}!!");
     }
 
     // Template:
     // [{pets:#formatPet.#anded()}]
     // Source: "templates/simple.template":9:4
-    private object? renderContent_2()
+    private object?[] renderContent_2()
     {
-        var pets = InContext(Get("pets"), child => new Simple(child).renderAnded());
+        object? pets = InContext(Get("pets"), dataContext => new Simple(dataContext).renderAnded());
 
         return Line($"{pets}");
     }
@@ -89,12 +84,44 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/simple.template":9:11
     private object? renderAnded()
     {
-        return CallNamed("anded", Receiver(child => child.Named("formatPet")));
+        return ApplySubtemplate("anded", SubtemplateInput("formatPet"));
     }
 
-    private object? renderSimple()
+    // Template:
+    //
+    //
+    // Subtemplates:
+    //
+    // {#formatPet:[a {type} named {name}]}
+    // {#anded:[{$0.Join(', ',' and ')}]}
+    // Source: "templates/simple.template":11:6
+    private void defineSubtemplates(SubtemplateDefinitions definitions)
     {
-        var content = InContext("{\"firstName\": \"Robert\", \"lastName\": \"Smith\", \"pets\":[\n{\"type\":\"dog\", \"name\": \"Toto\"}\n,{\"type\":\"cat\", \"name\": \"Dolly\"}\n,{\"type\":\"zebra\", \"name\": \"Stripes\"}\n]}", scope => scope.Each(child => new Simple(child).renderContent()));
+        definitions.Add("formatPet", definitionContext => definitionContext.Each(itemContext => new Simple(itemContext).formatPet()));
+        definitions.Add("anded", definitionContext => definitionContext.Each(itemContext => new Simple(itemContext).anded()));
+    }
+
+    // Template:
+    // // data context:
+    // {'{"firstName": "Robert", "lastName": "Smith", "pets":[
+    // {"type":"dog", "name": "Toto"}
+    // ,{"type":"cat", "name": "Dolly"}
+    // ,{"type":"zebra", "name": "Stripes"}
+    // ]}':
+    // // Template:
+    // [{"Hello"} {lastName}, {firstName} with {pets=>
+    //    [{pets:#formatPet.#anded()}]
+    //    ,[no pets]
+    // }!!]}
+    //
+    // Subtemplates:
+    //
+    // {#formatPet:[a {type} named {name}]}
+    // {#anded:[{$0.Join(', ',' and ')}]}
+    // Source: "templates/simple.template":1:1
+    private object?[] renderSimple()
+    {
+        object? content = InContext("{\"firstName\": \"Robert\", \"lastName\": \"Smith\", \"pets\":[\n{\"type\":\"dog\", \"name\": \"Toto\"}\n,{\"type\":\"cat\", \"name\": \"Dolly\"}\n,{\"type\":\"zebra\", \"name\": \"Stripes\"}\n]}", dataContext => dataContext.Each(itemContext => new Simple(itemContext).renderContent()));
 
         return Line($$"""
             

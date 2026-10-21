@@ -17,24 +17,18 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
     // {#Wiki:[{#wikiapi:[{query.pages:[{*.ToJson().Replace(/"\d+"/,'"key"')}]}]}]}
     // {#wikiapi:[{'https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exintro=&titles='}{$0}]}
     // Source: "templates/wikipedia.template":1:1
-    internal object? Render()
+    internal object?[] Evaluate()
     {
-        return WithDefinitions(
-            new Dictionary<string, Func<EvaluationContext, object?>>(StringComparer.Ordinal)
-            {
-                ["getWiki"] = scope => scope.Each(child => new Wikipedia(child).getWiki()),
-                ["Wiki"] = scope => scope.Each(child => new Wikipedia(child).Wiki()),
-                ["wikiapi"] = scope => scope.Each(child => new Wikipedia(child).wikiapi())
-            },
-            child => new Wikipedia(child).renderWikipedia());
+        return WithDefinitions(defineSubtemplates,
+            definitionContext => new Wikipedia(definitionContext).renderWikipedia());
     }
 
     // Template:
     // [{'https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exintro=&titles='}{$0}]
     // Source: "templates/wikipedia.template":6:11
-    private object? wikiapi()
+    private object?[] wikiapi()
     {
-        var item0 = Get("$0");
+        object? item0 = Get("$0");
 
         return Line($"https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exintro=&titles={item0}");
     }
@@ -42,9 +36,9 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
     // Template:
     // [{#wikiapi:[{query.pages:[{*.ToJson().Replace(/"\d+"/,'"key"')}]}]}]
     // Source: "templates/wikipedia.template":5:8
-    private object? Wiki()
+    private object?[] Wiki()
     {
-        var wikiapi = InContext(Each(child => child.Named("wikiapi")), scope => scope.Each(child => new Wikipedia(child).renderContent()));
+        object? wikiapi = InContext(Each(itemContext => itemContext.Named("wikiapi")), dataContext => dataContext.Each(itemContext => new Wikipedia(itemContext).renderContent()));
 
         return Line($"{wikiapi}");
     }
@@ -52,9 +46,9 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
     // Template:
     // [{query.pages:[{*.ToJson().Replace(/"\d+"/,'"key"')}]}]
     // Source: "templates/wikipedia.template":5:19
-    private object? renderContent()
+    private object?[] renderContent()
     {
-        var pages = InContext(Get("query.pages"), scope => scope.Each(child => new Wikipedia(child).renderReplace()));
+        object? pages = InContext(Get("query.pages"), dataContext => dataContext.Each(itemContext => new Wikipedia(itemContext).renderReplace()));
 
         return Line($"{pages}");
     }
@@ -62,7 +56,7 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
     // Template:
     // [{*.ToJson().Replace(/"\d+"/,'"key"')}]
     // Source: "templates/wikipedia.template":5:33
-    private object? renderReplace()
+    private object?[] renderReplace()
     {
         // Template:
         // *.ToJson()
@@ -88,7 +82,7 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
             () => applyToJson(),
             () => new object?[] { pattern(), "\"key\"" });
 
-        var replace = applyReplace();
+        object? replace = applyReplace();
 
         return Line($"{replace}");
     }
@@ -96,9 +90,9 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
     // Template:
     // [{#Wiki:[{key.extract}]}]
     // Source: "templates/wikipedia.template":4:11
-    private object? getWiki()
+    private object?[] getWiki()
     {
-        var wiki = InContext(Each(child => child.Named("Wiki")), scope => scope.Each(child => new Wikipedia(child).renderExtract()));
+        object? wiki = InContext(Each(itemContext => itemContext.Named("Wiki")), dataContext => dataContext.Each(itemContext => new Wikipedia(itemContext).renderExtract()));
 
         return Line($"{wiki}");
     }
@@ -106,16 +100,39 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
     // Template:
     // [{key.extract}]
     // Source: "templates/wikipedia.template":4:19
-    private object? renderExtract()
+    private object?[] renderExtract()
     {
-        var extract = Get("key.extract");
+        object? extract = Get("key.extract");
 
         return Line($"{extract}");
     }
 
-    private object? renderWikipedia()
+    // Template:
+    //
+    //
+    // Subtemplates:
+    // {#getWiki:[{#Wiki:[{key.extract}]}]}
+    // {#Wiki:[{#wikiapi:[{query.pages:[{*.ToJson().Replace(/"\d+"/,'"key"')}]}]}]}
+    // {#wikiapi:[{'https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exintro=&titles='}{$0}]}
+    // Source: "templates/wikipedia.template":1:27
+    private void defineSubtemplates(SubtemplateDefinitions definitions)
     {
-        var getWiki = CallNamed("getWiki", Receiver(child => "Paul Simon"));
+        definitions.Add("getWiki", definitionContext => definitionContext.Each(itemContext => new Wikipedia(itemContext).getWiki()));
+        definitions.Add("Wiki", definitionContext => definitionContext.Each(itemContext => new Wikipedia(itemContext).Wiki()));
+        definitions.Add("wikiapi", definitionContext => definitionContext.Each(itemContext => new Wikipedia(itemContext).wikiapi()));
+    }
+
+    // Template:
+    //  {'Paul Simon'.#getWiki()}
+    //
+    // Subtemplates:
+    // {#getWiki:[{#Wiki:[{key.extract}]}]}
+    // {#Wiki:[{#wikiapi:[{query.pages:[{*.ToJson().Replace(/"\d+"/,'"key"')}]}]}]}
+    // {#wikiapi:[{'https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exintro=&titles='}{$0}]}
+    // Source: "templates/wikipedia.template":1:1
+    private object?[] renderWikipedia()
+    {
+        object? getWiki = ApplySubtemplate("getWiki", MethodInput(itemContext => "Paul Simon"));
 
         return Line($" {getWiki}");
     }

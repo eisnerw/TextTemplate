@@ -106,7 +106,10 @@ public sealed class GenerationTests
                 ["inheritedLocals"] = "{person:[{#local} / {^.firstName}]} {firstName}\nSubtemplates:\n{#local:[{name}]}",
                 ["scopeIsolation"] = "{#outer} {#local}\nSubtemplates:\n{#local:[Root {firstName}]}\n{#outer:[{person:[{#local}]}\nSubtemplates:\n{#local:[Inner {name}]}]}",
                 ["rawQuotes"] = "Quotes \"\"\"\n\t{firstName}\n\nEnd\n",
-                ["nameCollisions"] = "{#Render} {#Get} {#class} {firstName} {firstName}\nSubtemplates:\n{#Render:[Render]}\n{#Get:[Get]}\n{#class:[Keyword]}",
+                ["nameCollisions"] = "{#Evaluate} {#Get} {#class} {firstName} {firstName}\nSubtemplates:\n{#Evaluate:[Evaluate]}\n{#Get:[Get]}\n{#class:[Keyword]}",
+                ["helperCollisions"] = "{#IsTruthy} {#MethodInput} {IsTruthy} {MethodInput} {firstName=>[yes],[no]} {firstName.Join(',')}\nSubtemplates:\n{#IsTruthy:[truth]}\n{#MethodInput:[input]}",
+                ["registrationCollisions"] = "{#defineSubtemplates} {#ApplySubtemplate} {#SubtemplateInput} {#SubtemplateDefinitions} {ApplySubtemplate} {SubtemplateInput}\nSubtemplates:\n{#defineSubtemplates:[definition]}\n{#ApplySubtemplate:[application]}\n{#SubtemplateInput:[input]}\n{#SubtemplateDefinitions:[scope]}",
+                ["typedBranches"] = "{yes=>'one','two'} {no=>'missing'} {yes->'text'} {yes=>'text',firstName} {yes=>[fragments]} {zero=0} {yes & !no}",
                 ["keywordContext"] = "{person:[{class}]}",
                 ["literalDelimiters"] = "{\"{{{{ }}}} \\\"\\\"\\\"\\\"\"}\n{firstName}\n",
                 ["emptyInline"] = "a{:[]}b"
@@ -136,14 +139,26 @@ public sealed class GenerationTests
             Assert.DoesNotContain("SyntaxNode", generated.Source);
             Assert.DoesNotMatch(@"\bEvaluate\d+\b", generated.Source!);
             Assert.Contains("internal sealed class Greeting", generated.Source);
-            Assert.Contains("internal object? Render()", generated.Source);
+            Assert.Contains("internal object?[] Evaluate()", generated.Source);
             Assert.Contains("Line($\"Hello {firstName}!\")", generated.Source);
-            Assert.Contains("private object? local()", generated.Source);
+            Assert.Contains("private object?[] local()", generated.Source);
+            string typedBranches = generated.Files["Templates/TypedBranches.cs"];
+            Assert.Contains("string yesResult =", typedBranches);
+            Assert.Contains("string? noResult =", typedBranches);
+            Assert.Contains("string yesResult_2 =", typedBranches);
+            Assert.Contains("object? yesResult_3 =", typedBranches);
+            Assert.Contains("object? yesResult_4 =", typedBranches);
+            Assert.Contains("bool content = EvaluationContext.Compare", typedBranches);
+            Assert.Contains("bool content_2 =", typedBranches);
             Assert.DoesNotMatch(@"\b(?:Template_|Subtemplate_|Define_|InlineTemplate_L)\w*", generated.Source!);
             Assert.DoesNotMatch(@"\b\w+_L\d+_C\d+\b", generated.Source!);
-            Assert.Contains("var firstName = Get(\"firstName\");", generated.Source);
-            Assert.Contains("private object? @class()", generated.Source);
-            Assert.Contains("private object? Render_2()", generated.Source);
+            Assert.Contains("object? firstName = Get(\"firstName\");", generated.Source);
+            Assert.Contains("private object?[] @class()", generated.Source);
+            Assert.Contains("private object?[] Evaluate_2()", generated.Source);
+            Assert.Contains("IsTruthy(\"firstName\")", generated.Source);
+            Assert.Contains("MethodInput(\"firstName\")", generated.Source);
+            Assert.Contains("private object?[] IsTruthy_2()", generated.Source);
+            Assert.Contains("private object?[] MethodInput_2()", generated.Source);
             Assert.Contains("Templates/AB_2.cs", generated.Files.Keys);
             Assert.Contains("Includes/Common.cs", generated.Files.Keys);
             Assert.Contains("internal sealed class Shared", generated.Source);
@@ -202,11 +217,24 @@ public sealed class GenerationTests
             Assert.True(generated.Success, string.Join("\n", generated.Diagnostics));
             Assert.Contains("Includes/DoInclude.cs", generated.Files.Keys);
             Assert.Contains("Includes/Common.cs", generated.Files.Keys);
+            string simpledata = generated.Files["Templates/Simpledata.cs"];
+            Assert.Contains("ApplySubtemplate(\"anded\", SubtemplateInput(\"xformatPet\"))", simpledata);
+            Assert.Contains("dataContext => new Simpledata(dataContext)", simpledata);
+            Assert.Contains("definitionContext => definitionContext.Each(itemContext =>", simpledata);
+            Assert.Contains("annotatedContext => annotatedContext.Include", simpledata);
+            Assert.Contains("annotatedContext => annotatedContext.Each(itemContext =>", simpledata);
+            Assert.DoesNotContain("child =>", simpledata);
+            Assert.Contains("WithDefinitions(defineSubtemplates,", simpledata);
+            Assert.Contains("private void defineSubtemplates(SubtemplateDefinitions definitions)", simpledata);
+            Assert.Contains("definitions.Add(\"formatPet\",", simpledata);
+            Assert.Contains("object? petsResult =", simpledata);
+            Assert.DoesNotContain("new Dictionary", simpledata);
+            Assert.DoesNotContain("CallNamed(", simpledata);
             string wikipedia = generated.Files["Templates/Wikipedia.cs"];
-            Assert.Contains("private object? getWiki()", wikipedia);
+            Assert.Contains("private object?[] getWiki()", wikipedia);
             Assert.DoesNotContain("EvaluationContext.At(", wikipedia);
             Assert.Contains("object? applyReplace()", wikipedia);
-            Assert.Contains("var extract = Get(\"key.extract\");", wikipedia);
+            Assert.Contains("object? extract = Get(\"key.extract\");", wikipedia);
             File.WriteAllText(Path.Combine(root, "Generated.cs"), generated.Source);
             File.WriteAllText(Path.Combine(root, "Standalone.csproj"), """<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><StartupObject>Probe</StartupObject></PropertyGroup></Project>""");
             // Compile every legacy template and subtemplate, including unfinished features.

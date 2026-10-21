@@ -530,55 +530,16 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // ]}
     // {#data:[/data/people]}
     // Source: "templates/tests.template":1:1
-    internal object? Render()
+    internal object?[] Evaluate()
     {
-        return WithDefinitions(
-            new Dictionary<string, Func<EvaluationContext, object?>>(StringComparer.Ordinal)
-            {
-                ["test"] = scope => scope.Each(child => new Tests(child).test()),
-                ["test1"] = scope => scope.Each(child => new Tests(child).test1()),
-                ["test1Result"] = scope => scope.Each(child => new Tests(child).test1Result()),
-                ["test2"] = scope => scope.Each(child => new Tests(child).test2()),
-                ["test2Result"] = scope => scope.Each(child => new Tests(child).test2Result()),
-                ["test3"] = scope => scope.Each(child => new Tests(child).test3()),
-                ["test3Result"] = scope => scope.Each(child => new Tests(child).test3Result()),
-                ["test4"] = scope => scope.Each(child => new Tests(child).test4()),
-                ["test4Result"] = child => new Tests(child).test4Result(),
-                ["test5"] = child => new Tests(child).test5(),
-                ["test5Result"] = scope => scope.Each(child => new Tests(child).test5Result()),
-                ["test6"] = child => new Tests(child).test6(),
-                ["test6Result"] = scope => scope.Each(child => new Tests(child).test6Result()),
-                ["test7"] = scope => scope.Each(child => new Tests(child).test7()),
-                ["test7Result"] = scope => scope.Each(child => new Tests(child).test7Result()),
-                ["test8"] = scope => scope.Each(child => new Tests(child).test8()),
-                ["test8Result"] = scope => scope.Each(child => new Tests(child).test8Result()),
-                ["test9"] = scope => scope.Each(child => new Tests(child).test9()),
-                ["test9Result"] = scope => scope.Each(child => new Tests(child).test9Result()),
-                ["test10"] = scope => scope.Each(child => new Tests(child).test10()),
-                ["test10Result"] = scope => scope.Each(child => new Tests(child).test10Result()),
-                ["test11"] = scope => scope.Each(child => new Tests(child).test11()),
-                ["test11Result"] = scope => scope.Each(child => new Tests(child).test11Result()),
-                ["test12"] = scope => scope.Each(child => new Tests(child).test12()),
-                ["test12Result"] = scope => scope.Each(child => new Tests(child).test12Result()),
-                ["test13"] = scope => scope.Each(child => new Tests(child).test13()),
-                ["test13Result"] = scope => scope.Each(child => new Tests(child).test13Result()),
-                ["test14"] = scope => scope.Each(child => new Tests(child).test14()),
-                ["test14Result"] = scope => scope.Each(child => new Tests(child).test14Result()),
-                ["test15"] = scope => scope.Each(child => new Tests(child).test15()),
-                ["test15Result"] = scope => scope.Each(child => new Tests(child).test15Result()),
-                ["test16"] = scope => scope.Each(child => new Tests(child).test16()),
-                ["test16Result"] = scope => scope.Each(child => new Tests(child).test16Result()),
-                ["tests"] = scope => scope.Each(child => new Tests(child).tests()),
-                ["expected"] = scope => scope.Each(child => new Tests(child).expected()),
-                ["data"] = scope => scope.Each(child => new Tests(child).data())
-            },
-            child => new Tests(child).renderTests());
+        return WithDefinitions(defineSubtemplates,
+            definitionContext => new Tests(definitionContext).renderTests());
     }
 
     // Template:
     // [/data/people]
     // Source: "templates/tests.template":519:8
-    private object? data()
+    private object?[] data()
     {
         return Line($"/data/people");
     }
@@ -603,7 +564,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Test 16 passed
     // ]
     // Source: "templates/tests.template":501:12
-    private object? expected()
+    private object?[] expected()
     {
         return Line($$"""
             
@@ -646,24 +607,24 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // {'16'.#test(#test16,#test16Result)}
     // ]
     // Source: "templates/tests.template":483:9
-    private object? tests()
+    private object?[] tests()
     {
-        var test = CallNamed("test", Receiver(child => "1"), Each(child => child.Named("test1")), Each(child => child.Named("test1Result")));
-        var test_2 = CallNamed("test", Receiver(child => "2"), Each(child => child.Named("test2")), Each(child => child.Named("test2Result")));
-        var test_3 = CallNamed("test", Receiver(child => "3"), Each(child => child.Named("test3")), Each(child => child.Named("test3Result")));
-        var test_4 = CallNamed("test", Receiver(child => "4"), Each(child => child.Named("test4")), Each(child => child.Named("test4Result")));
-        var test_5 = CallNamed("test", Receiver(child => "5"), Each(child => child.Named("test5")), Each(child => child.Named("test5Result")));
-        var test_6 = CallNamed("test", Receiver(child => "6"), Each(child => child.Named("test6")), Each(child => child.Named("test6Result")));
-        var test_7 = CallNamed("test", Receiver(child => "7"), Each(child => child.Named("test7")), Each(child => child.Named("test7Result")));
-        var test_8 = CallNamed("test", Receiver(child => "8"), Each(child => child.Named("test8")), Each(child => child.Named("test8Result")));
-        var test_9 = CallNamed("test", Receiver(child => "9"), Each(child => child.Named("test9")), Each(child => child.Named("test9Result")));
-        var test_10 = CallNamed("test", Receiver(child => "10"), Each(child => child.Named("test10")), Each(child => child.Named("test10Result")));
-        var test_11 = CallNamed("test", Receiver(child => "11"), Each(child => child.Named("test11")), Each(child => child.Named("test11Result")));
-        var test_12 = CallNamed("test", Receiver(child => "12"), Each(child => child.Named("test12")), Each(child => child.Named("test12Result")));
-        var test_13 = CallNamed("test", Receiver(child => "13"), Each(child => child.Named("test13")), Each(child => child.Named("test13Result")));
-        var test_14 = CallNamed("test", Receiver(child => "14"), Each(child => child.Named("test14")), Each(child => child.Named("test14Result")));
-        var test_15 = CallNamed("test", Receiver(child => "15"), Each(child => child.Named("test15")), Each(child => child.Named("test15Result")));
-        var test_16 = CallNamed("test", Receiver(child => "16"), Each(child => child.Named("test16")), Each(child => child.Named("test16Result")));
+        object? test = ApplySubtemplate("test", MethodInput(itemContext => "1"), Each(itemContext => itemContext.Named("test1")), Each(itemContext => itemContext.Named("test1Result")));
+        object? test_2 = ApplySubtemplate("test", MethodInput(itemContext => "2"), Each(itemContext => itemContext.Named("test2")), Each(itemContext => itemContext.Named("test2Result")));
+        object? test_3 = ApplySubtemplate("test", MethodInput(itemContext => "3"), Each(itemContext => itemContext.Named("test3")), Each(itemContext => itemContext.Named("test3Result")));
+        object? test_4 = ApplySubtemplate("test", MethodInput(itemContext => "4"), Each(itemContext => itemContext.Named("test4")), Each(itemContext => itemContext.Named("test4Result")));
+        object? test_5 = ApplySubtemplate("test", MethodInput(itemContext => "5"), Each(itemContext => itemContext.Named("test5")), Each(itemContext => itemContext.Named("test5Result")));
+        object? test_6 = ApplySubtemplate("test", MethodInput(itemContext => "6"), Each(itemContext => itemContext.Named("test6")), Each(itemContext => itemContext.Named("test6Result")));
+        object? test_7 = ApplySubtemplate("test", MethodInput(itemContext => "7"), Each(itemContext => itemContext.Named("test7")), Each(itemContext => itemContext.Named("test7Result")));
+        object? test_8 = ApplySubtemplate("test", MethodInput(itemContext => "8"), Each(itemContext => itemContext.Named("test8")), Each(itemContext => itemContext.Named("test8Result")));
+        object? test_9 = ApplySubtemplate("test", MethodInput(itemContext => "9"), Each(itemContext => itemContext.Named("test9")), Each(itemContext => itemContext.Named("test9Result")));
+        object? test_10 = ApplySubtemplate("test", MethodInput(itemContext => "10"), Each(itemContext => itemContext.Named("test10")), Each(itemContext => itemContext.Named("test10Result")));
+        object? test_11 = ApplySubtemplate("test", MethodInput(itemContext => "11"), Each(itemContext => itemContext.Named("test11")), Each(itemContext => itemContext.Named("test11Result")));
+        object? test_12 = ApplySubtemplate("test", MethodInput(itemContext => "12"), Each(itemContext => itemContext.Named("test12")), Each(itemContext => itemContext.Named("test12Result")));
+        object? test_13 = ApplySubtemplate("test", MethodInput(itemContext => "13"), Each(itemContext => itemContext.Named("test13")), Each(itemContext => itemContext.Named("test13Result")));
+        object? test_14 = ApplySubtemplate("test", MethodInput(itemContext => "14"), Each(itemContext => itemContext.Named("test14")), Each(itemContext => itemContext.Named("test14Result")));
+        object? test_15 = ApplySubtemplate("test", MethodInput(itemContext => "15"), Each(itemContext => itemContext.Named("test15")), Each(itemContext => itemContext.Named("test15Result")));
+        object? test_16 = ApplySubtemplate("test", MethodInput(itemContext => "16"), Each(itemContext => itemContext.Named("test16")), Each(itemContext => itemContext.Named("test16Result")));
 
         return Line($$"""
             
@@ -740,7 +701,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //  (1.1) cat
     //  (1.2) zebra]
     // Source: "templates/tests.template":431:16
-    private object? test16Result()
+    private object?[] test16Result()
     {
         return Line($$"""
             A:
@@ -826,7 +787,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //  {.} {type}]}
     // ].@MissingValue('No Information Provided').Compose()}]}]
     // Source: "templates/tests.template":404:10
-    private object? test16()
+    private object?[] test16()
     {
         // Template:
         // ''.Compose()
@@ -836,8 +797,8 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "templates/tests.template:405:2",
             () => "");
 
-        var compose = applyCompose();
-        var aPeopleBPeopleCPeop = Each(child => new Tests(child).renderAPeopleBPeopleCPeop());
+        object? compose = applyCompose();
+        object? aPeopleBPeopleCPeop = Each(itemContext => new Tests(itemContext).renderAPeopleBPeopleCPeop());
 
         return Line($"{compose}{aPeopleBPeopleCPeop}");
     }
@@ -869,13 +830,13 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //  {.} {type}]}
     // ].@MissingValue('No Information Provided').Compose()}]
     // Source: "templates/tests.template":406:3
-    private object? renderAPeopleBPeopleCPeop()
+    private object?[] renderAPeopleBPeopleCPeop()
     {
-        var content = InContext("/data/people", child => new Tests(child).renderCompose());
-        var content_2 = InContext("/data/people", child => new Tests(child).renderCompose_2());
-        var content_3 = InContext("/data/people", child => new Tests(child).renderCompose_4());
-        var content_4 = InContext("/data/people", child => new Tests(child).renderCompose_5());
-        var content_5 = InContext("/data/people", child => new Tests(child).renderCompose_7());
+        object? content = InContext("/data/people", dataContext => new Tests(dataContext).renderCompose());
+        object? content_2 = InContext("/data/people", dataContext => new Tests(dataContext).renderCompose_2());
+        object? content_3 = InContext("/data/people", dataContext => new Tests(dataContext).renderCompose_4());
+        object? content_4 = InContext("/data/people", dataContext => new Tests(dataContext).renderCompose_5());
+        object? content_5 = InContext("/data/people", dataContext => new Tests(dataContext).renderCompose_7());
 
         return Line($$"""
             A:
@@ -902,9 +863,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
         return Annotate(
             new Func<EvaluationContext, EvaluationContext>[]
             {
-                child => child.WithMissingValue("No Information Provided")
+                annotatedContext => annotatedContext.WithMissingValue("No Information Provided")
             },
-            child => new Tests(child).renderCompose_8());
+            annotatedContext => new Tests(annotatedContext).renderCompose_8());
     }
 
     // Template:
@@ -924,7 +885,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
         object? applyCompose() => Unsupported(
             "Call Compose",
             "templates/tests.template:427:24",
-            () => Each(child => new Tests(child).renderLastName_16()));
+            () => Each(itemContext => new Tests(itemContext).renderLastName_16()));
 
         return applyCompose();
     }
@@ -935,7 +896,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //  {.} {type}]}
     // ]
     // Source: "templates/tests.template":427:24
-    private object? renderLastName_16()
+    private object?[] renderLastName_16()
     {
         // Template:
         // {.}
@@ -944,9 +905,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet {.}",
             "templates/tests.template:428:1");
 
-        var content = bullet();
-        var lastName = Get("lastName");
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderType_13()));
+        object? content = bullet();
+        object? lastName = Get("lastName");
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_13()));
 
         return Line($"{content} {lastName}{pets}");
     }
@@ -955,7 +916,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [
     //  {.} {type}]
     // Source: "templates/tests.template":428:21
-    private object? renderType_13()
+    private object?[] renderType_13()
     {
         // Template:
         // {.}
@@ -964,8 +925,8 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet {.}",
             "templates/tests.template:429:2");
 
-        var content = bullet();
-        var type = Get("type");
+        object? content = bullet();
+        object? type = Get("type");
 
         return Line($"{content} {type}");
     }
@@ -980,9 +941,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
         return Annotate(
             new Func<EvaluationContext, EvaluationContext>[]
             {
-                child => child.WithMissingValue("No Information Provided")
+                annotatedContext => annotatedContext.WithMissingValue("No Information Provided")
             },
-            child => new Tests(child).renderCompose_6());
+            annotatedContext => new Tests(annotatedContext).renderCompose_6());
     }
 
     // Template:
@@ -1000,7 +961,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
         object? applyCompose() => Unsupported(
             "Call Compose",
             "templates/tests.template:423:24",
-            () => Each(child => new Tests(child).renderLastName_15()));
+            () => Each(itemContext => new Tests(itemContext).renderLastName_15()));
 
         return applyCompose();
     }
@@ -1010,10 +971,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //           {lastName}{pets:[{type}]}
     // ]
     // Source: "templates/tests.template":423:24
-    private object? renderLastName_15()
+    private object?[] renderLastName_15()
     {
-        var lastName = Get("lastName");
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderType_12()));
+        object? lastName = Get("lastName");
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_12()));
 
         return Line($"{lastName}{pets}");
     }
@@ -1021,9 +982,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{type}]
     // Source: "templates/tests.template":424:27
-    private object? renderType_12()
+    private object?[] renderType_12()
     {
-        var type = Get("type");
+        object? type = Get("type");
 
         return Line($"{type}");
     }
@@ -1043,7 +1004,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
         object? applyCompose() => Unsupported(
             "Call Compose",
             "templates/tests.template:419:24",
-            () => Each(child => new Tests(child).renderLastName_14()));
+            () => Each(itemContext => new Tests(itemContext).renderLastName_14()));
 
         return applyCompose();
     }
@@ -1053,7 +1014,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //    {.} {lastName}{pets:[{type}]}
     // ]
     // Source: "templates/tests.template":419:24
-    private object? renderLastName_14()
+    private object?[] renderLastName_14()
     {
         // Template:
         // {.}
@@ -1062,9 +1023,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet {.}",
             "templates/tests.template:420:4");
 
-        var content = bullet();
-        var lastName = Get("lastName");
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderType_11()));
+        object? content = bullet();
+        object? lastName = Get("lastName");
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_11()));
 
         return Line($"{content} {lastName}{pets}");
     }
@@ -1072,9 +1033,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{type}]
     // Source: "templates/tests.template":420:24
-    private object? renderType_11()
+    private object?[] renderType_11()
     {
-        var type = Get("type");
+        object? type = Get("type");
 
         return Line($"{type}");
     }
@@ -1089,9 +1050,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
         return Annotate(
             new Func<EvaluationContext, EvaluationContext>[]
             {
-                child => child.WithMissingValue("No Information Provided")
+                annotatedContext => annotatedContext.WithMissingValue("No Information Provided")
             },
-            child => new Tests(child).renderCompose_3());
+            annotatedContext => new Tests(annotatedContext).renderCompose_3());
     }
 
     // Template:
@@ -1109,7 +1070,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
         object? applyCompose() => Unsupported(
             "Call Compose",
             "templates/tests.template:415:24",
-            () => Each(child => new Tests(child).renderLastName_13()));
+            () => Each(itemContext => new Tests(itemContext).renderLastName_13()));
 
         return applyCompose();
     }
@@ -1119,7 +1080,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //    {.} {lastName}{pets:[{type}]}
     // ]
     // Source: "templates/tests.template":415:24
-    private object? renderLastName_13()
+    private object?[] renderLastName_13()
     {
         // Template:
         // {.}
@@ -1128,9 +1089,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet {.}",
             "templates/tests.template:416:4");
 
-        var content = bullet();
-        var lastName = Get("lastName");
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderType_10()));
+        object? content = bullet();
+        object? lastName = Get("lastName");
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_10()));
 
         return Line($"{content} {lastName}{pets}");
     }
@@ -1138,9 +1099,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{type}]
     // Source: "templates/tests.template":416:24
-    private object? renderType_10()
+    private object?[] renderType_10()
     {
-        var type = Get("type");
+        object? type = Get("type");
 
         return Line($"{type}");
     }
@@ -1166,7 +1127,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
         object? applyCompose() => Unsupported(
             "Call Compose",
             "templates/tests.template:408:24",
-            () => Each(child => new Tests(child).renderDomesticated()));
+            () => Each(itemContext => new Tests(itemContext).renderDomesticated()));
 
         return applyCompose();
     }
@@ -1179,7 +1140,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //    } //
     // ]
     // Source: "templates/tests.template":408:24
-    private object? renderDomesticated()
+    private object?[] renderDomesticated()
     {
         // Template:
         // {.}
@@ -1188,8 +1149,8 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet {.}",
             "templates/tests.template:409:1");
 
-        var content = bullet();
-        var domesticated = Each(child => new Tests(child).renderDomesticated_2());
+        object? content = bullet();
+        object? domesticated = Each(itemContext => new Tests(itemContext).renderDomesticated_2());
 
         return Line($"{content} Pets {domesticated}");
     }
@@ -1199,7 +1160,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //       {.} Domesticated{pets:[{type}]}
     //    ]
     // Source: "templates/tests.template":409:11
-    private object? renderDomesticated_2()
+    private object?[] renderDomesticated_2()
     {
         // Template:
         // {.}
@@ -1208,8 +1169,8 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet {.}",
             "templates/tests.template:410:7");
 
-        var content = bullet();
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderType_9()));
+        object? content = bullet();
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_9()));
 
         return Line($"{content} Domesticated{pets}");
     }
@@ -1217,9 +1178,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{type}]
     // Source: "templates/tests.template":410:29
-    private object? renderType_9()
+    private object?[] renderType_9()
     {
-        var type = Get("type");
+        object? type = Get("type");
 
         return Line($"{type}");
     }
@@ -1260,7 +1221,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //                  cat
     //                  zebra]
     // Source: "templates/tests.template":370:16
-    private object? test15Result()
+    private object?[] test15Result()
     {
         return Line($$"""
             Automatic bulleting for multi-values
@@ -1308,9 +1269,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //                  {pets:[{type} //  
     //             ]}]}]}]}]
     // Source: "templates/tests.template":363:10
-    private object? test15()
+    private object?[] test15()
     {
-        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Tests(child).renderLastName_12()));
+        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_12()));
 
         return Line($"Automatic bulleting for multi-values{data}");
     }
@@ -1323,7 +1284,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //                  {pets:[{type} //  
     //             ]}]}]}]
     // Source: "templates/tests.template":364:44
-    private object? renderLastName_12()
+    private object?[] renderLastName_12()
     {
         // Template:
         //     {.}
@@ -1332,9 +1293,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet     {.}",
             "templates/tests.template:366:1");
 
-        var lastName = Get("lastName");
-        var content = bullet();
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderName_13()));
+        object? lastName = Get("lastName");
+        object? content = bullet();
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_13()));
 
         return Line($$"""
             
@@ -1349,10 +1310,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //                  {pets:[{type} //  
     //             ]}]}]
     // Source: "templates/tests.template":366:15
-    private object? renderName_13()
+    private object?[] renderName_13()
     {
-        var name = Get("name");
-        var content = InContext(Get("^.^"), scope => scope.Each(child => new Tests(child).renderFirstName_9()));
+        object? name = Get("name");
+        object? content = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_9()));
 
         return Line($$"""
             {{name}} who is owned by 
@@ -1365,10 +1326,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //                  {pets:[{type} //  
     //             ]}]
     // Source: "templates/tests.template":367:19
-    private object? renderFirstName_9()
+    private object?[] renderFirstName_9()
     {
-        var firstName = Get("firstName");
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderType_8()));
+        object? firstName = Get("firstName");
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_8()));
 
         return Line($$"""
             {{firstName}} who owns 
@@ -1380,9 +1341,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{type} //  
     //             ]
     // Source: "templates/tests.template":368:24
-    private object? renderType_8()
+    private object?[] renderType_8()
     {
-        var type = Get("type");
+        object? type = Get("type");
 
         return Line($"{type}");
     }
@@ -1423,7 +1384,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //                  cat
     //                  zebra]
     // Source: "templates/tests.template":329:16
-    private object? test14Result()
+    private object?[] test14Result()
     {
         return Line($$"""
             Indent under indent under bullet 
@@ -1471,9 +1432,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //                  {pets:[{type} //  
     //             ]}]}]}]}]
     // Source: "templates/tests.template":322:10
-    private object? test14()
+    private object?[] test14()
     {
-        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Tests(child).renderLastName_11()));
+        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_11()));
 
         return Line($"Indent under indent under bullet {data}");
     }
@@ -1486,7 +1447,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //                  {pets:[{type} //  
     //             ]}]}]}]
     // Source: "templates/tests.template":323:41
-    private object? renderLastName_11()
+    private object?[] renderLastName_11()
     {
         // Template:
         //     {.}
@@ -1495,9 +1456,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet     {.}",
             "templates/tests.template:325:1");
 
-        var lastName = Get("lastName");
-        var content = bullet();
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderName_12()));
+        object? lastName = Get("lastName");
+        object? content = bullet();
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_12()));
 
         return Line($$"""
             
@@ -1512,10 +1473,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //                  {pets:[{type} //  
     //             ]}]}]
     // Source: "templates/tests.template":325:15
-    private object? renderName_12()
+    private object?[] renderName_12()
     {
-        var name = Get("name");
-        var content = InContext(Get("^.^"), scope => scope.Each(child => new Tests(child).renderFirstName_8()));
+        object? name = Get("name");
+        object? content = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_8()));
 
         return Line($$"""
             {{name}} who is owned by 
@@ -1528,10 +1489,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //                  {pets:[{type} //  
     //             ]}]
     // Source: "templates/tests.template":326:19
-    private object? renderFirstName_8()
+    private object?[] renderFirstName_8()
     {
-        var firstName = Get("firstName");
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderType_7()));
+        object? firstName = Get("firstName");
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_7()));
 
         return Line($$"""
             {{firstName}} who owns 
@@ -1543,9 +1504,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{type} //  
     //             ]
     // Source: "templates/tests.template":327:24
-    private object? renderType_7()
+    private object?[] renderType_7()
     {
-        var type = Get("type");
+        object? type = Get("type");
 
         return Line($"{type}");
     }
@@ -1586,7 +1547,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //            cat
     //            zebra]
     // Source: "templates/tests.template":288:16
-    private object? test13Result()
+    private object?[] test13Result()
     {
         return Line($$"""
             Yet another variation of hierarchy that also transitions from indent to bullet and back 
@@ -1634,9 +1595,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //         {^.^:[{firstName} who owns {pets:[{type} //  
     //             ]}]}]}]}]
     // Source: "templates/tests.template":281:10
-    private object? test13()
+    private object?[] test13()
     {
-        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Tests(child).renderLastName_10()));
+        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_10()));
 
         return Line($"Yet another variation of hierarchy that also transitions from indent to bullet and back {data}");
     }
@@ -1648,7 +1609,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //         {^.^:[{firstName} who owns {pets:[{type} //  
     //             ]}]}]}]
     // Source: "templates/tests.template":283:18
-    private object? renderLastName_10()
+    private object?[] renderLastName_10()
     {
         // Template:
         //     {.}
@@ -1657,9 +1618,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet     {.}",
             "templates/tests.template:285:1");
 
-        var lastName = Get("lastName");
-        var content = bullet();
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderName_11()));
+        object? lastName = Get("lastName");
+        object? content = bullet();
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_11()));
 
         return Line($$"""
             
@@ -1673,10 +1634,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //         {^.^:[{firstName} who owns {pets:[{type} //  
     //             ]}]}]
     // Source: "templates/tests.template":285:15
-    private object? renderName_11()
+    private object?[] renderName_11()
     {
-        var name = Get("name");
-        var content = InContext(Get("^.^"), scope => scope.Each(child => new Tests(child).renderFirstName_7()));
+        object? name = Get("name");
+        object? content = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_7()));
 
         return Line($$"""
             {{name}} who is owned by 
@@ -1688,10 +1649,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{firstName} who owns {pets:[{type} //  
     //             ]}]
     // Source: "templates/tests.template":286:14
-    private object? renderFirstName_7()
+    private object?[] renderFirstName_7()
     {
-        var firstName = Get("firstName");
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderType_6()));
+        object? firstName = Get("firstName");
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_6()));
 
         return Line($"{firstName} who owns {pets}");
     }
@@ -1700,9 +1661,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{type} //  
     //             ]
     // Source: "templates/tests.template":286:42
-    private object? renderType_6()
+    private object?[] renderType_6()
     {
-        var type = Get("type");
+        object? type = Get("type");
 
         return Line($"{type}");
     }
@@ -1743,7 +1704,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //            (2.1) cat
     //            (2.2) zebra]
     // Source: "templates/tests.template":247:16
-    private object? test12Result()
+    private object?[] test12Result()
     {
         return Line($$"""
             Additional variation of hierarchy that also transitions from indent to bullet and back 
@@ -1791,9 +1752,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //         {.} {^.^:[{firstName} who owns {pets:[{type} //  
     //             ]}]}]}]}]
     // Source: "templates/tests.template":240:10
-    private object? test12()
+    private object?[] test12()
     {
-        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Tests(child).renderLastName_9()));
+        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_9()));
 
         return Line($"Additional variation of hierarchy that also transitions from indent to bullet and back {data}");
     }
@@ -1805,7 +1766,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //         {.} {^.^:[{firstName} who owns {pets:[{type} //  
     //             ]}]}]}]
     // Source: "templates/tests.template":242:18
-    private object? renderLastName_9()
+    private object?[] renderLastName_9()
     {
         // Template:
         //     {.}
@@ -1814,9 +1775,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet     {.}",
             "templates/tests.template:244:1");
 
-        var lastName = Get("lastName");
-        var content = bullet();
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderName_10()));
+        object? lastName = Get("lastName");
+        object? content = bullet();
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_10()));
 
         return Line($$"""
             
@@ -1830,7 +1791,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //         {.} {^.^:[{firstName} who owns {pets:[{type} //  
     //             ]}]}]
     // Source: "templates/tests.template":244:15
-    private object? renderName_10()
+    private object?[] renderName_10()
     {
         // Template:
         //         {.}
@@ -1839,9 +1800,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet         {.}",
             "templates/tests.template:245:1");
 
-        var name = Get("name");
-        var content = bullet();
-        var content_2 = InContext(Get("^.^"), scope => scope.Each(child => new Tests(child).renderFirstName_6()));
+        object? name = Get("name");
+        object? content = bullet();
+        object? content_2 = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_6()));
 
         return Line($$"""
             {{name}} who is owned by 
@@ -1853,10 +1814,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{firstName} who owns {pets:[{type} //  
     //             ]}]
     // Source: "templates/tests.template":245:18
-    private object? renderFirstName_6()
+    private object?[] renderFirstName_6()
     {
-        var firstName = Get("firstName");
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderType_5()));
+        object? firstName = Get("firstName");
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_5()));
 
         return Line($"{firstName} who owns {pets}");
     }
@@ -1865,9 +1826,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{type} //  
     //             ]
     // Source: "templates/tests.template":245:46
-    private object? renderType_5()
+    private object?[] renderType_5()
     {
-        var type = Get("type");
+        object? type = Get("type");
 
         return Line($"{type}");
     }
@@ -1908,7 +1869,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //              (1.1) cat
     //              (1.2) zebra]
     // Source: "templates/tests.template":206:16
-    private object? test11Result()
+    private object?[] test11Result()
     {
         return Line($$"""
             Hierarchy that also transitions from indent to bullet and back 
@@ -1956,9 +1917,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //              {.} {pets:[{type} // 
     //             ]}]}]}]}]
     // Source: "templates/tests.template":199:10
-    private object? test11()
+    private object?[] test11()
     {
-        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Tests(child).renderLastName_8()));
+        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_8()));
 
         return Line($"Hierarchy that also transitions from indent to bullet and back {data}");
     }
@@ -1971,7 +1932,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //              {.} {pets:[{type} // 
     //             ]}]}]}]
     // Source: "templates/tests.template":200:71
-    private object? renderLastName_8()
+    private object?[] renderLastName_8()
     {
         // Template:
         //     {.}
@@ -1980,9 +1941,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet     {.}",
             "templates/tests.template:202:1");
 
-        var lastName = Get("lastName");
-        var content = bullet();
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderName_9()));
+        object? lastName = Get("lastName");
+        object? content = bullet();
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_9()));
 
         return Line($$"""
             
@@ -1997,10 +1958,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //              {.} {pets:[{type} // 
     //             ]}]}]
     // Source: "templates/tests.template":202:15
-    private object? renderName_9()
+    private object?[] renderName_9()
     {
-        var name = Get("name");
-        var content = InContext(Get("^.^"), scope => scope.Each(child => new Tests(child).renderFirstName_5()));
+        object? name = Get("name");
+        object? content = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_5()));
 
         return Line($$"""
             {{name}} who is owned by 
@@ -2013,7 +1974,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //              {.} {pets:[{type} // 
     //             ]}]
     // Source: "templates/tests.template":203:15
-    private object? renderFirstName_5()
+    private object?[] renderFirstName_5()
     {
         // Template:
         //              {.}
@@ -2022,9 +1983,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet              {.}",
             "templates/tests.template:204:1");
 
-        var firstName = Get("firstName");
-        var content = bullet();
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderType_4()));
+        object? firstName = Get("firstName");
+        object? content = bullet();
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_4()));
 
         return Line($$"""
             {{firstName}} who owns 
@@ -2036,9 +1997,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{type} // 
     //             ]
     // Source: "templates/tests.template":204:24
-    private object? renderType_4()
+    private object?[] renderType_4()
     {
-        var type = Get("type");
+        object? type = Get("type");
 
         return Line($"{type}");
     }
@@ -2053,7 +2014,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //     (0.4) Dolly
     //     (0.5) Stripes]
     // Source: "templates/tests.template":191:16
-    private object? test10Result()
+    private object?[] test10Result()
     {
         return Line($$"""
             Bulleted Continued list 
@@ -2072,9 +2033,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // {#data:[{pets:[ 
     //     {.} {name}]}]}]
     // Source: "templates/tests.template":187:10
-    private object? test10()
+    private object?[] test10()
     {
-        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Tests(child).renderContent_2()));
+        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderContent_2()));
 
         return Line($"Bulleted Continued list {data}");
     }
@@ -2083,9 +2044,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{pets:[ 
     //     {.} {name}]}]
     // Source: "templates/tests.template":189:8
-    private object? renderContent_2()
+    private object?[] renderContent_2()
     {
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderName_8()));
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_8()));
 
         return Line($"{pets}");
     }
@@ -2094,7 +2055,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [ 
     //     {.} {name}]
     // Source: "templates/tests.template":189:15
-    private object? renderName_8()
+    private object?[] renderName_8()
     {
         // Template:
         // {.}
@@ -2103,8 +2064,8 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet {.}",
             "templates/tests.template:190:5");
 
-        var content = bullet();
-        var name = Get("name");
+        object? content = bullet();
+        object? name = Get("name");
 
         return Line($"{content} {name}");
     }
@@ -2119,7 +2080,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //    Dolly
     //    Stripes]
     // Source: "templates/tests.template":179:15
-    private object? test9Result()
+    private object?[] test9Result()
     {
         return Line($$"""
             Continued list 
@@ -2136,9 +2097,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [
     // Continued list {#data:[{pets:[{name}]}]}]
     // Source: "templates/tests.template":177:9
-    private object? test9()
+    private object?[] test9()
     {
-        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Tests(child).renderContent()));
+        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderContent()));
 
         return Line($"Continued list {data}");
     }
@@ -2146,9 +2107,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{pets:[{name}]}]
     // Source: "templates/tests.template":178:23
-    private object? renderContent()
+    private object?[] renderContent()
     {
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderName_7()));
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_7()));
 
         return Line($"{pets}");
     }
@@ -2156,9 +2117,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{name}]
     // Source: "templates/tests.template":178:30
-    private object? renderName_7()
+    private object?[] renderName_7()
     {
-        var name = Get("name");
+        object? name = Get("name");
 
         return Line($"{name}");
     }
@@ -2199,7 +2160,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //             (1.1) cat
     //             (1.2) zebra]
     // Source: "templates/tests.template":143:15
-    private object? test8Result()
+    private object?[] test8Result()
     {
         return Line($$"""
             Hierarchy that also transitions from indent to bullet 
@@ -2245,9 +2206,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //          {.} {^.^:[{firstName} who owns
     //             {.} {pets:[{type}]}]}]}]}]
     // Source: "templates/tests.template":138:9
-    private object? test8()
+    private object?[] test8()
     {
-        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Tests(child).renderFirstName_3()));
+        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_3()));
 
         return Line($"Hierarchy that also transitions from indent to bullet {data}");
     }
@@ -2258,11 +2219,11 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //          {.} {^.^:[{firstName} who owns
     //             {.} {pets:[{type}]}]}]}]
     // Source: "templates/tests.template":139:62
-    private object? renderFirstName_3()
+    private object?[] renderFirstName_3()
     {
-        var firstName = Get("firstName");
-        var lastName = Get("lastName");
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderName_6()));
+        object? firstName = Get("firstName");
+        object? lastName = Get("lastName");
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_6()));
 
         return Line($$"""
             
@@ -2275,7 +2236,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //          {.} {^.^:[{firstName} who owns
     //             {.} {pets:[{type}]}]}]
     // Source: "templates/tests.template":140:41
-    private object? renderName_6()
+    private object?[] renderName_6()
     {
         // Template:
         //          {.}
@@ -2284,9 +2245,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet          {.}",
             "templates/tests.template:141:1");
 
-        var name = Get("name");
-        var content = bullet();
-        var content_2 = InContext(Get("^.^"), scope => scope.Each(child => new Tests(child).renderFirstName_4()));
+        object? name = Get("name");
+        object? content = bullet();
+        object? content_2 = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_4()));
 
         return Line($$"""
             {{name}} who is owned by 
@@ -2298,7 +2259,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{firstName} who owns
     //             {.} {pets:[{type}]}]
     // Source: "templates/tests.template":141:19
-    private object? renderFirstName_4()
+    private object?[] renderFirstName_4()
     {
         // Template:
         //             {.}
@@ -2307,9 +2268,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet             {.}",
             "templates/tests.template:142:1");
 
-        var firstName = Get("firstName");
-        var content = bullet();
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderType_3()));
+        object? firstName = Get("firstName");
+        object? content = bullet();
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_3()));
 
         return Line($$"""
             {{firstName}} who owns
@@ -2320,9 +2281,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{type}]
     // Source: "templates/tests.template":142:23
-    private object? renderType_3()
+    private object?[] renderType_3()
     {
-        var type = Get("type");
+        object? type = Get("type");
 
         return Line($"{type}");
     }
@@ -2363,7 +2324,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //             (2.1) cat
     //             (2.2) zebra]
     // Source: "templates/tests.template":104:15
-    private object? test7Result()
+    private object?[] test7Result()
     {
         return Line($$"""
             Hierarchy that transitions from indent to bullet 
@@ -2410,9 +2371,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //          {.} {^.^:[{firstName} who owns
     //             {.} {pets:[{type}]}]}]}]}]
     // Source: "templates/tests.template":98:9
-    private object? test7()
+    private object?[] test7()
     {
-        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Tests(child).renderLastName_7()));
+        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_7()));
 
         return Line($"Hierarchy that transitions from indent to bullet {data}");
     }
@@ -2424,10 +2385,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //          {.} {^.^:[{firstName} who owns
     //             {.} {pets:[{type}]}]}]}]
     // Source: "templates/tests.template":99:57
-    private object? renderLastName_7()
+    private object?[] renderLastName_7()
     {
-        var lastName = Get("lastName");
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderName_5()));
+        object? lastName = Get("lastName");
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_5()));
 
         return Line($$"""
             
@@ -2441,7 +2402,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //          {.} {^.^:[{firstName} who owns
     //             {.} {pets:[{type}]}]}]
     // Source: "templates/tests.template":100:17
-    private object? renderName_5()
+    private object?[] renderName_5()
     {
         // Template:
         //     {.}
@@ -2457,10 +2418,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet          {.}",
             "templates/tests.template:102:1");
 
-        var content = bullet();
-        var name = Get("name");
-        var content_2 = bullet_2();
-        var content_3 = InContext(Get("^.^"), scope => scope.Each(child => new Tests(child).renderFirstName_2()));
+        object? content = bullet();
+        object? name = Get("name");
+        object? content_2 = bullet_2();
+        object? content_3 = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_2()));
 
         return Line($$"""
             
@@ -2473,7 +2434,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{firstName} who owns
     //             {.} {pets:[{type}]}]
     // Source: "templates/tests.template":102:19
-    private object? renderFirstName_2()
+    private object?[] renderFirstName_2()
     {
         // Template:
         //             {.}
@@ -2482,9 +2443,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet             {.}",
             "templates/tests.template:103:1");
 
-        var firstName = Get("firstName");
-        var content = bullet();
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderType_2()));
+        object? firstName = Get("firstName");
+        object? content = bullet();
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_2()));
 
         return Line($$"""
             {{firstName}} who owns
@@ -2495,9 +2456,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{type}]
     // Source: "templates/tests.template":103:23
-    private object? renderType_2()
+    private object?[] renderType_2()
     {
-        var type = Get("type");
+        object? type = Get("type");
 
         return Line($"{type}");
     }
@@ -2538,7 +2499,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //               (3.1) cat
     //               (3.2) zebra]
     // Source: "templates/tests.template":64:15
-    private object? test6Result()
+    private object?[] test6Result()
     {
         return Line($$"""
             Hierarchy
@@ -2598,7 +2559,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
         object? applyCompose() => Unsupported(
             "Call Compose",
             "templates/tests.template:58:9",
-            () => Each(child => new Tests(child).renderHierarchy()));
+            () => Each(itemContext => new Tests(itemContext).renderHierarchy()));
 
         return applyCompose();
     }
@@ -2611,9 +2572,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //          {.} {^.^:[{firstName} who owns
     //               {.} {pets:[{type}]}]}]}]}]
     // Source: "templates/tests.template":58:9
-    private object? renderHierarchy()
+    private object?[] renderHierarchy()
     {
-        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Tests(child).renderLastName_6()));
+        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_6()));
 
         return Line($"Hierarchy{data}");
     }
@@ -2625,7 +2586,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //          {.} {^.^:[{firstName} who owns
     //               {.} {pets:[{type}]}]}]}]
     // Source: "templates/tests.template":59:17
-    private object? renderLastName_6()
+    private object?[] renderLastName_6()
     {
         // Template:
         // {.}
@@ -2634,9 +2595,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet {.}",
             "templates/tests.template:60:1");
 
-        var content = bullet();
-        var lastName = Get("lastName");
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderName_4()));
+        object? content = bullet();
+        object? lastName = Get("lastName");
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_4()));
 
         return Line($$"""
             
@@ -2650,7 +2611,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //          {.} {^.^:[{firstName} who owns
     //               {.} {pets:[{type}]}]}]
     // Source: "templates/tests.template":60:21
-    private object? renderName_4()
+    private object?[] renderName_4()
     {
         // Template:
         //     {.}
@@ -2666,10 +2627,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet          {.}",
             "templates/tests.template:62:1");
 
-        var content = bullet();
-        var name = Get("name");
-        var content_2 = bullet_2();
-        var content_3 = InContext(Get("^.^"), scope => scope.Each(child => new Tests(child).renderFirstName()));
+        object? content = bullet();
+        object? name = Get("name");
+        object? content_2 = bullet_2();
+        object? content_3 = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName()));
 
         return Line($$"""
             
@@ -2682,7 +2643,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{firstName} who owns
     //               {.} {pets:[{type}]}]
     // Source: "templates/tests.template":62:19
-    private object? renderFirstName()
+    private object?[] renderFirstName()
     {
         // Template:
         //               {.}
@@ -2691,9 +2652,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet               {.}",
             "templates/tests.template:63:1");
 
-        var firstName = Get("firstName");
-        var content = bullet();
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderType()));
+        object? firstName = Get("firstName");
+        object? content = bullet();
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType()));
 
         return Line($$"""
             {{firstName}} who owns
@@ -2704,9 +2665,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{type}]
     // Source: "templates/tests.template":63:25
-    private object? renderType()
+    private object?[] renderType()
     {
-        var type = Get("type");
+        object? type = Get("type");
 
         return Line($"{type}");
     }
@@ -2723,7 +2684,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //     (1.1) Dolly
     //     (1.2) Stripes]
     // Source: "templates/tests.template":48:15
-    private object? test5Result()
+    private object?[] test5Result()
     {
         return Line($$"""
             Bulleted Explicit Bulleted Indent
@@ -2755,7 +2716,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
         object? applyCompose() => Unsupported(
             "Call Compose",
             "templates/tests.template:44:9",
-            () => Each(child => new Tests(child).renderBulletedExplicitBulleted()));
+            () => Each(itemContext => new Tests(itemContext).renderBulletedExplicitBulleted()));
 
         return applyCompose();
     }
@@ -2766,9 +2727,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // {.} {lastName}{pets:[ //
     //     {.} {name}]}]}]
     // Source: "templates/tests.template":44:9
-    private object? renderBulletedExplicitBulleted()
+    private object?[] renderBulletedExplicitBulleted()
     {
-        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Tests(child).renderLastName_5()));
+        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_5()));
 
         return Line($"Bulleted Explicit Bulleted Indent{data}");
     }
@@ -2778,7 +2739,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // {.} {lastName}{pets:[ //
     //     {.} {name}]}]
     // Source: "templates/tests.template":45:41
-    private object? renderLastName_5()
+    private object?[] renderLastName_5()
     {
         // Template:
         // {.}
@@ -2787,9 +2748,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet {.}",
             "templates/tests.template:46:1");
 
-        var content = bullet();
-        var lastName = Get("lastName");
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderName_3()));
+        object? content = bullet();
+        object? lastName = Get("lastName");
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_3()));
 
         return Line($$"""
             
@@ -2801,7 +2762,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [ //
     //     {.} {name}]
     // Source: "templates/tests.template":46:21
-    private object? renderName_3()
+    private object?[] renderName_3()
     {
         // Template:
         //     {.}
@@ -2810,8 +2771,8 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet     {.}",
             "templates/tests.template:47:1");
 
-        var content = bullet();
-        var name = Get("name");
+        object? content = bullet();
+        object? name = Get("name");
 
         return Line($$"""
             
@@ -2848,7 +2809,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
         object? applyCompose() => Unsupported(
             "Call Compose",
             "templates/tests.template:34:15",
-            () => Each(child => Line($$"""
+            () => Each(itemContext => Line($$"""
             Bulleted Implied Bulleted Indent
             (0.0) Johnson
                (1.0) Buddy
@@ -2868,9 +2829,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Bulleted Implied Bulleted Indent{#data:[ //
     // {.} {lastName}{pets:[{name}]}]}]
     // Source: "templates/tests.template":31:9
-    private object? test4()
+    private object?[] test4()
     {
-        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Tests(child).renderLastName_4()));
+        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_4()));
 
         return Line($"Bulleted Implied Bulleted Indent{data}");
     }
@@ -2879,7 +2840,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [ //
     // {.} {lastName}{pets:[{name}]}]
     // Source: "templates/tests.template":32:40
-    private object? renderLastName_4()
+    private object?[] renderLastName_4()
     {
         // Template:
         // {.}
@@ -2888,9 +2849,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             "Bullet {.}",
             "templates/tests.template:33:1");
 
-        var content = bullet();
-        var lastName = Get("lastName");
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderName_2()));
+        object? content = bullet();
+        object? lastName = Get("lastName");
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_2()));
 
         return Line($$"""
             
@@ -2901,9 +2862,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{name}]
     // Source: "templates/tests.template":33:21
-    private object? renderName_2()
+    private object?[] renderName_2()
     {
-        var name = Get("name");
+        object? name = Get("name");
 
         return Line($"{name}");
     }
@@ -2920,7 +2881,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //       Dolly
     //       Stripes]
     // Source: "templates/tests.template":21:15
-    private object? test3Result()
+    private object?[] test3Result()
     {
         return Line($$"""
             Implied Double Indent
@@ -2939,9 +2900,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [
     // Implied Double Indent{#data:[{lastName}{pets:[{name}]}]}]
     // Source: "templates/tests.template":19:9
-    private object? test3()
+    private object?[] test3()
     {
-        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Tests(child).renderLastName_3()));
+        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_3()));
 
         return Line($"Implied Double Indent{data}");
     }
@@ -2949,10 +2910,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{lastName}{pets:[{name}]}]
     // Source: "templates/tests.template":20:29
-    private object? renderLastName_3()
+    private object?[] renderLastName_3()
     {
-        var lastName = Get("lastName");
-        var pets = InContext(Get("pets"), scope => scope.Each(child => new Tests(child).renderName()));
+        object? lastName = Get("lastName");
+        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName()));
 
         return Line($"{lastName}{pets}");
     }
@@ -2960,9 +2921,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{name}]
     // Source: "templates/tests.template":20:46
-    private object? renderName()
+    private object?[] renderName()
     {
-        var name = Get("name");
+        object? name = Get("name");
 
         return Line($"{name}");
     }
@@ -2973,7 +2934,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //    Johnson
     //    Smith]
     // Source: "templates/tests.template":15:15
-    private object? test2Result()
+    private object?[] test2Result()
     {
         return Line($$"""
             Implied Single Indent 
@@ -2986,9 +2947,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [
     // Implied Single Indent {#data:[{lastName}]}]
     // Source: "templates/tests.template":13:9
-    private object? test2()
+    private object?[] test2()
     {
-        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Tests(child).renderLastName_2()));
+        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_2()));
 
         return Line($"Implied Single Indent {data}");
     }
@@ -2996,9 +2957,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{lastName}]
     // Source: "templates/tests.template":14:30
-    private object? renderLastName_2()
+    private object?[] renderLastName_2()
     {
-        var lastName = Get("lastName");
+        object? lastName = Get("lastName");
 
         return Line($"{lastName}");
     }
@@ -3009,7 +2970,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //    Johnson
     //    Smith]
     // Source: "templates/tests.template":9:15
-    private object? test1Result()
+    private object?[] test1Result()
     {
         return Line($$"""
             Explicit Single Indent
@@ -3023,9 +2984,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Explicit Single Indent{#data:[
     //    {lastName}]}]
     // Source: "templates/tests.template":6:9
-    private object? test1()
+    private object?[] test1()
     {
-        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Tests(child).renderLastName()));
+        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName()));
 
         return Line($"Explicit Single Indent{data}");
     }
@@ -3034,9 +2995,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [
     //    {lastName}]
     // Source: "templates/tests.template":7:30
-    private object? renderLastName()
+    private object?[] renderLastName()
     {
-        var lastName = Get("lastName");
+        object? lastName = Get("lastName");
 
         return Line($"{lastName}");
     }
@@ -3045,7 +3006,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{$0.Matches(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)->
     // [Test {$0} {$1.Assert($2,'passed')}]}]
     // Source: "templates/tests.template":4:8
-    private object? test()
+    private object?[] test()
     {
         // Template:
         // $0.Matches(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)
@@ -3056,7 +3017,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             () => Get("$0"),
             () => new object?[] { EvaluationContext.ParseInteger("1"), EvaluationContext.ParseInteger("2"), EvaluationContext.ParseInteger("3"), EvaluationContext.ParseInteger("4"), EvaluationContext.ParseInteger("5"), EvaluationContext.ParseInteger("6"), EvaluationContext.ParseInteger("7"), EvaluationContext.ParseInteger("8"), EvaluationContext.ParseInteger("9"), EvaluationContext.ParseInteger("10"), EvaluationContext.ParseInteger("11"), EvaluationContext.ParseInteger("12"), EvaluationContext.ParseInteger("13"), EvaluationContext.ParseInteger("14"), EvaluationContext.ParseInteger("15"), EvaluationContext.ParseInteger("16") });
 
-        object? choice = (EvaluationContext.Condition(applyMatches()) ? Each(child => new Tests(child).renderItem0()) : "");
+        object? choice = (EvaluationContext.Condition(applyMatches()) ? Each(itemContext => new Tests(itemContext).renderItem0()) : "");
 
         return Line($"{choice}");
     }
@@ -3064,7 +3025,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [Test {$0} {$1.Assert($2,'passed')}]
     // Source: "templates/tests.template":5:1
-    private object? renderItem0()
+    private object?[] renderItem0()
     {
         // Template:
         // $1.Assert($2,'passed')
@@ -3075,13 +3036,1095 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
             () => Get("$1"),
             () => new object?[] { Get("$2"), "passed" });
 
-        var item0 = Get("$0");
-        var assert = applyAssert();
+        object? item0 = Get("$0");
+        object? assert = applyAssert();
 
         return Line($"Test {item0} {assert}");
     }
 
-    private object? renderTests()
+    // Template:
+    //
+    //
+    // Subtemplates:
+    // {#test:[{$0.Matches(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)->
+    // [Test {$0} {$1.Assert($2,'passed')}]}]}
+    // {#test1:[
+    // Explicit Single Indent{#data:[
+    //    {lastName}]}]}
+    // {#test1Result:[
+    // Explicit Single Indent
+    //    Johnson
+    //    Smith]}
+    // {#test2:[
+    // Implied Single Indent {#data:[{lastName}]}]}
+    // {#test2Result:[
+    // Implied Single Indent 
+    //    Johnson
+    //    Smith]}
+    // {#test3:[
+    // Implied Double Indent{#data:[{lastName}{pets:[{name}]}]}]}
+    // {#test3Result:[
+    // Implied Double Indent
+    //    Johnson
+    //       Buddy
+    //       Ralph
+    //       Stripes
+    //    Smith
+    //       Toto
+    //       Dolly
+    //       Stripes]}
+    // {#test4:[
+    // Bulleted Implied Bulleted Indent{#data:[ //
+    // {.} {lastName}{pets:[{name}]}]}]}
+    // {#test4Result:[
+    // Bulleted Implied Bulleted Indent
+    // (0.0) Johnson
+    //    (1.0) Buddy
+    //    (1.1) Ralph
+    //    (1.2) Stripes
+    // (0.1) Smith
+    //    (1.0) Toto
+    //    (1.1) Dolly
+    //    (1.2) Stripes].Compose()}
+    // {#test5:[
+    // Bulleted Explicit Bulleted Indent{#data:[ //
+    // {.} {lastName}{pets:[ //
+    //     {.} {name}]}]}].Compose()}
+    // {#test5Result:[
+    // Bulleted Explicit Bulleted Indent
+    // (0.0) Johnson
+    //     (1.0) Buddy
+    //     (1.1) Ralph
+    //     (1.2) Stripes
+    // (0.1) Smith
+    //     (1.0) Toto
+    //     (1.1) Dolly
+    //     (1.2) Stripes]}
+    // {#test6:[
+    // Hierarchy{#data:[ //
+    // {.} {lastName}{pets:[ //
+    //     {.} {name} who is owned by 
+    //          {.} {^.^:[{firstName} who owns
+    //               {.} {pets:[{type}]}]}]}]}].Compose()}
+    // {#test6Result:[
+    // Hierarchy
+    // (0.0) Johnson
+    //     (1.0) Buddy who is owned by 
+    //          (2.0) Doris who owns
+    //               (3.0) dog
+    //               (3.1) lion
+    //               (3.2) tiger
+    //     (1.1) Ralph who is owned by 
+    //          (2.0) Doris who owns
+    //               (3.0) dog
+    //               (3.1) lion
+    //               (3.2) tiger
+    //     (1.2) Stripes who is owned by 
+    //          (2.0) Doris who owns
+    //               (3.0) dog
+    //               (3.1) lion
+    //               (3.2) tiger
+    // (0.1) Smith
+    //     (1.0) Toto who is owned by 
+    //          (2.0) John who owns
+    //               (3.0) dog
+    //               (3.1) cat
+    //               (3.2) zebra
+    //     (1.1) Dolly who is owned by 
+    //          (2.0) John who owns
+    //               (3.0) dog
+    //               (3.1) cat
+    //               (3.2) zebra
+    //     (1.2) Stripes who is owned by 
+    //          (2.0) John who owns
+    //               (3.0) dog
+    //               (3.1) cat
+    //               (3.2) zebra]}
+    // {#test7:[
+    // Hierarchy that transitions from indent to bullet {#data:[ //
+    // {lastName}{pets:[ //
+    //     {.} {name} who is owned by 
+    //          {.} {^.^:[{firstName} who owns
+    //             {.} {pets:[{type}]}]}]}]}]}
+    // {#test7Result:[
+    // Hierarchy that transitions from indent to bullet 
+    // Johnson
+    //     (0.0) Buddy who is owned by 
+    //          (1.0) Doris who owns
+    //             (2.0) dog
+    //             (2.1) lion
+    //             (2.2) tiger
+    //     (0.1) Ralph who is owned by 
+    //          (1.0) Doris who owns
+    //             (2.0) dog
+    //             (2.1) lion
+    //             (2.2) tiger
+    //     (0.2) Stripes who is owned by 
+    //          (1.0) Doris who owns
+    //             (2.0) dog
+    //             (2.1) lion
+    //             (2.2) tiger
+    // Smith
+    //     (0.0) Toto who is owned by 
+    //          (1.0) John who owns
+    //             (2.0) dog
+    //             (2.1) cat
+    //             (2.2) zebra
+    //     (0.1) Dolly who is owned by 
+    //          (1.0) John who owns
+    //             (2.0) dog
+    //             (2.1) cat
+    //             (2.2) zebra
+    //     (0.2) Stripes who is owned by 
+    //          (1.0) John who owns
+    //             (2.0) dog
+    //             (2.1) cat
+    //             (2.2) zebra]}
+    // {#test8:[
+    // Hierarchy that also transitions from indent to bullet {#data:[ //
+    //   {firstName} {lastName} who owns {pets:[{name} who is owned by 
+    //          {.} {^.^:[{firstName} who owns
+    //             {.} {pets:[{type}]}]}]}]}]}
+    // {#test8Result:[
+    // Hierarchy that also transitions from indent to bullet 
+    //   Doris Johnson who owns 
+    //      Buddy who is owned by 
+    //          (0.0) Doris who owns
+    //             (1.0) dog
+    //             (1.1) lion
+    //             (1.2) tiger
+    //      Ralph who is owned by 
+    //          (0.0) Doris who owns
+    //             (1.0) dog
+    //             (1.1) lion
+    //             (1.2) tiger
+    //      Stripes who is owned by 
+    //          (0.0) Doris who owns
+    //             (1.0) dog
+    //             (1.1) lion
+    //             (1.2) tiger
+    //   John Smith who owns 
+    //      Toto who is owned by 
+    //          (0.0) John who owns
+    //             (1.0) dog
+    //             (1.1) cat
+    //             (1.2) zebra
+    //      Dolly who is owned by 
+    //          (0.0) John who owns
+    //             (1.0) dog
+    //             (1.1) cat
+    //             (1.2) zebra
+    //      Stripes who is owned by 
+    //          (0.0) John who owns
+    //             (1.0) dog
+    //             (1.1) cat
+    //             (1.2) zebra]}
+    // {#test9:[
+    // Continued list {#data:[{pets:[{name}]}]}]}
+    // {#test9Result:[
+    // Continued list 
+    //    Buddy
+    //    Ralph
+    //    Stripes
+    //    Toto
+    //    Dolly
+    //    Stripes]}
+    // {#test10:[
+    // Bulleted Continued list ` 
+    // {#data:[{pets:[ 
+    //     {.} {name}]}]}]}
+    // {#test10Result:[
+    // Bulleted Continued list 
+    //     (0.0) Buddy
+    //     (0.1) Ralph
+    //     (0.2) Stripes
+    //     (0.3) Toto
+    //     (0.4) Dolly
+    //     (0.5) Stripes]}
+    // {#test11:[
+    // Hierarchy that also transitions from indent to bullet and back {#data:[ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //          {^.^:[{firstName} who owns 
+    //              {.} {pets:[{type} // 
+    //             ]}]}]}]}]}
+    // {#test11Result:[
+    // Hierarchy that also transitions from indent to bullet and back 
+    // Johnson who owns 
+    //     (0.0) Buddy who is owned by 
+    //          Doris who owns 
+    //              (1.0) dog
+    //              (1.1) lion
+    //              (1.2) tiger
+    //     (0.1) Ralph who is owned by 
+    //          Doris who owns 
+    //              (1.0) dog
+    //              (1.1) lion
+    //              (1.2) tiger
+    //     (0.2) Stripes who is owned by 
+    //          Doris who owns 
+    //              (1.0) dog
+    //              (1.1) lion
+    //              (1.2) tiger
+    // Smith who owns 
+    //     (0.0) Toto who is owned by 
+    //          John who owns 
+    //              (1.0) dog
+    //              (1.1) cat
+    //              (1.2) zebra
+    //     (0.1) Dolly who is owned by 
+    //          John who owns 
+    //              (1.0) dog
+    //              (1.1) cat
+    //              (1.2) zebra
+    //     (0.2) Stripes who is owned by 
+    //          John who owns 
+    //              (1.0) dog
+    //              (1.1) cat
+    //              (1.2) zebra]}
+    // {#test12:[
+    // Additional variation of hierarchy that also transitions from indent to bullet `
+    //  and back {#data:[ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //         {.} {^.^:[{firstName} who owns {pets:[{type} //  
+    //             ]}]}]}]}]}
+    // {#test12Result:[
+    // Additional variation of hierarchy that also transitions from indent to bullet and back 
+    // Johnson who owns 
+    //     (0.0) Buddy who is owned by 
+    //         (1.0) Doris who owns 
+    //            (2.0) dog
+    //            (2.1) lion
+    //            (2.2) tiger
+    //     (0.1) Ralph who is owned by 
+    //         (1.0) Doris who owns 
+    //            (2.0) dog
+    //            (2.1) lion
+    //            (2.2) tiger
+    //     (0.2) Stripes who is owned by 
+    //         (1.0) Doris who owns 
+    //            (2.0) dog
+    //            (2.1) lion
+    //            (2.2) tiger
+    // Smith who owns 
+    //     (0.0) Toto who is owned by 
+    //         (1.0) John who owns 
+    //            (2.0) dog
+    //            (2.1) cat
+    //            (2.2) zebra
+    //     (0.1) Dolly who is owned by 
+    //         (1.0) John who owns 
+    //            (2.0) dog
+    //            (2.1) cat
+    //            (2.2) zebra
+    //     (0.2) Stripes who is owned by 
+    //         (1.0) John who owns 
+    //            (2.0) dog
+    //            (2.1) cat
+    //            (2.2) zebra]}
+    // {#test13:[
+    // Yet another variation of hierarchy that also transitions from indent to bullet `
+    //  and back {#data:[ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //         {^.^:[{firstName} who owns {pets:[{type} //  
+    //             ]}]}]}]}]}
+    // {#test13Result:[
+    // Yet another variation of hierarchy that also transitions from indent to bullet and back 
+    // Johnson who owns 
+    //     (0.0) Buddy who is owned by 
+    //         Doris who owns 
+    //            dog
+    //            lion
+    //            tiger
+    //     (0.1) Ralph who is owned by 
+    //         Doris who owns 
+    //            dog
+    //            lion
+    //            tiger
+    //     (0.2) Stripes who is owned by 
+    //         Doris who owns 
+    //            dog
+    //            lion
+    //            tiger
+    // Smith who owns 
+    //     (0.0) Toto who is owned by 
+    //         John who owns 
+    //            dog
+    //            cat
+    //            zebra
+    //     (0.1) Dolly who is owned by 
+    //         John who owns 
+    //            dog
+    //            cat
+    //            zebra
+    //     (0.2) Stripes who is owned by 
+    //         John who owns 
+    //            dog
+    //            cat
+    //            zebra]}
+    // {#test14:[
+    // Indent under indent under bullet {#data:[ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //              {^.^:[{firstName} who owns 
+    //                  {pets:[{type} //  
+    //             ]}]}]}]}]}
+    // {#test14Result:[
+    // Indent under indent under bullet 
+    // Johnson who owns 
+    //     (0.0) Buddy who is owned by 
+    //              Doris who owns 
+    //                  dog
+    //                  lion
+    //                  tiger
+    //     (0.1) Ralph who is owned by 
+    //              Doris who owns 
+    //                  dog
+    //                  lion
+    //                  tiger
+    //     (0.2) Stripes who is owned by 
+    //              Doris who owns 
+    //                  dog
+    //                  lion
+    //                  tiger
+    // Smith who owns 
+    //     (0.0) Toto who is owned by 
+    //              John who owns 
+    //                  dog
+    //                  cat
+    //                  zebra
+    //     (0.1) Dolly who is owned by 
+    //              John who owns 
+    //                  dog
+    //                  cat
+    //                  zebra
+    //     (0.2) Stripes who is owned by 
+    //              John who owns 
+    //                  dog
+    //                  cat
+    //                  zebra]}
+    // {#test15:[
+    // Automatic bulleting for multi-values{#data:[ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //              {^.^:[{firstName} who owns 
+    //                  {pets:[{type} //  
+    //             ]}]}]}]}]}
+    // {#test15Result:[
+    // Automatic bulleting for multi-values
+    // Johnson who owns 
+    //     (0.0) Buddy who is owned by 
+    //              Doris who owns 
+    //                  dog
+    //                  lion
+    //                  tiger
+    //     (0.1) Ralph who is owned by 
+    //              Doris who owns 
+    //                  dog
+    //                  lion
+    //                  tiger
+    //     (0.2) Stripes who is owned by 
+    //              Doris who owns 
+    //                  dog
+    //                  lion
+    //                  tiger
+    // Smith who owns 
+    //     (0.0) Toto who is owned by 
+    //              John who owns 
+    //                  dog
+    //                  cat
+    //                  zebra
+    //     (0.1) Dolly who is owned by 
+    //              John who owns 
+    //                  dog
+    //                  cat
+    //                  zebra
+    //     (0.2) Stripes who is owned by 
+    //              John who owns 
+    //                  dog
+    //                  cat
+    //                  zebra]}
+    // {#test16:[
+    // {''.Compose() // reset numbering from previous tests
+    // }{[
+    // A:
+    // People:{'/data/people':[
+    // {.} Pets {[
+    //       {.} Domesticated{pets:[{type}]}
+    //    ]
+    //    } //
+    // ].Compose()}
+    // B:
+    // People:{'/data/people':[
+    //    {.} {lastName}{pets:[{type}]}
+    // ].@MissingValue('No Information Provided').Compose()}
+    // C:
+    // People:{'/data/people':[
+    //    {.} {lastName}{pets:[{type}]}
+    // ].Compose()}   
+    // D:
+    // People:{'/data/people':[
+    //           {lastName}{pets:[{type}]}
+    // ].@MissingValue('No Information Provided').Compose()}
+    // E:
+    // People:{'/data/people':[
+    // {.} {lastName}{pets:[
+    //  {.} {type}]}
+    // ].@MissingValue('No Information Provided').Compose()}]}]}
+    // {#test16Result:[
+    // A:
+    // People:
+    // (0.0) Pets 
+    //       (1.0) Domesticated
+    //          (2.0) dog
+    //          (2.1) lion
+    //          (2.2) tiger
+    // (0.1) Pets 
+    //       (1.0) Domesticated
+    //          (2.0) dog
+    //          (2.1) cat
+    //          (2.2) zebra
+    // B:
+    // People:
+    //    (0.0) Johnson
+    //       (1.0) dog
+    //       (1.1) lion
+    //       (1.2) tiger
+    //    (0.1) Smith
+    //       (1.0) dog
+    //       (1.1) cat
+    //       (1.2) zebra
+    // C:
+    // People:
+    //    (0.0) Johnson
+    //       (1.0) dog
+    //       (1.1) lion
+    //       (1.2) tiger
+    //    (0.1) Smith
+    //       (1.0) dog
+    //       (1.1) cat
+    //       (1.2) zebra   
+    // D:
+    // People:Johnson
+    //    dog
+    //    lion
+    //    tiger
+    // Smith
+    //    dog
+    //    cat
+    //    zebra
+    // E:
+    // People:
+    // (0.0) Johnson
+    //  (1.0) dog
+    //  (1.1) lion
+    //  (1.2) tiger
+    // (0.1) Smith
+    //  (1.0) dog
+    //  (1.1) cat
+    //  (1.2) zebra]}
+    // {#tests:[ //
+    // {'1'.#test(#test1,#test1Result)}
+    // {'2'.#test(#test2,#test2Result)}
+    // {'3'.#test(#test3,#test3Result)}
+    // {'4'.#test(#test4,#test4Result)}
+    // {'5'.#test(#test5,#test5Result)}
+    // {'6'.#test(#test6,#test6Result)}
+    // {'7'.#test(#test7,#test7Result)}
+    // {'8'.#test(#test8,#test8Result)}
+    // {'9'.#test(#test9,#test9Result)}
+    // {'10'.#test(#test10,#test10Result)}
+    // {'11'.#test(#test11,#test11Result)}
+    // {'12'.#test(#test12,#test12Result)}
+    // {'13'.#test(#test13,#test13Result)}
+    // {'14'.#test(#test14,#test14Result)}
+    // {'15'.#test(#test15,#test15Result)}
+    // {'16'.#test(#test16,#test16Result)}
+    // ]}
+    // {#expected:[ //
+    // Test 1 passed
+    // Test 2 passed
+    // Test 3 passed
+    // Test 4 passed
+    // Test 5 passed
+    // Test 6 passed
+    // Test 7 passed
+    // Test 8 passed
+    // Test 9 passed
+    // Test 10 passed
+    // Test 11 passed
+    // Test 12 passed
+    // Test 13 passed
+    // Test 14 passed
+    // Test 15 passed
+    // Test 16 passed
+    // ]}
+    // {#data:[/data/people]}
+    // Source: "templates/tests.template":1:46
+    private void defineSubtemplates(SubtemplateDefinitions definitions)
+    {
+        definitions.Add("test", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test()));
+        definitions.Add("test1", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test1()));
+        definitions.Add("test1Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test1Result()));
+        definitions.Add("test2", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test2()));
+        definitions.Add("test2Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test2Result()));
+        definitions.Add("test3", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test3()));
+        definitions.Add("test3Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test3Result()));
+        definitions.Add("test4", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test4()));
+        definitions.Add("test4Result", definitionContext => new Tests(definitionContext).test4Result());
+        definitions.Add("test5", definitionContext => new Tests(definitionContext).test5());
+        definitions.Add("test5Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test5Result()));
+        definitions.Add("test6", definitionContext => new Tests(definitionContext).test6());
+        definitions.Add("test6Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test6Result()));
+        definitions.Add("test7", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test7()));
+        definitions.Add("test7Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test7Result()));
+        definitions.Add("test8", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test8()));
+        definitions.Add("test8Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test8Result()));
+        definitions.Add("test9", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test9()));
+        definitions.Add("test9Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test9Result()));
+        definitions.Add("test10", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test10()));
+        definitions.Add("test10Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test10Result()));
+        definitions.Add("test11", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test11()));
+        definitions.Add("test11Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test11Result()));
+        definitions.Add("test12", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test12()));
+        definitions.Add("test12Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test12Result()));
+        definitions.Add("test13", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test13()));
+        definitions.Add("test13Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test13Result()));
+        definitions.Add("test14", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test14()));
+        definitions.Add("test14Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test14Result()));
+        definitions.Add("test15", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test15()));
+        definitions.Add("test15Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test15Result()));
+        definitions.Add("test16", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test16()));
+        definitions.Add("test16Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test16Result()));
+        definitions.Add("tests", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).tests()));
+        definitions.Add("expected", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).expected()));
+        definitions.Add("data", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).data()));
+    }
+
+    // Template:
+    // {#tests.Assert(#expected,'ALL TESTS PASSED')}
+    //
+    // Subtemplates:
+    // {#test:[{$0.Matches(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)->
+    // [Test {$0} {$1.Assert($2,'passed')}]}]}
+    // {#test1:[
+    // Explicit Single Indent{#data:[
+    //    {lastName}]}]}
+    // {#test1Result:[
+    // Explicit Single Indent
+    //    Johnson
+    //    Smith]}
+    // {#test2:[
+    // Implied Single Indent {#data:[{lastName}]}]}
+    // {#test2Result:[
+    // Implied Single Indent 
+    //    Johnson
+    //    Smith]}
+    // {#test3:[
+    // Implied Double Indent{#data:[{lastName}{pets:[{name}]}]}]}
+    // {#test3Result:[
+    // Implied Double Indent
+    //    Johnson
+    //       Buddy
+    //       Ralph
+    //       Stripes
+    //    Smith
+    //       Toto
+    //       Dolly
+    //       Stripes]}
+    // {#test4:[
+    // Bulleted Implied Bulleted Indent{#data:[ //
+    // {.} {lastName}{pets:[{name}]}]}]}
+    // {#test4Result:[
+    // Bulleted Implied Bulleted Indent
+    // (0.0) Johnson
+    //    (1.0) Buddy
+    //    (1.1) Ralph
+    //    (1.2) Stripes
+    // (0.1) Smith
+    //    (1.0) Toto
+    //    (1.1) Dolly
+    //    (1.2) Stripes].Compose()}
+    // {#test5:[
+    // Bulleted Explicit Bulleted Indent{#data:[ //
+    // {.} {lastName}{pets:[ //
+    //     {.} {name}]}]}].Compose()}
+    // {#test5Result:[
+    // Bulleted Explicit Bulleted Indent
+    // (0.0) Johnson
+    //     (1.0) Buddy
+    //     (1.1) Ralph
+    //     (1.2) Stripes
+    // (0.1) Smith
+    //     (1.0) Toto
+    //     (1.1) Dolly
+    //     (1.2) Stripes]}
+    // {#test6:[
+    // Hierarchy{#data:[ //
+    // {.} {lastName}{pets:[ //
+    //     {.} {name} who is owned by 
+    //          {.} {^.^:[{firstName} who owns
+    //               {.} {pets:[{type}]}]}]}]}].Compose()}
+    // {#test6Result:[
+    // Hierarchy
+    // (0.0) Johnson
+    //     (1.0) Buddy who is owned by 
+    //          (2.0) Doris who owns
+    //               (3.0) dog
+    //               (3.1) lion
+    //               (3.2) tiger
+    //     (1.1) Ralph who is owned by 
+    //          (2.0) Doris who owns
+    //               (3.0) dog
+    //               (3.1) lion
+    //               (3.2) tiger
+    //     (1.2) Stripes who is owned by 
+    //          (2.0) Doris who owns
+    //               (3.0) dog
+    //               (3.1) lion
+    //               (3.2) tiger
+    // (0.1) Smith
+    //     (1.0) Toto who is owned by 
+    //          (2.0) John who owns
+    //               (3.0) dog
+    //               (3.1) cat
+    //               (3.2) zebra
+    //     (1.1) Dolly who is owned by 
+    //          (2.0) John who owns
+    //               (3.0) dog
+    //               (3.1) cat
+    //               (3.2) zebra
+    //     (1.2) Stripes who is owned by 
+    //          (2.0) John who owns
+    //               (3.0) dog
+    //               (3.1) cat
+    //               (3.2) zebra]}
+    // {#test7:[
+    // Hierarchy that transitions from indent to bullet {#data:[ //
+    // {lastName}{pets:[ //
+    //     {.} {name} who is owned by 
+    //          {.} {^.^:[{firstName} who owns
+    //             {.} {pets:[{type}]}]}]}]}]}
+    // {#test7Result:[
+    // Hierarchy that transitions from indent to bullet 
+    // Johnson
+    //     (0.0) Buddy who is owned by 
+    //          (1.0) Doris who owns
+    //             (2.0) dog
+    //             (2.1) lion
+    //             (2.2) tiger
+    //     (0.1) Ralph who is owned by 
+    //          (1.0) Doris who owns
+    //             (2.0) dog
+    //             (2.1) lion
+    //             (2.2) tiger
+    //     (0.2) Stripes who is owned by 
+    //          (1.0) Doris who owns
+    //             (2.0) dog
+    //             (2.1) lion
+    //             (2.2) tiger
+    // Smith
+    //     (0.0) Toto who is owned by 
+    //          (1.0) John who owns
+    //             (2.0) dog
+    //             (2.1) cat
+    //             (2.2) zebra
+    //     (0.1) Dolly who is owned by 
+    //          (1.0) John who owns
+    //             (2.0) dog
+    //             (2.1) cat
+    //             (2.2) zebra
+    //     (0.2) Stripes who is owned by 
+    //          (1.0) John who owns
+    //             (2.0) dog
+    //             (2.1) cat
+    //             (2.2) zebra]}
+    // {#test8:[
+    // Hierarchy that also transitions from indent to bullet {#data:[ //
+    //   {firstName} {lastName} who owns {pets:[{name} who is owned by 
+    //          {.} {^.^:[{firstName} who owns
+    //             {.} {pets:[{type}]}]}]}]}]}
+    // {#test8Result:[
+    // Hierarchy that also transitions from indent to bullet 
+    //   Doris Johnson who owns 
+    //      Buddy who is owned by 
+    //          (0.0) Doris who owns
+    //             (1.0) dog
+    //             (1.1) lion
+    //             (1.2) tiger
+    //      Ralph who is owned by 
+    //          (0.0) Doris who owns
+    //             (1.0) dog
+    //             (1.1) lion
+    //             (1.2) tiger
+    //      Stripes who is owned by 
+    //          (0.0) Doris who owns
+    //             (1.0) dog
+    //             (1.1) lion
+    //             (1.2) tiger
+    //   John Smith who owns 
+    //      Toto who is owned by 
+    //          (0.0) John who owns
+    //             (1.0) dog
+    //             (1.1) cat
+    //             (1.2) zebra
+    //      Dolly who is owned by 
+    //          (0.0) John who owns
+    //             (1.0) dog
+    //             (1.1) cat
+    //             (1.2) zebra
+    //      Stripes who is owned by 
+    //          (0.0) John who owns
+    //             (1.0) dog
+    //             (1.1) cat
+    //             (1.2) zebra]}
+    // {#test9:[
+    // Continued list {#data:[{pets:[{name}]}]}]}
+    // {#test9Result:[
+    // Continued list 
+    //    Buddy
+    //    Ralph
+    //    Stripes
+    //    Toto
+    //    Dolly
+    //    Stripes]}
+    // {#test10:[
+    // Bulleted Continued list ` 
+    // {#data:[{pets:[ 
+    //     {.} {name}]}]}]}
+    // {#test10Result:[
+    // Bulleted Continued list 
+    //     (0.0) Buddy
+    //     (0.1) Ralph
+    //     (0.2) Stripes
+    //     (0.3) Toto
+    //     (0.4) Dolly
+    //     (0.5) Stripes]}
+    // {#test11:[
+    // Hierarchy that also transitions from indent to bullet and back {#data:[ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //          {^.^:[{firstName} who owns 
+    //              {.} {pets:[{type} // 
+    //             ]}]}]}]}]}
+    // {#test11Result:[
+    // Hierarchy that also transitions from indent to bullet and back 
+    // Johnson who owns 
+    //     (0.0) Buddy who is owned by 
+    //          Doris who owns 
+    //              (1.0) dog
+    //              (1.1) lion
+    //              (1.2) tiger
+    //     (0.1) Ralph who is owned by 
+    //          Doris who owns 
+    //              (1.0) dog
+    //              (1.1) lion
+    //              (1.2) tiger
+    //     (0.2) Stripes who is owned by 
+    //          Doris who owns 
+    //              (1.0) dog
+    //              (1.1) lion
+    //              (1.2) tiger
+    // Smith who owns 
+    //     (0.0) Toto who is owned by 
+    //          John who owns 
+    //              (1.0) dog
+    //              (1.1) cat
+    //              (1.2) zebra
+    //     (0.1) Dolly who is owned by 
+    //          John who owns 
+    //              (1.0) dog
+    //              (1.1) cat
+    //              (1.2) zebra
+    //     (0.2) Stripes who is owned by 
+    //          John who owns 
+    //              (1.0) dog
+    //              (1.1) cat
+    //              (1.2) zebra]}
+    // {#test12:[
+    // Additional variation of hierarchy that also transitions from indent to bullet `
+    //  and back {#data:[ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //         {.} {^.^:[{firstName} who owns {pets:[{type} //  
+    //             ]}]}]}]}]}
+    // {#test12Result:[
+    // Additional variation of hierarchy that also transitions from indent to bullet and back 
+    // Johnson who owns 
+    //     (0.0) Buddy who is owned by 
+    //         (1.0) Doris who owns 
+    //            (2.0) dog
+    //            (2.1) lion
+    //            (2.2) tiger
+    //     (0.1) Ralph who is owned by 
+    //         (1.0) Doris who owns 
+    //            (2.0) dog
+    //            (2.1) lion
+    //            (2.2) tiger
+    //     (0.2) Stripes who is owned by 
+    //         (1.0) Doris who owns 
+    //            (2.0) dog
+    //            (2.1) lion
+    //            (2.2) tiger
+    // Smith who owns 
+    //     (0.0) Toto who is owned by 
+    //         (1.0) John who owns 
+    //            (2.0) dog
+    //            (2.1) cat
+    //            (2.2) zebra
+    //     (0.1) Dolly who is owned by 
+    //         (1.0) John who owns 
+    //            (2.0) dog
+    //            (2.1) cat
+    //            (2.2) zebra
+    //     (0.2) Stripes who is owned by 
+    //         (1.0) John who owns 
+    //            (2.0) dog
+    //            (2.1) cat
+    //            (2.2) zebra]}
+    // {#test13:[
+    // Yet another variation of hierarchy that also transitions from indent to bullet `
+    //  and back {#data:[ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //         {^.^:[{firstName} who owns {pets:[{type} //  
+    //             ]}]}]}]}]}
+    // {#test13Result:[
+    // Yet another variation of hierarchy that also transitions from indent to bullet and back 
+    // Johnson who owns 
+    //     (0.0) Buddy who is owned by 
+    //         Doris who owns 
+    //            dog
+    //            lion
+    //            tiger
+    //     (0.1) Ralph who is owned by 
+    //         Doris who owns 
+    //            dog
+    //            lion
+    //            tiger
+    //     (0.2) Stripes who is owned by 
+    //         Doris who owns 
+    //            dog
+    //            lion
+    //            tiger
+    // Smith who owns 
+    //     (0.0) Toto who is owned by 
+    //         John who owns 
+    //            dog
+    //            cat
+    //            zebra
+    //     (0.1) Dolly who is owned by 
+    //         John who owns 
+    //            dog
+    //            cat
+    //            zebra
+    //     (0.2) Stripes who is owned by 
+    //         John who owns 
+    //            dog
+    //            cat
+    //            zebra]}
+    // {#test14:[
+    // Indent under indent under bullet {#data:[ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //              {^.^:[{firstName} who owns 
+    //                  {pets:[{type} //  
+    //             ]}]}]}]}]}
+    // {#test14Result:[
+    // Indent under indent under bullet 
+    // Johnson who owns 
+    //     (0.0) Buddy who is owned by 
+    //              Doris who owns 
+    //                  dog
+    //                  lion
+    //                  tiger
+    //     (0.1) Ralph who is owned by 
+    //              Doris who owns 
+    //                  dog
+    //                  lion
+    //                  tiger
+    //     (0.2) Stripes who is owned by 
+    //              Doris who owns 
+    //                  dog
+    //                  lion
+    //                  tiger
+    // Smith who owns 
+    //     (0.0) Toto who is owned by 
+    //              John who owns 
+    //                  dog
+    //                  cat
+    //                  zebra
+    //     (0.1) Dolly who is owned by 
+    //              John who owns 
+    //                  dog
+    //                  cat
+    //                  zebra
+    //     (0.2) Stripes who is owned by 
+    //              John who owns 
+    //                  dog
+    //                  cat
+    //                  zebra]}
+    // {#test15:[
+    // Automatic bulleting for multi-values{#data:[ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //              {^.^:[{firstName} who owns 
+    //                  {pets:[{type} //  
+    //             ]}]}]}]}]}
+    // {#test15Result:[
+    // Automatic bulleting for multi-values
+    // Johnson who owns 
+    //     (0.0) Buddy who is owned by 
+    //              Doris who owns 
+    //                  dog
+    //                  lion
+    //                  tiger
+    //     (0.1) Ralph who is owned by 
+    //              Doris who owns 
+    //                  dog
+    //                  lion
+    //                  tiger
+    //     (0.2) Stripes who is owned by 
+    //              Doris who owns 
+    //                  dog
+    //                  lion
+    //                  tiger
+    // Smith who owns 
+    //     (0.0) Toto who is owned by 
+    //              John who owns 
+    //                  dog
+    //                  cat
+    //                  zebra
+    //     (0.1) Dolly who is owned by 
+    //              John who owns 
+    //                  dog
+    //                  cat
+    //                  zebra
+    //     (0.2) Stripes who is owned by 
+    //              John who owns 
+    //                  dog
+    //                  cat
+    //                  zebra]}
+    // {#test16:[
+    // {''.Compose() // reset numbering from previous tests
+    // }{[
+    // A:
+    // People:{'/data/people':[
+    // {.} Pets {[
+    //       {.} Domesticated{pets:[{type}]}
+    //    ]
+    //    } //
+    // ].Compose()}
+    // B:
+    // People:{'/data/people':[
+    //    {.} {lastName}{pets:[{type}]}
+    // ].@MissingValue('No Information Provided').Compose()}
+    // C:
+    // People:{'/data/people':[
+    //    {.} {lastName}{pets:[{type}]}
+    // ].Compose()}   
+    // D:
+    // People:{'/data/people':[
+    //           {lastName}{pets:[{type}]}
+    // ].@MissingValue('No Information Provided').Compose()}
+    // E:
+    // People:{'/data/people':[
+    // {.} {lastName}{pets:[
+    //  {.} {type}]}
+    // ].@MissingValue('No Information Provided').Compose()}]}]}
+    // {#test16Result:[
+    // A:
+    // People:
+    // (0.0) Pets 
+    //       (1.0) Domesticated
+    //          (2.0) dog
+    //          (2.1) lion
+    //          (2.2) tiger
+    // (0.1) Pets 
+    //       (1.0) Domesticated
+    //          (2.0) dog
+    //          (2.1) cat
+    //          (2.2) zebra
+    // B:
+    // People:
+    //    (0.0) Johnson
+    //       (1.0) dog
+    //       (1.1) lion
+    //       (1.2) tiger
+    //    (0.1) Smith
+    //       (1.0) dog
+    //       (1.1) cat
+    //       (1.2) zebra
+    // C:
+    // People:
+    //    (0.0) Johnson
+    //       (1.0) dog
+    //       (1.1) lion
+    //       (1.2) tiger
+    //    (0.1) Smith
+    //       (1.0) dog
+    //       (1.1) cat
+    //       (1.2) zebra   
+    // D:
+    // People:Johnson
+    //    dog
+    //    lion
+    //    tiger
+    // Smith
+    //    dog
+    //    cat
+    //    zebra
+    // E:
+    // People:
+    // (0.0) Johnson
+    //  (1.0) dog
+    //  (1.1) lion
+    //  (1.2) tiger
+    // (0.1) Smith
+    //  (1.0) dog
+    //  (1.1) cat
+    //  (1.2) zebra]}
+    // {#tests:[ //
+    // {'1'.#test(#test1,#test1Result)}
+    // {'2'.#test(#test2,#test2Result)}
+    // {'3'.#test(#test3,#test3Result)}
+    // {'4'.#test(#test4,#test4Result)}
+    // {'5'.#test(#test5,#test5Result)}
+    // {'6'.#test(#test6,#test6Result)}
+    // {'7'.#test(#test7,#test7Result)}
+    // {'8'.#test(#test8,#test8Result)}
+    // {'9'.#test(#test9,#test9Result)}
+    // {'10'.#test(#test10,#test10Result)}
+    // {'11'.#test(#test11,#test11Result)}
+    // {'12'.#test(#test12,#test12Result)}
+    // {'13'.#test(#test13,#test13Result)}
+    // {'14'.#test(#test14,#test14Result)}
+    // {'15'.#test(#test15,#test15Result)}
+    // {'16'.#test(#test16,#test16Result)}
+    // ]}
+    // {#expected:[ //
+    // Test 1 passed
+    // Test 2 passed
+    // Test 3 passed
+    // Test 4 passed
+    // Test 5 passed
+    // Test 6 passed
+    // Test 7 passed
+    // Test 8 passed
+    // Test 9 passed
+    // Test 10 passed
+    // Test 11 passed
+    // Test 12 passed
+    // Test 13 passed
+    // Test 14 passed
+    // Test 15 passed
+    // Test 16 passed
+    // ]}
+    // {#data:[/data/people]}
+    // Source: "templates/tests.template":1:1
+    private object?[] renderTests()
     {
         // Template:
         // #tests.Assert(#expected,'ALL TESTS PASSED')
@@ -3089,10 +4132,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
         object? applyAssert() => Unsupported(
             "Call Assert",
             "templates/tests.template:1:2",
-            () => Each(child => child.Named("tests")),
-            () => new object?[] { Each(child => child.Named("expected")), "ALL TESTS PASSED" });
+            () => Each(itemContext => itemContext.Named("tests")),
+            () => new object?[] { Each(itemContext => itemContext.Named("expected")), "ALL TESTS PASSED" });
 
-        var assert = applyAssert();
+        object? assert = applyAssert();
 
         return Line($"{assert}");
     }

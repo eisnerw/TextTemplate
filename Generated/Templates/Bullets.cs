@@ -52,36 +52,16 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // {#style5:[].@BulletStyle(' I', '•', 'A.', '(1)')}
     // {#data:[/data/people]}
     // Source: "templates/bullets.template":1:1
-    internal object? Render()
+    internal object?[] Evaluate()
     {
-        return WithDefinitions(
-            new Dictionary<string, Func<EvaluationContext, object?>>(StringComparer.Ordinal)
-            {
-                ["styleNumber"] = scope => scope.Each(child => new Bullets(child).styleNumber()),
-                ["showStyles"] = child => new Bullets(child).showStyles(),
-                ["formatPet"] = scope => scope.Each(child => new Bullets(child).formatPet()),
-                ["Domesticated"] = scope => scope.Each(child => new Bullets(child).Domesticated()),
-                ["NonDomesticated"] = scope => scope.Each(child => new Bullets(child).NonDomesticated()),
-                ["IsDomesticated"] = scope => scope.Each(child => new Bullets(child).IsDomesticated()),
-                ["Prepend"] = scope => scope.Each(child => new Bullets(child).Prepend()),
-                ["Surround"] = scope => scope.Each(child => new Bullets(child).Surround()),
-                ["Quoted"] = scope => scope.Each(child => new Bullets(child).Quoted()),
-                ["dpetcnt"] = scope => scope.Each(child => new Bullets(child).dpetcnt()),
-                ["ndpetcnt"] = scope => scope.Each(child => new Bullets(child).ndpetcnt()),
-                ["style1"] = child => new Bullets(child).style1(),
-                ["style2"] = child => new Bullets(child).style2(),
-                ["style3"] = child => new Bullets(child).style3(),
-                ["style4"] = child => new Bullets(child).style4(),
-                ["style5"] = child => new Bullets(child).style5(),
-                ["data"] = scope => scope.Each(child => new Bullets(child).data())
-            },
-            child => new Bullets(child).renderBullets());
+        return WithDefinitions(defineSubtemplates,
+            definitionContext => new Bullets(definitionContext).renderBullets());
     }
 
     // Template:
     // [/data/people]
     // Source: "templates/bullets.template":41:8
-    private object? data()
+    private object?[] data()
     {
         return Line($"/data/people");
     }
@@ -97,7 +77,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         object? applyBulletStyle() => Unsupported(
             "Call @BulletStyle",
             "templates/bullets.template:40:10",
-            () => Each(child => Line($"")),
+            () => Each(itemContext => Line($"")),
             () => new object?[] { " I", "•", "A.", "(1)" });
 
         return applyBulletStyle();
@@ -114,7 +94,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         object? applyBulletStyle() => Unsupported(
             "Call @BulletStyle",
             "templates/bullets.template:39:10",
-            () => Each(child => Line($"")),
+            () => Each(itemContext => Line($"")),
             () => new object?[] { "" });
 
         return applyBulletStyle();
@@ -131,7 +111,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         object? applyBulletStyle() => Unsupported(
             "Call @BulletStyle",
             "templates/bullets.template:38:10",
-            () => Each(child => Line($"")),
+            () => Each(itemContext => Line($"")),
             () => new object?[] { "-" });
 
         return applyBulletStyle();
@@ -148,7 +128,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         object? applyBulletStyle() => Unsupported(
             "Call @BulletStyle",
             "templates/bullets.template:37:10",
-            () => Each(child => Line($"")),
+            () => Each(itemContext => Line($"")),
             () => new object?[] { "1", "1.1", "1.1.1", "1(a)" });
 
         return applyBulletStyle();
@@ -165,7 +145,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         object? applyBulletStyle() => Unsupported(
             "Call @BulletStyle",
             "templates/bullets.template:36:10",
-            () => Each(child => Line($"")),
+            () => Each(itemContext => Line($"")),
             () => new object?[] { "I.", "(a)", "•", "i." });
 
         return applyBulletStyle();
@@ -174,7 +154,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{pets.#NonDomesticated().Count()}]
     // Source: "templates/bullets.template":35:12
-    private object? ndpetcnt()
+    private object?[] ndpetcnt()
     {
         // Template:
         // pets.#NonDomesticated().Count()
@@ -182,9 +162,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         object? applyCount() => Unsupported(
             "Call Count",
             "templates/bullets.template:35:14",
-            () => CallNamed("NonDomesticated", Receiver(child => child.Lookup("pets"))));
+            () => ApplySubtemplate("NonDomesticated", MethodInput("pets")));
 
-        var count = applyCount();
+        object? count = applyCount();
 
         return Line($"{count}");
     }
@@ -192,7 +172,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{pets.#Domesticated().Count()}]
     // Source: "templates/bullets.template":34:11
-    private object? dpetcnt()
+    private object?[] dpetcnt()
     {
         // Template:
         // pets.#Domesticated().Count()
@@ -200,9 +180,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         object? applyCount() => Unsupported(
             "Call Count",
             "templates/bullets.template:34:13",
-            () => CallNamed("Domesticated", Receiver(child => child.Lookup("pets"))));
+            () => ApplySubtemplate("Domesticated", MethodInput("pets")));
 
-        var count = applyCount();
+        object? count = applyCount();
 
         return Line($"{count}");
     }
@@ -210,19 +190,19 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0->[{$0.#Surround('"')}]}]
     // Source: "templates/bullets.template":33:10
-    private object? Quoted()
+    private object?[] Quoted()
     {
-        object? choice = (EvaluationContext.Condition(Get("$0")) ? Each(child => new Bullets(child).renderSurround()) : "");
+        object? item0Result = (IsTruthy("$0") ? Each(itemContext => new Bullets(itemContext).renderSurround()) : "");
 
-        return Line($"{choice}");
+        return Line($"{item0Result}");
     }
 
     // Template:
     // [{$0.#Surround('"')}]
     // Source: "templates/bullets.template":33:16
-    private object? renderSurround()
+    private object?[] renderSurround()
     {
-        var surround = CallNamed("Surround", Receiver(child => child.Lookup("$0")), "\"");
+        object? surround = ApplySubtemplate("Surround", MethodInput("$0"), "\"");
 
         return Line($"{surround}");
     }
@@ -230,21 +210,21 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0->[{$1}{$0}{$1}]}]
     // Source: "templates/bullets.template":32:12
-    private object? Surround()
+    private object?[] Surround()
     {
-        object? choice = (EvaluationContext.Condition(Get("$0")) ? Each(child => new Bullets(child).renderItem1_2()) : "");
+        object? item0Result = (IsTruthy("$0") ? Each(itemContext => new Bullets(itemContext).renderItem1_2()) : "");
 
-        return Line($"{choice}");
+        return Line($"{item0Result}");
     }
 
     // Template:
     // [{$1}{$0}{$1}]
     // Source: "templates/bullets.template":32:18
-    private object? renderItem1_2()
+    private object?[] renderItem1_2()
     {
-        var item1 = Get("$1");
-        var item0 = Get("$0");
-        var item1_2 = Get("$1");
+        object? item1 = Get("$1");
+        object? item0 = Get("$0");
+        object? item1_2 = Get("$1");
 
         return Line($"{item1}{item0}{item1_2}");
     }
@@ -252,20 +232,20 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0->[{$1}{$0}]}]
     // Source: "templates/bullets.template":31:11
-    private object? Prepend()
+    private object?[] Prepend()
     {
-        object? choice = (EvaluationContext.Condition(Get("$0")) ? Each(child => new Bullets(child).renderItem1()) : "");
+        object? item0Result = (IsTruthy("$0") ? Each(itemContext => new Bullets(itemContext).renderItem1()) : "");
 
-        return Line($"{choice}");
+        return Line($"{item0Result}");
     }
 
     // Template:
     // [{$1}{$0}]
     // Source: "templates/bullets.template":31:17
-    private object? renderItem1()
+    private object?[] renderItem1()
     {
-        var item1 = Get("$1");
-        var item0 = Get("$0");
+        object? item1 = Get("$1");
+        object? item0 = Get("$0");
 
         return Line($"{item1}{item0}");
     }
@@ -273,7 +253,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0.Matches('dog','cat')}]
     // Source: "templates/bullets.template":30:18
-    private object? IsDomesticated()
+    private object?[] IsDomesticated()
     {
         // Template:
         // $0.Matches('dog','cat')
@@ -284,7 +264,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
             () => Get("$0"),
             () => new object?[] { "dog", "cat" });
 
-        var matches = applyMatches();
+        object? matches = applyMatches();
 
         return Line($"{matches}");
     }
@@ -292,7 +272,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0.Where(!type.#IsDomesticated())}]
     // Source: "templates/bullets.template":29:20
-    private object? NonDomesticated()
+    private object?[] NonDomesticated()
     {
         // Template:
         // $0.Where(!type.#IsDomesticated())
@@ -301,9 +281,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
             "Call Where",
             "templates/bullets.template:29:22",
             () => Get("$0"),
-            () => new object?[] { !(EvaluationContext.Condition(CallNamed("IsDomesticated", Receiver(child => child.Lookup("type"))))) });
+            () => new object?[] { !(EvaluationContext.Condition(ApplySubtemplate("IsDomesticated", MethodInput("type")))) });
 
-        var where = applyWhere();
+        object? where = applyWhere();
 
         return Line($"{where}");
     }
@@ -311,7 +291,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0.Where(type.#IsDomesticated())}]
     // Source: "templates/bullets.template":28:17
-    private object? Domesticated()
+    private object?[] Domesticated()
     {
         // Template:
         // $0.Where(type.#IsDomesticated())
@@ -320,9 +300,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
             "Call Where",
             "templates/bullets.template:28:19",
             () => Get("$0"),
-            () => new object?[] { CallNamed("IsDomesticated", Receiver(child => child.Lookup("type"))) });
+            () => new object?[] { ApplySubtemplate("IsDomesticated", MethodInput("type")) });
 
-        var where = applyWhere();
+        object? where = applyWhere();
 
         return Line($"{where}");
     }
@@ -333,7 +313,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     //    {type} named {name} 
     // ]
     // Source: "templates/bullets.template":24:13
-    private object? formatPet()
+    private object?[] formatPet()
     {
         // Template:
         // type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')
@@ -342,11 +322,11 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
             "Call Case",
             "templates/bullets.template:25:7",
             () => Get("type"),
-            () => new object?[] { "zebra", Each(child => new Bullets(child).renderToLower()), "dog", "friskie", "cat", "fishy", "nice" });
+            () => new object?[] { "zebra", Each(itemContext => new Bullets(itemContext).renderToLower()), "dog", "friskie", "cat", "fishy", "nice" });
 
-        var @case = applyCase();
-        var type = Get("type");
-        var name = Get("name");
+        object? @case = applyCase();
+        object? type = Get("type");
+        object? name = Get("name");
 
         return Line($"a {@case} {type} named {name}");
     }
@@ -354,7 +334,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{[{name}y].ToLower()}]
     // Source: "templates/bullets.template":25:25
-    private object? renderToLower()
+    private object?[] renderToLower()
     {
         // Template:
         // [{name}y].ToLower()
@@ -362,9 +342,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         object? applyToLower() => Unsupported(
             "Call ToLower",
             "templates/bullets.template:25:27",
-            () => Each(child => new Bullets(child).renderName()));
+            () => Each(itemContext => new Bullets(itemContext).renderName()));
 
-        var toLower = applyToLower();
+        object? toLower = applyToLower();
 
         return Line($"{toLower}");
     }
@@ -372,9 +352,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{name}y]
     // Source: "templates/bullets.template":25:27
-    private object? renderName()
+    private object?[] renderName()
     {
-        var name = Get("name");
+        object? name = Get("name");
 
         return Line($"{name}y");
     }
@@ -416,8 +396,8 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         object? applyInclude() => Unsupported(
             "Call @Include",
             "templates/bullets.template:10:14",
-            () => Each(child => new Bullets(child).renderPeople()),
-            () => new object?[] { Each(child => new Bullets(child).renderContent()) });
+            () => Each(itemContext => new Bullets(itemContext).renderPeople()),
+            () => new object?[] { Each(itemContext => new Bullets(itemContext).renderContent()) });
 
         return applyInclude();
     }
@@ -425,9 +405,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{'#style'}{$1}]
     // Source: "templates/bullets.template":23:55
-    private object? renderContent()
+    private object?[] renderContent()
     {
-        var item1 = Get("$1");
+        object? item1 = Get("$1");
 
         return Line($"#style{item1}");
     }
@@ -448,9 +428,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     //    } //
     // ].@MissingValue('No Information Provided')}]
     // Source: "templates/bullets.template":10:14
-    private object? renderPeople()
+    private object?[] renderPeople()
     {
-        var data = InContext(Each(child => child.Named("data")), child => new Bullets(child).renderMissingValue());
+        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => new Bullets(dataContext).renderMissingValue());
 
         return Line($"People:{data}");
     }
@@ -476,9 +456,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         return Annotate(
             new Func<EvaluationContext, EvaluationContext>[]
             {
-                child => child.WithMissingValue("No Information Provided")
+                annotatedContext => annotatedContext.WithMissingValue("No Information Provided")
             },
-            scope => scope.Each(child => new Bullets(child).renderChoice()));
+            annotatedContext => annotatedContext.Each(itemContext => new Bullets(itemContext).renderChoice()));
     }
 
     // Template:
@@ -497,7 +477,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     //    } //
     // ]
     // Source: "templates/bullets.template":10:29
-    private object? renderChoice()
+    private object?[] renderChoice()
     {
         // Template:
         // {.}
@@ -516,7 +496,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         object? applyToUpper() => Unsupported(
             "Call ToUpper",
             "templates/bullets.template:11:27",
-            () => Each(child => new Bullets(child).renderLastName()));
+            () => Each(itemContext => new Bullets(itemContext).renderLastName()));
 
         // Template:
         //       {.}
@@ -548,21 +528,21 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
             "Bullet       {.}",
             "templates/bullets.template:18:1");
 
-        var content = bullet();
-        object? choice = (EvaluationContext.Compare(Get("^.^.$1"), "=", EvaluationContext.ParseInteger("2")) ? Each(child => Line($".0")) : "");
-        var quoted = CallNamed("Quoted", applyToUpper());
-        var content_2 = bullet_2();
-        var ifMissing = applyIfMissing();
-        var content_3 = bullet_3();
-        var firstName = Get("firstName");
-        var content_4 = bullet_4();
-        object? choice_2 = (EvaluationContext.Condition(Get("pets")) ? Each(child => new Bullets(child).renderCount()) : Each(child => Line($"no pets")));
+        object? content = bullet();
+        object? choice = (EvaluationContext.Compare(Get("^.^.$1"), "=", EvaluationContext.ParseInteger("2")) ? Each(itemContext => Line($".0")) : "");
+        object? quoted = ApplySubtemplate("Quoted", applyToUpper());
+        object? content_2 = bullet_2();
+        object? ifMissing = applyIfMissing();
+        object? content_3 = bullet_3();
+        object? firstName = Get("firstName");
+        object? content_4 = bullet_4();
+        object? petsResult = (IsTruthy("pets") ? Each(itemContext => new Bullets(itemContext).renderCount()) : Each(itemContext => Line($"no pets")));
 
         return Line($$"""
             {{content}}{{choice}} {{quoted}} 
             {{content_2}} Lastname: {{ifMissing}}   
             {{content_3}} FirstName: {{firstName}}  
-            {{content_4}} Pets {{choice_2}}
+            {{content_4}} Pets {{petsResult}}
             """);
     }
 
@@ -572,7 +552,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
     //    ]
     // Source: "templates/bullets.template":18:23
-    private object? renderCount()
+    private object?[] renderCount()
     {
         // Template:
         // pets.Count()
@@ -596,13 +576,13 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
             "Bullet          {.}",
             "templates/bullets.template:20:1");
 
-        var count = applyCount();
-        var content = bullet();
-        object? choice = (EvaluationContext.Compare(Each(child => child.Named("dpetcnt")), ">", EvaluationContext.ParseInteger("1")) ? Each(child => new Bullets(child).renderDpetcnt()) : "");
-        var domesticated = InContext(CallNamed("Domesticated", Receiver(child => child.Lookup("pets"))), scope => scope.Each(child => new Bullets(child).renderFormatPet()));
-        var content_2 = bullet_2();
-        object? choice_2 = (EvaluationContext.Compare(Each(child => child.Named("ndpetcnt")), ">", EvaluationContext.ParseInteger("1")) ? Each(child => new Bullets(child).renderNdpetcnt()) : "");
-        var nonDomesticated = InContext(CallNamed("NonDomesticated", Receiver(child => child.Lookup("pets"))), scope => scope.Each(child => new Bullets(child).renderFormatPet_2()));
+        object? count = applyCount();
+        object? content = bullet();
+        object? choice = (EvaluationContext.Compare(Each(itemContext => itemContext.Named("dpetcnt")), ">", EvaluationContext.ParseInteger("1")) ? Each(itemContext => new Bullets(itemContext).renderDpetcnt()) : "");
+        object? domesticated = InContext(ApplySubtemplate("Domesticated", MethodInput("pets")), dataContext => dataContext.Each(itemContext => new Bullets(itemContext).renderFormatPet()));
+        object? content_2 = bullet_2();
+        object? choice_2 = (EvaluationContext.Compare(Each(itemContext => itemContext.Named("ndpetcnt")), ">", EvaluationContext.ParseInteger("1")) ? Each(itemContext => new Bullets(itemContext).renderNdpetcnt()) : "");
+        object? nonDomesticated = InContext(ApplySubtemplate("NonDomesticated", MethodInput("pets")), dataContext => dataContext.Each(itemContext => new Bullets(itemContext).renderFormatPet_2()));
 
         return Line($$"""
             ({{count}}):  
@@ -614,9 +594,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{#formatPet}]
     // Source: "templates/bullets.template":20:89
-    private object? renderFormatPet_2()
+    private object?[] renderFormatPet_2()
     {
-        var formatPet = Each(child => child.Named("formatPet"));
+        object? formatPet = Each(itemContext => itemContext.Named("formatPet"));
 
         return Line($"{formatPet}");
     }
@@ -624,9 +604,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [({#ndpetcnt})]
     // Source: "templates/bullets.template":20:46
-    private object? renderNdpetcnt()
+    private object?[] renderNdpetcnt()
     {
-        var ndpetcnt = Each(child => child.Named("ndpetcnt"));
+        object? ndpetcnt = Each(itemContext => itemContext.Named("ndpetcnt"));
 
         return Line($"({ndpetcnt})");
     }
@@ -634,9 +614,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{#formatPet}]
     // Source: "templates/bullets.template":19:81
-    private object? renderFormatPet()
+    private object?[] renderFormatPet()
     {
-        var formatPet = Each(child => child.Named("formatPet"));
+        object? formatPet = Each(itemContext => itemContext.Named("formatPet"));
 
         return Line($"{formatPet}");
     }
@@ -644,9 +624,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [ ({#dpetcnt})]
     // Source: "templates/bullets.template":19:41
-    private object? renderDpetcnt()
+    private object?[] renderDpetcnt()
     {
-        var dpetcnt = Each(child => child.Named("dpetcnt"));
+        object? dpetcnt = Each(itemContext => itemContext.Named("dpetcnt"));
 
         return Line($" ({dpetcnt})");
     }
@@ -658,11 +638,11 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     //       middleName.#Prepend(' ')
     //    }]
     // Source: "templates/bullets.template":11:27
-    private object? renderLastName()
+    private object?[] renderLastName()
     {
-        var lastName = Get("lastName");
-        var prepend = CallNamed("Prepend", Receiver(child => child.Lookup("firstName")), ", ");
-        var prepend_2 = CallNamed("Prepend", Receiver(child => child.Lookup("middleName")), " ");
+        object? lastName = Get("lastName");
+        object? prepend = ApplySubtemplate("Prepend", MethodInput("firstName"), ", ");
+        object? prepend_2 = ApplySubtemplate("Prepend", MethodInput("middleName"), " ");
 
         return Line($"{lastName}{prepend}{prepend_2}");
     }
@@ -670,14 +650,117 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [1]
     // Source: "templates/bullets.template":9:15
-    private object? styleNumber()
+    private object?[] styleNumber()
     {
         return Line($"1");
     }
 
-    private object? renderBullets()
+    // Template:
+    //
+    //
+    //  
+    // Subtemplates:
+    // {#styleNumber:[1]}
+    // {#showStyles:[People:{#data:[
+    //    {.}{^.^.$1 = 2->[.0]} {[{ 
+    //       lastName}{ 
+    //       firstName.#Prepend(', ')}{    
+    //       middleName.#Prepend(' ')
+    //    }].ToUpper().#Quoted()} 
+    //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
+    //       {.} FirstName: {firstName}  
+    //       {.} Pets {pets=>[({pets.Count()}):  
+    //          {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
+    //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
+    //    ],[no pets]
+    //    } //
+    // ].@MissingValue('No Information Provided')}].@Include([{'#style'}{$1}])}
+    // {#formatPet:[  
+    //    a {type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')}  `   
+    //    {type} named {name} 
+    // ]}
+    // {#Domesticated: [{$0.Where(type.#IsDomesticated())}]}
+    // {#NonDomesticated: [{$0.Where(!type.#IsDomesticated())}]} 
+    // {#IsDomesticated:[{$0.Matches('dog','cat')}]}  
+    // {#Prepend:[{$0->[{$1}{$0}]}]}
+    // {#Surround:[{$0->[{$1}{$0}{$1}]}]}
+    // {#Quoted:[{$0->[{$0.#Surround('"')}]}]}
+    // {#dpetcnt:[{pets.#Domesticated().Count()}]}
+    // {#ndpetcnt:[{pets.#NonDomesticated().Count()}]}
+    // {#style1:[].@BulletStyle('I.','(a)','•','i.')}
+    // {#style2:[].@BulletStyle('1','1.1','1.1.1','1(a)')}
+    // {#style3:[].@BulletStyle('-')}
+    // {#style4:[].@BulletStyle('')}
+    // {#style5:[].@BulletStyle(' I', '•', 'A.', '(1)')}
+    // {#data:[/data/people]}
+    // Source: "templates/bullets.template":5:20
+    private void defineSubtemplates(SubtemplateDefinitions definitions)
     {
-        var showStyles = CallNamed("showStyles", Receiver(child => ""), EvaluationContext.ParseInteger("1"));
+        definitions.Add("styleNumber", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).styleNumber()));
+        definitions.Add("showStyles", definitionContext => new Bullets(definitionContext).showStyles());
+        definitions.Add("formatPet", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).formatPet()));
+        definitions.Add("Domesticated", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).Domesticated()));
+        definitions.Add("NonDomesticated", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).NonDomesticated()));
+        definitions.Add("IsDomesticated", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).IsDomesticated()));
+        definitions.Add("Prepend", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).Prepend()));
+        definitions.Add("Surround", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).Surround()));
+        definitions.Add("Quoted", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).Quoted()));
+        definitions.Add("dpetcnt", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).dpetcnt()));
+        definitions.Add("ndpetcnt", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).ndpetcnt()));
+        definitions.Add("style1", definitionContext => new Bullets(definitionContext).style1());
+        definitions.Add("style2", definitionContext => new Bullets(definitionContext).style2());
+        definitions.Add("style3", definitionContext => new Bullets(definitionContext).style3());
+        definitions.Add("style4", definitionContext => new Bullets(definitionContext).style4());
+        definitions.Add("style5", definitionContext => new Bullets(definitionContext).style5());
+        definitions.Add("data", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).data()));
+    }
+
+    // Template:
+    // Shows use of bullet styles as well as modular subtemplates, automatic bulleting,`
+    // and indenting only for multiple values.  You can see different bullet styles `
+    // by changing the parameter to #showStyles from 1 through 5
+    //
+    // {''.#showStyles(1)}
+    //
+    //  
+    // Subtemplates:
+    // {#styleNumber:[1]}
+    // {#showStyles:[People:{#data:[
+    //    {.}{^.^.$1 = 2->[.0]} {[{ 
+    //       lastName}{ 
+    //       firstName.#Prepend(', ')}{    
+    //       middleName.#Prepend(' ')
+    //    }].ToUpper().#Quoted()} 
+    //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
+    //       {.} FirstName: {firstName}  
+    //       {.} Pets {pets=>[({pets.Count()}):  
+    //          {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
+    //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
+    //    ],[no pets]
+    //    } //
+    // ].@MissingValue('No Information Provided')}].@Include([{'#style'}{$1}])}
+    // {#formatPet:[  
+    //    a {type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')}  `   
+    //    {type} named {name} 
+    // ]}
+    // {#Domesticated: [{$0.Where(type.#IsDomesticated())}]}
+    // {#NonDomesticated: [{$0.Where(!type.#IsDomesticated())}]} 
+    // {#IsDomesticated:[{$0.Matches('dog','cat')}]}  
+    // {#Prepend:[{$0->[{$1}{$0}]}]}
+    // {#Surround:[{$0->[{$1}{$0}{$1}]}]}
+    // {#Quoted:[{$0->[{$0.#Surround('"')}]}]}
+    // {#dpetcnt:[{pets.#Domesticated().Count()}]}
+    // {#ndpetcnt:[{pets.#NonDomesticated().Count()}]}
+    // {#style1:[].@BulletStyle('I.','(a)','•','i.')}
+    // {#style2:[].@BulletStyle('1','1.1','1.1.1','1(a)')}
+    // {#style3:[].@BulletStyle('-')}
+    // {#style4:[].@BulletStyle('')}
+    // {#style5:[].@BulletStyle(' I', '•', 'A.', '(1)')}
+    // {#data:[/data/people]}
+    // Source: "templates/bullets.template":1:1
+    private object?[] renderBullets()
+    {
+        object? showStyles = ApplySubtemplate("showStyles", MethodInput(itemContext => ""), EvaluationContext.ParseInteger("1"));
 
         return Line($$"""
             Shows use of bullet styles as well as modular subtemplates, automatic bulleting, and indenting only for multiple values.  You can see different bullet styles by changing the parameter to #showStyles from 1 through 5
