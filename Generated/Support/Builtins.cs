@@ -10,6 +10,13 @@ using System.Text.RegularExpressions;
 // Built-in template methods; distinct from user-defined template methods.
 internal static class Builtins
 {
+    internal static bool CaseMatches(object value, object? match)
+    {
+        match = EvaluationContext.Intermediate(match);
+        string expected = match is null ? "" : JsString(match);
+        string actual = JsString(value);
+        return string.Equals(actual, expected, StringComparison.Ordinal) || CompareStrings(actual, expected) == 0;
+    }
     internal static object? Join(object? value, params object?[] arguments)
         => EvaluationContext.JoinValues(value, arguments);
 

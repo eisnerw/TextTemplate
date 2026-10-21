@@ -161,13 +161,25 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         // Template:
         // type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')
         // Source: "templates/outline.template":23:7
-        object? applyCase() => Unsupported(
-            "Call Case",
-            "templates/outline.template:23:7",
-            () => Get("type"),
-            () => new object?[] { "zebra", Each(itemContext => new Outline(itemContext).renderToLower()), "dog", "friskie", "cat", "fishy", "nice" });
+        object? selectCase()
+        {
+            object? value = EvaluationContext.Intermediate(MethodInput(itemContext => itemContext.Lookup("type")));
+            if (value is null or EvaluationContext.Missing) return value;
+            if (value is EvaluationContext.Data or EvaluationContext.Arguments) return null;
+            switch (value)
+            {
+                case var candidate when Builtins.CaseMatches(candidate, "zebra"):
+                    return EvaluationContext.Intermediate(Each(itemContext => new Outline(itemContext).renderToLower()));
+                case var candidate when Builtins.CaseMatches(candidate, "dog"):
+                    return EvaluationContext.Intermediate("friskie");
+                case var candidate when Builtins.CaseMatches(candidate, "cat"):
+                    return EvaluationContext.Intermediate("fishy");
+                default:
+                    return EvaluationContext.Intermediate("nice");
+            }
+        }
 
-        object? @case = applyCase();
+        object? @case = selectCase();
         object? type = Get("type");
         object? name = Get("name");
 

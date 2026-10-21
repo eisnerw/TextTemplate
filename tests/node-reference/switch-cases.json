@@ -1,0 +1,74 @@
+[
+  {
+    "name": "case-first",
+    "script": "{value.Case('cat','yes','dog','no','else')}",
+    "data": {
+      "value": "cat"
+    },
+    "expected": "yes"
+  },
+  {
+    "name": "case-second",
+    "script": "{value.Case('cat','yes','dog',[woof],'else')}",
+    "data": {
+      "value": "dog"
+    },
+    "expected": "woof"
+  },
+  {
+    "name": "case-default",
+    "script": "{value.Case('cat','yes','dog','no','else')}",
+    "data": {
+      "value": "bird"
+    },
+    "expected": "else"
+  },
+  {
+    "name": "case-numeric",
+    "script": "{value.Case('1.2','yes','else')}",
+    "data": {
+      "value": 1.9
+    },
+    "expected": "yes"
+  },
+  {
+    "name": "case-fraction",
+    "script": "{value.Case('.5','yes','else')}",
+    "data": {
+      "value": ".5"
+    },
+    "expected": "yes"
+  },
+  {
+    "name": "case-lazy",
+    "script": "{value.Case('cat',[yes],'dog',[{value.Unknown()}],[{value.Unknown()}])}",
+    "data": {
+      "value": "cat"
+    },
+    "expected": "yes"
+  },
+  {
+    "name": "case-null",
+    "script": "{value.Case('cat','yes','else')}",
+    "data": {
+      "value": null
+    },
+    "expected": ""
+  },
+  {
+    "name": "case-object",
+    "script": "{value.Case('cat','yes','else')}",
+    "data": {
+      "value": {}
+    },
+    "expected": ""
+  },
+  {
+    "name": "case-missing",
+    "script": "{absent.Case('cat','yes','else')}",
+    "data": {
+      "value": null
+    },
+    "expected": ""
+  }
+]

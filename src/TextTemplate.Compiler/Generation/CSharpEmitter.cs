@@ -574,6 +574,31 @@ public sealed class CSharpEmitter
                             string.Join(",\n                ", annotations.Select(call => Annotation(call))) + "\n            },\n            " + InChild(body, "annotatedContext") + ")";
                     }
                 }
+                else if (node.Value == "Case")
+                {
+                    var caseArgs = node.Children.Skip(1).SelectMany(child => child.Children).ToList();
+                    // TODO: Characterize legacy even-length and too-short Case argument forms.
+                    if (caseArgs.Count < 3 || caseArgs.Count % 2 == 0) expression = Stub();
+                    else
+                    {
+                        string function = Unique("selectCase", current.Names);
+                        string input = node.Children[0].Kind == SyntaxKind.Call ? Call(node.Children[0])
+                            : "MethodInput(" + RawChild(node.Children[0]) + ")";
+                        var body = new StringBuilder(SourceComment(node, source, "        "));
+                        body.Append("        object? ").Append(function).Append("()\n        {\n")
+                            .Append("            object? value = EvaluationContext.Intermediate(").Append(input).Append(");\n")
+                            .Append("            if (value is null or EvaluationContext.Missing) return value;\n")
+                            .Append("            if (value is EvaluationContext.Data or EvaluationContext.Arguments) return null;\n")
+                            .Append("            switch (value)\n            {\n");
+                        for (int i = 0; i < caseArgs.Count - 1; i += 2)
+                            body.Append("                case var candidate when Builtins.CaseMatches(candidate, ").Append(Call(caseArgs[i])).Append("):\n")
+                                .Append("                    return EvaluationContext.Intermediate(").Append(Call(caseArgs[i + 1])).Append(");\n");
+                        body.Append("                default:\n                    return EvaluationContext.Intermediate(").Append(Call(caseArgs[^1])).Append(");\n")
+                            .Append("            }\n        }\n\n");
+                        current.Functions.Add(body.ToString());
+                        expression = function + "()";
+                    }
+                }
                 // TODO: Implement Count(predicate) with per-item predicate evaluation.
                 else if (node.Value!.StartsWith('#') || (node.Value == "Count" && !node.Children.Skip(1).SelectMany(child => child.Children).Any()) || node.Value is "Where" or "IfMissing" or "Join" or "Trim" or "StartsWith" or "EndsWith" or "Contains" or "Replace" or "Substr" or "IndexOf" or "LastIndexOf" or "EndIndexOf" or "ToUpper" or "ToLower" or "GreaterThan" or "LessThan" or "Matches" or "Assert")
                 {

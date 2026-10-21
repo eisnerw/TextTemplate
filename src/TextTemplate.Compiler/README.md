@@ -370,3 +370,8 @@ TODO: `Where` is currently an authorized pass-through: it returns its receiver
 unchanged and does not evaluate its predicate. Implement per-item filtering before
 claiming legacy parity. TODOs in source also track literal bullets, stored-only
 multiline styles, and the unimplemented conditional `Count` form.
+
+`Case(match, result, ..., default)` compiles to a C# switch with lazy guarded
+cases and result branches. Matching preserves legacy ordinal string equality and
+integer-parsed numeric equality. TODO: characterize even-length and too-short
+argument forms; these remain runtime stubs. Node cases: `switch-cases.json`.

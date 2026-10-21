@@ -383,13 +383,23 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
         // Template:
         // $0.Case(3,[{#ungrouped}],2,[{#bySign}],[{#byDate}])
         // Source: "templates/birthdays.template":5:14
-        object? applyCase() => Unsupported(
-            "Call Case",
-            "templates/birthdays.template:5:14",
-            () => Get("$0"),
-            () => new object?[] { EvaluationContext.ParseInteger("3"), Each(itemContext => new Birthdays(itemContext).renderUngrouped()), EvaluationContext.ParseInteger("2"), Each(itemContext => new Birthdays(itemContext).renderBySign()), Each(itemContext => new Birthdays(itemContext).renderByDate()) });
+        object? selectCase()
+        {
+            object? value = EvaluationContext.Intermediate(MethodInput(itemContext => itemContext.Lookup("$0")));
+            if (value is null or EvaluationContext.Missing) return value;
+            if (value is EvaluationContext.Data or EvaluationContext.Arguments) return null;
+            switch (value)
+            {
+                case var candidate when Builtins.CaseMatches(candidate, EvaluationContext.ParseInteger("3")):
+                    return EvaluationContext.Intermediate(Each(itemContext => new Birthdays(itemContext).renderUngrouped()));
+                case var candidate when Builtins.CaseMatches(candidate, EvaluationContext.ParseInteger("2")):
+                    return EvaluationContext.Intermediate(Each(itemContext => new Birthdays(itemContext).renderBySign()));
+                default:
+                    return EvaluationContext.Intermediate(Each(itemContext => new Birthdays(itemContext).renderByDate()));
+            }
+        }
 
-        object? @case = applyCase();
+        object? @case = selectCase();
 
         return Line($"{@case}");
     }

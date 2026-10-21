@@ -38,6 +38,7 @@ public sealed class GenerationTests
     [InlineData("ifmissing")]
     [InlineData("count")]
     [InlineData("named-data")]
+    [InlineData("switch")]
     public void RuntimeCasesMatchNode(string suite)
     {
         string root = Path.Combine(Path.GetTempPath(), "texttemplate-lists-" + Guid.NewGuid().ToString("N"));
