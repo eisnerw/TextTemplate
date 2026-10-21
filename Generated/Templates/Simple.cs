@@ -11,7 +11,7 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
 {
     // Template:
     // // data context:
-    // {'{"firstName": "Robert", "lastName": "Smith", "pets":[
+    // {'{"firstName": "Robert", "lastName": "Smith", "petsx":[
     // {"type":"dog", "name": "Toto"}
     // ,{"type":"cat", "name": "Dolly"}
     // ,{"type":"zebra", "name": "Stripes"}
@@ -27,7 +27,7 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
     // {#formatPet:[a {type} named {name}]}
     // {#anded:[{$0.Join(', ',' and ')}]}
     // Source: "templates/simple.template":1:1
-    internal object?[] Evaluate()
+    internal TemplateContent Evaluate()
     {
         return WithDefinitions(defineSubtemplates,
             definitionContext => new Simple(definitionContext).renderSimple());
@@ -36,7 +36,7 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0.Join(', ',' and ')}]
     // Source: "templates/simple.template":16:9
-    private object?[] anded()
+    private TemplateContent anded()
     {
         object? join = Join(MethodInput("$0"), ", ", " and ");
 
@@ -46,7 +46,7 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [a {type} named {name}]
     // Source: "templates/simple.template":15:13
-    private object?[] formatPet()
+    private TemplateContent formatPet()
     {
         object? type = Get("type");
         object? name = Get("name");
@@ -60,7 +60,7 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
     //    ,[no pets]
     // }!!]
     // Source: "templates/simple.template":8:1
-    private object?[] renderContent()
+    private TemplateContent renderContent()
     {
         object? lastName = Get("lastName");
         object? firstName = Get("firstName");
@@ -72,7 +72,7 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{pets:#formatPet.#anded()}]
     // Source: "templates/simple.template":9:4
-    private object?[] renderContent_2()
+    private TemplateContent renderContent_2()
     {
         object? pets = InContext(Get("pets"), dataContext => new Simple(dataContext).renderAnded());
 
@@ -103,7 +103,7 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
 
     // Template:
     // // data context:
-    // {'{"firstName": "Robert", "lastName": "Smith", "pets":[
+    // {'{"firstName": "Robert", "lastName": "Smith", "petsx":[
     // {"type":"dog", "name": "Toto"}
     // ,{"type":"cat", "name": "Dolly"}
     // ,{"type":"zebra", "name": "Stripes"}
@@ -119,9 +119,9 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
     // {#formatPet:[a {type} named {name}]}
     // {#anded:[{$0.Join(', ',' and ')}]}
     // Source: "templates/simple.template":1:1
-    private object?[] renderSimple()
+    private TemplateContent renderSimple()
     {
-        object? content = InContext("{\"firstName\": \"Robert\", \"lastName\": \"Smith\", \"pets\":[\n{\"type\":\"dog\", \"name\": \"Toto\"}\n,{\"type\":\"cat\", \"name\": \"Dolly\"}\n,{\"type\":\"zebra\", \"name\": \"Stripes\"}\n]}", dataContext => dataContext.Each(itemContext => new Simple(itemContext).renderContent()));
+        object? content = InContext("{\"firstName\": \"Robert\", \"lastName\": \"Smith\", \"petsx\":[\n{\"type\":\"dog\", \"name\": \"Toto\"}\n,{\"type\":\"cat\", \"name\": \"Dolly\"}\n,{\"type\":\"zebra\", \"name\": \"Stripes\"}\n]}", dataContext => dataContext.Each(itemContext => new Simple(itemContext).renderContent()));
 
         return Line($$"""
             

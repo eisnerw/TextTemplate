@@ -202,7 +202,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // author welcomes comments, criticisms and suggestions.  ]}
     // {#externalData:[{'/data/famousBirthdays'}]}
     // Source: "templates/startup.template":1:1
-    internal object?[] Evaluate()
+    internal TemplateContent Evaluate()
     {
         return WithDefinitions(defineSubtemplates,
             definitionContext => new Startup(definitionContext).renderStartup());
@@ -211,7 +211,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{'/data/famousBirthdays'}]
     // Source: "templates/startup.template":191:16
-    private object?[] externalData()
+    private TemplateContent externalData()
     {
         return Line($"/data/famousBirthdays");
     }
@@ -227,7 +227,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // noted above, implementations in other languages are anticipated.  The `
     // author welcomes comments, criticisms and suggestions.  ]
     // Source: "templates/startup.template":182:9
-    private object?[] notes()
+    private TemplateContent notes()
     {
         object? click = ApplySubtemplate("Click", MethodInput(itemContext => "licensed"), "https://github.com/eisnerw/texttemplate-editor/blob/texttemplate-editor/LICENSE.txt", "Click to see the license");
 
@@ -250,7 +250,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     //    {.} {'Experimental application of a computed url to call ElasticSearch'.#Click('/load/elastic','Calling elastic')}
     // ]
     // Source: "templates/startup.template":168:12
-    private object?[] examples()
+    private TemplateContent examples()
     {
         // Template:
         // {.}
@@ -354,7 +354,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     //    style="font-style:italic;text-decoration: underline;cursor: pointer" `
     //    href="{!$1.StartsWith('/')->[https:{'//'}]}{$1}">{$0}</a>]
     // Source: "templates/startup.template":165:9
-    private object?[] Click()
+    private TemplateContent Click()
     {
         // Template:
         // $1.StartsWith('/')
@@ -376,7 +376,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$2}]
     // Source: "templates/startup.template":165:25
-    private object?[] renderItem2()
+    private TemplateContent renderItem2()
     {
         object? item2 = Get("$2");
 
@@ -386,7 +386,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{fname} {lname} is {isAlive=>[alive],[dead]}]
     // Source: "templates/startup.template":164:15
-    private object?[] deadoralive()
+    private TemplateContent deadoralive()
     {
         object? fname = Get("fname");
         object? lname = Get("lname");
@@ -400,7 +400,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     //       be shared, be used as functions, replace conditional expressions as `
     //       well as method arguments]
     // Source: "templates/startup.template":161:14
-    private object?[] subexample()
+    private TemplateContent subexample()
     {
         return Line($"subtemplates that can replace repeated expressions, be shared, be used as functions, replace conditional expressions as well as method arguments");
     }
@@ -426,7 +426,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // 	{.} Universal, through multiple implementations in a variety of computer languages, `
     // 	    starting with JavaScript/Typescript, followed by Java, C# and others]
     // Source: "templates/startup.template":142:9
-    private object?[] goals()
+    private TemplateContent goals()
     {
         // Template:
         // 	{.}
@@ -511,7 +511,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // template like {'[Interpolation example: {first} {second}!!]'}, the language will `
     // produce:]
     // Source: "templates/startup.template":131:9
-    private object?[] intro()
+    private TemplateContent intro()
     {
         return Line($$"""
             Welcome to the TextTemplate documentation and editor.  TextTemplate is a declarative domain-specific language for specifying string-interpolated templates.  It supports concise expressions that can specify formatting, data manipulation, logic and layout in order to facilitate the design and maintenance of code that transforms data into text.
@@ -1045,7 +1045,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     //
     // ]
     // Source: "templates/startup.template":6:12
-    private object?[] renderIntro()
+    private TemplateContent renderIntro()
     {
         // Template:
         // {.}
@@ -1400,7 +1400,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{#deadoralive.@Falsy(/^0$/)}]
     // Source: "templates/startup.template":86:8
-    private object?[] renderFalsy()
+    private TemplateContent renderFalsy()
     {
         // Template:
         // /^0$/
@@ -1454,7 +1454,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{data}]
     // Source: "templates/startup.template":80:38
-    private object?[] renderData()
+    private TemplateContent renderData()
     {
         object? data = Get("data");
 
@@ -1468,7 +1468,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     //         {dob.ToDate('YYYY')} on {dob.ToDate('dddd')} the `
     //         {dob.ToDate('do')}]
     // Source: "templates/startup.template":72:58
-    private object?[] renderDob()
+    private TemplateContent renderDob()
     {
         // Template:
         // dob.ToDate('MMMM')
@@ -1562,7 +1562,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // [{sign} 
     //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
     // Source: "templates/startup.template":65:37
-    private object?[] renderSign()
+    private TemplateContent renderSign()
     {
         // Template:
         // group.OrderBy(lname)
@@ -1585,7 +1585,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{fname} {lname} ({dob})]
     // Source: "templates/startup.template":66:34
-    private object?[] renderFname()
+    private TemplateContent renderFname()
     {
         object? fname = Get("fname");
         object? lname = Get("lname");
@@ -1597,7 +1597,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{element1.LessThan([{element2}])->[{element1} {element2}]}]
     // Source: "templates/startup.template":55:10
-    private object?[] renderChoice()
+    private TemplateContent renderChoice()
     {
         // Template:
         // element1.LessThan([{element2}])
@@ -1616,7 +1616,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{element1} {element2}]
     // Source: "templates/startup.template":55:45
-    private object?[] renderElement1()
+    private TemplateContent renderElement1()
     {
         object? element1 = Get("element1");
         object? element2 = Get("element2");
@@ -1627,7 +1627,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{element2}]
     // Source: "templates/startup.template":55:30
-    private object?[] renderElement2()
+    private TemplateContent renderElement2()
     {
         object? element2 = Get("element2");
 
@@ -1652,7 +1652,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // [{test->[available]} values and replacement of `
     //     {unavailable}]
     // Source: "templates/startup.template":44:5
-    private object?[] renderTestResult()
+    private TemplateContent renderTestResult()
     {
         object? testResult = (IsTruthy("test") ? Each(itemContext => Line($"available")) : "");
         object? unavailable = Get("unavailable");
@@ -1689,7 +1689,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     //     {pets:[
     //        {.} {type}s]}]
     // Source: "templates/startup.template":38:4
-    private object?[] renderAndedPhrasesEGO()
+    private TemplateContent renderAndedPhrasesEGO()
     {
         object? pets = InContext(Get("pets"), dataContext => new Startup(dataContext).renderJoin());
         object? pets_2 = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderType_2()));
@@ -1704,7 +1704,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // [
     //        {.} {type}s]
     // Source: "templates/startup.template":40:11
-    private object?[] renderType_2()
+    private TemplateContent renderType_2()
     {
         // Template:
         // {.}
@@ -1730,7 +1730,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{type}s]
     // Source: "templates/startup.template":38:35
-    private object?[] renderType()
+    private TemplateContent renderType()
     {
         object? type = Get("type");
 
@@ -1740,7 +1740,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [Interpolation example: {first} {second}!!]
     // Source: "templates/startup.template":13:7
-    private object?[] renderFirst()
+    private TemplateContent renderFirst()
     {
         object? first = Get("first");
         object? second = Get("second");
@@ -2145,7 +2145,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // author welcomes comments, criticisms and suggestions.  ]}
     // {#externalData:[{'/data/famousBirthdays'}]}
     // Source: "templates/startup.template":1:1
-    private object?[] renderStartup()
+    private TemplateContent renderStartup()
     {
         object? overview = Each(itemContext => itemContext.Named("overview"));
 

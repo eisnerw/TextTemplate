@@ -43,7 +43,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // {#Quoted:[{$0->[{$0.#Surround('"')}]}]}
     // {#data:[/data/people]}
     // Source: "templates/outline.template":1:1
-    internal object?[] Evaluate()
+    internal TemplateContent Evaluate()
     {
         return WithDefinitions(defineSubtemplates,
             definitionContext => new Outline(definitionContext).renderOutline());
@@ -52,7 +52,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [/data/people]
     // Source: "templates/outline.template":32:8
-    private object?[] data()
+    private TemplateContent data()
     {
         return Line($"/data/people");
     }
@@ -60,7 +60,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0->[{$0.#Surround('"')}]}]
     // Source: "templates/outline.template":31:10
-    private object?[] Quoted()
+    private TemplateContent Quoted()
     {
         object? item0Result = (IsTruthy("$0") ? Each(itemContext => new Outline(itemContext).renderSurround()) : "");
 
@@ -70,7 +70,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0.#Surround('"')}]
     // Source: "templates/outline.template":31:16
-    private object?[] renderSurround()
+    private TemplateContent renderSurround()
     {
         object? surround = ApplySubtemplate("Surround", MethodInput("$0"), "\"");
 
@@ -80,7 +80,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0->[{$1}{$0}{$1}]}]
     // Source: "templates/outline.template":30:12
-    private object?[] Surround()
+    private TemplateContent Surround()
     {
         object? item0Result = (IsTruthy("$0") ? Each(itemContext => new Outline(itemContext).renderItem1_2()) : "");
 
@@ -90,7 +90,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$1}{$0}{$1}]
     // Source: "templates/outline.template":30:18
-    private object?[] renderItem1_2()
+    private TemplateContent renderItem1_2()
     {
         object? item1 = Get("$1");
         object? item0 = Get("$0");
@@ -102,7 +102,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0->[{$1}{$0}]}]
     // Source: "templates/outline.template":29:11
-    private object?[] Prepend()
+    private TemplateContent Prepend()
     {
         object? item0Result = (IsTruthy("$0") ? Each(itemContext => new Outline(itemContext).renderItem1()) : "");
 
@@ -112,7 +112,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$1}{$0}]
     // Source: "templates/outline.template":29:17
-    private object?[] renderItem1()
+    private TemplateContent renderItem1()
     {
         object? item1 = Get("$1");
         object? item0 = Get("$0");
@@ -123,7 +123,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0.Matches('dog','cat')}]
     // Source: "templates/outline.template":28:18
-    private object?[] IsDomesticated()
+    private TemplateContent IsDomesticated()
     {
         // Template:
         // $0.Matches('dog','cat')
@@ -142,7 +142,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0.Where(!type.#IsDomesticated())}]
     // Source: "templates/outline.template":27:20
-    private object?[] NonDomesticated()
+    private TemplateContent NonDomesticated()
     {
         // Template:
         // $0.Where(!type.#IsDomesticated())
@@ -161,7 +161,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0.Where(type.#IsDomesticated())}]
     // Source: "templates/outline.template":26:17
-    private object?[] Domesticated()
+    private TemplateContent Domesticated()
     {
         // Template:
         // $0.Where(type.#IsDomesticated())
@@ -183,7 +183,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     //    {type} named {name} 
     // ]
     // Source: "templates/outline.template":22:13
-    private object?[] formatPet()
+    private TemplateContent formatPet()
     {
         // Template:
         // type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')
@@ -204,7 +204,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{[{name}y].ToLower()}]
     // Source: "templates/outline.template":23:25
-    private object?[] renderToLower()
+    private TemplateContent renderToLower()
     {
         // Template:
         // [{name}y].ToLower()
@@ -222,7 +222,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{name}y]
     // Source: "templates/outline.template":23:27
-    private object?[] renderName()
+    private TemplateContent renderName()
     {
         object? name = Get("name");
 
@@ -324,7 +324,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     //       {.} Comment{comment.Contains("\\n")->[s]}: {comment}  
     // ]
     // Source: "templates/outline.template":1:15
-    private object?[] renderQuoted()
+    private TemplateContent renderQuoted()
     {
         // Template:
         // {.}
@@ -420,7 +420,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     //             {.} {pets.#NonDomesticated():[{#formatPet}]}    
     //    ]
     // Source: "templates/outline.template":9:23
-    private object?[] renderCount()
+    private TemplateContent renderCount()
     {
         // Template:
         // pets.Count()
@@ -496,7 +496,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{#formatPet}]
     // Source: "templates/outline.template":13:42
-    private object?[] renderFormatPet_2()
+    private TemplateContent renderFormatPet_2()
     {
         object? formatPet = Each(itemContext => itemContext.Named("formatPet"));
 
@@ -506,7 +506,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{#formatPet}]
     // Source: "templates/outline.template":11:39
-    private object?[] renderFormatPet()
+    private TemplateContent renderFormatPet()
     {
         object? formatPet = Each(itemContext => itemContext.Named("formatPet"));
 
@@ -520,7 +520,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     //       middleName.#Prepend(' ')
     //    }]
     // Source: "templates/outline.template":2:9
-    private object?[] renderLastName()
+    private TemplateContent renderLastName()
     {
         object? lastName = Get("lastName");
         object? prepend = ApplySubtemplate("Prepend", MethodInput("firstName"), ", ");
@@ -592,7 +592,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // {#Quoted:[{$0->[{$0.#Surround('"')}]}]}
     // {#data:[/data/people]}
     // Source: "templates/outline.template":1:1
-    private object?[] renderOutline()
+    private TemplateContent renderOutline()
     {
         object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => new Outline(dataContext).renderMissingValue());
 

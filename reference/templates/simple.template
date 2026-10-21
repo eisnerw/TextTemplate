@@ -1,5 +1,5 @@
 // data context:
-{'{"firstName": "Robert", "lastName": "Smith", "pets":[
+{'{"firstName": "Robert", "lastName": "Smith", "petsx":[
 {"type":"dog", "name": "Toto"}
 ,{"type":"cat", "name": "Dolly"}
 ,{"type":"zebra", "name": "Stripes"}

@@ -24,7 +24,7 @@ internal abstract class TemplateUnit(EvaluationContext context)
     protected bool IsTruthy(string path) => EvaluationContext.Condition(Get(path));
     protected object? Get(string path) => context.Lookup(path);
     protected object? Named(string name) => context.Named(name);
-    protected static object?[] Line(EvaluationContext.StructuredText text) => EvaluationContext.Text(text);
+    protected static TemplateContent Line(EvaluationContext.StructuredText text) => EvaluationContext.Text(text);
     protected object? InContext(object? value, Func<EvaluationContext, object?> body, Func<object?>? fallback = null)
         => context.Context(value, body, fallback);
     // Registration creates bindings only; bodies run later in the caller's context.

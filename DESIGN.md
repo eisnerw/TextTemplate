@@ -334,6 +334,11 @@ standalone C# tests execute the same inputs independently.
 - `Join` filters missing/false/empty items, defaults to comma-space, and accepts
   an optional final separator. String data lists also support joining; arbitrary
   object data formatting remains unfinished.
+- When every item is missing, a multi-item method argument list joins to an empty
+  string, preserving surrounding text. A singleton data array collapses before
+  evaluation, so its missing scalar receiver propagates through the same method
+  chain and suppresses the surrounding line. The `all-missing-named-join-1` and
+  `all-missing-named-join-3` cases freeze this legacy distinction.
 
 The end-to-end regression now includes `simpledata` with `nested`, `escapeTest`,
 and the three-pet `simpledata` dataset. This is incremental list support, not full

@@ -620,5 +620,43 @@
       ]
     },
     "expected": "X\n   A\n   a\n   B\n   bY"
+  },
+  {
+    "name": "all-missing-named-join-1",
+    "script": "Hello {lastName}, {firstName} with {pets:#pet.#anded()}!!\nSubtemplates:\n{#pet:[a {type} named {namex}]}\n{#anded:[{$0.Join(\", \",\" and \")}]}",
+    "data": {
+      "firstName": "John",
+      "lastName": "Smith",
+      "pets": [
+        {
+          "type": "dog",
+          "name": "Toto"
+        }
+      ]
+    },
+    "expected": ""
+  },
+  {
+    "name": "all-missing-named-join-3",
+    "script": "Hello {lastName}, {firstName} with {pets:#pet.#anded()}!!\nSubtemplates:\n{#pet:[a {type} named {namex}]}\n{#anded:[{$0.Join(\", \",\" and \")}]}",
+    "data": {
+      "firstName": "John",
+      "lastName": "Smith",
+      "pets": [
+        {
+          "type": "dog",
+          "name": "Toto"
+        },
+        {
+          "type": "dog",
+          "name": "Toto"
+        },
+        {
+          "type": "dog",
+          "name": "Toto"
+        }
+      ]
+    },
+    "expected": "Hello Smith, John with !!"
   }
 ]

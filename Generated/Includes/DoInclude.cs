@@ -15,7 +15,7 @@ internal sealed class DoInclude(EvaluationContext context) : TemplateUnit(contex
     // {#a:[]}
     // ].@MissingValue('missing --{key}--')
     // Source: "subtemplates/doInclude.template":1:1
-    internal object?[] Evaluate()
+    internal TemplateContent Evaluate()
     {
         object? missingValue = Annotate(
             new Func<EvaluationContext, EvaluationContext>[]
@@ -33,7 +33,7 @@ internal sealed class DoInclude(EvaluationContext context) : TemplateUnit(contex
     // {#a:[]}
     // ]
     // Source: "subtemplates/doInclude.template":1:1
-    private object?[] renderSubtemplates()
+    private TemplateContent renderSubtemplates()
     {
         object? a = InContext(Each(itemContext => itemContext.Named("a")), dataContext => dataContext.Each(itemContext => new DoInclude(itemContext).a()));
 
@@ -46,7 +46,7 @@ internal sealed class DoInclude(EvaluationContext context) : TemplateUnit(contex
     // Template:
     // []
     // Source: "subtemplates/doInclude.template":3:5
-    private object?[] a()
+    private TemplateContent a()
     {
         return Line($"");
     }

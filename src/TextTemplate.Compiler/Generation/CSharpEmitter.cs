@@ -67,7 +67,7 @@ public sealed class CSharpEmitter
         var mainMap = new List<string>(); var sharedMap = new List<string>();
         var unitNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "GeneratedTemplates", "EvaluationContext", "TemplateUnit", "SubtemplateDefinitions", "GeneratedTemplateProgram", "Common",
+            "GeneratedTemplates", "EvaluationContext", "TemplateContent", "TemplateUnit", "SubtemplateDefinitions", "GeneratedTemplateProgram", "Common",
             "System", "StringComparer", "StringComparison", "JsonElement", "JsonDocument", "JsonValueKind",
             "Dictionary", "List", "Func", "Action", "Regex", "CultureInfo", "Math", "Console", "File",
             "Exception", "ArgumentException", "InvalidOperationException", "NotImplementedException"
@@ -106,6 +106,7 @@ public sealed class CSharpEmitter
         files.Add("Support/EvaluationContext.cs", Header + runtime[..programStart]);
         files.Add("Program.cs", Header + runtime[programStart..]);
         files.Add("Support/TemplateUnit.cs", Header + UnitSupport);
+        files.Add("Support/TemplateContent.cs", Header + ContentSupport);
         string result = Header + string.Join("\n", files.Values.Select(file => file[Header.Length..]));
         return new(result, diagnostics) { Files = files };
     }
@@ -119,6 +120,18 @@ public sealed class CSharpEmitter
         }
         foreach (var child in node.Children) Validate(child, source, diagnostics);
     }
+    private const string ContentSupport = """
+        // Structured output, retained until the final rendering pass.
+        // Argument arrays and input data are distinct from template content.
+        public sealed class TemplateContent
+        {
+            internal object?[] Fragments { get; }
+            internal TemplateContent(object?[] fragments) => Fragments = fragments;
+            public string Render() => EvaluationContext.Compose(this) ?? "";
+            public override string ToString() => Render();
+        }
+        """;
+
     private const string UnitSupport = """
         // Short instance helpers keep compatibility machinery out of template bodies.
         internal abstract class TemplateUnit(EvaluationContext context)
@@ -137,7 +150,7 @@ public sealed class CSharpEmitter
             protected bool IsTruthy(string path) => EvaluationContext.Condition(Get(path));
             protected object? Get(string path) => context.Lookup(path);
             protected object? Named(string name) => context.Named(name);
-            protected static object?[] Line(EvaluationContext.StructuredText text) => EvaluationContext.Text(text);
+            protected static TemplateContent Line(EvaluationContext.StructuredText text) => EvaluationContext.Text(text);
             protected object? InContext(object? value, Func<EvaluationContext, object?> body, Func<object?>? fallback = null)
                 => context.Context(value, body, fallback);
             // Registration creates bindings only; bodies run later in the caller's context.
@@ -333,6 +346,7 @@ public sealed class CSharpEmitter
             case SyntaxKind.Group: case SyntaxKind.Not: case SyntaxKind.Logical: case SyntaxKind.Relational:
                 return "bool";
             case SyntaxKind.Template: case SyntaxKind.SharedTemplate: case SyntaxKind.InlineTemplate:
+                return "TemplateContent";
             case SyntaxKind.Arguments:
                 return "object?[]";
             case SyntaxKind.Interpolation:
@@ -498,7 +512,7 @@ public sealed class CSharpEmitter
                         definition => InChild(definition, "definitionContext"),
                         ReferenceEquals(node, source.Tree) ? "defineSubtemplates" : methods[node] + "Definitions");
                     string contentName = Unique(ReferenceEquals(node, source.Tree) ? "render" + unitName : methods[node] + "Content", methodNames);
-                    bodies.Append(SourceComment(node, source, "    ")).Append("    private object?[] ").Append(contentName)
+                    bodies.Append(SourceComment(node, source, "    ")).Append("    private TemplateContent ").Append(contentName)
                         .Append("()\n    {\n").Append(Body(expression)).Append("    }\n\n");
                     current = new MethodBody();
                     expression = "WithDefinitions(" + registration + ",\n            definitionContext => new " + unitName + "(definitionContext)." + contentName + "())";

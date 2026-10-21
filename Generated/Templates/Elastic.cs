@@ -24,7 +24,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     // {#colon:[:]}
     // {#at:[@]}
     // Source: "templates/elastic.template":1:1
-    internal object?[] Evaluate()
+    internal TemplateContent Evaluate()
     {
         return WithDefinitions(defineSubtemplates,
             definitionContext => new Elastic(definitionContext).renderElastic());
@@ -33,7 +33,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [@]
     // Source: "templates/elastic.template":13:6
-    private object?[] at()
+    private TemplateContent at()
     {
         return Line($"@");
     }
@@ -41,7 +41,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [:]
     // Source: "templates/elastic.template":12:9
-    private object?[] colon()
+    private TemplateContent colon()
     {
         return Line($":");
     }
@@ -49,7 +49,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{'/_search?from=0&size='}{$2=>[{$2}],[1000]}{'&_source='}{$0}{'&filter_path=hits.hits._source'}]
     // Source: "templates/elastic.template":11:22
-    private object?[] elasticQueryString()
+    private TemplateContent elasticQueryString()
     {
         object? item2Result = (IsTruthy("$2") ? Each(itemContext => new Elastic(itemContext).renderItem2()) : Each(itemContext => Line($"1000")));
         object? item0 = Get("$0");
@@ -60,7 +60,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$2}]
     // Source: "templates/elastic.template":11:53
-    private object?[] renderItem2()
+    private TemplateContent renderItem2()
     {
         object? item2 = Get("$2");
 
@@ -70,7 +70,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{'https://7303xa0iq9'}{#colon}{'4cdkz0o14'}{#at}{'texttemplate-testing-7087740692.us-east-1.bonsaisearch.net:443'}]
     // Source: "templates/elastic.template":10:14
-    private object?[] elasticUrl()
+    private TemplateContent elasticUrl()
     {
         object? colon = Each(itemContext => itemContext.Named("colon"));
         object? at = Each(itemContext => itemContext.Named("at"));
@@ -81,7 +81,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{#elasticUrl}{#elasticQueryString}&q={$1}]
     // Source: "templates/elastic.template":9:15
-    private object?[] elasticSpec()
+    private TemplateContent elasticSpec()
     {
         object? elasticUrl = Each(itemContext => itemContext.Named("elasticUrl"));
         object? elasticQueryString = Each(itemContext => itemContext.Named("elasticQueryString"));
@@ -93,7 +93,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{#elasticSpec:[{hits.hits._source}]}]
     // Source: "templates/elastic.template":8:16
-    private object?[] elasticQuery()
+    private TemplateContent elasticQuery()
     {
         object? elasticSpec = InContext(Each(itemContext => itemContext.Named("elasticSpec")), dataContext => dataContext.Each(itemContext => new Elastic(itemContext).render_source()));
 
@@ -103,7 +103,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{hits.hits._source}]
     // Source: "templates/elastic.template":8:31
-    private object?[] render_source()
+    private TemplateContent render_source()
     {
         object? _source = Get("hits.hits._source");
 
@@ -117,7 +117,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     // ).OrderBy(lname):
     //    [{fname} {lname} {!isAlive->[(dead)]}].@Falsy(/0/)}]
     // Source: "templates/elastic.template":2:2
-    private object?[] renderContent()
+    private TemplateContent renderContent()
     {
         // Template:
         // 'fname,lname,isAlive'
@@ -163,7 +163,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{fname} {lname} {!isAlive->[(dead)]}]
     // Source: "templates/elastic.template":6:4
-    private object?[] renderFname()
+    private TemplateContent renderFname()
     {
         object? fname = Get("fname");
         object? lname = Get("lname");
@@ -175,7 +175,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{'fname,lname,isAlive'.#elasticSpec('lname:c* AND fname:c*',1000)}]
     // Source: "templates/elastic.template":1:2
-    private object?[] renderElasticSpec()
+    private TemplateContent renderElasticSpec()
     {
         object? elasticSpec = ApplySubtemplate("elasticSpec", MethodInput(itemContext => "fname,lname,isAlive"), "lname:c* AND fname:c*", EvaluationContext.ParseInteger("1000"));
 
@@ -217,7 +217,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     // {#colon:[:]}
     // {#at:[@]}
     // Source: "templates/elastic.template":1:1
-    private object?[] renderElastic()
+    private TemplateContent renderElastic()
     {
         // Template:
         // [{'fname,lname,isAlive'

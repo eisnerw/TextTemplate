@@ -52,7 +52,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // {#style5:[].@BulletStyle(' I', '•', 'A.', '(1)')}
     // {#data:[/data/people]}
     // Source: "templates/bullets.template":1:1
-    internal object?[] Evaluate()
+    internal TemplateContent Evaluate()
     {
         return WithDefinitions(defineSubtemplates,
             definitionContext => new Bullets(definitionContext).renderBullets());
@@ -61,7 +61,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [/data/people]
     // Source: "templates/bullets.template":41:8
-    private object?[] data()
+    private TemplateContent data()
     {
         return Line($"/data/people");
     }
@@ -154,7 +154,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{pets.#NonDomesticated().Count()}]
     // Source: "templates/bullets.template":35:12
-    private object?[] ndpetcnt()
+    private TemplateContent ndpetcnt()
     {
         // Template:
         // pets.#NonDomesticated().Count()
@@ -172,7 +172,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{pets.#Domesticated().Count()}]
     // Source: "templates/bullets.template":34:11
-    private object?[] dpetcnt()
+    private TemplateContent dpetcnt()
     {
         // Template:
         // pets.#Domesticated().Count()
@@ -190,7 +190,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0->[{$0.#Surround('"')}]}]
     // Source: "templates/bullets.template":33:10
-    private object?[] Quoted()
+    private TemplateContent Quoted()
     {
         object? item0Result = (IsTruthy("$0") ? Each(itemContext => new Bullets(itemContext).renderSurround()) : "");
 
@@ -200,7 +200,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0.#Surround('"')}]
     // Source: "templates/bullets.template":33:16
-    private object?[] renderSurround()
+    private TemplateContent renderSurround()
     {
         object? surround = ApplySubtemplate("Surround", MethodInput("$0"), "\"");
 
@@ -210,7 +210,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0->[{$1}{$0}{$1}]}]
     // Source: "templates/bullets.template":32:12
-    private object?[] Surround()
+    private TemplateContent Surround()
     {
         object? item0Result = (IsTruthy("$0") ? Each(itemContext => new Bullets(itemContext).renderItem1_2()) : "");
 
@@ -220,7 +220,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$1}{$0}{$1}]
     // Source: "templates/bullets.template":32:18
-    private object?[] renderItem1_2()
+    private TemplateContent renderItem1_2()
     {
         object? item1 = Get("$1");
         object? item0 = Get("$0");
@@ -232,7 +232,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0->[{$1}{$0}]}]
     // Source: "templates/bullets.template":31:11
-    private object?[] Prepend()
+    private TemplateContent Prepend()
     {
         object? item0Result = (IsTruthy("$0") ? Each(itemContext => new Bullets(itemContext).renderItem1()) : "");
 
@@ -242,7 +242,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$1}{$0}]
     // Source: "templates/bullets.template":31:17
-    private object?[] renderItem1()
+    private TemplateContent renderItem1()
     {
         object? item1 = Get("$1");
         object? item0 = Get("$0");
@@ -253,7 +253,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0.Matches('dog','cat')}]
     // Source: "templates/bullets.template":30:18
-    private object?[] IsDomesticated()
+    private TemplateContent IsDomesticated()
     {
         // Template:
         // $0.Matches('dog','cat')
@@ -272,7 +272,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0.Where(!type.#IsDomesticated())}]
     // Source: "templates/bullets.template":29:20
-    private object?[] NonDomesticated()
+    private TemplateContent NonDomesticated()
     {
         // Template:
         // $0.Where(!type.#IsDomesticated())
@@ -291,7 +291,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0.Where(type.#IsDomesticated())}]
     // Source: "templates/bullets.template":28:17
-    private object?[] Domesticated()
+    private TemplateContent Domesticated()
     {
         // Template:
         // $0.Where(type.#IsDomesticated())
@@ -313,7 +313,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     //    {type} named {name} 
     // ]
     // Source: "templates/bullets.template":24:13
-    private object?[] formatPet()
+    private TemplateContent formatPet()
     {
         // Template:
         // type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')
@@ -334,7 +334,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{[{name}y].ToLower()}]
     // Source: "templates/bullets.template":25:25
-    private object?[] renderToLower()
+    private TemplateContent renderToLower()
     {
         // Template:
         // [{name}y].ToLower()
@@ -352,7 +352,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{name}y]
     // Source: "templates/bullets.template":25:27
-    private object?[] renderName()
+    private TemplateContent renderName()
     {
         object? name = Get("name");
 
@@ -405,7 +405,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{'#style'}{$1}]
     // Source: "templates/bullets.template":23:55
-    private object?[] renderContent()
+    private TemplateContent renderContent()
     {
         object? item1 = Get("$1");
 
@@ -428,7 +428,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     //    } //
     // ].@MissingValue('No Information Provided')}]
     // Source: "templates/bullets.template":10:14
-    private object?[] renderPeople()
+    private TemplateContent renderPeople()
     {
         object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => new Bullets(dataContext).renderMissingValue());
 
@@ -477,7 +477,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     //    } //
     // ]
     // Source: "templates/bullets.template":10:29
-    private object?[] renderChoice()
+    private TemplateContent renderChoice()
     {
         // Template:
         // {.}
@@ -552,7 +552,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
     //    ]
     // Source: "templates/bullets.template":18:23
-    private object?[] renderCount()
+    private TemplateContent renderCount()
     {
         // Template:
         // pets.Count()
@@ -594,7 +594,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{#formatPet}]
     // Source: "templates/bullets.template":20:89
-    private object?[] renderFormatPet_2()
+    private TemplateContent renderFormatPet_2()
     {
         object? formatPet = Each(itemContext => itemContext.Named("formatPet"));
 
@@ -604,7 +604,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [({#ndpetcnt})]
     // Source: "templates/bullets.template":20:46
-    private object?[] renderNdpetcnt()
+    private TemplateContent renderNdpetcnt()
     {
         object? ndpetcnt = Each(itemContext => itemContext.Named("ndpetcnt"));
 
@@ -614,7 +614,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{#formatPet}]
     // Source: "templates/bullets.template":19:81
-    private object?[] renderFormatPet()
+    private TemplateContent renderFormatPet()
     {
         object? formatPet = Each(itemContext => itemContext.Named("formatPet"));
 
@@ -624,7 +624,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [ ({#dpetcnt})]
     // Source: "templates/bullets.template":19:41
-    private object?[] renderDpetcnt()
+    private TemplateContent renderDpetcnt()
     {
         object? dpetcnt = Each(itemContext => itemContext.Named("dpetcnt"));
 
@@ -638,7 +638,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     //       middleName.#Prepend(' ')
     //    }]
     // Source: "templates/bullets.template":11:27
-    private object?[] renderLastName()
+    private TemplateContent renderLastName()
     {
         object? lastName = Get("lastName");
         object? prepend = ApplySubtemplate("Prepend", MethodInput("firstName"), ", ");
@@ -650,7 +650,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [1]
     // Source: "templates/bullets.template":9:15
-    private object?[] styleNumber()
+    private TemplateContent styleNumber()
     {
         return Line($"1");
     }
@@ -758,7 +758,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // {#style5:[].@BulletStyle(' I', '•', 'A.', '(1)')}
     // {#data:[/data/people]}
     // Source: "templates/bullets.template":1:1
-    private object?[] renderBullets()
+    private TemplateContent renderBullets()
     {
         object? showStyles = ApplySubtemplate("showStyles", MethodInput(itemContext => ""), EvaluationContext.ParseInteger("1"));
 

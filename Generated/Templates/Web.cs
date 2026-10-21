@@ -65,7 +65,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // {#formatGitRepos:[- {name}{description->[ ({description})]}]} 
     // ]}
     // Source: "templates/web.template":1:1
-    internal object?[] Evaluate()
+    internal TemplateContent Evaluate()
     {
         return WithDefinitions(defineSubtemplates,
             definitionContext => new Web(definitionContext).renderWeb());
@@ -81,7 +81,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // {#formatGitRepos:[- {name}{description->[ ({description})]}]} 
     // ]
     // Source: "templates/web.template":47:12
-    private object?[] external()
+    private TemplateContent external()
     {
         return WithDefinitions(externalDefinitions,
             definitionContext => new Web(definitionContext).externalContent());
@@ -90,7 +90,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [- {name}{description->[ ({description})]}]
     // Source: "templates/web.template":53:18
-    private object?[] formatGitRepos()
+    private TemplateContent formatGitRepos()
     {
         object? name = Get("name");
         object? descriptionResult = (IsTruthy("description") ? Each(itemContext => new Web(itemContext).renderDescription()) : "");
@@ -101,7 +101,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [ ({description})]
     // Source: "templates/web.template":53:41
-    private object?[] renderDescription()
+    private TemplateContent renderDescription()
     {
         object? description = Get("description");
 
@@ -115,7 +115,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     //       {$0.#Style($1)}]}
     // ]
     // Source: "templates/web.template":42:17
-    private object?[] OptionalStyle()
+    private TemplateContent OptionalStyle()
     {
         object? item2Result = (IsTruthy("$2") ? Each(itemContext => new Web(itemContext).renderStyle_2()) : Each(itemContext => new Web(itemContext).renderStyle_3()));
 
@@ -126,7 +126,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // [
     //       {$0.#Style($1)}]
     // Source: "templates/web.template":44:6
-    private object?[] renderStyle_3()
+    private TemplateContent renderStyle_3()
     {
         object? style = ApplySubtemplate("Style", MethodInput("$0"), Get("$1"));
 
@@ -138,7 +138,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     //       {$0.#Style($2,$3,$4,$5,$6,$7,$8,$9)}
     //    ]
     // Source: "templates/web.template":42:23
-    private object?[] renderStyle_2()
+    private TemplateContent renderStyle_2()
     {
         object? style = ApplySubtemplate("Style", MethodInput("$0"), Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9"));
 
@@ -163,7 +163,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     //    {$1->[{$1.#StyleCases($2,$3,$4,$5,$6,$7,$8,$9)}]}
     // ]
     // Source: "templates/web.template":26:14
-    private object?[] StyleCases()
+    private TemplateContent StyleCases()
     {
         // Template:
         // $0
@@ -197,7 +197,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$1.#StyleCases($2,$3,$4,$5,$6,$7,$8,$9)}]
     // Source: "templates/web.template":40:9
-    private object?[] renderStyleCases()
+    private TemplateContent renderStyleCases()
     {
         object? styleCases = ApplySubtemplate("StyleCases", MethodInput("$1"), Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9"));
 
@@ -220,7 +220,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     //    onclick="document.location='/#{$1}'; `
     //    document.location.reload()">{$0}</a>]
     // Source: "templates/web.template":22:9
-    private object?[] renderItem2Result()
+    private TemplateContent renderItem2Result()
     {
         object? item2Result = (IsTruthy("$2") ? Each(itemContext => new Web(itemContext).renderItem2()) : Each(itemContext => Line($"Click this")));
         object? item1 = Get("$1");
@@ -232,7 +232,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$2}]
     // Source: "templates/web.template":22:25
-    private object?[] renderItem2()
+    private TemplateContent renderItem2()
     {
         object? item2 = Get("$2");
 
@@ -242,7 +242,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [<{$1}>{$0}</{$1}>]
     // Source: "templates/web.template":21:7
-    private object?[] Tag()
+    private TemplateContent Tag()
     {
         object? item1 = Get("$1");
         object? item0 = Get("$0");
@@ -254,7 +254,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [<pre><span>{$0}</span><pre>]
     // Source: "templates/web.template":20:10
-    private object?[] ToHtml()
+    private TemplateContent ToHtml()
     {
         object? item0 = Get("$0");
 
@@ -266,7 +266,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     //    $2,$3,$4,$5,$6,$7,$8,$9  
     // )}">{$0}</span>]
     // Source: "templates/web.template":17:1
-    private object?[] Style()
+    private TemplateContent Style()
     {
         object? styleCases = ApplySubtemplate("StyleCases", MethodInput("$1"), Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9"));
         object? item0 = Get("$0");
@@ -278,7 +278,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // [Hello {'test'.#Style('outlined-red-dots')} `
     // {"World".#Style('italic','bold','red')}!!]
     // Source: "templates/web.template":2:2
-    private object?[] renderStyle()
+    private TemplateContent renderStyle()
     {
         object? style = ApplySubtemplate("Style", MethodInput(itemContext => "test"), "outlined-red-dots");
         object? style_2 = ApplySubtemplate("Style", MethodInput(itemContext => "World"), "italic", "bold", "red");
@@ -307,7 +307,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // {#formatGitRepos:[- {name}{description->[ ({description})]}]} 
     // ]
     // Source: "templates/web.template":47:12
-    private object?[] externalContent()
+    private TemplateContent externalContent()
     {
         object? content = InContext("https://api.github.com/users/eisnerw/repos", dataContext => dataContext.Each(itemContext => itemContext.Named("formatGitRepos")));
 
@@ -428,7 +428,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // {#formatGitRepos:[- {name}{description->[ ({description})]}]} 
     // ]}
     // Source: "templates/web.template":1:1
-    private object?[] renderWeb()
+    private TemplateContent renderWeb()
     {
         object? toHtml = ApplySubtemplate("ToHtml", ApplySubtemplate("Tag", ApplySubtemplate("Style", MethodInput(itemContext => new Web(itemContext).renderStyle()), "normal", "blue"), "h2"));
         object? click = ApplySubtemplate("Click", MethodInput(itemContext => "Link"), "simple", "Click this to load a simple template", "link", "italic");

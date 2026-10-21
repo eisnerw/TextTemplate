@@ -232,6 +232,7 @@ Generated source is intended to be read, edited, and optionally checked in:
 - `Templates/Simple.cs`, etc.: one instance class per top-level template.
 - `Includes/DoInclude.cs`, etc.: one file per statically identified `@Include` unit.
 - `Includes/Common.cs`: other shared units, each retaining its own class scope.
+- `Support/TemplateContent.cs`: structured fragments with `Render()` and `ToString()` for final text.
 - `Support/TemplateUnit.cs`: short instance helpers such as `Get`, `Line`, and `InContext`.
 - `Support/EvaluationContext.cs`: inherited contexts and compatibility/composition helpers.
 - `Program.cs`: console host.
@@ -255,7 +256,7 @@ etc.; keyword identifiers are escaped. File/class names are allocated determinis
 and avoid case-insensitive collisions. Anonymous body methods describe their content.
 
 Generated locals and method returns use their proven C# types: `bool` for predicates,
-`double` for numbers, `string` for text, and `object?[]` for structured fragments.
+`double` for numbers, `string` for text, and `TemplateContent` for structured fragments.
 Conditional branches retain their common type and become nullable when needed.
 Dynamic lookups, list evaluation, and unfinished operations retain `object?`;
 the generator does not assume a type from sample data.
@@ -263,7 +264,7 @@ the generator does not assume a type from sample data.
 Simple templates use readable local values and structured interpolated strings:
 
 ```csharp
-private object?[] formatPet()
+private TemplateContent formatPet()
 {
     object? type = Get("type");
     object? name = Get("name");
@@ -271,6 +272,19 @@ private object?[] formatPet()
     return Line($"a {type} named {name}");
 }
 ```
+
+`Line` returns `TemplateContent`. Its `Render()` and `ToString()` produce final text;
+internal composition traverses fragments directly so nested content is not flattened early.
+Argument arrays remain separate from template content. A nonnullable `TemplateContent` means
+that the fragment container exists, not that every fragment has a value.
+`Line($"...")` uses a custom interpolated-string handler that retains nulls and
+missing-value markers. Composition removes the entire affected line, including
+surrounding literals, and keeps unaffected lines. Consequently generated bodies
+need neither eager null guards nor a nullable return solely because a lookup
+may be missing. Only final `Render()` / `ToString()` converts wholly suppressed
+content to `""`; doing that during nested interpolation would lose suppression.
+The birthday-row regression cases cover optional null names, required null or
+absent names, and null results from a nested date subtemplate against Node.
 
 `Line` retains object-valued holes, missing values, and nested fragments until final
 composition; it does not append a newline. Raw multiline strings preserve visible

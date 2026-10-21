@@ -20,7 +20,7 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
     // {#formatPet:[a {type} named {name}]}
     // {#anded:[{$0.Join(', ',' and ')}]}
     // Source: "templates/simpledata.template":1:1
-    internal object?[] Evaluate()
+    internal TemplateContent Evaluate()
     {
         return WithDefinitions(defineSubtemplates,
             definitionContext => new Simpledata(definitionContext).renderSimpledata());
@@ -29,7 +29,7 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
     // Template:
     // [{$0.Join(', ',' and ')}]
     // Source: "templates/simpledata.template":9:9
-    private object?[] anded()
+    private TemplateContent anded()
     {
         object? join = Join(MethodInput("$0"), ", ", " and ");
 
@@ -39,7 +39,7 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
     // Template:
     // [a {type} named {name}]
     // Source: "templates/simpledata.template":8:13
-    private object?[] formatPet()
+    private TemplateContent formatPet()
     {
         object? type = Get("type");
         object? name = Get("name");
@@ -50,7 +50,7 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
     // Template:
     // [{pets:#xformatPet.#anded()}]
     // Source: "templates/simpledata.template":2:4
-    private object?[] renderContent()
+    private TemplateContent renderContent()
     {
         object? pets = InContext(Get("pets"), dataContext => new Simpledata(dataContext).renderAnded());
 
@@ -90,7 +90,7 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
     // {#formatPet:[a {type} named {name}]}
     // {#anded:[{$0.Join(', ',' and ')}]}
     // Source: "templates/simpledata.template":1:1
-    private object?[] renderSimpledata()
+    private TemplateContent renderSimpledata()
     {
         object? lastName = Get("lastName");
         object? firstName = Get("firstName");

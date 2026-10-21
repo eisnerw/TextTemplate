@@ -44,6 +44,7 @@ internal sealed class EvaluationContext
                     JsonValueKind.Undefined => "<undefined>",
                     _ => json
                 };
+            if (item is TemplateContent content) return ArrayPreview(content.Fragments, depth);
             if (item is object?[] array) return ArrayPreview(array, depth);
             return item is bool or double or int or long ? item : "<" + item.GetType().Name + ">";
         }
@@ -132,7 +133,7 @@ internal sealed class EvaluationContext
         internal object?[] ToFragments() => fragments.ToArray();
         public override string ToString() => DebugSummary(fragments?.ToArray());
     }
-    internal static object?[] Text(StructuredText text) => text.ToFragments();
+    internal static TemplateContent Text(StructuredText text) => new(text.ToFragments());
 
     internal EvaluationContext(JsonElement? data, Dictionary<string, Func<EvaluationContext, object?>> shared)
     {
@@ -337,7 +338,12 @@ internal sealed class EvaluationContext
         try { return method(this); }
         finally { recursion.Value--; }
     }
-    internal static object? Intermediate(object? value) => value is object?[] sequence ? sequence.Length == 1 ? Intermediate(sequence[0]) : Compose(value) : value;
+    internal static object? Intermediate(object? value)
+    {
+        if (value is TemplateContent content)
+            return content.Fragments.Length == 1 ? Intermediate(content.Fragments[0]) : Compose(content);
+        return value is object?[] sequence ? sequence.Length == 1 ? Intermediate(sequence[0]) : Compose(value) : value;
+    }
     internal static bool Condition(object? value)
     {
         value = Intermediate(value);
@@ -392,6 +398,8 @@ internal sealed class EvaluationContext
         bool skipping = false;
         void Visit(object? item, string? indent = null)
         {
+            // Traverse fragments directly: ToString would lose missing-line and indentation behavior.
+            if (item is TemplateContent templateContent) { foreach (object? fragment in templateContent.Fragments) Visit(fragment, indent); return; }
             if (item is object?[] sequence) { foreach (object? child in sequence) Visit(child, indent); return; }
             if (item is Arguments arguments) item = new RenderedList(arguments.Items);
             if (item is RenderedList rendered)

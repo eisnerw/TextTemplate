@@ -530,7 +530,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // ]}
     // {#data:[/data/people]}
     // Source: "templates/tests.template":1:1
-    internal object?[] Evaluate()
+    internal TemplateContent Evaluate()
     {
         return WithDefinitions(defineSubtemplates,
             definitionContext => new Tests(definitionContext).renderTests());
@@ -539,7 +539,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [/data/people]
     // Source: "templates/tests.template":519:8
-    private object?[] data()
+    private TemplateContent data()
     {
         return Line($"/data/people");
     }
@@ -564,7 +564,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Test 16 passed
     // ]
     // Source: "templates/tests.template":501:12
-    private object?[] expected()
+    private TemplateContent expected()
     {
         return Line($$"""
             
@@ -607,7 +607,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // {'16'.#test(#test16,#test16Result)}
     // ]
     // Source: "templates/tests.template":483:9
-    private object?[] tests()
+    private TemplateContent tests()
     {
         object? test = ApplySubtemplate("test", MethodInput(itemContext => "1"), Each(itemContext => itemContext.Named("test1")), Each(itemContext => itemContext.Named("test1Result")));
         object? test_2 = ApplySubtemplate("test", MethodInput(itemContext => "2"), Each(itemContext => itemContext.Named("test2")), Each(itemContext => itemContext.Named("test2Result")));
@@ -701,7 +701,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //  (1.1) cat
     //  (1.2) zebra]
     // Source: "templates/tests.template":431:16
-    private object?[] test16Result()
+    private TemplateContent test16Result()
     {
         return Line($$"""
             A:
@@ -787,7 +787,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //  {.} {type}]}
     // ].@MissingValue('No Information Provided').Compose()}]}]
     // Source: "templates/tests.template":404:10
-    private object?[] test16()
+    private TemplateContent test16()
     {
         // Template:
         // ''.Compose()
@@ -830,7 +830,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //  {.} {type}]}
     // ].@MissingValue('No Information Provided').Compose()}]
     // Source: "templates/tests.template":406:3
-    private object?[] renderAPeopleBPeopleCPeop()
+    private TemplateContent renderAPeopleBPeopleCPeop()
     {
         object? content = InContext("/data/people", dataContext => new Tests(dataContext).renderCompose());
         object? content_2 = InContext("/data/people", dataContext => new Tests(dataContext).renderCompose_2());
@@ -896,7 +896,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //  {.} {type}]}
     // ]
     // Source: "templates/tests.template":427:24
-    private object?[] renderLastName_16()
+    private TemplateContent renderLastName_16()
     {
         // Template:
         // {.}
@@ -916,7 +916,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [
     //  {.} {type}]
     // Source: "templates/tests.template":428:21
-    private object?[] renderType_13()
+    private TemplateContent renderType_13()
     {
         // Template:
         // {.}
@@ -971,7 +971,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //           {lastName}{pets:[{type}]}
     // ]
     // Source: "templates/tests.template":423:24
-    private object?[] renderLastName_15()
+    private TemplateContent renderLastName_15()
     {
         object? lastName = Get("lastName");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_12()));
@@ -982,7 +982,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{type}]
     // Source: "templates/tests.template":424:27
-    private object?[] renderType_12()
+    private TemplateContent renderType_12()
     {
         object? type = Get("type");
 
@@ -1014,7 +1014,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //    {.} {lastName}{pets:[{type}]}
     // ]
     // Source: "templates/tests.template":419:24
-    private object?[] renderLastName_14()
+    private TemplateContent renderLastName_14()
     {
         // Template:
         // {.}
@@ -1033,7 +1033,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{type}]
     // Source: "templates/tests.template":420:24
-    private object?[] renderType_11()
+    private TemplateContent renderType_11()
     {
         object? type = Get("type");
 
@@ -1080,7 +1080,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //    {.} {lastName}{pets:[{type}]}
     // ]
     // Source: "templates/tests.template":415:24
-    private object?[] renderLastName_13()
+    private TemplateContent renderLastName_13()
     {
         // Template:
         // {.}
@@ -1099,7 +1099,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{type}]
     // Source: "templates/tests.template":416:24
-    private object?[] renderType_10()
+    private TemplateContent renderType_10()
     {
         object? type = Get("type");
 
@@ -1140,7 +1140,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //    } //
     // ]
     // Source: "templates/tests.template":408:24
-    private object?[] renderDomesticated()
+    private TemplateContent renderDomesticated()
     {
         // Template:
         // {.}
@@ -1160,7 +1160,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //       {.} Domesticated{pets:[{type}]}
     //    ]
     // Source: "templates/tests.template":409:11
-    private object?[] renderDomesticated_2()
+    private TemplateContent renderDomesticated_2()
     {
         // Template:
         // {.}
@@ -1178,7 +1178,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{type}]
     // Source: "templates/tests.template":410:29
-    private object?[] renderType_9()
+    private TemplateContent renderType_9()
     {
         object? type = Get("type");
 
@@ -1221,7 +1221,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //                  cat
     //                  zebra]
     // Source: "templates/tests.template":370:16
-    private object?[] test15Result()
+    private TemplateContent test15Result()
     {
         return Line($$"""
             Automatic bulleting for multi-values
@@ -1269,7 +1269,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //                  {pets:[{type} //  
     //             ]}]}]}]}]
     // Source: "templates/tests.template":363:10
-    private object?[] test15()
+    private TemplateContent test15()
     {
         object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_12()));
 
@@ -1284,7 +1284,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //                  {pets:[{type} //  
     //             ]}]}]}]
     // Source: "templates/tests.template":364:44
-    private object?[] renderLastName_12()
+    private TemplateContent renderLastName_12()
     {
         // Template:
         //     {.}
@@ -1310,7 +1310,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //                  {pets:[{type} //  
     //             ]}]}]
     // Source: "templates/tests.template":366:15
-    private object?[] renderName_13()
+    private TemplateContent renderName_13()
     {
         object? name = Get("name");
         object? content = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_9()));
@@ -1326,7 +1326,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //                  {pets:[{type} //  
     //             ]}]
     // Source: "templates/tests.template":367:19
-    private object?[] renderFirstName_9()
+    private TemplateContent renderFirstName_9()
     {
         object? firstName = Get("firstName");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_8()));
@@ -1341,7 +1341,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{type} //  
     //             ]
     // Source: "templates/tests.template":368:24
-    private object?[] renderType_8()
+    private TemplateContent renderType_8()
     {
         object? type = Get("type");
 
@@ -1384,7 +1384,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //                  cat
     //                  zebra]
     // Source: "templates/tests.template":329:16
-    private object?[] test14Result()
+    private TemplateContent test14Result()
     {
         return Line($$"""
             Indent under indent under bullet 
@@ -1432,7 +1432,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //                  {pets:[{type} //  
     //             ]}]}]}]}]
     // Source: "templates/tests.template":322:10
-    private object?[] test14()
+    private TemplateContent test14()
     {
         object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_11()));
 
@@ -1447,7 +1447,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //                  {pets:[{type} //  
     //             ]}]}]}]
     // Source: "templates/tests.template":323:41
-    private object?[] renderLastName_11()
+    private TemplateContent renderLastName_11()
     {
         // Template:
         //     {.}
@@ -1473,7 +1473,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //                  {pets:[{type} //  
     //             ]}]}]
     // Source: "templates/tests.template":325:15
-    private object?[] renderName_12()
+    private TemplateContent renderName_12()
     {
         object? name = Get("name");
         object? content = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_8()));
@@ -1489,7 +1489,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //                  {pets:[{type} //  
     //             ]}]
     // Source: "templates/tests.template":326:19
-    private object?[] renderFirstName_8()
+    private TemplateContent renderFirstName_8()
     {
         object? firstName = Get("firstName");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_7()));
@@ -1504,7 +1504,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{type} //  
     //             ]
     // Source: "templates/tests.template":327:24
-    private object?[] renderType_7()
+    private TemplateContent renderType_7()
     {
         object? type = Get("type");
 
@@ -1547,7 +1547,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //            cat
     //            zebra]
     // Source: "templates/tests.template":288:16
-    private object?[] test13Result()
+    private TemplateContent test13Result()
     {
         return Line($$"""
             Yet another variation of hierarchy that also transitions from indent to bullet and back 
@@ -1595,7 +1595,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //         {^.^:[{firstName} who owns {pets:[{type} //  
     //             ]}]}]}]}]
     // Source: "templates/tests.template":281:10
-    private object?[] test13()
+    private TemplateContent test13()
     {
         object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_10()));
 
@@ -1609,7 +1609,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //         {^.^:[{firstName} who owns {pets:[{type} //  
     //             ]}]}]}]
     // Source: "templates/tests.template":283:18
-    private object?[] renderLastName_10()
+    private TemplateContent renderLastName_10()
     {
         // Template:
         //     {.}
@@ -1634,7 +1634,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //         {^.^:[{firstName} who owns {pets:[{type} //  
     //             ]}]}]
     // Source: "templates/tests.template":285:15
-    private object?[] renderName_11()
+    private TemplateContent renderName_11()
     {
         object? name = Get("name");
         object? content = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_7()));
@@ -1649,7 +1649,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{firstName} who owns {pets:[{type} //  
     //             ]}]
     // Source: "templates/tests.template":286:14
-    private object?[] renderFirstName_7()
+    private TemplateContent renderFirstName_7()
     {
         object? firstName = Get("firstName");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_6()));
@@ -1661,7 +1661,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{type} //  
     //             ]
     // Source: "templates/tests.template":286:42
-    private object?[] renderType_6()
+    private TemplateContent renderType_6()
     {
         object? type = Get("type");
 
@@ -1704,7 +1704,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //            (2.1) cat
     //            (2.2) zebra]
     // Source: "templates/tests.template":247:16
-    private object?[] test12Result()
+    private TemplateContent test12Result()
     {
         return Line($$"""
             Additional variation of hierarchy that also transitions from indent to bullet and back 
@@ -1752,7 +1752,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //         {.} {^.^:[{firstName} who owns {pets:[{type} //  
     //             ]}]}]}]}]
     // Source: "templates/tests.template":240:10
-    private object?[] test12()
+    private TemplateContent test12()
     {
         object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_9()));
 
@@ -1766,7 +1766,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //         {.} {^.^:[{firstName} who owns {pets:[{type} //  
     //             ]}]}]}]
     // Source: "templates/tests.template":242:18
-    private object?[] renderLastName_9()
+    private TemplateContent renderLastName_9()
     {
         // Template:
         //     {.}
@@ -1791,7 +1791,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //         {.} {^.^:[{firstName} who owns {pets:[{type} //  
     //             ]}]}]
     // Source: "templates/tests.template":244:15
-    private object?[] renderName_10()
+    private TemplateContent renderName_10()
     {
         // Template:
         //         {.}
@@ -1814,7 +1814,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{firstName} who owns {pets:[{type} //  
     //             ]}]
     // Source: "templates/tests.template":245:18
-    private object?[] renderFirstName_6()
+    private TemplateContent renderFirstName_6()
     {
         object? firstName = Get("firstName");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_5()));
@@ -1826,7 +1826,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{type} //  
     //             ]
     // Source: "templates/tests.template":245:46
-    private object?[] renderType_5()
+    private TemplateContent renderType_5()
     {
         object? type = Get("type");
 
@@ -1869,7 +1869,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //              (1.1) cat
     //              (1.2) zebra]
     // Source: "templates/tests.template":206:16
-    private object?[] test11Result()
+    private TemplateContent test11Result()
     {
         return Line($$"""
             Hierarchy that also transitions from indent to bullet and back 
@@ -1917,7 +1917,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //              {.} {pets:[{type} // 
     //             ]}]}]}]}]
     // Source: "templates/tests.template":199:10
-    private object?[] test11()
+    private TemplateContent test11()
     {
         object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_8()));
 
@@ -1932,7 +1932,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //              {.} {pets:[{type} // 
     //             ]}]}]}]
     // Source: "templates/tests.template":200:71
-    private object?[] renderLastName_8()
+    private TemplateContent renderLastName_8()
     {
         // Template:
         //     {.}
@@ -1958,7 +1958,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //              {.} {pets:[{type} // 
     //             ]}]}]
     // Source: "templates/tests.template":202:15
-    private object?[] renderName_9()
+    private TemplateContent renderName_9()
     {
         object? name = Get("name");
         object? content = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_5()));
@@ -1974,7 +1974,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //              {.} {pets:[{type} // 
     //             ]}]
     // Source: "templates/tests.template":203:15
-    private object?[] renderFirstName_5()
+    private TemplateContent renderFirstName_5()
     {
         // Template:
         //              {.}
@@ -1997,7 +1997,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{type} // 
     //             ]
     // Source: "templates/tests.template":204:24
-    private object?[] renderType_4()
+    private TemplateContent renderType_4()
     {
         object? type = Get("type");
 
@@ -2014,7 +2014,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //     (0.4) Dolly
     //     (0.5) Stripes]
     // Source: "templates/tests.template":191:16
-    private object?[] test10Result()
+    private TemplateContent test10Result()
     {
         return Line($$"""
             Bulleted Continued list 
@@ -2033,7 +2033,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // {#data:[{pets:[ 
     //     {.} {name}]}]}]
     // Source: "templates/tests.template":187:10
-    private object?[] test10()
+    private TemplateContent test10()
     {
         object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderContent_2()));
 
@@ -2044,7 +2044,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{pets:[ 
     //     {.} {name}]}]
     // Source: "templates/tests.template":189:8
-    private object?[] renderContent_2()
+    private TemplateContent renderContent_2()
     {
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_8()));
 
@@ -2055,7 +2055,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [ 
     //     {.} {name}]
     // Source: "templates/tests.template":189:15
-    private object?[] renderName_8()
+    private TemplateContent renderName_8()
     {
         // Template:
         // {.}
@@ -2080,7 +2080,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //    Dolly
     //    Stripes]
     // Source: "templates/tests.template":179:15
-    private object?[] test9Result()
+    private TemplateContent test9Result()
     {
         return Line($$"""
             Continued list 
@@ -2097,7 +2097,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [
     // Continued list {#data:[{pets:[{name}]}]}]
     // Source: "templates/tests.template":177:9
-    private object?[] test9()
+    private TemplateContent test9()
     {
         object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderContent()));
 
@@ -2107,7 +2107,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{pets:[{name}]}]
     // Source: "templates/tests.template":178:23
-    private object?[] renderContent()
+    private TemplateContent renderContent()
     {
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_7()));
 
@@ -2117,7 +2117,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{name}]
     // Source: "templates/tests.template":178:30
-    private object?[] renderName_7()
+    private TemplateContent renderName_7()
     {
         object? name = Get("name");
 
@@ -2160,7 +2160,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //             (1.1) cat
     //             (1.2) zebra]
     // Source: "templates/tests.template":143:15
-    private object?[] test8Result()
+    private TemplateContent test8Result()
     {
         return Line($$"""
             Hierarchy that also transitions from indent to bullet 
@@ -2206,7 +2206,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //          {.} {^.^:[{firstName} who owns
     //             {.} {pets:[{type}]}]}]}]}]
     // Source: "templates/tests.template":138:9
-    private object?[] test8()
+    private TemplateContent test8()
     {
         object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_3()));
 
@@ -2219,7 +2219,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //          {.} {^.^:[{firstName} who owns
     //             {.} {pets:[{type}]}]}]}]
     // Source: "templates/tests.template":139:62
-    private object?[] renderFirstName_3()
+    private TemplateContent renderFirstName_3()
     {
         object? firstName = Get("firstName");
         object? lastName = Get("lastName");
@@ -2236,7 +2236,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //          {.} {^.^:[{firstName} who owns
     //             {.} {pets:[{type}]}]}]
     // Source: "templates/tests.template":140:41
-    private object?[] renderName_6()
+    private TemplateContent renderName_6()
     {
         // Template:
         //          {.}
@@ -2259,7 +2259,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{firstName} who owns
     //             {.} {pets:[{type}]}]
     // Source: "templates/tests.template":141:19
-    private object?[] renderFirstName_4()
+    private TemplateContent renderFirstName_4()
     {
         // Template:
         //             {.}
@@ -2281,7 +2281,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{type}]
     // Source: "templates/tests.template":142:23
-    private object?[] renderType_3()
+    private TemplateContent renderType_3()
     {
         object? type = Get("type");
 
@@ -2324,7 +2324,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //             (2.1) cat
     //             (2.2) zebra]
     // Source: "templates/tests.template":104:15
-    private object?[] test7Result()
+    private TemplateContent test7Result()
     {
         return Line($$"""
             Hierarchy that transitions from indent to bullet 
@@ -2371,7 +2371,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //          {.} {^.^:[{firstName} who owns
     //             {.} {pets:[{type}]}]}]}]}]
     // Source: "templates/tests.template":98:9
-    private object?[] test7()
+    private TemplateContent test7()
     {
         object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_7()));
 
@@ -2385,7 +2385,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //          {.} {^.^:[{firstName} who owns
     //             {.} {pets:[{type}]}]}]}]
     // Source: "templates/tests.template":99:57
-    private object?[] renderLastName_7()
+    private TemplateContent renderLastName_7()
     {
         object? lastName = Get("lastName");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_5()));
@@ -2402,7 +2402,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //          {.} {^.^:[{firstName} who owns
     //             {.} {pets:[{type}]}]}]
     // Source: "templates/tests.template":100:17
-    private object?[] renderName_5()
+    private TemplateContent renderName_5()
     {
         // Template:
         //     {.}
@@ -2434,7 +2434,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{firstName} who owns
     //             {.} {pets:[{type}]}]
     // Source: "templates/tests.template":102:19
-    private object?[] renderFirstName_2()
+    private TemplateContent renderFirstName_2()
     {
         // Template:
         //             {.}
@@ -2456,7 +2456,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{type}]
     // Source: "templates/tests.template":103:23
-    private object?[] renderType_2()
+    private TemplateContent renderType_2()
     {
         object? type = Get("type");
 
@@ -2499,7 +2499,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //               (3.1) cat
     //               (3.2) zebra]
     // Source: "templates/tests.template":64:15
-    private object?[] test6Result()
+    private TemplateContent test6Result()
     {
         return Line($$"""
             Hierarchy
@@ -2572,7 +2572,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //          {.} {^.^:[{firstName} who owns
     //               {.} {pets:[{type}]}]}]}]}]
     // Source: "templates/tests.template":58:9
-    private object?[] renderHierarchy()
+    private TemplateContent renderHierarchy()
     {
         object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_6()));
 
@@ -2586,7 +2586,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //          {.} {^.^:[{firstName} who owns
     //               {.} {pets:[{type}]}]}]}]
     // Source: "templates/tests.template":59:17
-    private object?[] renderLastName_6()
+    private TemplateContent renderLastName_6()
     {
         // Template:
         // {.}
@@ -2611,7 +2611,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //          {.} {^.^:[{firstName} who owns
     //               {.} {pets:[{type}]}]}]
     // Source: "templates/tests.template":60:21
-    private object?[] renderName_4()
+    private TemplateContent renderName_4()
     {
         // Template:
         //     {.}
@@ -2643,7 +2643,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{firstName} who owns
     //               {.} {pets:[{type}]}]
     // Source: "templates/tests.template":62:19
-    private object?[] renderFirstName()
+    private TemplateContent renderFirstName()
     {
         // Template:
         //               {.}
@@ -2665,7 +2665,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{type}]
     // Source: "templates/tests.template":63:25
-    private object?[] renderType()
+    private TemplateContent renderType()
     {
         object? type = Get("type");
 
@@ -2684,7 +2684,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //     (1.1) Dolly
     //     (1.2) Stripes]
     // Source: "templates/tests.template":48:15
-    private object?[] test5Result()
+    private TemplateContent test5Result()
     {
         return Line($$"""
             Bulleted Explicit Bulleted Indent
@@ -2727,7 +2727,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // {.} {lastName}{pets:[ //
     //     {.} {name}]}]}]
     // Source: "templates/tests.template":44:9
-    private object?[] renderBulletedExplicitBulleted()
+    private TemplateContent renderBulletedExplicitBulleted()
     {
         object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_5()));
 
@@ -2739,7 +2739,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // {.} {lastName}{pets:[ //
     //     {.} {name}]}]
     // Source: "templates/tests.template":45:41
-    private object?[] renderLastName_5()
+    private TemplateContent renderLastName_5()
     {
         // Template:
         // {.}
@@ -2762,7 +2762,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [ //
     //     {.} {name}]
     // Source: "templates/tests.template":46:21
-    private object?[] renderName_3()
+    private TemplateContent renderName_3()
     {
         // Template:
         //     {.}
@@ -2829,7 +2829,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Bulleted Implied Bulleted Indent{#data:[ //
     // {.} {lastName}{pets:[{name}]}]}]
     // Source: "templates/tests.template":31:9
-    private object?[] test4()
+    private TemplateContent test4()
     {
         object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_4()));
 
@@ -2840,7 +2840,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [ //
     // {.} {lastName}{pets:[{name}]}]
     // Source: "templates/tests.template":32:40
-    private object?[] renderLastName_4()
+    private TemplateContent renderLastName_4()
     {
         // Template:
         // {.}
@@ -2862,7 +2862,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{name}]
     // Source: "templates/tests.template":33:21
-    private object?[] renderName_2()
+    private TemplateContent renderName_2()
     {
         object? name = Get("name");
 
@@ -2881,7 +2881,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //       Dolly
     //       Stripes]
     // Source: "templates/tests.template":21:15
-    private object?[] test3Result()
+    private TemplateContent test3Result()
     {
         return Line($$"""
             Implied Double Indent
@@ -2900,7 +2900,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [
     // Implied Double Indent{#data:[{lastName}{pets:[{name}]}]}]
     // Source: "templates/tests.template":19:9
-    private object?[] test3()
+    private TemplateContent test3()
     {
         object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_3()));
 
@@ -2910,7 +2910,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{lastName}{pets:[{name}]}]
     // Source: "templates/tests.template":20:29
-    private object?[] renderLastName_3()
+    private TemplateContent renderLastName_3()
     {
         object? lastName = Get("lastName");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName()));
@@ -2921,7 +2921,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{name}]
     // Source: "templates/tests.template":20:46
-    private object?[] renderName()
+    private TemplateContent renderName()
     {
         object? name = Get("name");
 
@@ -2934,7 +2934,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //    Johnson
     //    Smith]
     // Source: "templates/tests.template":15:15
-    private object?[] test2Result()
+    private TemplateContent test2Result()
     {
         return Line($$"""
             Implied Single Indent 
@@ -2947,7 +2947,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [
     // Implied Single Indent {#data:[{lastName}]}]
     // Source: "templates/tests.template":13:9
-    private object?[] test2()
+    private TemplateContent test2()
     {
         object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_2()));
 
@@ -2957,7 +2957,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{lastName}]
     // Source: "templates/tests.template":14:30
-    private object?[] renderLastName_2()
+    private TemplateContent renderLastName_2()
     {
         object? lastName = Get("lastName");
 
@@ -2970,7 +2970,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //    Johnson
     //    Smith]
     // Source: "templates/tests.template":9:15
-    private object?[] test1Result()
+    private TemplateContent test1Result()
     {
         return Line($$"""
             Explicit Single Indent
@@ -2984,7 +2984,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Explicit Single Indent{#data:[
     //    {lastName}]}]
     // Source: "templates/tests.template":6:9
-    private object?[] test1()
+    private TemplateContent test1()
     {
         object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName()));
 
@@ -2995,7 +2995,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [
     //    {lastName}]
     // Source: "templates/tests.template":7:30
-    private object?[] renderLastName()
+    private TemplateContent renderLastName()
     {
         object? lastName = Get("lastName");
 
@@ -3006,7 +3006,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // [{$0.Matches(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)->
     // [Test {$0} {$1.Assert($2,'passed')}]}]
     // Source: "templates/tests.template":4:8
-    private object?[] test()
+    private TemplateContent test()
     {
         // Template:
         // $0.Matches(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)
@@ -3025,7 +3025,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [Test {$0} {$1.Assert($2,'passed')}]
     // Source: "templates/tests.template":5:1
-    private object?[] renderItem0()
+    private TemplateContent renderItem0()
     {
         // Template:
         // $1.Assert($2,'passed')
@@ -4124,7 +4124,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // ]}
     // {#data:[/data/people]}
     // Source: "templates/tests.template":1:1
-    private object?[] renderTests()
+    private TemplateContent renderTests()
     {
         // Template:
         // #tests.Assert(#expected,'ALL TESTS PASSED')

@@ -87,6 +87,7 @@ public sealed class GenerationTests
                 ["aB"] = "Collision",
                 ["class"] = "Keyword",
                 ["StringComparer"] = "Runtime name collision",
+                ["TemplateContent"] = "Content type name collision",
                 ["a_b"] = "Underscore",
                 ["1class"] = "Digit",
                 ["café"] = "Unicode",
@@ -109,6 +110,11 @@ public sealed class GenerationTests
                 ["nameCollisions"] = "{#Evaluate} {#Get} {#class} {firstName} {firstName}\nSubtemplates:\n{#Evaluate:[Evaluate]}\n{#Get:[Get]}\n{#class:[Keyword]}",
                 ["helperCollisions"] = "{#IsTruthy} {#MethodInput} {IsTruthy} {MethodInput} {firstName=>[yes],[no]} {firstName.Join(',')}\nSubtemplates:\n{#IsTruthy:[truth]}\n{#MethodInput:[input]}",
                 ["registrationCollisions"] = "{#defineSubtemplates} {#ApplySubtemplate} {#SubtemplateInput} {#SubtemplateDefinitions} {ApplySubtemplate} {SubtemplateInput}\nSubtemplates:\n{#defineSubtemplates:[definition]}\n{#ApplySubtemplate:[application]}\n{#SubtemplateInput:[input]}\n{#SubtemplateDefinitions:[scope]}",
+                ["birthdayComplete"] = "{'{\"fname\":\"Ada\",\"lname\":\"Lovelace\",\"date\":\"Dec 10\"}':[before\n{fname->[{fname} ]}{lname} {#date}\nafter]}\nSubtemplates:\n{#date:[{date}]}",
+                ["birthdayOptionalNull"] = "{'{\"fname\":null,\"lname\":\"Lovelace\",\"date\":\"Dec 10\"}':[before\n{fname->[{fname} ]}{lname} {#date}\nafter]}\nSubtemplates:\n{#date:[{date}]}",
+                ["birthdayRequiredNull"] = "{'{\"fname\":\"Ada\",\"lname\":null,\"date\":\"Dec 10\"}':[before\n{fname->[{fname} ]}{lname} {#date}\nafter]}\nSubtemplates:\n{#date:[{date}]}",
+                ["birthdayRequiredAbsent"] = "{'{\"fname\":\"Ada\",\"date\":\"Dec 10\"}':[before\n{fname->[{fname} ]}{lname} {#date}\nafter]}\nSubtemplates:\n{#date:[{date}]}",
+                ["birthdayNestedNull"] = "{'{\"fname\":\"Ada\",\"lname\":\"Lovelace\",\"date\":null}':[before\n{fname->[{fname} ]}{lname} {#date}\nafter]}\nSubtemplates:\n{#date:[{date}]}",
                 ["typedBranches"] = "{yes=>'one','two'} {no=>'missing'} {yes->'text'} {yes=>'text',firstName} {yes=>[fragments]} {zero=0} {yes & !no}",
                 ["keywordContext"] = "{person:[{class}]}",
                 ["literalDelimiters"] = "{\"{{{{ }}}} \\\"\\\"\\\"\\\"\"}\n{firstName}\n",
@@ -139,9 +145,9 @@ public sealed class GenerationTests
             Assert.DoesNotContain("SyntaxNode", generated.Source);
             Assert.DoesNotMatch(@"\bEvaluate\d+\b", generated.Source!);
             Assert.Contains("internal sealed class Greeting", generated.Source);
-            Assert.Contains("internal object?[] Evaluate()", generated.Source);
+            Assert.Contains("internal TemplateContent Evaluate()", generated.Source);
             Assert.Contains("Line($\"Hello {firstName}!\")", generated.Source);
-            Assert.Contains("private object?[] local()", generated.Source);
+            Assert.Contains("private TemplateContent local()", generated.Source);
             string typedBranches = generated.Files["Templates/TypedBranches.cs"];
             Assert.Contains("string yesResult =", typedBranches);
             Assert.Contains("string? noResult =", typedBranches);
@@ -153,12 +159,12 @@ public sealed class GenerationTests
             Assert.DoesNotMatch(@"\b(?:Template_|Subtemplate_|Define_|InlineTemplate_L)\w*", generated.Source!);
             Assert.DoesNotMatch(@"\b\w+_L\d+_C\d+\b", generated.Source!);
             Assert.Contains("object? firstName = Get(\"firstName\");", generated.Source);
-            Assert.Contains("private object?[] @class()", generated.Source);
-            Assert.Contains("private object?[] Evaluate_2()", generated.Source);
+            Assert.Contains("private TemplateContent @class()", generated.Source);
+            Assert.Contains("private TemplateContent Evaluate_2()", generated.Source);
             Assert.Contains("IsTruthy(\"firstName\")", generated.Source);
             Assert.Contains("MethodInput(\"firstName\")", generated.Source);
-            Assert.Contains("private object?[] IsTruthy_2()", generated.Source);
-            Assert.Contains("private object?[] MethodInput_2()", generated.Source);
+            Assert.Contains("private TemplateContent IsTruthy_2()", generated.Source);
+            Assert.Contains("private TemplateContent MethodInput_2()", generated.Source);
             Assert.Contains("Templates/AB_2.cs", generated.Files.Keys);
             Assert.Contains("Includes/Common.cs", generated.Files.Keys);
             Assert.Contains("internal sealed class Shared", generated.Source);
@@ -185,6 +191,7 @@ public sealed class GenerationTests
             var deps = File.ReadAllText(Path.Combine(isolated, "bin-output", "Standalone.deps.json"));
             Assert.DoesNotContain("TextTemplate", deps);
             // Extracted data files are actual input values, not the named fixture database.
+            Assert.Contains("Support/TemplateContent.cs", generated.Files.Keys);
             foreach (string dataName in new[] { "nested", "escapeTest", "simpledata" })
             {
                 string fixture = Path.Combine(Repository(), "reference", "data", dataName + ".json");
@@ -231,7 +238,7 @@ public sealed class GenerationTests
             Assert.DoesNotContain("new Dictionary", simpledata);
             Assert.DoesNotContain("CallNamed(", simpledata);
             string wikipedia = generated.Files["Templates/Wikipedia.cs"];
-            Assert.Contains("private object?[] getWiki()", wikipedia);
+            Assert.Contains("private TemplateContent getWiki()", wikipedia);
             Assert.DoesNotContain("EvaluationContext.At(", wikipedia);
             Assert.Contains("object? applyReplace()", wikipedia);
             Assert.Contains("object? extract = Get(\"key.extract\");", wikipedia);
@@ -242,6 +249,19 @@ public sealed class GenerationTests
                 using System;
                 public static class Probe {
                     public static void Main(string[] args) {
+                        if (args.Length > 0 && args[0] == "--content-probe") {
+                            TemplateContent inner = EvaluationContext.Text($"value {true}");
+                            TemplateContent outer = EvaluationContext.Text($"before {inner} after");
+                            if (outer.Render() != "before value true after" || outer.ToString() != outer.Render())
+                                throw new Exception("Content rendering failed.");
+                            TemplateContent missing = EvaluationContext.Text($"{new EvaluationContext.Missing("absent")}");
+                            if (missing.Render() != "" || EvaluationContext.Compose(missing) is not null)
+                                throw new Exception("Missing content lost its internal distinction from empty text.");
+                            TemplateContent nested = EvaluationContext.Text($"remove {missing} suffix\nkeep");
+                            if (nested.Render() != "keep") throw new Exception("Nested content was flattened early.");
+                            Console.Write("content-ok");
+                            return;
+                        }
                         if (args.Length > 0) { Environment.ExitCode = GeneratedTemplateProgram.Main(args); return; }
                         try { GeneratedTemplates.Render("startup"); }
                         catch (NotImplementedException e) { Console.Write(e.Message); }
@@ -250,6 +270,10 @@ public sealed class GenerationTests
                 """);
             var build = Run("dotnet", root, "build", "--nologo", "-o", "output");
             Assert.True(build.Exit == 0, build.Output + build.Error);
+            var contentProbe = Run("dotnet", root, "output/Standalone.dll", "--content-probe");
+            Assert.True(contentProbe.Exit == 0, contentProbe.Output + contentProbe.Error);
+            Assert.Equal("content-ok", contentProbe.Output);
+            Assert.Contains("Support/TemplateContent.cs", generated.Files.Keys);
             foreach (string dataName in new[] { "nested", "escapeTest", "simpledata" })
             {
                 string dataFile = Path.Combine(Repository(), "reference/data", dataName + ".json");

@@ -30,7 +30,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     //    }
     // ]}
     // Source: "templates/events.template":1:1
-    internal object?[] Evaluate()
+    internal TemplateContent Evaluate()
     {
         return WithDefinitions(defineSubtemplates,
             definitionContext => new Events(definitionContext).renderEvents());
@@ -46,7 +46,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     //    }
     // ]
     // Source: "templates/events.template":12:15
-    private object?[] formatTimes()
+    private TemplateContent formatTimes()
     {
         // Template:
         // $0.ToDate([h{!$0.#onHour()->[:mm]}{!$0.#SameAMPM($1)->[a]}])
@@ -76,7 +76,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$1.ToDate().ToUpper()} at ]
     // Source: "templates/events.template":17:22
-    private object?[] renderToUpper_2()
+    private TemplateContent renderToUpper_2()
     {
         // Template:
         // $1.ToDate()
@@ -102,7 +102,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [h{!$0.#onHour()->[:mm]}{!$0.#SameAMPM($1)->[a]}]
     // Source: "templates/events.template":15:14
-    private object?[] renderChoice()
+    private TemplateContent renderChoice()
     {
         object? choice = (!(EvaluationContext.Condition(ApplySubtemplate("onHour", MethodInput("$0")))) ? Each(itemContext => Line($":mm")) : "");
         object? choice_2 = (!(EvaluationContext.Condition(ApplySubtemplate("SameAMPM", MethodInput("$0"), Get("$1")))) ? Each(itemContext => Line($"a")) : "");
@@ -113,7 +113,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0.ToDate('mm') = '00'}]
     // Source: "templates/events.template":11:10
-    private object?[] onHour()
+    private TemplateContent onHour()
     {
         // Template:
         // $0.ToDate('mm')
@@ -132,7 +132,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0.ToDate('a') = $1.ToDate('a') & $0.#SameDay($1)}]
     // Source: "templates/events.template":10:12
-    private object?[] SameAMPM()
+    private TemplateContent SameAMPM()
     {
         // Template:
         // $0.ToDate('a')
@@ -160,7 +160,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{$0.ToDate('YYYYMMDD') = $1.ToDate('YYYYMMDD')}]
     // Source: "templates/events.template":9:11
-    private object?[] SameDay()
+    private TemplateContent SameDay()
     {
         // Template:
         // $0.ToDate('YYYYMMDD')
@@ -255,7 +255,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     //       {.} Location {location}]}
     // ]
     // Source: "templates/events.template":2:67
-    private object?[] renderToUpper()
+    private TemplateContent renderToUpper()
     {
         // Template:
         // start.ToUpper()
@@ -297,7 +297,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     //       {.} Notes: {description}
     //       {.} Location {location}]
     // Source: "templates/events.template":4:41
-    private object?[] renderFormatTimes()
+    private TemplateContent renderFormatTimes()
     {
         // Template:
         //       {.}
@@ -371,7 +371,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     //    }
     // ]}
     // Source: "templates/events.template":1:1
-    private object?[] renderEvents()
+    private TemplateContent renderEvents()
     {
         // Template:
         // start.ToDate('YYYY-MM-DDT00:00:00')

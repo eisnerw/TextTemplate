@@ -31,7 +31,7 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     //       ,'none', '')}
     // ]}
     // Source: "templates/docs.template":1:1
-    internal object?[] Evaluate()
+    internal TemplateContent Evaluate()
     {
         return WithDefinitions(defineSubtemplates,
             definitionContext => new Docs(definitionContext).renderDocs());
@@ -48,7 +48,7 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     //       ,'none', '')}
     // ]
     // Source: "templates/docs.template":12:8
-    private object?[] name()
+    private TemplateContent name()
     {
         // Template:
         // type.Matches('a','The')
@@ -84,7 +84,7 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [{type} ]
     // Source: "templates/docs.template":13:27
-    private object?[] renderType()
+    private TemplateContent renderType()
     {
         object? type = Get("type");
 
@@ -94,7 +94,7 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // [<b>{$0}</b>]
     // Source: "templates/docs.template":11:9
-    private object?[] title()
+    private TemplateContent title()
     {
         object? item0 = Get("$0");
 
@@ -111,7 +111,7 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     //       ]}
     //    ]}]}]}].@BulletStyle('I.','(a)','•','i.').@MissingValue('')}]
     // Source: "templates/docs.template":1:40
-    private object?[] renderName()
+    private TemplateContent renderName()
     {
         object? name = Each(itemContext => itemContext.Named("name"));
         object? contents = InContext(Get("contents"), dataContext => new Docs(dataContext).renderMissingValue());
@@ -176,7 +176,7 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     //       ]}
     //    ]}]}]}]
     // Source: "templates/docs.template":1:58
-    private object?[] renderName_2()
+    private TemplateContent renderName_2()
     {
         // Template:
         // {.}
@@ -205,7 +205,7 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     //       ]}
     //    ]}]}]
     // Source: "templates/docs.template":3:29
-    private object?[] renderContent()
+    private TemplateContent renderContent()
     {
         object? contents = InContext(Get("contents"), dataContext => dataContext.Each(itemContext => new Docs(itemContext).renderName_3()));
 
@@ -222,7 +222,7 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     //       ]}
     //    ]}]
     // Source: "templates/docs.template":4:14
-    private object?[] renderName_3()
+    private TemplateContent renderName_3()
     {
         object? name = Each(itemContext => itemContext.Named("name"));
         object? text = Get("text");
@@ -238,7 +238,7 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     //       ]}
     //    ]
     // Source: "templates/docs.template":4:39
-    private object?[] renderContent_2()
+    private TemplateContent renderContent_2()
     {
         object? contents = InContext(Get("contents"), dataContext => dataContext.Each(itemContext => new Docs(itemContext).renderName_4()));
 
@@ -250,7 +250,7 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     //          {#name}{text}
     //       ]
     // Source: "templates/docs.template":5:17
-    private object?[] renderName_4()
+    private TemplateContent renderName_4()
     {
         object? name = Each(itemContext => itemContext.Named("name"));
         object? text = Get("text");
@@ -301,7 +301,7 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     //       ,'none', '')}
     // ]}
     // Source: "templates/docs.template":1:1
-    private object?[] renderDocs()
+    private TemplateContent renderDocs()
     {
         object? content = InContext("/data/docs", dataContext => dataContext.Each(itemContext => new Docs(itemContext).renderName()));
 
