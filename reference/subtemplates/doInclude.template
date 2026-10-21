@@ -1,4 +1,4 @@
 [
 Subtemplates:
-{#a:[THIS IS AN INCLUDED SUBTEMPLATE]}
+{#a:[]}
 ].@MissingValue('missing --{key}--')

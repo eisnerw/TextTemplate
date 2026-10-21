@@ -208,14 +208,14 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             new Dictionary<string, Func<EvaluationContext, object?>>(StringComparer.Ordinal)
             {
                 ["overview"] = child => new Startup(child).overview(),
-                ["intro"] = child => new Startup(child).intro(),
-                ["goals"] = child => new Startup(child).goals(),
-                ["subexample"] = child => new Startup(child).subexample(),
-                ["deadoralive"] = child => new Startup(child).deadoralive(),
-                ["Click"] = child => new Startup(child).Click(),
-                ["examples"] = child => new Startup(child).examples(),
-                ["notes"] = child => new Startup(child).notes(),
-                ["externalData"] = child => new Startup(child).externalData()
+                ["intro"] = scope => scope.Each(child => new Startup(child).intro()),
+                ["goals"] = scope => scope.Each(child => new Startup(child).goals()),
+                ["subexample"] = scope => scope.Each(child => new Startup(child).subexample()),
+                ["deadoralive"] = scope => scope.Each(child => new Startup(child).deadoralive()),
+                ["Click"] = scope => scope.Each(child => new Startup(child).Click()),
+                ["examples"] = scope => scope.Each(child => new Startup(child).examples()),
+                ["notes"] = scope => scope.Each(child => new Startup(child).notes()),
+                ["externalData"] = scope => scope.Each(child => new Startup(child).externalData())
             },
             child => new Startup(child).renderStartup());
     }
@@ -241,7 +241,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":182:9
     private object? notes()
     {
-        var click = CallNamed("Click", "licensed", "https://github.com/eisnerw/texttemplate-editor/blob/texttemplate-editor/LICENSE.txt", "Click to see the license");
+        var click = CallNamed("Click", Receiver(child => "licensed"), "https://github.com/eisnerw/texttemplate-editor/blob/texttemplate-editor/LICENSE.txt", "Click to see the license");
 
         return Line($"Note: This software is copyrighted and {click} under the MIT license.  The software is beta and therefore subject to change.  In its current state, it is primarily useful for refining the language, building a reference implementation, and receiving feedback.  As noted above, implementations in other languages are anticipated.  The author welcomes comments, criticisms and suggestions.  ");
     }
@@ -329,21 +329,21 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
 
         var content = bullet();
         var content_2 = bullet_2();
-        var click = CallNamed("Click", "A simple template", "/load/simple", "Simple template");
+        var click = CallNamed("Click", Receiver(child => "A simple template"), "/load/simple", "Simple template");
         var content_3 = bullet_3();
-        var click_2 = CallNamed("Click", "A demonstration of outlining", "/load/outline", "Outline template");
+        var click_2 = CallNamed("Click", Receiver(child => "A demonstration of outlining"), "/load/outline", "Outline template");
         var content_4 = bullet_4();
-        var click_3 = CallNamed("Click", "A demonstration of bullets", "/load/bullets", "Bullets template");
+        var click_3 = CallNamed("Click", Receiver(child => "A demonstration of bullets"), "/load/bullets", "Bullets template");
         var content_5 = bullet_5();
-        var click_4 = CallNamed("Click", "Use of Assert() for validating template output", "/load/tests", "Tests template");
+        var click_4 = CallNamed("Click", Receiver(child => "Use of Assert() for validating template output"), "/load/tests", "Tests template");
         var content_6 = bullet_6();
-        var click_5 = CallNamed("Click", "Some interesting ways of using TextTemplate with the web", "/load/web", "Web template");
+        var click_5 = CallNamed("Click", Receiver(child => "Some interesting ways of using TextTemplate with the web"), "/load/web", "Web template");
         var content_7 = bullet_7();
-        var click_6 = CallNamed("Click", "Date manipulation for a \"To Do\" list", "/load/events", "Events template");
+        var click_6 = CallNamed("Click", Receiver(child => "Date manipulation for a \"To Do\" list"), "/load/events", "Events template");
         var content_8 = bullet_8();
-        var click_7 = CallNamed("Click", "A demonstration of grouping and order", "/load/birthdays", "Birthdays template");
+        var click_7 = CallNamed("Click", Receiver(child => "A demonstration of grouping and order"), "/load/birthdays", "Birthdays template");
         var content_9 = bullet_9();
-        var click_8 = CallNamed("Click", "Experimental application of a computed url to call ElasticSearch", "/load/elastic", "Calling elastic");
+        var click_8 = CallNamed("Click", Receiver(child => "Experimental application of a computed url to call ElasticSearch"), "/load/elastic", "Calling elastic");
 
         return Line($$"""
             {{content}} Examples
@@ -377,8 +377,8 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             () => Get("$1"),
             () => new object?[] { "/" });
 
-        object? choice = (EvaluationContext.Condition(Get("$2")) ? this.renderItem2() : Line($"Click to see the Github project"));
-        object? choice_2 = (!(EvaluationContext.Condition(applyStartsWith())) ? Line($"https://") : "");
+        object? choice = (EvaluationContext.Condition(Get("$2")) ? Each(child => new Startup(child).renderItem2()) : Each(child => Line($"Click to see the Github project")));
+        object? choice_2 = (!(EvaluationContext.Condition(applyStartsWith())) ? Each(child => Line($"https://")) : "");
         var item1 = Get("$1");
         var item0 = Get("$0");
 
@@ -402,7 +402,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     {
         var fname = Get("fname");
         var lname = Get("lname");
-        object? choice = (EvaluationContext.Condition(Get("isAlive")) ? Line($"alive") : Line($"dead"));
+        object? choice = (EvaluationContext.Condition(Get("isAlive")) ? Each(child => Line($"alive")) : Each(child => Line($"dead")));
 
         return Line($"{fname} {lname} is {choice}");
     }
@@ -791,7 +791,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         object? applyBulletStyle() => Unsupported(
             "Call @BulletStyle",
             "templates/startup.template:6:12",
-            () => this.renderIntro(),
+            () => Each(child => new Startup(child).renderIntro()),
             () => new object?[] { "I.", "(a)", "•", "1." });
 
         // Template:
@@ -1184,7 +1184,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         object? applyWhere() => Unsupported(
             "Call Where",
             "templates/startup.template:64:11",
-            () => Named("externalData"),
+            () => Each(child => child.Named("externalData")),
             () => new object?[] { (EvaluationContext.Compare(applyToDate(), "=", "27") && EvaluationContext.Compare(applySubstr_2(), "=", "D")) });
 
         // Template:
@@ -1219,7 +1219,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         object? applyWhere_2() => Unsupported(
             "Call Where",
             "templates/startup.template:72:9",
-            () => Named("externalData"),
+            () => Each(child => child.Named("externalData")),
             () => new object?[] { EvaluationContext.Compare(applySubstr_3(), "=", "1967-10") });
 
         // Template:
@@ -1251,7 +1251,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         object? applyWhere_3() => Unsupported(
             "Call Where",
             "templates/startup.template:85:9",
-            () => Named("externalData"),
+            () => Each(child => child.Named("externalData")),
             () => new object?[] { EvaluationContext.Compare(applySubstr_4(), "=", "01-25") });
 
         // Template:
@@ -1304,9 +1304,9 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             "templates/startup.template:114:1");
 
         var content = bullet();
-        var intro = Named("intro");
-        var content_2 = InContext("{\"first\":\"Hello\", \"second\":\"World\"}", child => new Startup(child).renderFirst());
-        var goals = Named("goals");
+        var intro = Each(child => child.Named("intro"));
+        var content_2 = InContext("{\"first\":\"Hello\", \"second\":\"World\"}", scope => scope.Each(child => new Startup(child).renderFirst()));
+        var goals = Each(child => child.Named("goals"));
         var content_3 = bullet_2();
         var content_4 = InContext("{\"pets\":[ \n      {\"type\":\"cat\"}\n      ,{\"type\":\"dog\"}\n      ,{\"type\":\"tiger\"}\n   ]}", child => new Startup(child).renderBulletStyle());
         var content_5 = bullet_3();
@@ -1317,14 +1317,14 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         var substr = applySubstr();
         var align = applyAlign();
         var toUpper = applyToUpper();
-        object? choice = (EvaluationContext.Condition(applyMatches()) ? Line($"test") : Line($"fail"));
-        var content_8 = InContext("{\"element1\":\"multiple\",\"element2\":\"values\"}", child => new Startup(child).renderChoice_2());
+        object? choice = (EvaluationContext.Condition(applyMatches()) ? Each(child => Line($"test")) : Each(child => Line($"fail")));
+        var content_8 = InContext("{\"element1\":\"multiple\",\"element2\":\"values\"}", scope => scope.Each(child => new Startup(child).renderChoice_2()));
         var content_9 = bullet_5();
-        var subexample = Named("subexample");
+        var subexample = Each(child => child.Named("subexample"));
         var content_10 = bullet_6();
         var groupBy = InContext(applyGroupBy(), child => new Startup(child).renderDateTest());
         var content_11 = bullet_7();
-        var where = InContext(applyWhere_2(), child => new Startup(child).renderDob());
+        var where = InContext(applyWhere_2(), scope => scope.Each(child => new Startup(child).renderDob()));
         var content_12 = bullet_8();
         var content_13 = InContext("{\"data\":\"Joan's <data>\"}", child => new Startup(child).renderEncodeFor());
         var content_14 = bullet_9();
@@ -1332,20 +1332,20 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         var content_15 = bullet_10();
         var content_16 = bullet_11();
         var content_17 = bullet_12();
-        var click = CallNamed("Click", "Microsoft's Monaco Editor", "github.com/microsoft/monaco-editor");
+        var click = CallNamed("Click", Receiver(child => "Microsoft's Monaco Editor"), "github.com/microsoft/monaco-editor");
         var content_18 = bullet_13();
-        var click_2 = CallNamed("Click", "ANTLR (ANother Tool for Language Recognition)", "www.antlr.org/", "click to go to the ANTLR website");
+        var click_2 = CallNamed("Click", Receiver(child => "ANTLR (ANother Tool for Language Recognition)"), "www.antlr.org/", "click to go to the ANTLR website");
         var content_19 = bullet_14();
-        var click_3 = CallNamed("Click", "The \"calc-monaco-editor\" project", "github.com/Strumenta/calc-monaco-editor");
-        var click_4 = CallNamed("Click", "article", "tomassetti.me/writing-a-browser-based-editor-using-monaco-and-antlr/", "Click to go to the article");
+        var click_3 = CallNamed("Click", Receiver(child => "The \"calc-monaco-editor\" project"), "github.com/Strumenta/calc-monaco-editor");
+        var click_4 = CallNamed("Click", Receiver(child => "article"), "tomassetti.me/writing-a-browser-based-editor-using-monaco-and-antlr/", "Click to go to the article");
         var content_20 = bullet_15();
-        var click_5 = CallNamed("Click", "Moment.js", "momentjs.com", "Click to go to the website");
+        var click_5 = CallNamed("Click", Receiver(child => "Moment.js"), "momentjs.com", "Click to go to the website");
         var content_21 = bullet_16();
-        var click_6 = CallNamed("Click", "here", "/load/docs", "Click to see the documentation using TextTemplate");
-        var click_7 = CallNamed("Click", "here", "/runonserver/docs", "Click to see the documentation rendered on the server");
-        var click_8 = CallNamed("Click", "/runonserver/events", "/runonserver/events", "Click to see the events template");
-        var examples = Named("examples");
-        var notes = Named("notes");
+        var click_6 = CallNamed("Click", Receiver(child => "here"), "/load/docs", "Click to see the documentation using TextTemplate");
+        var click_7 = CallNamed("Click", Receiver(child => "here"), "/runonserver/docs", "Click to see the documentation rendered on the server");
+        var click_8 = CallNamed("Click", Receiver(child => "/runonserver/events"), "/runonserver/events", "Click to see the events template");
+        var examples = Each(child => child.Named("examples"));
+        var notes = Each(child => child.Named("notes"));
 
         return Line($$"""
             {{content}} Introduction
@@ -1406,7 +1406,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":86:8
     private object? renderJoin_2()
     {
-        return Join(this.renderFalsy(), ", ", " and ");
+        return Join(Receiver(child => new Startup(child).renderFalsy()), ", ", " and ");
     }
 
     // Template:
@@ -1427,7 +1427,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         object? applyFalsy() => Unsupported(
             "Call @Falsy",
             "templates/startup.template:86:10",
-            () => Named("deadoralive"),
+            () => Each(child => child.Named("deadoralive")),
             () => new object?[] { pattern() });
 
         var falsy = applyFalsy();
@@ -1447,7 +1447,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         object? applyEncodeDataFor() => Unsupported(
             "Call @EncodeDataFor",
             "templates/startup.template:80:38",
-            () => this.renderData(),
+            () => Each(child => new Startup(child).renderData()),
             () => new object?[] { "html" });
 
         // Template:
@@ -1545,7 +1545,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         object? applyDateFormat() => Unsupported(
             "Call @DateFormat",
             "templates/startup.template:65:37",
-            () => this.renderSign(),
+            () => Each(child => new Startup(child).renderSign()),
             () => new object?[] { "M/D/YYYY" });
 
         // Template:
@@ -1586,7 +1586,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             () => new object?[] { Get("lname") });
 
         var sign = Get("sign");
-        var orderBy = InContext(applyOrderBy(), child => new Startup(child).renderFname());
+        var orderBy = InContext(applyOrderBy(), scope => scope.Each(child => new Startup(child).renderFname()));
 
         return Line($$"""
             {{sign}} 
@@ -1618,9 +1618,9 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             "Call LessThan",
             "templates/startup.template:55:12",
             () => Get("element1"),
-            () => new object?[] { this.renderElement2() });
+            () => new object?[] { Each(child => new Startup(child).renderElement2()) });
 
-        object? choice = (EvaluationContext.Condition(applyLessThan()) ? this.renderElement1() : "");
+        object? choice = (EvaluationContext.Condition(applyLessThan()) ? Each(child => new Startup(child).renderElement1()) : "");
 
         return Line($"{choice}");
     }
@@ -1657,7 +1657,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             {
                 child => child.WithMissingValue("missing")
             },
-            child => new Startup(child).renderChoice());
+            scope => scope.Each(child => new Startup(child).renderChoice()));
     }
 
     // Template:
@@ -1666,7 +1666,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":44:5
     private object? renderChoice()
     {
-        object? choice = (EvaluationContext.Condition(Get("test")) ? Line($"available") : "");
+        object? choice = (EvaluationContext.Condition(Get("test")) ? Each(child => Line($"available")) : "");
         var unavailable = Get("unavailable");
 
         return Line($"{choice} values and replacement of {unavailable}");
@@ -1689,7 +1689,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         object? applyBulletStyle() => Unsupported(
             "Call @BulletStyle",
             "templates/startup.template:38:4",
-            () => this.renderAndedPhrasesEGO(),
+            () => Each(child => new Startup(child).renderAndedPhrasesEGO()),
             () => new object?[] { "-" });
 
         return applyBulletStyle();
@@ -1704,7 +1704,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     private object? renderAndedPhrasesEGO()
     {
         var pets = InContext(Get("pets"), child => new Startup(child).renderJoin());
-        var pets_2 = InContext(Get("pets"), child => new Startup(child).renderType_2());
+        var pets_2 = InContext(Get("pets"), scope => scope.Each(child => new Startup(child).renderType_2()));
 
         return Line($$"""
             "anded" phrases (e.g., "{{pets}}") or bulleted lists
@@ -1736,7 +1736,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":38:35
     private object? renderJoin()
     {
-        return Join(this.renderType(), ", ", " and ");
+        return Join(Receiver(child => new Startup(child).renderType()), ", ", " and ");
     }
 
     // Template:
@@ -1762,7 +1762,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
 
     private object? renderStartup()
     {
-        var overview = Named("overview");
+        var overview = Each(child => child.Named("overview"));
 
         return Line($$"""
                                          The TextTemplate Language

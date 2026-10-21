@@ -12,7 +12,7 @@ internal sealed class DoInclude(EvaluationContext context) : TemplateUnit(contex
     // Template:
     // [
     // Subtemplates:
-    // {#a:[THIS IS AN INCLUDED SUBTEMPLATE]}
+    // {#a:[]}
     // ].@MissingValue('missing --{key}--')
     // Source: "subtemplates/doInclude.template":1:1
     internal object? Render()
@@ -22,7 +22,7 @@ internal sealed class DoInclude(EvaluationContext context) : TemplateUnit(contex
             {
                 child => child.WithMissingValue("missing --{key}--")
             },
-            child => new DoInclude(child).renderSubtemplates());
+            scope => scope.Each(child => new DoInclude(child).renderSubtemplates()));
 
         return Line($"{missingValue}");
     }
@@ -30,12 +30,12 @@ internal sealed class DoInclude(EvaluationContext context) : TemplateUnit(contex
     // Template:
     // [
     // Subtemplates:
-    // {#a:[THIS IS AN INCLUDED SUBTEMPLATE]}
+    // {#a:[]}
     // ]
     // Source: "subtemplates/doInclude.template":1:1
     private object? renderSubtemplates()
     {
-        var a = InContext(Named("a"), child => new DoInclude(child).a());
+        var a = InContext(Each(child => child.Named("a")), scope => scope.Each(child => new DoInclude(child).a()));
 
         return Line($$"""
             Subtemplates:
@@ -44,11 +44,11 @@ internal sealed class DoInclude(EvaluationContext context) : TemplateUnit(contex
     }
 
     // Template:
-    // [THIS IS AN INCLUDED SUBTEMPLATE]
+    // []
     // Source: "subtemplates/doInclude.template":3:5
     private object? a()
     {
-        return Line($"THIS IS AN INCLUDED SUBTEMPLATE");
+        return Line($"");
     }
 
     internal EvaluationContext Import()

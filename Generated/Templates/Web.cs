@@ -70,13 +70,13 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
         return WithDefinitions(
             new Dictionary<string, Func<EvaluationContext, object?>>(StringComparer.Ordinal)
             {
-                ["Style"] = child => new Web(child).Style(),
-                ["ToHtml"] = child => new Web(child).ToHtml(),
-                ["Tag"] = child => new Web(child).Tag(),
+                ["Style"] = scope => scope.Each(child => new Web(child).Style()),
+                ["ToHtml"] = scope => scope.Each(child => new Web(child).ToHtml()),
+                ["Tag"] = scope => scope.Each(child => new Web(child).Tag()),
                 ["Click"] = child => new Web(child).Click(),
-                ["StyleCases"] = child => new Web(child).StyleCases(),
-                ["OptionalStyle"] = child => new Web(child).OptionalStyle(),
-                ["external"] = child => new Web(child).external()
+                ["StyleCases"] = scope => scope.Each(child => new Web(child).StyleCases()),
+                ["OptionalStyle"] = scope => scope.Each(child => new Web(child).OptionalStyle()),
+                ["external"] = scope => scope.Each(child => new Web(child).external())
             },
             child => new Web(child).renderWeb());
     }
@@ -96,7 +96,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
         return WithDefinitions(
             new Dictionary<string, Func<EvaluationContext, object?>>(StringComparer.Ordinal)
             {
-                ["formatGitRepos"] = child => new Web(child).formatGitRepos()
+                ["formatGitRepos"] = scope => scope.Each(child => new Web(child).formatGitRepos())
             },
             child => new Web(child).externalContent());
     }
@@ -107,7 +107,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     private object? formatGitRepos()
     {
         var name = Get("name");
-        object? choice = (EvaluationContext.Condition(Get("description")) ? this.renderDescription() : "");
+        object? choice = (EvaluationContext.Condition(Get("description")) ? Each(child => new Web(child).renderDescription()) : "");
 
         return Line($"- {name}{choice}");
     }
@@ -123,14 +123,6 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     }
 
     // Template:
-    // #formatGitRepos
-    // Source: "templates/web.template":50:58
-    private object? renderFormatGitRepos()
-    {
-        return Named("formatGitRepos");
-    }
-
-    // Template:
     // [{$2=>[
     //       {$0.#Style($2,$3,$4,$5,$6,$7,$8,$9)}
     //    ],[
@@ -139,7 +131,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/web.template":42:17
     private object? OptionalStyle()
     {
-        object? choice = (EvaluationContext.Condition(Get("$2")) ? this.renderStyle_2() : this.renderStyle_3());
+        object? choice = (EvaluationContext.Condition(Get("$2")) ? Each(child => new Web(child).renderStyle_2()) : Each(child => new Web(child).renderStyle_3()));
 
         return Line($"{choice}");
     }
@@ -150,7 +142,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/web.template":44:6
     private object? renderStyle_3()
     {
-        var style = CallNamed("Style", Get("$0"), Get("$1"));
+        var style = CallNamed("Style", Receiver(child => child.Lookup("$0")), Get("$1"));
 
         return Line($"{style}");
     }
@@ -162,7 +154,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/web.template":42:23
     private object? renderStyle_2()
     {
-        var style = CallNamed("Style", Get("$0"), Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9"));
+        var style = CallNamed("Style", Receiver(child => child.Lookup("$0")), Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9"));
 
         return Line($"{style}");
     }
@@ -208,7 +200,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
             () => new object?[] { "italic", "font-style:italic", "normal", "font-weight:normal;white-space:normal", "bold", "font-weight:bold", "red", "color:red", "blue", "color:blue", "black", "color:black", "outlined-red-dots", "outline-color:red;outline-style:dotted", "underline", "text-decoration: underline", "link", "text-decoration: underline;color:blue" });
 
         var @case = applyCase();
-        object? choice = (EvaluationContext.Condition(Get("$1")) ? this.renderStyleCases() : "");
+        object? choice = (EvaluationContext.Condition(Get("$1")) ? Each(child => new Web(child).renderStyleCases()) : "");
 
         return Line($$"""
                {{@case}};
@@ -221,7 +213,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/web.template":40:9
     private object? renderStyleCases()
     {
-        var styleCases = CallNamed("StyleCases", Get("$1"), Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9"));
+        var styleCases = CallNamed("StyleCases", Receiver(child => child.Lookup("$1")), Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9"));
 
         return Line($"{styleCases}");
     }
@@ -234,7 +226,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/web.template":22:9
     private object? Click()
     {
-        return CallNamed("OptionalStyle", this.renderChoice(), "link", Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9"));
+        return CallNamed("OptionalStyle", Receiver(child => new Web(child).renderChoice()), "link", Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9"));
     }
 
     // Template:
@@ -244,7 +236,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/web.template":22:9
     private object? renderChoice()
     {
-        object? choice = (EvaluationContext.Condition(Get("$2")) ? this.renderItem2() : Line($"Click this"));
+        object? choice = (EvaluationContext.Condition(Get("$2")) ? Each(child => new Web(child).renderItem2()) : Each(child => Line($"Click this")));
         var item1 = Get("$1");
         var item0 = Get("$0");
 
@@ -290,7 +282,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/web.template":17:1
     private object? Style()
     {
-        var styleCases = CallNamed("StyleCases", Get("$1"), Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9"));
+        var styleCases = CallNamed("StyleCases", Receiver(child => child.Lookup("$1")), Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9"));
         var item0 = Get("$0");
 
         return Line($"<span style=\"{styleCases}\">{item0}</span>");
@@ -302,17 +294,17 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/web.template":2:2
     private object? renderStyle()
     {
-        var style = CallNamed("Style", "test", "outlined-red-dots");
-        var style_2 = CallNamed("Style", "World", "italic", "bold", "red");
+        var style = CallNamed("Style", Receiver(child => "test"), "outlined-red-dots");
+        var style_2 = CallNamed("Style", Receiver(child => "World"), "italic", "bold", "red");
 
         return Line($"Hello {style} {style_2}!!");
     }
 
     private object? renderWeb()
     {
-        var toHtml = CallNamed("ToHtml", CallNamed("Tag", CallNamed("Style", this.renderStyle(), "normal", "blue"), "h2"));
-        var click = CallNamed("Click", "Link", "simple", "Click this to load a simple template", "link", "italic");
-        var external = Named("external");
+        var toHtml = CallNamed("ToHtml", CallNamed("Tag", CallNamed("Style", Receiver(child => new Web(child).renderStyle()), "normal", "blue"), "h2"));
+        var click = CallNamed("Click", Receiver(child => "Link"), "simple", "Click this to load a simple template", "link", "italic");
+        var external = Each(child => child.Named("external"));
 
         return Line($$"""
             Here is an example of tagging and styling using Text Templates:
@@ -325,7 +317,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
 
     private object? externalContent()
     {
-        var content = InContext("https://api.github.com/users/eisnerw/repos", child => new Web(child).renderFormatGitRepos());
+        var content = InContext("https://api.github.com/users/eisnerw/repos", scope => scope.Each(child => child.Named("formatGitRepos")));
 
         return Line($$"""
             This is an example of an external data source (in this case, Github)

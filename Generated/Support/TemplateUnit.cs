@@ -14,7 +14,9 @@ internal abstract class TemplateUnit(EvaluationContext context)
     protected object? Annotate(Func<EvaluationContext, EvaluationContext>[] annotations, Func<EvaluationContext, object?> body)
         => context.Annotate(annotations, body);
     protected object? CallNamed(string name, object? value, params object?[] arguments) => context.CallNamed(name, value, arguments);
-    protected static object? Join(object? value, params object?[] arguments) => EvaluationContext.JoinScalar(value, arguments);
+    protected static object? Join(object? value, params object?[] arguments) => EvaluationContext.JoinValues(value, arguments);
+    protected object? Each(Func<EvaluationContext, object?> body) => context.Each(body);
+    protected object? Receiver(Func<EvaluationContext, object?> body) => context.Receiver(body);
     protected object? Get(string path) => context.Lookup(path);
     protected object? Named(string name) => context.Named(name);
     protected static object?[] Line(EvaluationContext.StructuredText text) => EvaluationContext.Text(text);

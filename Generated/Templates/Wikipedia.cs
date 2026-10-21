@@ -22,9 +22,9 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
         return WithDefinitions(
             new Dictionary<string, Func<EvaluationContext, object?>>(StringComparer.Ordinal)
             {
-                ["getWiki"] = child => new Wikipedia(child).getWiki(),
-                ["Wiki"] = child => new Wikipedia(child).Wiki(),
-                ["wikiapi"] = child => new Wikipedia(child).wikiapi()
+                ["getWiki"] = scope => scope.Each(child => new Wikipedia(child).getWiki()),
+                ["Wiki"] = scope => scope.Each(child => new Wikipedia(child).Wiki()),
+                ["wikiapi"] = scope => scope.Each(child => new Wikipedia(child).wikiapi())
             },
             child => new Wikipedia(child).renderWikipedia());
     }
@@ -44,7 +44,7 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/wikipedia.template":5:8
     private object? Wiki()
     {
-        var wikiapi = InContext(Named("wikiapi"), child => new Wikipedia(child).renderContent());
+        var wikiapi = InContext(Each(child => child.Named("wikiapi")), scope => scope.Each(child => new Wikipedia(child).renderContent()));
 
         return Line($"{wikiapi}");
     }
@@ -54,7 +54,7 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/wikipedia.template":5:19
     private object? renderContent()
     {
-        var pages = InContext(Get("query.pages"), child => new Wikipedia(child).renderReplace());
+        var pages = InContext(Get("query.pages"), scope => scope.Each(child => new Wikipedia(child).renderReplace()));
 
         return Line($"{pages}");
     }
@@ -98,7 +98,7 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/wikipedia.template":4:11
     private object? getWiki()
     {
-        var wiki = InContext(Named("Wiki"), child => new Wikipedia(child).renderExtract());
+        var wiki = InContext(Each(child => child.Named("Wiki")), scope => scope.Each(child => new Wikipedia(child).renderExtract()));
 
         return Line($"{wiki}");
     }
@@ -115,7 +115,7 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
 
     private object? renderWikipedia()
     {
-        var getWiki = CallNamed("getWiki", "Paul Simon");
+        var getWiki = CallNamed("getWiki", Receiver(child => "Paul Simon"));
 
         return Line($" {getWiki}");
     }

@@ -1,0 +1,624 @@
+[
+  {
+    "name": "empty-inline",
+    "script": "{pets:[{name}]}",
+    "data": {
+      "owner": "O",
+      "pets": []
+    },
+    "expected": ""
+  },
+  {
+    "name": "empty-embedded",
+    "script": "X{pets:[{name}]}Y",
+    "data": {
+      "owner": "O",
+      "pets": []
+    },
+    "expected": ""
+  },
+  {
+    "name": "empty-join",
+    "script": "{pets:[{name}].Join(\", \",\" and \")}",
+    "data": {
+      "owner": "O",
+      "pets": []
+    },
+    "expected": ""
+  },
+  {
+    "name": "empty-named-method",
+    "script": "{pets:#pet.#anded()}\nSubtemplates:\n{#pet:[{name}]}\n{#anded:[{$0.Join(\", \",\" and \")}]}",
+    "data": {
+      "owner": "O",
+      "pets": []
+    },
+    "expected": ""
+  },
+  {
+    "name": "empty-parent",
+    "script": "{pets:[{name}/{^.^.owner}]}",
+    "data": {
+      "owner": "O",
+      "pets": []
+    },
+    "expected": ""
+  },
+  {
+    "name": "singleton-inline",
+    "script": "{pets:[{name}]}",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        }
+      ]
+    },
+    "expected": "A"
+  },
+  {
+    "name": "singleton-embedded",
+    "script": "X{pets:[{name}]}Y",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        }
+      ]
+    },
+    "expected": "XAY"
+  },
+  {
+    "name": "singleton-join",
+    "script": "{pets:[{name}].Join(\", \",\" and \")}",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        }
+      ]
+    },
+    "expected": "A"
+  },
+  {
+    "name": "singleton-named-method",
+    "script": "{pets:#pet.#anded()}\nSubtemplates:\n{#pet:[{name}]}\n{#anded:[{$0.Join(\", \",\" and \")}]}",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        }
+      ]
+    },
+    "expected": "A"
+  },
+  {
+    "name": "singleton-parent",
+    "script": "{pets:[{name}/{^.^.owner}]}",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        }
+      ]
+    },
+    "expected": "A/O"
+  },
+  {
+    "name": "multiple-inline",
+    "script": "{pets:[{name}]}",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "A\nB"
+  },
+  {
+    "name": "multiple-embedded",
+    "script": "X{pets:[{name}]}Y",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "X\n   A\n   BY"
+  },
+  {
+    "name": "multiple-join",
+    "script": "{pets:[{name}].Join(\", \",\" and \")}",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "A and B"
+  },
+  {
+    "name": "multiple-named-method",
+    "script": "{pets:#pet.#anded()}\nSubtemplates:\n{#pet:[{name}]}\n{#anded:[{$0.Join(\", \",\" and \")}]}",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "A and B"
+  },
+  {
+    "name": "multiple-parent",
+    "script": "{pets:[{name}/{^.^.owner}]}",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "A/O\nB/O"
+  },
+  {
+    "name": "missing-item-inline",
+    "script": "{pets:[{name}]}",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        },
+        {},
+        {
+          "name": "C"
+        }
+      ]
+    },
+    "expected": "A\nC"
+  },
+  {
+    "name": "missing-item-embedded",
+    "script": "X{pets:[{name}]}Y",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        },
+        {},
+        {
+          "name": "C"
+        }
+      ]
+    },
+    "expected": "X\n   A\n   CY"
+  },
+  {
+    "name": "missing-item-join",
+    "script": "{pets:[{name}].Join(\", \",\" and \")}",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        },
+        {},
+        {
+          "name": "C"
+        }
+      ]
+    },
+    "expected": "A and C"
+  },
+  {
+    "name": "missing-item-named-method",
+    "script": "{pets:#pet.#anded()}\nSubtemplates:\n{#pet:[{name}]}\n{#anded:[{$0.Join(\", \",\" and \")}]}",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        },
+        {},
+        {
+          "name": "C"
+        }
+      ]
+    },
+    "expected": "A and C"
+  },
+  {
+    "name": "missing-item-parent",
+    "script": "{pets:[{name}/{^.^.owner}]}",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        },
+        {},
+        {
+          "name": "C"
+        }
+      ]
+    },
+    "expected": "A/O\nC/O"
+  },
+  {
+    "name": "three-join",
+    "script": "{pets:[{name}].Join(\", \",\" and \")}",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        },
+        {
+          "name": "C"
+        }
+      ]
+    },
+    "expected": "A, B and C"
+  },
+  {
+    "name": "default-join",
+    "script": "{pets:[{name}].Join()}",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        },
+        {
+          "name": "C"
+        }
+      ]
+    },
+    "expected": "A, B, C"
+  },
+  {
+    "name": "indented",
+    "script": "Start\n\t{pets:[{name}]}\nEnd",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        },
+        {
+          "name": "C"
+        }
+      ]
+    },
+    "expected": "Start\n    A\n    B\n    C\nEnd"
+  },
+  {
+    "name": "multiline",
+    "script": "X{pets:[{name}\nmore]}Y",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        },
+        {
+          "name": "C"
+        }
+      ]
+    },
+    "expected": "X\n   A\nmore\n   B\nmore\n   C\nmoreY"
+  },
+  {
+    "name": "all-missing",
+    "script": "X{pets:[{absent}]}Y",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        },
+        {
+          "name": "C"
+        }
+      ]
+    },
+    "expected": ""
+  },
+  {
+    "name": "root-named",
+    "script": "{#pet}\nSubtemplates:\n{#pet:[{name}]}",
+    "data": [
+      {
+        "name": "A"
+      },
+      {
+        "name": "B"
+      },
+      {
+        "name": "C"
+      }
+    ],
+    "expected": "A\nB\nC"
+  },
+  {
+    "name": "root-inline",
+    "script": "{:[{name}]}",
+    "data": [
+      {
+        "name": "A"
+      },
+      {
+        "name": "B"
+      },
+      {
+        "name": "C"
+      }
+    ],
+    "expected": "A\nB\nC"
+  },
+  {
+    "name": "strings",
+    "script": "{pets:[{_}].Join(\"|\")}",
+    "data": {
+      "pets": [
+        "A",
+        "B",
+        "C"
+      ]
+    },
+    "expected": "A|B|C"
+  },
+  {
+    "name": "projection",
+    "script": "{pets.name.Join(\"|\")}",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        },
+        {
+          "name": "C"
+        }
+      ]
+    },
+    "expected": "A|B|C"
+  },
+  {
+    "name": "nested",
+    "script": "{pets:[{name}: {toys:[{_}]}]}",
+    "data": {
+      "pets": [
+        {
+          "name": "A",
+          "toys": [
+            "x",
+            "y"
+          ]
+        },
+        {
+          "name": "B",
+          "toys": [
+            "z",
+            "w"
+          ]
+        }
+      ]
+    },
+    "expected": "A: \n   x\n   y\nB: \n   z\n   w"
+  },
+  {
+    "name": "leading-newline",
+    "script": "X{pets:[\n{name}]}Y",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        },
+        {
+          "name": "C"
+        }
+      ]
+    },
+    "expected": "X\n   A\n   B\n   CY"
+  },
+  {
+    "name": "literal-list",
+    "script": "X{pets:[same]}Y",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        },
+        {
+          "name": "C"
+        }
+      ]
+    },
+    "expected": "X\n   same\n   same\n   sameY"
+  },
+  {
+    "name": "empty-fallback",
+    "script": "{pets:[{name}],[no pets]}",
+    "data": {
+      "pets": []
+    },
+    "expected": "no pets"
+  },
+  {
+    "name": "missing-replacement",
+    "script": "{pets:[{absent}].@MissingValue(\"?\")}",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        },
+        {
+          "name": "C"
+        }
+      ]
+    },
+    "expected": "?\n?\n?"
+  },
+  {
+    "name": "join-chain",
+    "script": "{pets:[{name}].Join(\"|\").Join(\"!\")}",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        },
+        {
+          "name": "C"
+        }
+      ]
+    },
+    "expected": "A|B|C"
+  },
+  {
+    "name": "scalar-data-join",
+    "script": "{pets.Join(\"|\")}",
+    "data": {
+      "pets": [
+        "A",
+        "B",
+        "C"
+      ]
+    },
+    "expected": "A|B|C"
+  },
+  {
+    "name": "parent-receiver",
+    "script": "{pets:[{^.^.owner.Join(\"|\")}]}",
+    "data": {
+      "owner": "O",
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        },
+        {
+          "name": "C"
+        }
+      ]
+    },
+    "expected": "O\nO\nO"
+  },
+  {
+    "name": "zero-values",
+    "script": "{pets:[{name}].Join(\"|\")}",
+    "data": {
+      "pets": [
+        {
+          "name": 0
+        },
+        {
+          "name": false
+        },
+        {
+          "name": ""
+        },
+        {
+          "name": "A"
+        }
+      ]
+    },
+    "expected": "A"
+  },
+  {
+    "name": "argument-render",
+    "script": "X{pets:[{name}].#identity()}Y\nSubtemplates:\n{#identity:[{$0}]}",
+    "data": {
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "X\n   A\n   BY"
+  },
+  {
+    "name": "nested-multiline",
+    "script": "X{pets:[{name}].#identity()}Y\nSubtemplates:\n{#identity:[{$0}]}",
+    "data": {
+      "pets": [
+        {
+          "name": "A\na"
+        },
+        {
+          "name": "B\nb"
+        }
+      ]
+    },
+    "expected": "X\n   A\n   a\n   B\n   bY"
+  }
+]

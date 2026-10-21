@@ -35,10 +35,10 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
         return WithDefinitions(
             new Dictionary<string, Func<EvaluationContext, object?>>(StringComparer.Ordinal)
             {
-                ["SameDay"] = child => new Events(child).SameDay(),
-                ["SameAMPM"] = child => new Events(child).SameAMPM(),
-                ["onHour"] = child => new Events(child).onHour(),
-                ["formatTimes"] = child => new Events(child).formatTimes()
+                ["SameDay"] = scope => scope.Each(child => new Events(child).SameDay()),
+                ["SameAMPM"] = scope => scope.Each(child => new Events(child).SameAMPM()),
+                ["onHour"] = scope => scope.Each(child => new Events(child).onHour()),
+                ["formatTimes"] = scope => scope.Each(child => new Events(child).formatTimes())
             },
             child => new Events(child).renderEvents());
     }
@@ -62,7 +62,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
             "Call ToDate",
             "templates/events.template:15:4",
             () => Get("$0"),
-            () => new object?[] { this.renderChoice() });
+            () => new object?[] { Each(child => new Events(child).renderChoice()) });
 
         // Template:
         // $1.ToDate('h:mma')
@@ -74,7 +74,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
             () => new object?[] { "h:mma" });
 
         var toDate = applyToDate();
-        object? choice = (!(EvaluationContext.Condition(CallNamed("SameDay", Get("$1"), Get("$0")))) ? this.renderToUpper_2() : "");
+        object? choice = (!(EvaluationContext.Condition(CallNamed("SameDay", Receiver(child => child.Lookup("$1")), Get("$0")))) ? Each(child => new Events(child).renderToUpper_2()) : "");
         var toDate_2 = applyToDate_2();
 
         return Line($"{toDate}-{choice}{toDate_2}");
@@ -111,8 +111,8 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/events.template":15:14
     private object? renderChoice()
     {
-        object? choice = (!(EvaluationContext.Condition(CallNamed("onHour", Get("$0")))) ? Line($":mm") : "");
-        object? choice_2 = (!(EvaluationContext.Condition(CallNamed("SameAMPM", Get("$0"), Get("$1")))) ? Line($"a") : "");
+        object? choice = (!(EvaluationContext.Condition(CallNamed("onHour", Receiver(child => child.Lookup("$0"))))) ? Each(child => Line($":mm")) : "");
+        object? choice_2 = (!(EvaluationContext.Condition(CallNamed("SameAMPM", Receiver(child => child.Lookup("$0")), Get("$1")))) ? Each(child => Line($"a")) : "");
 
         return Line($"h{choice}{choice_2}");
     }
@@ -159,7 +159,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
             () => Get("$1"),
             () => new object?[] { "a" });
 
-        var content = (EvaluationContext.Compare(applyToDate(), "=", applyToDate_2()) && EvaluationContext.Condition(CallNamed("SameDay", Get("$0"), Get("$1"))));
+        var content = (EvaluationContext.Compare(applyToDate(), "=", applyToDate_2()) && EvaluationContext.Condition(CallNamed("SameDay", Receiver(child => child.Lookup("$0")), Get("$1"))));
 
         return Line($"{content}");
     }
@@ -220,7 +220,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
         object? applyDateTest() => Unsupported(
             "Call @DateTest",
             "templates/events.template:2:67",
-            () => this.renderToUpper(),
+            () => Each(child => new Events(child).renderToUpper()),
             () => new object?[] { pattern() });
 
         // Template:
@@ -291,7 +291,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
             () => new object?[] { applyToDate() });
 
         var toUpper = applyToUpper();
-        var orderBy = InContext(applyOrderBy(), child => new Events(child).renderFormatTimes());
+        var orderBy = InContext(applyOrderBy(), scope => scope.Each(child => new Events(child).renderFormatTimes()));
 
         return Line($$"""
             {{toUpper}} 
@@ -320,7 +320,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
             "Bullet       {.}",
             "templates/events.template:6:1");
 
-        var formatTimes = CallNamed("formatTimes", Get("start"), Get("end"));
+        var formatTimes = CallNamed("formatTimes", Receiver(child => child.Lookup("start")), Get("end"));
         var summary = Get("summary");
         var content = bullet();
         var description = Get("description");

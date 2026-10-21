@@ -36,8 +36,8 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
         return WithDefinitions(
             new Dictionary<string, Func<EvaluationContext, object?>>(StringComparer.Ordinal)
             {
-                ["title"] = child => new Docs(child).title(),
-                ["name"] = child => new Docs(child).name()
+                ["title"] = scope => scope.Each(child => new Docs(child).title()),
+                ["name"] = scope => scope.Each(child => new Docs(child).name())
             },
             child => new Docs(child).renderDocs());
     }
@@ -79,8 +79,8 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
             () => Get("type"),
             () => new object?[] { "dash", " &#8212; ", "comma", ", ", "a", "", "The", "", "blank", " ", "none", "" });
 
-        object? choice = (EvaluationContext.Condition(applyMatches()) ? this.renderType() : "");
-        var title = CallNamed("title", Get("name"));
+        object? choice = (EvaluationContext.Condition(applyMatches()) ? Each(child => new Docs(child).renderType()) : "");
+        var title = CallNamed("title", Receiver(child => child.Lookup("name")));
         var @case = applyCase();
 
         return Line($"{choice}{title}{@case}");
@@ -118,7 +118,7 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/docs.template":1:40
     private object? renderName()
     {
-        var name = Named("name");
+        var name = Each(child => child.Named("name"));
         var contents = InContext(Get("contents"), child => new Docs(child).renderMissingValue());
 
         return Line($"{name}{contents}");
@@ -149,7 +149,7 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
         object? applyBulletStyle() => Unsupported(
             "Call @BulletStyle",
             "templates/docs.template:1:58",
-            () => this.renderName_2(),
+            () => Each(child => new Docs(child).renderName_2()),
             () => new object?[] { "I.", "(a)", "•", "i." });
 
         // Template:
@@ -191,9 +191,9 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
             "templates/docs.template:3:1");
 
         var content = bullet();
-        var name = Named("name");
+        var name = Each(child => child.Named("name"));
         var text = Get("text");
-        object? choice = (EvaluationContext.Condition(Get("contents")) ? this.renderContent() : "");
+        object? choice = (EvaluationContext.Condition(Get("contents")) ? Each(child => new Docs(child).renderContent()) : "");
 
         return Line($$"""
             
@@ -212,7 +212,7 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/docs.template":3:29
     private object? renderContent()
     {
-        var contents = InContext(Get("contents"), child => new Docs(child).renderName_3());
+        var contents = InContext(Get("contents"), scope => scope.Each(child => new Docs(child).renderName_3()));
 
         return Line($$"""
             
@@ -229,9 +229,9 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/docs.template":4:14
     private object? renderName_3()
     {
-        var name = Named("name");
+        var name = Each(child => child.Named("name"));
         var text = Get("text");
-        object? choice = (EvaluationContext.Condition(Get("contents")) ? this.renderContent_2() : "");
+        object? choice = (EvaluationContext.Condition(Get("contents")) ? Each(child => new Docs(child).renderContent_2()) : "");
 
         return Line($"{name}{text}{choice}");
     }
@@ -245,7 +245,7 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/docs.template":4:39
     private object? renderContent_2()
     {
-        var contents = InContext(Get("contents"), child => new Docs(child).renderName_4());
+        var contents = InContext(Get("contents"), scope => scope.Each(child => new Docs(child).renderName_4()));
 
         return Line($"{contents}");
     }
@@ -257,7 +257,7 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/docs.template":5:17
     private object? renderName_4()
     {
-        var name = Named("name");
+        var name = Each(child => child.Named("name"));
         var text = Get("text");
 
         return Line($"{name}{text}");
@@ -265,7 +265,7 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
 
     private object? renderDocs()
     {
-        var content = InContext("/data/docs", child => new Docs(child).renderName());
+        var content = InContext("/data/docs", scope => scope.Each(child => new Docs(child).renderName()));
 
         return Line($"                         {content}");
     }

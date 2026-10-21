@@ -81,7 +81,7 @@ public sealed class CSharpEmitter
             bodies.Clear();
             methodNames.Clear();
             unitName = units[key];
-            methodNames.UnionWith(new[] { unitName, "Get", "Line", "Named", "InContext", "WithDefinitions", "Unsupported", "Annotate", "CallNamed", "Join", "Import", "Context" });
+            methodNames.UnionWith(new[] { unitName, "Get", "Line", "Named", "InContext", "WithDefinitions", "Unsupported", "Annotate", "CallNamed", "Join", "Import", "Context", "Each", "Receiver" });
             IndexDefinitions(source.Tree);
             if (source.Category == "subtemplates" && includes.Contains(source.Name)) EmitImport(source);
             string method = Emit(source.Tree, source);
@@ -127,7 +127,9 @@ public sealed class CSharpEmitter
             protected object? Annotate(Func<EvaluationContext, EvaluationContext>[] annotations, Func<EvaluationContext, object?> body)
                 => context.Annotate(annotations, body);
             protected object? CallNamed(string name, object? value, params object?[] arguments) => context.CallNamed(name, value, arguments);
-            protected static object? Join(object? value, params object?[] arguments) => EvaluationContext.JoinScalar(value, arguments);
+            protected static object? Join(object? value, params object?[] arguments) => EvaluationContext.JoinValues(value, arguments);
+            protected object? Each(Func<EvaluationContext, object?> body) => context.Each(body);
+            protected object? Receiver(Func<EvaluationContext, object?> body) => context.Receiver(body);
             protected object? Get(string path) => context.Lookup(path);
             protected object? Named(string name) => context.Named(name);
             protected static object?[] Line(EvaluationContext.StructuredText text) => EvaluationContext.Text(text);
@@ -365,9 +367,20 @@ public sealed class CSharpEmitter
 
     private string Expression(SyntaxNode node, ParsedSource source)
     {
-        string Call(SyntaxNode child) => IsLiteralBody(child) ? InterpolatedText(child.Children, _ => throw new InvalidOperationException()) : child.Kind is SyntaxKind.Template or SyntaxKind.SharedTemplate or SyntaxKind.InlineTemplate
+        string Call(SyntaxNode child) => child.Kind == SyntaxKind.InlineTemplate
+            ? "Each(" + RawChild(child) + ")" : child.Kind is SyntaxKind.Template or SyntaxKind.SharedTemplate
             ? "this." + Emit(child, source) + "()" : Expression(child, source);
-        string InChild(SyntaxNode child) => IsLiteralBody(child) && !definitionNames.ContainsKey(child) ? "child => " + Call(child) : "child => new " + unitName + "(child)." + Emit(child, source) + "()";
+        string RawChild(SyntaxNode child) => child.Kind switch
+        {
+            SyntaxKind.Identifier when !child.Value!.StartsWith('@') => "child => child.Lookup(" + Quote(child.Value) + ")",
+            SyntaxKind.NamedSubtemplate => "child => child.Named(" + Quote(child.Value!) + ")",
+            SyntaxKind.String => "child => " + Quote(DecodeString(child.Value!)),
+            SyntaxKind.Number => "child => EvaluationContext.ParseInteger(" + Quote(child.Value!) + ")",
+            _ when IsLiteralBody(child) && !definitionNames.ContainsKey(child) => "child => " + InterpolatedText(child.Children, _ => throw new InvalidOperationException()),
+            _ => "child => new " + unitName + "(child)." + Emit(child, source) + "()"
+        };
+        string InChild(SyntaxNode child) => child.Kind is SyntaxKind.InlineTemplate or SyntaxKind.NamedSubtemplate
+            ? "scope => scope.Each(" + RawChild(child) + ")" : RawChild(child);
         string Predicate(SyntaxNode child) => child.Kind switch
         {
             SyntaxKind.Relational or SyntaxKind.Logical or SyntaxKind.Not or SyntaxKind.Group => Call(child),
@@ -429,7 +442,7 @@ public sealed class CSharpEmitter
             case SyntaxKind.Interpolation: expression = Call(node.Children[0]); break;
             case SyntaxKind.Identifier:
                 expression = node.Value!.StartsWith('@') ? Stub() : "Get(" + Quote(node.Value!) + ")"; break;
-            case SyntaxKind.NamedSubtemplate: expression = "Named(" + Quote(node.Value!) + ")"; break;
+            case SyntaxKind.NamedSubtemplate: expression = "Each(child => child.Named(" + Quote(node.Value!) + "))"; break;
             case SyntaxKind.String:
                 expression = Quote(DecodeString(node.Value!)); break;
             case SyntaxKind.Number: expression = "EvaluationContext.ParseInteger(" + Quote(node.Value!) + ")"; break;
@@ -467,7 +480,7 @@ public sealed class CSharpEmitter
                 {
                     string arguments = string.Join(", ", node.Children.Skip(1).SelectMany(child => child.Children).Select(Call));
                     expression = (node.Value == "Join" ? "Join(" : "CallNamed(" + Quote(node.Value[1..]) + ", ") +
-                        Call(node.Children[0]) + (arguments.Length == 0 ? "" : ", " + arguments) + ")";
+                        (node.Children[0].Kind == SyntaxKind.Call || receiver.Value?.StartsWith('^') == true ? Call(node.Children[0]) : "Receiver(" + RawChild(node.Children[0]) + ")") + (arguments.Length == 0 ? "" : ", " + arguments) + ")";
                 }
                 else expression = Stub();
                 break;

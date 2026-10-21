@@ -25,8 +25,8 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
         return WithDefinitions(
             new Dictionary<string, Func<EvaluationContext, object?>>(StringComparer.Ordinal)
             {
-                ["formatPet"] = child => new Simpledata(child).formatPet(),
-                ["anded"] = child => new Simpledata(child).anded()
+                ["formatPet"] = scope => scope.Each(child => new Simpledata(child).formatPet()),
+                ["anded"] = scope => scope.Each(child => new Simpledata(child).anded())
             },
             child => new Simpledata(child).renderSimpledata());
     }
@@ -36,7 +36,7 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
     // Source: "templates/simpledata.template":9:9
     private object? anded()
     {
-        var join = Join(Get("$0"), ", ", " and ");
+        var join = Join(Receiver(child => child.Lookup("$0")), ", ", " and ");
 
         return Line($"{join}");
     }
@@ -67,7 +67,7 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
     // Source: "templates/simpledata.template":2:11
     private object? renderAnded()
     {
-        return CallNamed("anded", Named("xformatPet"));
+        return CallNamed("anded", Receiver(child => child.Named("xformatPet")));
     }
 
     private object? renderSimpledata()
@@ -79,7 +79,7 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
             {
                 child => child.Include("doInclude", imported => new DoInclude(imported).Import())
             },
-            child => new Simpledata(child).renderContent()) : Line($"no pets"));
+            scope => scope.Each(child => new Simpledata(child).renderContent())) : Each(child => Line($"no pets")));
 
         return Line($"Hello {lastName}, {firstName} with {choice}!!");
     }

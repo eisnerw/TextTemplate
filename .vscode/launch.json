@@ -11,7 +11,7 @@
         "--template",
         "simpledata",
         "--data-file",
-        "reference/data/nested.json"
+        "reference/data/simpledata.json"
       ],
       "cwd": "${workspaceFolder}",
       "console": "internalConsole",

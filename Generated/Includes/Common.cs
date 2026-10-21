@@ -408,7 +408,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":1:1
     internal object? Render()
     {
-        var assert = this.renderAssert();
+        var assert = Each(child => new Doit(child).renderAssert());
 
         return Line($"{assert}");
     }
@@ -815,38 +815,38 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
         return WithDefinitions(
             new Dictionary<string, Func<EvaluationContext, object?>>(StringComparer.Ordinal)
             {
-                ["test"] = child => new Doit(child).test(),
-                ["test1"] = child => new Doit(child).test1(),
-                ["test1Result"] = child => new Doit(child).test1Result(),
-                ["test2"] = child => new Doit(child).test2(),
-                ["test2Result"] = child => new Doit(child).test2Result(),
-                ["test3"] = child => new Doit(child).test3(),
-                ["test3Result"] = child => new Doit(child).test3Result(),
-                ["test4"] = child => new Doit(child).test4(),
-                ["test4Result"] = child => new Doit(child).test4Result(),
-                ["test5"] = child => new Doit(child).test5(),
-                ["test5Result"] = child => new Doit(child).test5Result(),
-                ["test6"] = child => new Doit(child).test6(),
-                ["test6Result"] = child => new Doit(child).test6Result(),
-                ["test7"] = child => new Doit(child).test7(),
-                ["test7Result"] = child => new Doit(child).test7Result(),
-                ["test8"] = child => new Doit(child).test8(),
-                ["test8Result"] = child => new Doit(child).test8Result(),
-                ["test9"] = child => new Doit(child).test9(),
-                ["test9Result"] = child => new Doit(child).test9Result(),
-                ["test10"] = child => new Doit(child).test10(),
-                ["test10Result"] = child => new Doit(child).test10Result(),
-                ["test11"] = child => new Doit(child).test11(),
-                ["test11Result"] = child => new Doit(child).test11Result(),
-                ["test12"] = child => new Doit(child).test12(),
-                ["test12Result"] = child => new Doit(child).test12Result(),
-                ["test13"] = child => new Doit(child).test13(),
-                ["test13Result"] = child => new Doit(child).test13Result(),
-                ["test14"] = child => new Doit(child).test14(),
-                ["test14Result"] = child => new Doit(child).test14Result(),
-                ["tests"] = child => new Doit(child).tests(),
-                ["expected"] = child => new Doit(child).expected(),
-                ["data"] = child => new Doit(child).data()
+                ["test"] = scope => scope.Each(child => new Doit(child).test()),
+                ["test1"] = scope => scope.Each(child => new Doit(child).test1()),
+                ["test1Result"] = scope => scope.Each(child => new Doit(child).test1Result()),
+                ["test2"] = scope => scope.Each(child => new Doit(child).test2()),
+                ["test2Result"] = scope => scope.Each(child => new Doit(child).test2Result()),
+                ["test3"] = scope => scope.Each(child => new Doit(child).test3()),
+                ["test3Result"] = scope => scope.Each(child => new Doit(child).test3Result()),
+                ["test4"] = scope => scope.Each(child => new Doit(child).test4()),
+                ["test4Result"] = scope => scope.Each(child => new Doit(child).test4Result()),
+                ["test5"] = scope => scope.Each(child => new Doit(child).test5()),
+                ["test5Result"] = scope => scope.Each(child => new Doit(child).test5Result()),
+                ["test6"] = scope => scope.Each(child => new Doit(child).test6()),
+                ["test6Result"] = scope => scope.Each(child => new Doit(child).test6Result()),
+                ["test7"] = scope => scope.Each(child => new Doit(child).test7()),
+                ["test7Result"] = scope => scope.Each(child => new Doit(child).test7Result()),
+                ["test8"] = scope => scope.Each(child => new Doit(child).test8()),
+                ["test8Result"] = scope => scope.Each(child => new Doit(child).test8Result()),
+                ["test9"] = scope => scope.Each(child => new Doit(child).test9()),
+                ["test9Result"] = scope => scope.Each(child => new Doit(child).test9Result()),
+                ["test10"] = scope => scope.Each(child => new Doit(child).test10()),
+                ["test10Result"] = scope => scope.Each(child => new Doit(child).test10Result()),
+                ["test11"] = scope => scope.Each(child => new Doit(child).test11()),
+                ["test11Result"] = scope => scope.Each(child => new Doit(child).test11Result()),
+                ["test12"] = scope => scope.Each(child => new Doit(child).test12()),
+                ["test12Result"] = scope => scope.Each(child => new Doit(child).test12Result()),
+                ["test13"] = scope => scope.Each(child => new Doit(child).test13()),
+                ["test13Result"] = scope => scope.Each(child => new Doit(child).test13Result()),
+                ["test14"] = scope => scope.Each(child => new Doit(child).test14()),
+                ["test14Result"] = scope => scope.Each(child => new Doit(child).test14Result()),
+                ["tests"] = scope => scope.Each(child => new Doit(child).tests()),
+                ["expected"] = scope => scope.Each(child => new Doit(child).expected()),
+                ["data"] = scope => scope.Each(child => new Doit(child).data())
             },
             child => new Doit(child).renderAssertContent());
     }
@@ -918,20 +918,20 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":363:9
     private object? tests()
     {
-        var test = CallNamed("test", "1", Named("test1"), Named("test1Result"));
-        var test_2 = CallNamed("test", "2", Named("test2"), Named("test2Result"));
-        var test_3 = CallNamed("test", "3", Named("test3"), Named("test3Result"));
-        var test_4 = CallNamed("test", "4", Named("test4"), Named("test4Result"));
-        var test_5 = CallNamed("test", "5", Named("test5"), Named("test5Result"));
-        var test_6 = CallNamed("test", "6", Named("test6"), Named("test6Result"));
-        var test_7 = CallNamed("test", "7", Named("test7"), Named("test7Result"));
-        var test_8 = CallNamed("test", "8", Named("test8"), Named("test8Result"));
-        var test_9 = CallNamed("test", "9", Named("test9"), Named("test9Result"));
-        var test_10 = CallNamed("test", "10", Named("test10"), Named("test10Result"));
-        var test_11 = CallNamed("test", "11", Named("test11"), Named("test11Result"));
-        var test_12 = CallNamed("test", "12", Named("test12"), Named("test12Result"));
-        var test_13 = CallNamed("test", "13", Named("test13"), Named("test13Result"));
-        var test_14 = CallNamed("test", "14", Named("test14"), Named("test14Result"));
+        var test = CallNamed("test", Receiver(child => "1"), Each(child => child.Named("test1")), Each(child => child.Named("test1Result")));
+        var test_2 = CallNamed("test", Receiver(child => "2"), Each(child => child.Named("test2")), Each(child => child.Named("test2Result")));
+        var test_3 = CallNamed("test", Receiver(child => "3"), Each(child => child.Named("test3")), Each(child => child.Named("test3Result")));
+        var test_4 = CallNamed("test", Receiver(child => "4"), Each(child => child.Named("test4")), Each(child => child.Named("test4Result")));
+        var test_5 = CallNamed("test", Receiver(child => "5"), Each(child => child.Named("test5")), Each(child => child.Named("test5Result")));
+        var test_6 = CallNamed("test", Receiver(child => "6"), Each(child => child.Named("test6")), Each(child => child.Named("test6Result")));
+        var test_7 = CallNamed("test", Receiver(child => "7"), Each(child => child.Named("test7")), Each(child => child.Named("test7Result")));
+        var test_8 = CallNamed("test", Receiver(child => "8"), Each(child => child.Named("test8")), Each(child => child.Named("test8Result")));
+        var test_9 = CallNamed("test", Receiver(child => "9"), Each(child => child.Named("test9")), Each(child => child.Named("test9Result")));
+        var test_10 = CallNamed("test", Receiver(child => "10"), Each(child => child.Named("test10")), Each(child => child.Named("test10Result")));
+        var test_11 = CallNamed("test", Receiver(child => "11"), Each(child => child.Named("test11")), Each(child => child.Named("test11Result")));
+        var test_12 = CallNamed("test", Receiver(child => "12"), Each(child => child.Named("test12")), Each(child => child.Named("test12Result")));
+        var test_13 = CallNamed("test", Receiver(child => "13"), Each(child => child.Named("test13")), Each(child => child.Named("test13Result")));
+        var test_14 = CallNamed("test", Receiver(child => "14"), Each(child => child.Named("test14")), Each(child => child.Named("test14Result")));
 
         return Line($$"""
             
@@ -1038,7 +1038,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":322:10
     private object? test14()
     {
-        var data = InContext(Named("data"), child => new Doit(child).renderLastName_11());
+        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Doit(child).renderLastName_11()));
 
         return Line($"Indent under indent under bullet {data}");
     }
@@ -1062,7 +1062,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
 
         var lastName = Get("lastName");
         var content = bullet();
-        var pets = InContext(Get("pets"), child => new Doit(child).renderName_12());
+        var pets = InContext(Get("pets"), scope => scope.Each(child => new Doit(child).renderName_12()));
 
         return Line($$"""
             
@@ -1080,7 +1080,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     private object? renderName_12()
     {
         var name = Get("name");
-        var content = InContext(Get("^.^"), child => new Doit(child).renderFirstName_8());
+        var content = InContext(Get("^.^"), scope => scope.Each(child => new Doit(child).renderFirstName_8()));
 
         return Line($$"""
             {{name}} who is owned by 
@@ -1096,7 +1096,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     private object? renderFirstName_8()
     {
         var firstName = Get("firstName");
-        var pets = InContext(Get("pets"), child => new Doit(child).renderType_7());
+        var pets = InContext(Get("pets"), scope => scope.Each(child => new Doit(child).renderType_7()));
 
         return Line($$"""
             {{firstName}} who owns 
@@ -1201,7 +1201,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":281:10
     private object? test13()
     {
-        var data = InContext(Named("data"), child => new Doit(child).renderLastName_10());
+        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Doit(child).renderLastName_10()));
 
         return Line($"Yet another variation of hierarchy that also transitions from indent to bullet and back {data}");
     }
@@ -1224,7 +1224,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
 
         var lastName = Get("lastName");
         var content = bullet();
-        var pets = InContext(Get("pets"), child => new Doit(child).renderName_11());
+        var pets = InContext(Get("pets"), scope => scope.Each(child => new Doit(child).renderName_11()));
 
         return Line($$"""
             
@@ -1241,7 +1241,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     private object? renderName_11()
     {
         var name = Get("name");
-        var content = InContext(Get("^.^"), child => new Doit(child).renderFirstName_7());
+        var content = InContext(Get("^.^"), scope => scope.Each(child => new Doit(child).renderFirstName_7()));
 
         return Line($$"""
             {{name}} who is owned by 
@@ -1256,7 +1256,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     private object? renderFirstName_7()
     {
         var firstName = Get("firstName");
-        var pets = InContext(Get("pets"), child => new Doit(child).renderType_6());
+        var pets = InContext(Get("pets"), scope => scope.Each(child => new Doit(child).renderType_6()));
 
         return Line($"{firstName} who owns {pets}");
     }
@@ -1358,7 +1358,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":240:10
     private object? test12()
     {
-        var data = InContext(Named("data"), child => new Doit(child).renderLastName_9());
+        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Doit(child).renderLastName_9()));
 
         return Line($"Additional variation of hierarchy that also transitions from indent to bullet and back {data}");
     }
@@ -1381,7 +1381,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
 
         var lastName = Get("lastName");
         var content = bullet();
-        var pets = InContext(Get("pets"), child => new Doit(child).renderName_10());
+        var pets = InContext(Get("pets"), scope => scope.Each(child => new Doit(child).renderName_10()));
 
         return Line($$"""
             
@@ -1406,7 +1406,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
 
         var name = Get("name");
         var content = bullet();
-        var content_2 = InContext(Get("^.^"), child => new Doit(child).renderFirstName_6());
+        var content_2 = InContext(Get("^.^"), scope => scope.Each(child => new Doit(child).renderFirstName_6()));
 
         return Line($$"""
             {{name}} who is owned by 
@@ -1421,7 +1421,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     private object? renderFirstName_6()
     {
         var firstName = Get("firstName");
-        var pets = InContext(Get("pets"), child => new Doit(child).renderType_5());
+        var pets = InContext(Get("pets"), scope => scope.Each(child => new Doit(child).renderType_5()));
 
         return Line($"{firstName} who owns {pets}");
     }
@@ -1523,7 +1523,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":199:10
     private object? test11()
     {
-        var data = InContext(Named("data"), child => new Doit(child).renderLastName_8());
+        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Doit(child).renderLastName_8()));
 
         return Line($"Hierarchy that also transitions from indent to bullet and back {data}");
     }
@@ -1547,7 +1547,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
 
         var lastName = Get("lastName");
         var content = bullet();
-        var pets = InContext(Get("pets"), child => new Doit(child).renderName_9());
+        var pets = InContext(Get("pets"), scope => scope.Each(child => new Doit(child).renderName_9()));
 
         return Line($$"""
             
@@ -1565,7 +1565,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     private object? renderName_9()
     {
         var name = Get("name");
-        var content = InContext(Get("^.^"), child => new Doit(child).renderFirstName_5());
+        var content = InContext(Get("^.^"), scope => scope.Each(child => new Doit(child).renderFirstName_5()));
 
         return Line($$"""
             {{name}} who is owned by 
@@ -1589,7 +1589,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
 
         var firstName = Get("firstName");
         var content = bullet();
-        var pets = InContext(Get("pets"), child => new Doit(child).renderType_4());
+        var pets = InContext(Get("pets"), scope => scope.Each(child => new Doit(child).renderType_4()));
 
         return Line($$"""
             {{firstName}} who owns 
@@ -1639,7 +1639,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":187:10
     private object? test10()
     {
-        var data = InContext(Named("data"), child => new Doit(child).renderContent_2());
+        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Doit(child).renderContent_2()));
 
         return Line($"Bulleted Continued list {data}");
     }
@@ -1650,7 +1650,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":189:8
     private object? renderContent_2()
     {
-        var pets = InContext(Get("pets"), child => new Doit(child).renderName_8());
+        var pets = InContext(Get("pets"), scope => scope.Each(child => new Doit(child).renderName_8()));
 
         return Line($"{pets}");
     }
@@ -1703,7 +1703,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":177:9
     private object? test9()
     {
-        var data = InContext(Named("data"), child => new Doit(child).renderContent());
+        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Doit(child).renderContent()));
 
         return Line($"Continued list {data}");
     }
@@ -1713,7 +1713,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":178:23
     private object? renderContent()
     {
-        var pets = InContext(Get("pets"), child => new Doit(child).renderName_7());
+        var pets = InContext(Get("pets"), scope => scope.Each(child => new Doit(child).renderName_7()));
 
         return Line($"{pets}");
     }
@@ -1812,7 +1812,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":138:9
     private object? test8()
     {
-        var data = InContext(Named("data"), child => new Doit(child).renderFirstName_3());
+        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Doit(child).renderFirstName_3()));
 
         return Line($"Hierarchy that also transitions from indent to bullet {data}");
     }
@@ -1827,7 +1827,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     {
         var firstName = Get("firstName");
         var lastName = Get("lastName");
-        var pets = InContext(Get("pets"), child => new Doit(child).renderName_6());
+        var pets = InContext(Get("pets"), scope => scope.Each(child => new Doit(child).renderName_6()));
 
         return Line($$"""
             
@@ -1851,7 +1851,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
 
         var name = Get("name");
         var content = bullet();
-        var content_2 = InContext(Get("^.^"), child => new Doit(child).renderFirstName_4());
+        var content_2 = InContext(Get("^.^"), scope => scope.Each(child => new Doit(child).renderFirstName_4()));
 
         return Line($$"""
             {{name}} who is owned by 
@@ -1874,7 +1874,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
 
         var firstName = Get("firstName");
         var content = bullet();
-        var pets = InContext(Get("pets"), child => new Doit(child).renderType_3());
+        var pets = InContext(Get("pets"), scope => scope.Each(child => new Doit(child).renderType_3()));
 
         return Line($$"""
             {{firstName}} who owns
@@ -1977,7 +1977,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":98:9
     private object? test7()
     {
-        var data = InContext(Named("data"), child => new Doit(child).renderLastName_7());
+        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Doit(child).renderLastName_7()));
 
         return Line($"Hierarchy that transitions from indent to bullet {data}");
     }
@@ -1992,7 +1992,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     private object? renderLastName_7()
     {
         var lastName = Get("lastName");
-        var pets = InContext(Get("pets"), child => new Doit(child).renderName_5());
+        var pets = InContext(Get("pets"), scope => scope.Each(child => new Doit(child).renderName_5()));
 
         return Line($$"""
             
@@ -2025,7 +2025,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
         var content = bullet();
         var name = Get("name");
         var content_2 = bullet_2();
-        var content_3 = InContext(Get("^.^"), child => new Doit(child).renderFirstName_2());
+        var content_3 = InContext(Get("^.^"), scope => scope.Each(child => new Doit(child).renderFirstName_2()));
 
         return Line($$"""
             
@@ -2049,7 +2049,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
 
         var firstName = Get("firstName");
         var content = bullet();
-        var pets = InContext(Get("pets"), child => new Doit(child).renderType_2());
+        var pets = InContext(Get("pets"), scope => scope.Each(child => new Doit(child).renderType_2()));
 
         return Line($$"""
             {{firstName}} who owns
@@ -2152,7 +2152,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":58:9
     private object? test6()
     {
-        var data = InContext(Named("data"), child => new Doit(child).renderLastName_6());
+        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Doit(child).renderLastName_6()));
 
         return Line($"Hierarchy{data}");
     }
@@ -2175,7 +2175,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
 
         var content = bullet();
         var lastName = Get("lastName");
-        var pets = InContext(Get("pets"), child => new Doit(child).renderName_4());
+        var pets = InContext(Get("pets"), scope => scope.Each(child => new Doit(child).renderName_4()));
 
         return Line($$"""
             
@@ -2208,7 +2208,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
         var content = bullet();
         var name = Get("name");
         var content_2 = bullet_2();
-        var content_3 = InContext(Get("^.^"), child => new Doit(child).renderFirstName());
+        var content_3 = InContext(Get("^.^"), scope => scope.Each(child => new Doit(child).renderFirstName()));
 
         return Line($$"""
             
@@ -2232,7 +2232,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
 
         var firstName = Get("firstName");
         var content = bullet();
-        var pets = InContext(Get("pets"), child => new Doit(child).renderType());
+        var pets = InContext(Get("pets"), scope => scope.Each(child => new Doit(child).renderType()));
 
         return Line($$"""
             {{firstName}} who owns
@@ -2285,7 +2285,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":44:9
     private object? test5()
     {
-        var data = InContext(Named("data"), child => new Doit(child).renderLastName_5());
+        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Doit(child).renderLastName_5()));
 
         return Line($"Bulleted Explicit Bulleted Indent{data}");
     }
@@ -2306,7 +2306,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
 
         var content = bullet();
         var lastName = Get("lastName");
-        var pets = InContext(Get("pets"), child => new Doit(child).renderName_3());
+        var pets = InContext(Get("pets"), scope => scope.Each(child => new Doit(child).renderName_3()));
 
         return Line($$"""
             
@@ -2370,7 +2370,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":31:9
     private object? test4()
     {
-        var data = InContext(Named("data"), child => new Doit(child).renderLastName_4());
+        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Doit(child).renderLastName_4()));
 
         return Line($"Bulleted Implied Bulleted Indent{data}");
     }
@@ -2390,7 +2390,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
 
         var content = bullet();
         var lastName = Get("lastName");
-        var pets = InContext(Get("pets"), child => new Doit(child).renderName_2());
+        var pets = InContext(Get("pets"), scope => scope.Each(child => new Doit(child).renderName_2()));
 
         return Line($$"""
             
@@ -2441,7 +2441,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":19:9
     private object? test3()
     {
-        var data = InContext(Named("data"), child => new Doit(child).renderLastName_3());
+        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Doit(child).renderLastName_3()));
 
         return Line($"Implied Double Indent{data}");
     }
@@ -2452,7 +2452,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     private object? renderLastName_3()
     {
         var lastName = Get("lastName");
-        var pets = InContext(Get("pets"), child => new Doit(child).renderName());
+        var pets = InContext(Get("pets"), scope => scope.Each(child => new Doit(child).renderName()));
 
         return Line($"{lastName}{pets}");
     }
@@ -2488,7 +2488,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":13:9
     private object? test2()
     {
-        var data = InContext(Named("data"), child => new Doit(child).renderLastName_2());
+        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Doit(child).renderLastName_2()));
 
         return Line($"Implied Single Indent {data}");
     }
@@ -2525,7 +2525,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":6:9
     private object? test1()
     {
-        var data = InContext(Named("data"), child => new Doit(child).renderLastName());
+        var data = InContext(Each(child => child.Named("data")), scope => scope.Each(child => new Doit(child).renderLastName()));
 
         return Line($"Explicit Single Indent{data}");
     }
@@ -2556,7 +2556,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
             () => Get("$0"),
             () => new object?[] { EvaluationContext.ParseInteger("1"), EvaluationContext.ParseInteger("2"), EvaluationContext.ParseInteger("3"), EvaluationContext.ParseInteger("4"), EvaluationContext.ParseInteger("5"), EvaluationContext.ParseInteger("6"), EvaluationContext.ParseInteger("7"), EvaluationContext.ParseInteger("8"), EvaluationContext.ParseInteger("9"), EvaluationContext.ParseInteger("10"), EvaluationContext.ParseInteger("11"), EvaluationContext.ParseInteger("12"), EvaluationContext.ParseInteger("13"), EvaluationContext.ParseInteger("14") });
 
-        object? choice = (EvaluationContext.Condition(applyMatches()) ? this.renderItem0() : "");
+        object? choice = (EvaluationContext.Condition(applyMatches()) ? Each(child => new Doit(child).renderItem0()) : "");
 
         return Line($"{choice}");
     }
@@ -2589,8 +2589,8 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
         object? applyAssert() => Unsupported(
             "Call Assert",
             "subtemplates/doit.template:1:3",
-            () => Named("tests"),
-            () => new object?[] { Named("expected"), "ALL TESTS PASSED" });
+            () => Each(child => child.Named("tests")),
+            () => new object?[] { Each(child => child.Named("expected")), "ALL TESTS PASSED" });
 
         var assert = applyAssert();
 
@@ -2606,7 +2606,7 @@ internal sealed class FormatGitRepos(EvaluationContext context) : TemplateUnit(c
     // Source: "subtemplates/formatGitRepos.template":1:1
     internal object? Render()
     {
-        var content = this.renderContent();
+        var content = Each(child => new FormatGitRepos(child).renderContent());
 
         return Line($"{content}");
     }
@@ -2616,7 +2616,7 @@ internal sealed class FormatGitRepos(EvaluationContext context) : TemplateUnit(c
     // Source: "subtemplates/formatGitRepos.template":1:1
     private object? renderContent()
     {
-        var data = InContext(Get("data"), child => new FormatGitRepos(child).renderName());
+        var data = InContext(Get("data"), scope => scope.Each(child => new FormatGitRepos(child).renderName()));
 
         return Line($"{data}");
     }
@@ -2627,7 +2627,7 @@ internal sealed class FormatGitRepos(EvaluationContext context) : TemplateUnit(c
     private object? renderName()
     {
         var name = Get("name");
-        object? choice = (EvaluationContext.Condition(Get("description")) ? this.renderDescription() : "");
+        object? choice = (EvaluationContext.Condition(Get("description")) ? Each(child => new FormatGitRepos(child).renderDescription()) : "");
 
         return Line($"{name}{choice}");
     }
@@ -2651,7 +2651,7 @@ internal sealed class FormatGitReposAnded(EvaluationContext context) : TemplateU
     // Source: "subtemplates/formatGitReposAnded.template":1:1
     internal object? Render()
     {
-        var content = this.renderContent();
+        var content = Each(child => new FormatGitReposAnded(child).renderContent());
 
         return Line($"{content}");
     }
@@ -2677,7 +2677,7 @@ internal sealed class FormatGitReposAnded(EvaluationContext context) : TemplateU
         object? applyAnded() => Unsupported(
             "Call Anded",
             "subtemplates/formatGitReposAnded.template:1:8",
-            () => this.renderName());
+            () => Each(child => new FormatGitReposAnded(child).renderName()));
 
         return applyAnded();
     }
@@ -2688,7 +2688,7 @@ internal sealed class FormatGitReposAnded(EvaluationContext context) : TemplateU
     private object? renderName()
     {
         var name = Get("name");
-        object? choice = (EvaluationContext.Condition(Get("description")) ? this.renderDescription() : "");
+        object? choice = (EvaluationContext.Condition(Get("description")) ? Each(child => new FormatGitReposAnded(child).renderDescription()) : "");
 
         return Line($"{name}{choice}");
     }
@@ -2708,25 +2708,25 @@ internal sealed class FormatGitReposAnded(EvaluationContext context) : TemplateU
 internal sealed class XformatPet(EvaluationContext context) : TemplateUnit(context)
 {
     // Template:
-    // [a {type} named {namex} {#a}]
+    // [a {type} named {name}{#a}]
     // Source: "subtemplates/xformatPet.template":1:1
     internal object? Render()
     {
-        var type = this.renderType();
+        var type = Each(child => new XformatPet(child).renderType());
 
         return Line($"{type}");
     }
 
     // Template:
-    // [a {type} named {namex} {#a}]
+    // [a {type} named {name}{#a}]
     // Source: "subtemplates/xformatPet.template":1:1
     private object? renderType()
     {
         var type = Get("type");
-        var namex = Get("namex");
-        var a = Named("a");
+        var name = Get("name");
+        var a = Each(child => child.Named("a"));
 
-        return Line($"a {type} named {namex} {a}");
+        return Line($"a {type} named {name}{a}");
     }
 
 }
@@ -2738,7 +2738,7 @@ internal sealed class XformatPets(EvaluationContext context) : TemplateUnit(cont
     // Source: "subtemplates/xformatPets.template":1:1
     internal object? Render()
     {
-        var content = this.renderContent();
+        var content = Each(child => new XformatPets(child).renderContent());
 
         return Line($"{content}");
     }
@@ -2764,7 +2764,7 @@ internal sealed class XformatPets(EvaluationContext context) : TemplateUnit(cont
         object? applyAnded() => Unsupported(
             "Call Anded",
             "subtemplates/xformatPets.template:1:8",
-            () => this.renderType());
+            () => Each(child => new XformatPets(child).renderType()));
 
         return applyAnded();
     }

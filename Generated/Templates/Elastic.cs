@@ -29,12 +29,12 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
         return WithDefinitions(
             new Dictionary<string, Func<EvaluationContext, object?>>(StringComparer.Ordinal)
             {
-                ["elasticQuery"] = child => new Elastic(child).elasticQuery(),
-                ["elasticSpec"] = child => new Elastic(child).elasticSpec(),
-                ["elasticUrl"] = child => new Elastic(child).elasticUrl(),
-                ["elasticQueryString"] = child => new Elastic(child).elasticQueryString(),
-                ["colon"] = child => new Elastic(child).colon(),
-                ["at"] = child => new Elastic(child).at()
+                ["elasticQuery"] = scope => scope.Each(child => new Elastic(child).elasticQuery()),
+                ["elasticSpec"] = scope => scope.Each(child => new Elastic(child).elasticSpec()),
+                ["elasticUrl"] = scope => scope.Each(child => new Elastic(child).elasticUrl()),
+                ["elasticQueryString"] = scope => scope.Each(child => new Elastic(child).elasticQueryString()),
+                ["colon"] = scope => scope.Each(child => new Elastic(child).colon()),
+                ["at"] = scope => scope.Each(child => new Elastic(child).at())
             },
             child => new Elastic(child).renderElastic());
     }
@@ -60,7 +60,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/elastic.template":11:22
     private object? elasticQueryString()
     {
-        object? choice = (EvaluationContext.Condition(Get("$2")) ? this.renderItem2() : Line($"1000"));
+        object? choice = (EvaluationContext.Condition(Get("$2")) ? Each(child => new Elastic(child).renderItem2()) : Each(child => Line($"1000")));
         var item0 = Get("$0");
 
         return Line($"/_search?from=0&size={choice}&_source={item0}&filter_path=hits.hits._source");
@@ -81,8 +81,8 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/elastic.template":10:14
     private object? elasticUrl()
     {
-        var colon = Named("colon");
-        var at = Named("at");
+        var colon = Each(child => child.Named("colon"));
+        var at = Each(child => child.Named("at"));
 
         return Line($"https://7303xa0iq9{colon}4cdkz0o14{at}texttemplate-testing-7087740692.us-east-1.bonsaisearch.net:443");
     }
@@ -92,8 +92,8 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/elastic.template":9:15
     private object? elasticSpec()
     {
-        var elasticUrl = Named("elasticUrl");
-        var elasticQueryString = Named("elasticQueryString");
+        var elasticUrl = Each(child => child.Named("elasticUrl"));
+        var elasticQueryString = Each(child => child.Named("elasticQueryString"));
         var item1 = Get("$1");
 
         return Line($"{elasticUrl}{elasticQueryString}&q={item1}");
@@ -104,7 +104,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/elastic.template":8:16
     private object? elasticQuery()
     {
-        var elasticSpec = InContext(Named("elasticSpec"), child => new Elastic(child).render_source());
+        var elasticSpec = InContext(Each(child => child.Named("elasticSpec")), scope => scope.Each(child => new Elastic(child).render_source()));
 
         return Line($"{elasticSpec}");
     }
@@ -137,7 +137,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
         object? applyOrderBy() => Unsupported(
             "Call OrderBy",
             "templates/elastic.template:2:4",
-            () => CallNamed("elasticQuery", "fname,lname,isAlive", "lname:c* AND fname:c*", EvaluationContext.ParseInteger("1000")),
+            () => CallNamed("elasticQuery", Receiver(child => "fname,lname,isAlive"), "lname:c* AND fname:c*", EvaluationContext.ParseInteger("1000")),
             () => new object?[] { Get("lname") });
 
         var orderBy = InContext(applyOrderBy(), child => new Elastic(child).renderFalsy());
@@ -163,7 +163,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
         object? applyFalsy() => Unsupported(
             "Call @Falsy",
             "templates/elastic.template:6:4",
-            () => this.renderFname(),
+            () => Each(child => new Elastic(child).renderFname()),
             () => new object?[] { pattern() });
 
         return applyFalsy();
@@ -176,7 +176,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     {
         var fname = Get("fname");
         var lname = Get("lname");
-        object? choice = (!(EvaluationContext.Condition(Get("isAlive"))) ? Line($"(dead)") : "");
+        object? choice = (!(EvaluationContext.Condition(Get("isAlive"))) ? Each(child => Line($"(dead)")) : "");
 
         return Line($"{fname} {lname} {choice}");
     }
@@ -186,7 +186,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/elastic.template":1:2
     private object? renderElasticSpec()
     {
-        var elasticSpec = CallNamed("elasticSpec", "fname,lname,isAlive", "lname:c* AND fname:c*", EvaluationContext.ParseInteger("1000"));
+        var elasticSpec = CallNamed("elasticSpec", Receiver(child => "fname,lname,isAlive"), "lname:c* AND fname:c*", EvaluationContext.ParseInteger("1000"));
 
         return Line($"{elasticSpec}");
     }
@@ -203,10 +203,10 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
         object? applyDebug() => Unsupported(
             "Call @Debug",
             "templates/elastic.template:2:2",
-            () => this.renderContent(),
+            () => Each(child => new Elastic(child).renderContent()),
             () => new object?[] { EvaluationContext.ParseInteger("0") });
 
-        var elasticSpec = InContext(this.renderElasticSpec(), child => Line($""));
+        var elasticSpec = InContext(Each(child => new Elastic(child).renderElasticSpec()), scope => scope.Each(child => Line($"")));
         var debug = applyDebug();
 
         return Line($"{elasticSpec} {debug}");

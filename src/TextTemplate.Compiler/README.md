@@ -22,10 +22,11 @@ dotnet run --no-build --project Generated -- --template hello --data-file /tmp/t
 
 Generation currently implements a subset of execution semantics. The complete
 reference collection compiles, but templates that reach unfinished features throw
-`NotImplementedException`. Most methods/annotations, inline calls, regexes, bullets, list contexts, and URL
+`NotImplementedException`. Most methods/annotations, inline calls, regexes, bullets, and URL
 resolution still have stubs. Supported additions are literal shared `@Include`,
 literal `@MissingValue`, named subtemplate methods with scalar arguments, and
-scalar `Join` (which leaves a scalar unchanged). Exceptions from
+list contexts and per-item inline/named evaluation, and `Join` with an optional
+final separator (scalar input remains unchanged). Exceptions from
 emitted template logic identify the feature and original file, line, and column.
 Stubs do not run their operands; an unselected conditional branch does not throw.
 These are temporary implementation points, not language restrictions or successful
@@ -64,9 +65,17 @@ no regeneration. No data file is inferred automatically. The example above now r
 Hello Smith, John with a dog named missing --namex-- THIS IS AN INCLUDED SUBTEMPLATE!!
 ```
 
-The singleton pet array collapses to an object as in the interpreter. Multi-element
-list contexts, including the three pets in `reference/data/simpledata.json`, are
-still unfinished.
+The singleton pet array collapses to an object as in the interpreter. Multiple pets
+also work, including the three-pet fixture:
+
+```sh
+dotnet run --project Generated -- --template simpledata --data-file reference/data/simpledata.json
+```
+
+List items inherit definitions and annotations, retain parent links, and preserve
+structured content until composition. `Join(', ', ' and ')` uses the final separator
+between the last two retained items. Filtering, grouping, bullets, and general
+object formatting remain unfinished.
 
 ## Compiler options
 

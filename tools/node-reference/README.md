@@ -271,3 +271,9 @@ are not used as TextTemplate acceptance tests. Browser UI queuing, hover behavio
 external network fixtures and locale/date-dependent output remain outside the
 verified baseline. This TypeScript evaluator is the behavioral reference for C#
 development; no recovered C# implementation is required.
+
+Focused `include-cases.json` and `list-cases.json` characterizations live under
+`tests/node-reference/`. List cases include the input data and exact expected text
+for empty/singleton/multiple items, nested contexts, parent links, missing values,
+indentation, and method/Join behavior. Both the Node tests and the independent
+standalone C# tests consume those inputs; `npm test` includes these cases.

@@ -32,8 +32,8 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
         return WithDefinitions(
             new Dictionary<string, Func<EvaluationContext, object?>>(StringComparer.Ordinal)
             {
-                ["formatPet"] = child => new Simple(child).formatPet(),
-                ["anded"] = child => new Simple(child).anded()
+                ["formatPet"] = scope => scope.Each(child => new Simple(child).formatPet()),
+                ["anded"] = scope => scope.Each(child => new Simple(child).anded())
             },
             child => new Simple(child).renderSimple());
     }
@@ -43,7 +43,7 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/simple.template":16:9
     private object? anded()
     {
-        var join = Join(Get("$0"), ", ", " and ");
+        var join = Join(Receiver(child => child.Lookup("$0")), ", ", " and ");
 
         return Line($"{join}");
     }
@@ -69,7 +69,7 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
     {
         var lastName = Get("lastName");
         var firstName = Get("firstName");
-        object? choice = (EvaluationContext.Condition(Get("pets")) ? this.renderContent_2() : Line($"no pets"));
+        object? choice = (EvaluationContext.Condition(Get("pets")) ? Each(child => new Simple(child).renderContent_2()) : Each(child => Line($"no pets")));
 
         return Line($"Hello {lastName}, {firstName} with {choice}!!");
     }
@@ -89,12 +89,12 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/simple.template":9:11
     private object? renderAnded()
     {
-        return CallNamed("anded", Named("formatPet"));
+        return CallNamed("anded", Receiver(child => child.Named("formatPet")));
     }
 
     private object? renderSimple()
     {
-        var content = InContext("{\"firstName\": \"Robert\", \"lastName\": \"Smith\", \"pets\":[\n{\"type\":\"dog\", \"name\": \"Toto\"}\n,{\"type\":\"cat\", \"name\": \"Dolly\"}\n,{\"type\":\"zebra\", \"name\": \"Stripes\"}\n]}", child => new Simple(child).renderContent());
+        var content = InContext("{\"firstName\": \"Robert\", \"lastName\": \"Smith\", \"pets\":[\n{\"type\":\"dog\", \"name\": \"Toto\"}\n,{\"type\":\"cat\", \"name\": \"Dolly\"}\n,{\"type\":\"zebra\", \"name\": \"Stripes\"}\n]}", scope => scope.Each(child => new Simple(child).renderContent()));
 
         return Line($$"""
             

@@ -266,8 +266,8 @@ Child contexts inherit data and local definitions without mutating the caller. T
 share a recursion-depth counter; named definitions execute against the invocation
 context. Runtime name resolution is retained where caller scope can affect binding.
 Literal shared includes, literal missing-value annotations, scalar named-method
-arguments, and scalar Join are now supported as described below. Full hierarchy,
-list contexts, and other unfinished features still have runtime stubs.
+arguments, and scalar Join are now supported as described below. Full bullet hierarchy
+and other unfinished features still have runtime stubs.
 
 C# generation defaults to `Generated/`. Generated sources and their project may be
 checked in. This repository treats `Generated/` as disposable compiler output;
@@ -299,11 +299,43 @@ the independent Node tests and C# A/B tests run the same inputs.
   `{key}` substitutions use the original lookup path. Predicate truth remains false.
 - Named methods evaluate with `$0` as the receiver and `$1`, `$2`, etc. as scalar
   arguments in a child data context. `^` refers to the caller's data.
-- Legacy `Join` leaves scalar input unchanged. List joining remains unfinished.
+- Legacy `Join` leaves scalar input unchanged. List joining is described below.
 
 The exact `simpledata` / `reference/data/nested.json` invocation and escaped-name
 variant are compared against Node. Singleton arrays use the established legacy
-collapse behavior; multi-element list contexts remain unsupported. Computed/local
+collapse behavior; multi-element lists are now supported as described below. Computed/local
 include targets, nonliteral annotation arguments, unsupported include layouts,
 and additional include annotations still fail explicitly when executed. These
 limits must not be mistaken for general annotation or list parity.
+
+
+## 13. List contexts and joining
+
+The unchanged interpreter's `TemplateData`, `visitMethodableTemplateSpec`,
+`invokeMethods`, `Join`, and `doCompose` are the behavioral sources. The list
+characterizations in `tests/node-reference/list-cases.json` record exact outputs
+against reference commit `ccedefd87b012ff1173ee2f43323b6eb7c8bd268`; Node and
+standalone C# tests execute the same inputs independently.
+
+- Data lists retain item order and parent links: an item's parent is its containing
+  list, whose parent is the enclosing dictionary. Singleton arrays collapse.
+  Empty array properties are absent, so context fallbacks and missing annotations
+  apply to the property name.
+- Inline and named templates evaluate in each item context, inheriting local
+  definitions and annotations. Missing rendered items are omitted; a single
+  surviving result collapses and no surviving result becomes missing `list`.
+  A root template itself is not repeated for root-array input.
+- Rendered lists remain structured until final composition, including nested lists
+  and legacy indentation. They are distinct from data lists and method argument
+  lists. Debug summaries preview all three without traversing parents.
+- Method receivers evaluate once per item before the method chain runs. The chain
+  receives an argument list; named methods store it in `$0`, allowing the fixture's
+  `#anded()` to call `$0.Join(...)`. Parent-prefixed receivers bypass this mapping.
+- `Join` filters missing/false/empty items, defaults to comma-space, and accepts
+  an optional final separator. String data lists also support joining; arbitrary
+  object data formatting remains unfinished.
+
+The end-to-end regression now includes `simpledata` with `nested`, `escapeTest`,
+and the three-pet `simpledata` dataset. This is incremental list support, not full
+language parity: filtering, grouping, bullets, general data formatting, and
+additional methods/annotations retain their existing deferred failure behavior.

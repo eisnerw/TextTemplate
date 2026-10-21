@@ -31,6 +31,46 @@ public sealed class GenerationTests
     }
 
     [Fact]
+    public void ListContextsMatchNode()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "texttemplate-lists-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(root, "templates"));
+        Directory.CreateDirectory(Path.Combine(root, "subtemplates"));
+        try
+        {
+            using var cases = JsonDocument.Parse(File.ReadAllText(Path.Combine(Repository(), "tests/node-reference/list-cases.json")));
+            foreach (var item in cases.RootElement.EnumerateArray())
+                File.WriteAllText(Path.Combine(root, "templates", item.GetProperty("name").GetString() + ".template"), item.GetProperty("script").GetString());
+            var parsed = new TextTemplateCompiler().CompileDirectory(root);
+            Assert.True(parsed.Success, string.Join("\n", parsed.Diagnostics));
+            var generated = new CSharpEmitter().Generate(parsed.Document!);
+            Assert.True(generated.Success, string.Join("\n", generated.Diagnostics));
+            foreach (var file in generated.Files)
+            {
+                string path = Path.Combine(root, "generated", file.Key);
+                Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                File.WriteAllText(path, file.Value);
+            }
+            File.WriteAllText(Path.Combine(root, "generated", "GeneratedTemplates.csproj"), """<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable></PropertyGroup></Project>""");
+            var build = Run("dotnet", root, "build", "generated", "-o", "output", "--nologo");
+            Assert.True(build.Exit == 0, build.Output + build.Error);
+            foreach (var item in cases.RootElement.EnumerateArray())
+            {
+                string name = item.GetProperty("name").GetString()!;
+                string dataFile = Path.Combine(root, "data.json");
+                File.WriteAllText(dataFile, item.GetProperty("data").GetRawText());
+                var reference = Run("node", Repository(), "tools/node-reference/cli.mjs", "--template", name, "--template-root", root, "--data-file", dataFile);
+                Assert.True(reference.Exit == 0, reference.Error);
+                Match(item.GetProperty("expected").GetString()!, reference.Output, name + " reference");
+                var actual = Run("dotnet", root, "output/GeneratedTemplates.dll", "--template", name, "--data-file", dataFile);
+                Assert.True(actual.Exit == 0, name + ": " + actual.Error);
+                Match(reference.Output, actual.Output, name + " " + item.GetProperty("data").GetRawText());
+            }
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
     public void GeneratedProgramRunsIndependentlyAndMatchesNode()
     {
         string root = Path.Combine(Path.GetTempPath(), "texttemplate-ab-" + Guid.NewGuid().ToString("N"));
@@ -141,10 +181,10 @@ public sealed class GenerationTests
                 Assert.True(actual.Exit == 0, actual.Error);
                 Match(reference.Output, actual.Output, "greeting with " + fixture);
             }
-            // Unsupported runtime data shapes fail explicitly instead of pretending to match.
+            // Root lists project properties without repeating the whole root template.
             File.WriteAllText(dataFile, "[{\"firstName\":\"A\"},{\"firstName\":\"B\"}]");
             var list = Run("dotnet", isolated, "bin-output/Standalone.dll", "--template", "greeting", "--data-file", dataFile);
-            Assert.Equal(1, list.Exit); Assert.Equal("", list.Output); Assert.Contains("list contexts", list.Error);
+            Assert.Equal(0, list.Exit); Assert.Equal("Hello A, B!", list.Output);
         }
         finally { Directory.Delete(root, true); }
     }
@@ -182,7 +222,7 @@ public sealed class GenerationTests
                 """);
             var build = Run("dotnet", root, "build", "--nologo", "-o", "output");
             Assert.True(build.Exit == 0, build.Output + build.Error);
-            foreach (string dataName in new[] { "nested", "escapeTest" })
+            foreach (string dataName in new[] { "nested", "escapeTest", "simpledata" })
             {
                 string dataFile = Path.Combine(Repository(), "reference/data", dataName + ".json");
                 var reference = Run("node", Repository(), "tools/node-reference/cli.mjs", "--template", "simpledata", "--template-root", "reference", "--data-file", dataFile);
