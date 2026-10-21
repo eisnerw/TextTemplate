@@ -169,7 +169,7 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/docs.template":1:58
     private TemplateContent renderName_2()
     {
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? name = Each(itemContext => itemContext.Named("name"));
         object? text = Get("text");
         object? contentsResult = (IsTruthy("contents") ? Each(itemContext => new Docs(itemContext).renderContent()) : "");

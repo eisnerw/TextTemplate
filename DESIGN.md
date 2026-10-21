@@ -449,3 +449,8 @@ Named template methods accept object/list receivers as `$0` and object/list
 arguments as `$1`, `$2`, etc. These retain their existing data parent links; the
 method call context is a child of the caller. Node comparisons cover field lookup,
 list counts and iteration, arguments, and parent access (`named-data-cases.json`).
+
+TODO: `Where` is currently an authorized pass-through: it returns its receiver
+unchanged and does not evaluate its predicate. Implement per-item filtering before
+claiming legacy parity. TODOs in source also track literal bullets, stored-only
+multiline styles, and the unimplemented conditional `Count` form.

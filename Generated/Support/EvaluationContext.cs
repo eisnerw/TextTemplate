@@ -108,7 +108,7 @@ internal sealed class EvaluationContext
     private readonly string? dataRoot;
     private string? missingText;
     private TemplateRegex? falsy;
-    // Stored for future multiline rendering; currently does not alter composition.
+    // TODO: Apply MultilineStyle during composition; currently only stored and inherited.
     internal IReadOnlyList<string>? MultilineStyle { get; private set; }
     private Missing MissingValue(string key) => new(key, missingText?.Replace("{key}", key));
     internal readonly Data? Current;

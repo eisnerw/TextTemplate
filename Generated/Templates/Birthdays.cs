@@ -239,15 +239,6 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     private TemplateContent byDate()
     {
         // Template:
-        // '/data/famousBirthdays'.Where(!isAlive)
-        // Source: "templates/birthdays.template":6:12
-        object? applyWhere() => Unsupported(
-            "Call Where",
-            "templates/birthdays.template:6:12",
-            () => "/data/famousBirthdays",
-            () => new object?[] { !(IsTruthy("isAlive")) });
-
-        // Template:
         // dob.ToDate('MM')
         // Source: "templates/birthdays.template":6:60
         object? applyToDate() => Unsupported(
@@ -262,7 +253,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
         object? applyGroupBy() => Unsupported(
             "Call GroupBy",
             "templates/birthdays.template:6:12",
-            () => applyWhere(),
+            () => Builtins.Where(MethodInput(itemContext => "/data/famousBirthdays")),
             () => new object?[] { applyToDate(), "group", "month" });
 
         object? groupBy = InContext(applyGroupBy(), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderToDate()));

@@ -135,16 +135,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/outline.template":27:20
     private TemplateContent NonDomesticated()
     {
-        // Template:
-        // $0.Where(!type.#IsDomesticated())
-        // Source: "templates/outline.template":27:22
-        object? applyWhere() => Unsupported(
-            "Call Where",
-            "templates/outline.template:27:22",
-            () => Get("$0"),
-            () => new object?[] { !(Context.TestCondition(ApplySubtemplate("IsDomesticated", MethodInput("type")))) });
-
-        object? where = applyWhere();
+        object? where = Builtins.Where(MethodInput("$0"));
 
         return Line($"{where}");
     }
@@ -154,16 +145,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/outline.template":26:17
     private TemplateContent Domesticated()
     {
-        // Template:
-        // $0.Where(type.#IsDomesticated())
-        // Source: "templates/outline.template":26:19
-        object? applyWhere() => Unsupported(
-            "Call Where",
-            "templates/outline.template:26:19",
-            () => Get("$0"),
-            () => new object?[] { ApplySubtemplate("IsDomesticated", MethodInput("type")) });
-
-        object? where = applyWhere();
+        object? where = Builtins.Where(MethodInput("$0"));
 
         return Line($"{where}");
     }
@@ -264,15 +246,15 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/outline.template":1:15
     private TemplateContent renderQuoted()
     {
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? quoted = ApplySubtemplate("Quoted", Builtins.ToUpper(MethodInput(itemContext => new Outline(itemContext).renderLastName())));
-        object? content_2 = "{.}";
+        object? content_2 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? ifMissing = Builtins.IfMissing(MethodInput("lastName"), "No Last Name");
-        object? content_3 = "{.}";
+        object? content_3 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? firstName = Get("firstName");
-        object? content_4 = "{.}";
+        object? content_4 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? petsResult = (IsTruthy("pets") ? Each(itemContext => new Outline(itemContext).renderCount()) : Each(itemContext => Line($"no pets")));
-        object? content_5 = "{.}";
+        object? content_5 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? choice = (Context.TestCondition(Builtins.Contains(MethodInput("comment"), "\\n")) ? Each(itemContext => Line($"s")) : "");
         object? comment = Get("comment");
 
@@ -296,13 +278,13 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderCount()
     {
         object? count = Builtins.Count(MethodInput("pets"));
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? count_2 = Builtins.Count(ApplySubtemplate("Domesticated", MethodInput("pets")));
-        object? content_2 = "{.}";
+        object? content_2 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? domesticated = InContext(ApplySubtemplate("Domesticated", MethodInput("pets")), dataContext => dataContext.Each(itemContext => new Outline(itemContext).renderFormatPet()));
-        object? content_3 = "{.}";
+        object? content_3 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? count_3 = Builtins.Count(ApplySubtemplate("NonDomesticated", MethodInput("pets")));
-        object? content_4 = "{.}";
+        object? content_4 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? nonDomesticated = InContext(ApplySubtemplate("NonDomesticated", MethodInput("pets")), dataContext => dataContext.Each(itemContext => new Outline(itemContext).renderFormatPet_2()));
 
         return Line($$"""

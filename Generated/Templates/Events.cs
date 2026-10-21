@@ -278,9 +278,9 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     {
         object? formatTimes = ApplySubtemplate("formatTimes", MethodInput("start"), Get("end"));
         object? summary = Get("summary");
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? description = Get("description");
-        object? content_2 = "{.}";
+        object? content_2 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? location = Get("location");
 
         return Line($$"""

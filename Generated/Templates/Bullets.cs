@@ -249,16 +249,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":29:20
     private TemplateContent NonDomesticated()
     {
-        // Template:
-        // $0.Where(!type.#IsDomesticated())
-        // Source: "templates/bullets.template":29:22
-        object? applyWhere() => Unsupported(
-            "Call Where",
-            "templates/bullets.template:29:22",
-            () => Get("$0"),
-            () => new object?[] { !(Context.TestCondition(ApplySubtemplate("IsDomesticated", MethodInput("type")))) });
-
-        object? where = applyWhere();
+        object? where = Builtins.Where(MethodInput("$0"));
 
         return Line($"{where}");
     }
@@ -268,16 +259,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":28:17
     private TemplateContent Domesticated()
     {
-        // Template:
-        // $0.Where(type.#IsDomesticated())
-        // Source: "templates/bullets.template":28:19
-        object? applyWhere() => Unsupported(
-            "Call Where",
-            "templates/bullets.template:28:19",
-            () => Get("$0"),
-            () => new object?[] { ApplySubtemplate("IsDomesticated", MethodInput("type")) });
-
-        object? where = applyWhere();
+        object? where = Builtins.Where(MethodInput("$0"));
 
         return Line($"{where}");
     }
@@ -446,14 +428,14 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":10:29
     private TemplateContent renderChoice()
     {
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? choice = (EvaluationContext.Compare(Get("^.^.$1"), "=", EvaluationContext.ParseInteger("2")) ? Each(itemContext => Line($".0")) : "");
         object? quoted = ApplySubtemplate("Quoted", Builtins.ToUpper(MethodInput(itemContext => new Bullets(itemContext).renderLastName())));
-        object? content_2 = "{.}";
+        object? content_2 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? ifMissing = Builtins.IfMissing(MethodInput("lastName"), "No Last Name");
-        object? content_3 = "{.}";
+        object? content_3 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? firstName = Get("firstName");
-        object? content_4 = "{.}";
+        object? content_4 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? petsResult = (IsTruthy("pets") ? Each(itemContext => new Bullets(itemContext).renderCount()) : Each(itemContext => Line($"no pets")));
 
         return Line($$"""
@@ -473,10 +455,10 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderCount()
     {
         object? count = Builtins.Count(MethodInput("pets"));
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? choice = (EvaluationContext.Compare(Each(itemContext => itemContext.Named("dpetcnt")), ">", EvaluationContext.ParseInteger("1")) ? Each(itemContext => new Bullets(itemContext).renderDpetcnt()) : "");
         object? domesticated = InContext(ApplySubtemplate("Domesticated", MethodInput("pets")), dataContext => dataContext.Each(itemContext => new Bullets(itemContext).renderFormatPet()));
-        object? content_2 = "{.}";
+        object? content_2 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? choice_2 = (EvaluationContext.Compare(Each(itemContext => itemContext.Named("ndpetcnt")), ">", EvaluationContext.ParseInteger("1")) ? Each(itemContext => new Bullets(itemContext).renderNdpetcnt()) : "");
         object? nonDomesticated = InContext(ApplySubtemplate("NonDomesticated", MethodInput("pets")), dataContext => dataContext.Each(itemContext => new Bullets(itemContext).renderFormatPet_2()));
 

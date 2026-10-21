@@ -898,7 +898,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":427:24
     private TemplateContent renderLastName_16()
     {
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? lastName = Get("lastName");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_13()));
 
@@ -911,7 +911,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":428:21
     private TemplateContent renderType_13()
     {
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? type = Get("type");
 
         return Line($"{content} {type}");
@@ -1002,7 +1002,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":419:24
     private TemplateContent renderLastName_14()
     {
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? lastName = Get("lastName");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_11()));
 
@@ -1061,7 +1061,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":415:24
     private TemplateContent renderLastName_13()
     {
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? lastName = Get("lastName");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_10()));
 
@@ -1114,7 +1114,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":408:24
     private TemplateContent renderDomesticated()
     {
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? domesticated = Each(itemContext => new Tests(itemContext).renderDomesticated_2());
 
         return Line($"{content} Pets {domesticated}");
@@ -1127,7 +1127,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":409:11
     private TemplateContent renderDomesticated_2()
     {
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_9()));
 
         return Line($"{content} Domesticated{pets}");
@@ -1245,7 +1245,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderLastName_12()
     {
         object? lastName = Get("lastName");
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_13()));
 
         return Line($$"""
@@ -1401,7 +1401,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderLastName_11()
     {
         object? lastName = Get("lastName");
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_12()));
 
         return Line($$"""
@@ -1556,7 +1556,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderLastName_10()
     {
         object? lastName = Get("lastName");
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_11()));
 
         return Line($$"""
@@ -1706,7 +1706,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderLastName_9()
     {
         object? lastName = Get("lastName");
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_10()));
 
         return Line($$"""
@@ -1724,7 +1724,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderName_10()
     {
         object? name = Get("name");
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? content_2 = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_6()));
 
         return Line($$"""
@@ -1858,7 +1858,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderLastName_8()
     {
         object? lastName = Get("lastName");
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_9()));
 
         return Line($$"""
@@ -1893,7 +1893,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderFirstName_5()
     {
         object? firstName = Get("firstName");
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_4()));
 
         return Line($$"""
@@ -1966,7 +1966,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":189:15
     private TemplateContent renderName_8()
     {
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? name = Get("name");
 
         return Line($"{content} {name}");
@@ -2141,7 +2141,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderName_6()
     {
         object? name = Get("name");
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? content_2 = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_4()));
 
         return Line($$"""
@@ -2157,7 +2157,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderFirstName_4()
     {
         object? firstName = Get("firstName");
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_3()));
 
         return Line($$"""
@@ -2292,9 +2292,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":100:17
     private TemplateContent renderName_5()
     {
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? name = Get("name");
-        object? content_2 = "{.}";
+        object? content_2 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? content_3 = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_2()));
 
         return Line($$"""
@@ -2311,7 +2311,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderFirstName_2()
     {
         object? firstName = Get("firstName");
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_2()));
 
         return Line($$"""
@@ -2455,7 +2455,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":59:17
     private TemplateContent renderLastName_6()
     {
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? lastName = Get("lastName");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_4()));
 
@@ -2473,9 +2473,9 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":60:21
     private TemplateContent renderName_4()
     {
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? name = Get("name");
-        object? content_2 = "{.}";
+        object? content_2 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? content_3 = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName()));
 
         return Line($$"""
@@ -2492,7 +2492,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderFirstName()
     {
         object? firstName = Get("firstName");
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType()));
 
         return Line($$"""
@@ -2580,7 +2580,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":45:41
     private TemplateContent renderLastName_5()
     {
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? lastName = Get("lastName");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_3()));
 
@@ -2596,7 +2596,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":46:21
     private TemplateContent renderName_3()
     {
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? name = Get("name");
 
         return Line($$"""
@@ -2667,7 +2667,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":32:40
     private TemplateContent renderLastName_4()
     {
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? lastName = Get("lastName");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_2()));
 

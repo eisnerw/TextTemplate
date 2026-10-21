@@ -252,22 +252,22 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":168:12
     private TemplateContent examples()
     {
-        object? content = "{.}";
-        object? content_2 = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content_2 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? click = ApplySubtemplate("Click", MethodInput(itemContext => "A simple template"), "/load/simple", "Simple template");
-        object? content_3 = "{.}";
+        object? content_3 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? click_2 = ApplySubtemplate("Click", MethodInput(itemContext => "A demonstration of outlining"), "/load/outline", "Outline template");
-        object? content_4 = "{.}";
+        object? content_4 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? click_3 = ApplySubtemplate("Click", MethodInput(itemContext => "A demonstration of bullets"), "/load/bullets", "Bullets template");
-        object? content_5 = "{.}";
+        object? content_5 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? click_4 = ApplySubtemplate("Click", MethodInput(itemContext => "Use of Assert() for validating template output"), "/load/tests", "Tests template");
-        object? content_6 = "{.}";
+        object? content_6 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? click_5 = ApplySubtemplate("Click", MethodInput(itemContext => "Some interesting ways of using TextTemplate with the web"), "/load/web", "Web template");
-        object? content_7 = "{.}";
+        object? content_7 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? click_6 = ApplySubtemplate("Click", MethodInput(itemContext => "Date manipulation for a \"To Do\" list"), "/load/events", "Events template");
-        object? content_8 = "{.}";
+        object? content_8 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? click_7 = ApplySubtemplate("Click", MethodInput(itemContext => "A demonstration of grouping and order"), "/load/birthdays", "Birthdays template");
-        object? content_9 = "{.}";
+        object? content_9 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? click_8 = ApplySubtemplate("Click", MethodInput(itemContext => "Experimental application of a computed url to call ElasticSearch"), "/load/elastic", "Calling elastic");
 
         return Line($$"""
@@ -356,13 +356,13 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":142:9
     private TemplateContent goals()
     {
-        object? content = "{.}";
-        object? content_2 = "{.}";
-        object? content_3 = "{.}";
-        object? content_4 = "{.}";
-        object? content_5 = "{.}";
-        object? content_6 = "{.}";
-        object? content_7 = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content_2 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content_3 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content_4 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content_5 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content_6 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content_7 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
 
         return Line($$"""
             The goals of the project (not necessarily achieved with version 1) are to create a language that is:
@@ -936,60 +936,24 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             () => new object?[] { EvaluationContext.ParseInteger("9"), "C", "-" });
 
         // Template:
-        // dob.ToDate('DD')
-        // Source: "templates/startup.template":64:31
-        object? applyToDate() => Unsupported(
-            "Call ToDate",
-            "templates/startup.template:64:31",
-            () => Get("dob"),
-            () => new object?[] { "DD" });
-
-        // Template:
-        // #externalData.Where(dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D')
-        // Source: "templates/startup.template":64:11
-        object? applyWhere() => Unsupported(
-            "Call Where",
-            "templates/startup.template:64:11",
-            () => Each(itemContext => itemContext.Named("externalData")),
-            () => new object?[] { (EvaluationContext.Compare(applyToDate(), "=", "27") && EvaluationContext.Compare(Builtins.Substr(MethodInput("lname"), EvaluationContext.ParseInteger("0"), EvaluationContext.ParseInteger("1")), "=", "D")) });
-
-        // Template:
         // #externalData.Where(dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D')
         //             .GroupBy(sign, 'group')
         // Source: "templates/startup.template":64:11
         object? applyGroupBy() => Unsupported(
             "Call GroupBy",
             "templates/startup.template:64:11",
-            () => applyWhere(),
+            () => Builtins.Where(SubtemplateInput("externalData")),
             () => new object?[] { Get("sign"), "group" });
 
-        // Template:
-        // #externalData.Where(dob.Substr(0,7) = '1967-10')
-        // Source: "templates/startup.template":72:9
-        object? applyWhere_2() => Unsupported(
-            "Call Where",
-            "templates/startup.template:72:9",
-            () => Each(itemContext => itemContext.Named("externalData")),
-            () => new object?[] { EvaluationContext.Compare(Builtins.Substr(MethodInput("dob"), EvaluationContext.ParseInteger("0"), EvaluationContext.ParseInteger("7")), "=", "1967-10") });
-
-        // Template:
-        // #externalData.Where(dob.Substr(5,5) = '01-25')
-        // Source: "templates/startup.template":85:9
-        object? applyWhere_3() => Unsupported(
-            "Call Where",
-            "templates/startup.template:85:9",
-            () => Each(itemContext => itemContext.Named("externalData")),
-            () => new object?[] { EvaluationContext.Compare(Builtins.Substr(MethodInput("dob"), EvaluationContext.ParseInteger("5"), EvaluationContext.ParseInteger("5")), "=", "01-25") });
-
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? intro = Each(itemContext => itemContext.Named("intro"));
         object? content_2 = InContext("{\"first\":\"Hello\", \"second\":\"World\"}", dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderFirst()));
         object? goals = Each(itemContext => itemContext.Named("goals"));
-        object? content_3 = "{.}";
+        object? content_3 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? content_4 = InContext("{\"pets\":[ \n      {\"type\":\"cat\"}\n      ,{\"type\":\"dog\"}\n      ,{\"type\":\"tiger\"}\n   ]}", dataContext => new Startup(dataContext).renderBulletStyle());
-        object? content_5 = "{.}";
+        object? content_5 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? content_6 = InContext("{\"test\":\"value\"}", dataContext => new Startup(dataContext).renderMissingValue());
-        object? content_7 = "{.}";
+        object? content_7 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? replace = Builtins.Replace(MethodInput(itemContext => "replacing"), "ing", "ement");
         object? trim = Builtins.Trim(MethodInput(itemContext => " trimming "));
         object? substr = Builtins.Substr(MethodInput(itemContext => " substringy"), EvaluationContext.ParseInteger("1"), EvaluationContext.ParseInteger("9"));
@@ -997,28 +961,28 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         object? toUpper = Builtins.ToUpper(MethodInput(itemContext => "case"));
         object? choice = (Context.TestCondition(Builtins.Matches(MethodInput(itemContext => "true"), "yes", "1", new TemplateRegex("/True/i", "templates/startup.template:52:33"))) ? Each(itemContext => Line($"test")) : Each(itemContext => Line($"fail")));
         object? content_8 = InContext("{\"element1\":\"multiple\",\"element2\":\"values\"}", dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderChoice()));
-        object? content_9 = "{.}";
+        object? content_9 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? subexample = Each(itemContext => itemContext.Named("subexample"));
-        object? content_10 = "{.}";
+        object? content_10 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? groupBy = InContext(applyGroupBy(), dataContext => new Startup(dataContext).renderDateTest());
-        object? content_11 = "{.}";
-        object? where = InContext(applyWhere_2(), dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderDob()));
-        object? content_12 = "{.}";
+        object? content_11 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? where = InContext(Builtins.Where(SubtemplateInput("externalData")), dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderDob()));
+        object? content_12 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? content_13 = InContext("{\"data\":\"Joan's <data>\"}", dataContext => new Startup(dataContext).renderEncodeFor());
-        object? content_14 = "{.}";
-        object? where_2 = InContext(applyWhere_3(), dataContext => new Startup(dataContext).renderJoin_2());
-        object? content_15 = "{.}";
-        object? content_16 = "{.}";
-        object? content_17 = "{.}";
+        object? content_14 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? where_2 = InContext(Builtins.Where(SubtemplateInput("externalData")), dataContext => new Startup(dataContext).renderJoin_2());
+        object? content_15 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content_16 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content_17 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? click = ApplySubtemplate("Click", MethodInput(itemContext => "Microsoft's Monaco Editor"), "github.com/microsoft/monaco-editor");
-        object? content_18 = "{.}";
+        object? content_18 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? click_2 = ApplySubtemplate("Click", MethodInput(itemContext => "ANTLR (ANother Tool for Language Recognition)"), "www.antlr.org/", "click to go to the ANTLR website");
-        object? content_19 = "{.}";
+        object? content_19 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? click_3 = ApplySubtemplate("Click", MethodInput(itemContext => "The \"calc-monaco-editor\" project"), "github.com/Strumenta/calc-monaco-editor");
         object? click_4 = ApplySubtemplate("Click", MethodInput(itemContext => "article"), "tomassetti.me/writing-a-browser-based-editor-using-monaco-and-antlr/", "Click to go to the article");
-        object? content_20 = "{.}";
+        object? content_20 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? click_5 = ApplySubtemplate("Click", MethodInput(itemContext => "Moment.js"), "momentjs.com", "Click to go to the website");
-        object? content_21 = "{.}";
+        object? content_21 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? click_6 = ApplySubtemplate("Click", MethodInput(itemContext => "here"), "/load/docs", "Click to see the documentation using TextTemplate");
         object? click_7 = ApplySubtemplate("Click", MethodInput(itemContext => "here"), "/runonserver/docs", "Click to see the documentation rendered on the server");
         object? click_8 = ApplySubtemplate("Click", MethodInput(itemContext => "/runonserver/events"), "/runonserver/events", "Click to see the events template");
@@ -1369,7 +1333,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":40:11
     private TemplateContent renderType_2()
     {
-        object? content = "{.}";
+        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
         object? type = Get("type");
 
         return Line($"{content} {type}s");

@@ -197,6 +197,7 @@ public sealed class CSharpEmitter
     private string? Annotation(SyntaxNode call, string context = "annotatedContext", bool lambda = true)
     {
         var args = call.Children.Skip(1).SelectMany(child => child.Children).ToList();
+        // TODO: Evaluate dynamic style arguments and apply multiline formatting during composition.
         if (call.Value == "@MultilineStyle" && args.All(arg => arg.Kind == SyntaxKind.String))
             return (lambda ? context + " => " : "") + context + ".WithMultilineStyle(" + string.Join(", ", args.Select(arg => Quote(DecodeString(arg.Value!)))) + ")";
         if (call.Value == "@Falsy" && (args.Count == 0 || args.Count == 1 && args[0].Kind == SyntaxKind.Regex))
@@ -573,9 +574,11 @@ public sealed class CSharpEmitter
                             string.Join(",\n                ", annotations.Select(call => Annotation(call))) + "\n            },\n            " + InChild(body, "annotatedContext") + ")";
                     }
                 }
-                else if (node.Value!.StartsWith('#') || (node.Value == "Count" && !node.Children.Skip(1).SelectMany(child => child.Children).Any()) || node.Value is "IfMissing" or "Join" or "Trim" or "StartsWith" or "EndsWith" or "Contains" or "Replace" or "Substr" or "IndexOf" or "LastIndexOf" or "EndIndexOf" or "ToUpper" or "ToLower" or "GreaterThan" or "LessThan" or "Matches" or "Assert")
+                // TODO: Implement Count(predicate) with per-item predicate evaluation.
+                else if (node.Value!.StartsWith('#') || (node.Value == "Count" && !node.Children.Skip(1).SelectMany(child => child.Children).Any()) || node.Value is "Where" or "IfMissing" or "Join" or "Trim" or "StartsWith" or "EndsWith" or "Contains" or "Replace" or "Substr" or "IndexOf" or "LastIndexOf" or "EndIndexOf" or "ToUpper" or "ToLower" or "GreaterThan" or "LessThan" or "Matches" or "Assert")
                 {
-                    string arguments = string.Join(", ", node.Children.Skip(1).SelectMany(child => child.Children).Select(Call));
+                    // TODO: Where must evaluate its predicate in each item's context; skip it for this temporary pass-through.
+                    string arguments = node.Value == "Where" ? "" : string.Join(", ", node.Children.Skip(1).SelectMany(child => child.Children).Select(Call));
                     expression = (!node.Value.StartsWith('#') ? "Builtins." + node.Value + "(" : "ApplySubtemplate(" + Quote(node.Value[1..]) + ", ") +
                         (node.Children[0].Kind == SyntaxKind.Call || receiver.Value?.StartsWith('^') == true ? Call(node.Children[0]) : node.Children[0].Kind == SyntaxKind.Identifier && !node.Children[0].Value!.StartsWith('@')
                             ? "MethodInput(" + Quote(node.Children[0].Value!) + ")"
@@ -588,9 +591,9 @@ public sealed class CSharpEmitter
             case SyntaxKind.Regex:
                 expression = "new TemplateRegex(" + Quote(node.Value!) + ", " + Quote(location) + ")";
                 break;
-            // Temporary literal marker until hierarchical bullet rendering is implemented.
+            // TODO: Implement hierarchical bullet formatting and numbering.
             case SyntaxKind.Bullet:
-                expression = Quote("{.}"); break;
+                expression = "/* TODO: Render hierarchical bullets and numbering. */ " + Quote("{.}"); break;
             case SyntaxKind.InlineCall:
                 expression = Stub(); break;
             default: expression = Stub(); break;
