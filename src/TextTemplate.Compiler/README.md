@@ -39,6 +39,8 @@ helper source, with no runtime parser, syntax tree, or TextTemplate DLL dependen
 The public API is `GeneratedTemplates.Render(name, JsonElement? data = null)`.
 Each generated template exposes an internal `Evaluate()` method that returns
 structured content; the public API composes that content into the final string.
+Built-in language methods use `Builtins.Join(...)`, with their entry points in
+`Support/Builtins.cs`; user-defined template methods retain their own names.
 Generated lookups use `IsTruthy(path)` for legacy truth checks and
 `MethodInput(path)` to collect a method input across current item contexts.
 Complex method inputs use the deferred `MethodInput(itemContext => ...)` overload.

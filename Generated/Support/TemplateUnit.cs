@@ -14,7 +14,6 @@ internal abstract class TemplateUnit(EvaluationContext context)
     protected object? Annotate(Func<EvaluationContext, EvaluationContext>[] annotations, Func<EvaluationContext, object?> body)
         => context.Annotate(annotations, body);
     protected object? ApplySubtemplate(string name, object? value, params object?[] arguments) => context.CallNamed(name, value, arguments);
-    protected static object? Join(object? value, params object?[] arguments) => EvaluationContext.JoinValues(value, arguments);
     protected object? Each(Func<EvaluationContext, object?> body) => context.Each(body);
     // Collect method input in each current item context before invoking the method.
     protected object? MethodInput(Func<EvaluationContext, object?> body) => context.Receiver(body);

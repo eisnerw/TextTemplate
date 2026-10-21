@@ -20,7 +20,7 @@ public sealed class CSharpEmitter
     private readonly Dictionary<string, string> sharedUnits = new(StringComparer.Ordinal);
     private sealed class MethodBody
     {
-        internal readonly HashSet<string> Names = new(StringComparer.Ordinal) { "context", "itemContext", "dataContext", "definitionContext", "annotatedContext", "includedContext", "Get", "Line", "Named", "Unsupported", "InContext", "WithDefinitions", "MethodInput", "IsTruthy", "SubtemplateInput", "ApplySubtemplate", "SubtemplateDefinitions", "DefineSubtemplates" };
+        internal readonly HashSet<string> Names = new(StringComparer.Ordinal) { "Builtins", "context", "itemContext", "dataContext", "definitionContext", "annotatedContext", "includedContext", "Get", "Line", "Named", "Unsupported", "InContext", "WithDefinitions", "MethodInput", "IsTruthy", "SubtemplateInput", "ApplySubtemplate", "SubtemplateDefinitions", "DefineSubtemplates" };
         internal readonly List<string> Statements = new();
         internal readonly List<string> Functions = new();
     }
@@ -67,7 +67,7 @@ public sealed class CSharpEmitter
         var mainMap = new List<string>(); var sharedMap = new List<string>();
         var unitNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "GeneratedTemplates", "EvaluationContext", "TemplateContent", "TemplateUnit", "SubtemplateDefinitions", "GeneratedTemplateProgram", "Common",
+            "GeneratedTemplates", "EvaluationContext", "TemplateContent", "TemplateUnit", "Builtins", "SubtemplateDefinitions", "GeneratedTemplateProgram", "Common",
             "System", "StringComparer", "StringComparison", "JsonElement", "JsonDocument", "JsonValueKind",
             "Dictionary", "List", "Func", "Action", "Regex", "CultureInfo", "Math", "Console", "File",
             "Exception", "ArgumentException", "InvalidOperationException", "NotImplementedException"
@@ -81,7 +81,7 @@ public sealed class CSharpEmitter
             bodies.Clear();
             methodNames.Clear();
             unitName = units[key];
-            methodNames.UnionWith(new[] { unitName, "Get", "Line", "Named", "InContext", "WithDefinitions", "Unsupported", "Annotate", "Join", "Import", "Context", "Each", "MethodInput", "IsTruthy", "SubtemplateInput", "ApplySubtemplate", "SubtemplateDefinitions", "DefineSubtemplates" });
+            methodNames.UnionWith(new[] { unitName, "Get", "Line", "Named", "InContext", "WithDefinitions", "Unsupported", "Annotate", "Builtins", "Import", "Context", "Each", "MethodInput", "IsTruthy", "SubtemplateInput", "ApplySubtemplate", "SubtemplateDefinitions", "DefineSubtemplates" });
             IndexDefinitions(source.Tree);
             if (source.Category == "subtemplates" && includes.Contains(source.Name)) EmitImport(source);
             string method = Emit(source.Tree, source);
@@ -106,6 +106,7 @@ public sealed class CSharpEmitter
         files.Add("Support/EvaluationContext.cs", Header + runtime[..programStart]);
         files.Add("Program.cs", Header + runtime[programStart..]);
         files.Add("Support/TemplateUnit.cs", Header + UnitSupport);
+        files.Add("Support/Builtins.cs", Header + BuiltinSupport);
         files.Add("Support/TemplateContent.cs", Header + ContentSupport);
         string result = Header + string.Join("\n", files.Values.Select(file => file[Header.Length..]));
         return new(result, diagnostics) { Files = files };
@@ -132,6 +133,15 @@ public sealed class CSharpEmitter
         }
         """;
 
+    private const string BuiltinSupport = """
+        // Built-in template methods; distinct from user-defined template methods.
+        internal static class Builtins
+        {
+            internal static object? Join(object? value, params object?[] arguments)
+                => EvaluationContext.JoinValues(value, arguments);
+        }
+        """;
+
     private const string UnitSupport = """
         // Short instance helpers keep compatibility machinery out of template bodies.
         internal abstract class TemplateUnit(EvaluationContext context)
@@ -140,7 +150,6 @@ public sealed class CSharpEmitter
             protected object? Annotate(Func<EvaluationContext, EvaluationContext>[] annotations, Func<EvaluationContext, object?> body)
                 => context.Annotate(annotations, body);
             protected object? ApplySubtemplate(string name, object? value, params object?[] arguments) => context.CallNamed(name, value, arguments);
-            protected static object? Join(object? value, params object?[] arguments) => EvaluationContext.JoinValues(value, arguments);
             protected object? Each(Func<EvaluationContext, object?> body) => context.Each(body);
             // Collect method input in each current item context before invoking the method.
             protected object? MethodInput(Func<EvaluationContext, object?> body) => context.Receiver(body);
@@ -561,7 +570,7 @@ public sealed class CSharpEmitter
                 else if (node.Value!.StartsWith('#') || node.Value == "Join")
                 {
                     string arguments = string.Join(", ", node.Children.Skip(1).SelectMany(child => child.Children).Select(Call));
-                    expression = (node.Value == "Join" ? "Join(" : "ApplySubtemplate(" + Quote(node.Value[1..]) + ", ") +
+                    expression = (node.Value == "Join" ? "Builtins.Join(" : "ApplySubtemplate(" + Quote(node.Value[1..]) + ", ") +
                         (node.Children[0].Kind == SyntaxKind.Call || receiver.Value?.StartsWith('^') == true ? Call(node.Children[0]) : node.Children[0].Kind == SyntaxKind.Identifier && !node.Children[0].Value!.StartsWith('@')
                             ? "MethodInput(" + Quote(node.Children[0].Value!) + ")"
                             : node.Children[0].Kind == SyntaxKind.NamedSubtemplate

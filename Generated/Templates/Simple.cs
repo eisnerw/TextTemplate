@@ -38,7 +38,7 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/simple.template":16:9
     private TemplateContent anded()
     {
-        object? join = Join(MethodInput("$0"), ", ", " and ");
+        object? join = Builtins.Join(MethodInput("$0"), ", ", " and ");
 
         return Line($"{join}");
     }

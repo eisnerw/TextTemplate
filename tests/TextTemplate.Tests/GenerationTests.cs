@@ -108,6 +108,7 @@ public sealed class GenerationTests
                 ["scopeIsolation"] = "{#outer} {#local}\nSubtemplates:\n{#local:[Root {firstName}]}\n{#outer:[{person:[{#local}]}\nSubtemplates:\n{#local:[Inner {name}]}]}",
                 ["rawQuotes"] = "Quotes \"\"\"\n\t{firstName}\n\nEnd\n",
                 ["nameCollisions"] = "{#Evaluate} {#Get} {#class} {firstName} {firstName}\nSubtemplates:\n{#Evaluate:[Evaluate]}\n{#Get:[Get]}\n{#class:[Keyword]}",
+                ["builtins"] = "{#Join} {#Builtins} {Builtins} {firstName.Join(',')}\nSubtemplates:\n{#Join:[template join]}\n{#Builtins:[template builtins]}",
                 ["helperCollisions"] = "{#IsTruthy} {#MethodInput} {IsTruthy} {MethodInput} {firstName=>[yes],[no]} {firstName.Join(',')}\nSubtemplates:\n{#IsTruthy:[truth]}\n{#MethodInput:[input]}",
                 ["registrationCollisions"] = "{#defineSubtemplates} {#ApplySubtemplate} {#SubtemplateInput} {#SubtemplateDefinitions} {ApplySubtemplate} {SubtemplateInput}\nSubtemplates:\n{#defineSubtemplates:[definition]}\n{#ApplySubtemplate:[application]}\n{#SubtemplateInput:[input]}\n{#SubtemplateDefinitions:[scope]}",
                 ["birthdayComplete"] = "{'{\"fname\":\"Ada\",\"lname\":\"Lovelace\",\"date\":\"Dec 10\"}':[before\n{fname->[{fname} ]}{lname} {#date}\nafter]}\nSubtemplates:\n{#date:[{date}]}",
@@ -163,6 +164,12 @@ public sealed class GenerationTests
             Assert.Contains("private TemplateContent Evaluate_2()", generated.Source);
             Assert.Contains("IsTruthy(\"firstName\")", generated.Source);
             Assert.Contains("MethodInput(\"firstName\")", generated.Source);
+            Assert.Contains("Builtins.Join(MethodInput(\"firstName\")", generated.Source);
+            Assert.Contains("Support/Builtins.cs", generated.Files.Keys);
+            Assert.Contains("Templates/Builtins_2.cs", generated.Files.Keys);
+            Assert.Contains("private TemplateContent Join()", generated.Source);
+            Assert.Contains("private TemplateContent Builtins_3()", generated.Source);
+            Assert.DoesNotContain("protected static object? Join(", generated.Source);
             Assert.Contains("private TemplateContent IsTruthy_2()", generated.Source);
             Assert.Contains("private TemplateContent MethodInput_2()", generated.Source);
             Assert.Contains("Templates/AB_2.cs", generated.Files.Keys);

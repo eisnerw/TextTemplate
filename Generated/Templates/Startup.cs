@@ -1394,7 +1394,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":86:8
     private object? renderJoin_2()
     {
-        return Join(MethodInput(itemContext => new Startup(itemContext).renderFalsy()), ", ", " and ");
+        return Builtins.Join(MethodInput(itemContext => new Startup(itemContext).renderFalsy()), ", ", " and ");
     }
 
     // Template:
@@ -1724,7 +1724,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":38:35
     private object? renderJoin()
     {
-        return Join(MethodInput(itemContext => new Startup(itemContext).renderType()), ", ", " and ");
+        return Builtins.Join(MethodInput(itemContext => new Startup(itemContext).renderType()), ", ", " and ");
     }
 
     // Template:
