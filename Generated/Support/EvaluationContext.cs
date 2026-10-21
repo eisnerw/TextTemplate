@@ -106,6 +106,7 @@ internal sealed class EvaluationContext
             : $"Missing({JsonSerializer.Serialize(Key)}, replacement: {JsonSerializer.Serialize(Replacement)})";
     }
     private string? missingText;
+    private TemplateRegex? falsy;
     private Missing MissingValue(string key) => new(key, missingText?.Replace("{key}", key));
     internal readonly Data? Current;
     internal readonly Dictionary<string, Func<EvaluationContext, object?>> Shared;
@@ -120,6 +121,7 @@ internal sealed class EvaluationContext
         Locals = new(parent.Locals, StringComparer.Ordinal);
         recursion = parent.recursion;
         missingText = parent.missingText;
+        falsy = parent.falsy;
     }
 
     [System.Runtime.CompilerServices.InterpolatedStringHandler]
@@ -267,6 +269,14 @@ internal sealed class EvaluationContext
         foreach (KeyValuePair<string, Func<EvaluationContext, object?>> entry in definitions) child.Locals[entry.Key] = entry.Value;
         return child;
     }
+    internal EvaluationContext WithFalsy(TemplateRegex? pattern)
+    {
+        EvaluationContext child = new EvaluationContext(this, Current);
+        child.falsy = pattern;
+        return child;
+    }
+    internal bool TestCondition(object? value)
+        => Condition(value) && !(falsy?.Test(Builtins.JsString(value)) ?? false);
     internal EvaluationContext WithMissingValue(string replacement)
     {
         EvaluationContext child = new EvaluationContext(this, Current);
@@ -296,7 +306,7 @@ internal sealed class EvaluationContext
         {
             object? argument = Intermediate(arguments[i]);
             if (argument is Data) throw new NotImplementedException("Object arguments for named methods are not implemented yet.");
-            if (argument is not Missing) data.Values["$" + (i + 1)] = argument;
+            if (argument is not Missing and not TemplateRegex) data.Values["$" + (i + 1)] = argument;
         }
         return new EvaluationContext(this, data).Named(name);
     }

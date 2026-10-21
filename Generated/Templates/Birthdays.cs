@@ -376,23 +376,12 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/birthdays.template":5:12
     private object? grouping()
     {
-        // Template:
-        // /^0$/
-        // Source: "templates/birthdays.template":5:75
-        object? pattern() => Unsupported(
-            "Regex /^0$/",
-            "templates/birthdays.template:5:75");
-
-        // Template:
-        // [{$0.Case(3,[{#ungrouped}],2,[{#bySign}],[{#byDate}])}].@Falsy(/^0$/)
-        // Source: "templates/birthdays.template":5:12
-        object? applyFalsy() => Unsupported(
-            "Call @Falsy",
-            "templates/birthdays.template:5:12",
-            () => Each(itemContext => new Birthdays(itemContext).renderCase()),
-            () => new object?[] { pattern() });
-
-        return applyFalsy();
+        return Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithFalsy(new TemplateRegex("/^0$/", "templates/birthdays.template:5:75"))
+            },
+            annotatedContext => annotatedContext.Each(itemContext => new Birthdays(itemContext).renderCase()));
     }
 
     // Template:

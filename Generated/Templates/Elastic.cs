@@ -141,23 +141,12 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/elastic.template":6:4
     private object? renderFalsy()
     {
-        // Template:
-        // /0/
-        // Source: "templates/elastic.template":6:50
-        object? pattern() => Unsupported(
-            "Regex /0/",
-            "templates/elastic.template:6:50");
-
-        // Template:
-        // [{fname} {lname} {!isAlive->[(dead)]}].@Falsy(/0/)
-        // Source: "templates/elastic.template":6:4
-        object? applyFalsy() => Unsupported(
-            "Call @Falsy",
-            "templates/elastic.template:6:4",
-            () => Each(itemContext => new Elastic(itemContext).renderFname()),
-            () => new object?[] { pattern() });
-
-        return applyFalsy();
+        return Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithFalsy(new TemplateRegex("/0/", "templates/elastic.template:6:50"))
+            },
+            annotatedContext => annotatedContext.Each(itemContext => new Elastic(itemContext).renderFname()));
     }
 
     // Template:

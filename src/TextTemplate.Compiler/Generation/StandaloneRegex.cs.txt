@@ -1,0 +1,259 @@
+// JavaScript non-Unicode regex adapter for the frozen grammar's g/i/m/s flags.
+// Match indexes and replacement captures always refer to the original UTF-16 input.
+internal sealed class TemplateRegex
+{
+    private readonly Regex regex;
+    private readonly bool global, ignoreCase;
+    private readonly Dictionary<string, int> names = new(StringComparer.Ordinal);
+    private readonly string literal;
+    private int lastIndex;
+    internal TemplateRegex(string literal, string location)
+    {
+        int slash = literal.LastIndexOf('/');
+        string flags = literal[(slash + 1)..], pattern = literal[1..slash];
+        var seen = new HashSet<char>();
+        foreach (char flag in flags)
+            if (!"gims".Contains(flag) || !seen.Add(flag)) throw new InvalidOperationException(location + ": invalid regular expression flags.");
+        this.literal = "/" + pattern + "/" + (flags.Contains('g') ? "g" : "") + (flags.Contains('i') ? "i" : "") + (flags.Contains('m') ? "m" : "") + (flags.Contains('s') ? "s" : "");
+        global = flags.Contains('g'); ignoreCase = flags.Contains('i');
+        try { regex = new Regex(Translate(pattern, flags.Contains('m'), flags.Contains('s')), RegexOptions.ECMAScript | RegexOptions.CultureInvariant); }
+        catch (NotImplementedException error) { throw new NotImplementedException(location + ": " + error.Message, error); }
+        catch (ArgumentException error) { throw new InvalidOperationException(location + ": invalid regular expression.", error); }
+    }
+    public override string ToString() => literal;
+    private char Canonical(char c)
+    {
+        if (!ignoreCase) return c;
+        string upper = NodeCasing.Convert(c.ToString(), true);
+        return upper.Length != 1 || (c >= 128 && upper[0] < 128) ? c : upper[0];
+    }
+    private string Input(string text)
+    {
+        if (!ignoreCase) return text;
+        char[] chars = text.ToCharArray();
+        for (int i = 0; i < chars.Length; i++) chars[i] = Canonical(chars[i]);
+        return new string(chars);
+    }
+    internal bool Test(string text)
+    {
+        if (global && lastIndex > text.Length) { lastIndex = 0; return false; }
+        Match match = regex.Match(Input(text), global ? lastIndex : 0);
+        if (global) lastIndex = match.Success ? match.Index + match.Length : 0;
+        return match.Success;
+    }
+    internal string Replace(string text, string replacement)
+    {
+        if (global) lastIndex = 0;
+        string input = Input(text);
+        var output = new System.Text.StringBuilder();
+        int end = 0;
+        for (Match match = regex.Match(input); match.Success; match = match.NextMatch())
+        {
+            output.Append(text, end, match.Index - end);
+            output.Append(Replacement(text, match, replacement));
+            end = match.Index + match.Length;
+            if (!global) break;
+        }
+        output.Append(text, end, text.Length - end);
+        return output.ToString();
+    }
+    private string Replacement(string text, Match match, string replacement)
+    {
+        string Capture(int n) => match.Groups[n].Success ? text.Substring(match.Groups[n].Index, match.Groups[n].Length) : "";
+        var output = new System.Text.StringBuilder();
+        for (int i = 0; i < replacement.Length; i++)
+        {
+            char c = replacement[i];
+            if (c != '$' || i + 1 == replacement.Length) { output.Append(c); continue; }
+            char next = replacement[i + 1];
+            if (next == '$') { output.Append('$'); i++; }
+            else if (next == '&') { output.Append(Capture(0)); i++; }
+            else if (next == '`') { output.Append(text, 0, match.Index); i++; }
+            else if (next == '\'') { output.Append(text, match.Index + match.Length, text.Length - match.Index - match.Length); i++; }
+            else if (next == '<' && names.Count > 0 && replacement.IndexOf('>', i + 2) is int close && close >= 0)
+            {
+                string name = replacement[(i + 2)..close];
+                if (names.TryGetValue(name, out int group)) output.Append(Capture(group));
+                i = close;
+            }
+            else if (next is >= '0' and <= '9')
+            {
+                int group = next - '0', consumed = 1;
+                if (i + 2 < replacement.Length && replacement[i + 2] is >= '0' and <= '9')
+                {
+                    int two = group * 10 + replacement[i + 2] - '0';
+                    if (two > 0 && two < match.Groups.Count) { group = two; consumed = 2; }
+                }
+                if (group > 0 && group < match.Groups.Count) { output.Append(Capture(group)); i += consumed; }
+                else output.Append('$');
+            }
+            else output.Append('$');
+        }
+        return output.ToString();
+    }
+    private static string Escape(char c) => "\\u" + ((int)c).ToString("x4", CultureInfo.InvariantCulture);
+    private string Set(bool[] set, bool negate)
+    {
+        if (ignoreCase)
+        {
+            bool[] canonical = new bool[65536];
+            for (int i = 0; i < set.Length; i++) if (set[i]) canonical[Canonical((char)i)] = true;
+            set = canonical;
+        }
+        var output = new System.Text.StringBuilder(negate ? "[^" : "[");
+        bool any = false;
+        for (int i = 0; i < set.Length; i++)
+        {
+            if (!set[i]) continue;
+            any = true;
+            int end = i;
+            while (end + 1 < set.Length && set[end + 1]) end++;
+            output.Append(Escape((char)i));
+            if (end > i) output.Append('-').Append(Escape((char)end));
+            i = end;
+        }
+        return any ? output.Append(']').ToString() : negate ? "[\\s\\S]" : "(?!)";
+    }
+    private static bool IsWord(char c) => c is >= 'A' and <= 'Z' or >= 'a' and <= 'z' or >= '0' and <= '9' or '_';
+    private bool[] Atom(string pattern, ref int position)
+    {
+        bool[] set = new bool[65536];
+        char c = pattern[position++];
+        if (c != '\\') { set[c] = true; return set; }
+        if (position == pattern.Length) throw new ArgumentException("Trailing escape.");
+        c = pattern[position++];
+        if ("dDsSwW".Contains(c))
+        {
+            for (int i = 0; i < set.Length; i++)
+            {
+                bool matches = char.ToLowerInvariant(c) switch { 'd' => i is >= '0' and <= '9', 's' => Builtins.Whitespace.Contains((char)i), _ => IsWord((char)i) };
+                set[i] = char.IsUpper(c) ? !matches : matches;
+            }
+        }
+        else
+        {
+            c = c switch { 'n' => '\n', 'r' => '\r', 't' => '\t', 'v' => '\v', 'f' => '\f', 'b' => '\b', _ => c };
+            if (c is 'x' or 'u')
+            {
+                int length = c == 'x' ? 2 : 4;
+                if (position + length <= pattern.Length && ushort.TryParse(pattern.AsSpan(position, length), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out ushort code))
+                { c = (char)code; position += length; }
+            }
+            else if (c == 'c')
+            {
+                if (position == pattern.Length || !char.IsAsciiLetter(pattern[position])) throw new NotImplementedException("Regex control escape form is not implemented.");
+                c = (char)(pattern[position++] % 32);
+            }
+            else if (c is >= '0' and <= '9')
+            {
+                if (c != '0' || position < pattern.Length && char.IsAsciiDigit(pattern[position])) throw new NotImplementedException("Regex octal/forward numeric escapes are not implemented.");
+                c = '\0';
+            }
+            set[c] = true;
+        }
+        return set;
+    }
+    private string Translate(string pattern, bool multiline, bool dotAll)
+    {
+        var output = new System.Text.StringBuilder();
+        var groups = new Stack<(int Before, bool Capture)>();
+        int captures = 0;
+        const string boundary = "(?:(?<=[A-Za-z0-9_])(?![A-Za-z0-9_])|(?<![A-Za-z0-9_])(?=[A-Za-z0-9_]))";
+        for (int i = 0; i < pattern.Length;)
+        {
+            char c = pattern[i++];
+            if (c == '[')
+            {
+                bool negate = i < pattern.Length && pattern[i] == '^'; if (negate) i++;
+                bool[] set = new bool[65536];
+                while (i < pattern.Length && pattern[i] != ']')
+                {
+                    bool[] atom = Atom(pattern, ref i);
+                    if (i + 1 < pattern.Length && pattern[i] == '-' && pattern[i + 1] != ']')
+                    {
+                        i++; bool[] end = Atom(pattern, ref i);
+                        int a = Array.IndexOf(atom, true), b = Array.IndexOf(end, true);
+                        if (a < 0 || b < a || Array.LastIndexOf(atom, true) != a || Array.LastIndexOf(end, true) != b)
+                            throw new NotImplementedException("Regex character-class range form is not implemented.");
+                        for (int n = a; n <= b; n++) atom[n] = true;
+                    }
+                    for (int n = 0; n < set.Length; n++) set[n] |= atom[n];
+                }
+                if (i == pattern.Length) throw new ArgumentException("Unclosed character class.");
+                i++; output.Append(Set(set, negate));
+            }
+            else if (c == '(')
+            {
+                bool capture = i == pattern.Length || pattern[i] != '?';
+                string prefix = "(";
+                if (!capture)
+                {
+                    if (i + 1 >= pattern.Length) throw new ArgumentException("Invalid group.");
+                    char kind = pattern[++i]; i++;
+                    if (kind is ':' or '=' or '!') prefix = "(?" + kind;
+                    else if (kind == '<' && i < pattern.Length && pattern[i] is '=' or '!') prefix = "(?<" + pattern[i++];
+                    else if (kind == '<')
+                    {
+                        int close = pattern.IndexOf('>', i);
+                        if (close < 0) throw new ArgumentException("Invalid named capture.");
+                        string name = pattern[i..close];
+                        if (!Regex.IsMatch(name, @"^[A-Za-z_$][A-Za-z0-9_$]*$")) throw new NotImplementedException("Unicode regex capture names are not implemented.");
+                        if (!names.TryAdd(name, captures + 1)) throw new NotImplementedException("Duplicate regex capture names are not implemented.");
+                        i = close + 1; capture = true;
+                    }
+                    else throw new ArgumentException("Invalid JavaScript group.");
+                }
+                groups.Push((captures, capture)); if (capture) captures++;
+                output.Append(prefix);
+            }
+            else if (c == ')')
+            {
+                if (groups.Count == 0) throw new ArgumentException("Unmatched group.");
+                var group = groups.Pop();
+                bool repeats = i < pattern.Length && "*+".Contains(pattern[i]);
+                if (i < pattern.Length && pattern[i] == '{')
+                {
+                    Match count = Regex.Match(pattern[i..], @"^\{([0-9]+)(?:,([0-9]*))?\}");
+                    if (count.Success)
+                    {
+                        string maximum = count.Groups[2].Success ? count.Groups[2].Value : count.Groups[1].Value;
+                        repeats = maximum.Length == 0 || double.Parse(maximum, CultureInfo.InvariantCulture) > 1;
+                    }
+                }
+                if (repeats && captures - group.Before > (group.Capture ? 1 : 0))
+                    throw new NotImplementedException("Regex quantified nested captures require JavaScript capture-reset semantics.");
+                output.Append(')');
+            }
+            else if (c == '\\')
+            {
+                if (i < pattern.Length && pattern[i] is 'b' or 'B') { output.Append(pattern[i++] == 'b' ? boundary : "(?!" + boundary + ")"); }
+                else if (i < pattern.Length && pattern[i] is >= '1' and <= '9')
+                {
+                    int start = i; while (i < pattern.Length && char.IsAsciiDigit(pattern[i])) i++;
+                    if (!int.TryParse(pattern[start..i], out int group) || group > captures) throw new NotImplementedException("Regex forward/octal backreferences are not implemented.");
+                    output.Append("(?:\\").Append(group).Append(')');
+                }
+                else if (i + 1 < pattern.Length && pattern[i] == 'k' && pattern[i + 1] == '<')
+                {
+                    int close = pattern.IndexOf('>', i + 2);
+                    if (close < 0 || !names.TryGetValue(pattern[(i + 2)..close], out int group)) throw new NotImplementedException("Regex forward named backreferences are not implemented.");
+                    output.Append("(?:\\").Append(group).Append(')'); i = close + 1;
+                }
+                else { i--; output.Append(Set(Atom(pattern, ref i), false)); }
+            }
+            else if (c == '.') output.Append(dotAll ? "[\\s\\S]" : "[^\\r\\n\\u2028\\u2029]");
+            else if (c == '^') output.Append(multiline ? "(?:\\A|(?<=[\\r\\n\\u2028\\u2029]))" : "\\A");
+            else if (c == '$') output.Append(multiline ? "(?:\\z|(?=[\\r\\n\\u2028\\u2029]))" : "\\z");
+            else if ("*+?|".Contains(c)) output.Append(c);
+            else if (c == '{')
+            {
+                Match quantifier = Regex.Match(pattern[i..], @"^[0-9]+(?:,[0-9]*)?\}");
+                if (quantifier.Success) { output.Append('{').Append(quantifier.Value); i += quantifier.Length; }
+                else output.Append(Escape(c));
+            }
+            else output.Append(Escape(Canonical(c)));
+        }
+        if (groups.Count != 0) throw new ArgumentException("Unclosed group.");
+        return output.ToString();
+    }
+}

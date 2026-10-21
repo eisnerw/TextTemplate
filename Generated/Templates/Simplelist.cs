@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 internal sealed class Simplelist(EvaluationContext context) : TemplateUnit(context)
 {
     // Template:
-    // {"Hello"} {lastName}, {firstName.StartsWith('J')->[Mr. ]}{firstName.ToLower().Replace('john', [{firstName.ToUpper()}])} with {pets=>
+    // {"Hello"} {lastName}, {firstName.Matches(/jo/i)->[Mr. ]}{firstName.ToLower().Replace('john', [{firstName.ToUpper()}])} with {pets=>
     //    [{pets:#xformatPet}].@Include('#doInclude')
     //    ,[no pets]
     // }!!
@@ -59,7 +59,7 @@ internal sealed class Simplelist(EvaluationContext context) : TemplateUnit(conte
 
     // Template:
     // [{firstName.ToUpper()}]
-    // Source: "templates/simplelist.template":1:95
+    // Source: "templates/simplelist.template":1:94
     private TemplateContent renderToUpper()
     {
         object? toUpper = Builtins.ToUpper(MethodInput("firstName"));
@@ -82,7 +82,7 @@ internal sealed class Simplelist(EvaluationContext context) : TemplateUnit(conte
     }
 
     // Template:
-    // {"Hello"} {lastName}, {firstName.StartsWith('J')->[Mr. ]}{firstName.ToLower().Replace('john', [{firstName.ToUpper()}])} with {pets=>
+    // {"Hello"} {lastName}, {firstName.Matches(/jo/i)->[Mr. ]}{firstName.ToLower().Replace('john', [{firstName.ToUpper()}])} with {pets=>
     //    [{pets:#xformatPet}].@Include('#doInclude')
     //    ,[no pets]
     // }!!
@@ -95,7 +95,7 @@ internal sealed class Simplelist(EvaluationContext context) : TemplateUnit(conte
     private TemplateContent renderSimplelist()
     {
         object? lastName = Get("lastName");
-        object? choice = (EvaluationContext.Condition(Builtins.StartsWith(MethodInput("firstName"), "J")) ? Each(itemContext => Line($"Mr. ")) : "");
+        object? choice = (Context.TestCondition(Builtins.Matches(MethodInput("firstName"), new TemplateRegex("/jo/i", "templates/simplelist.template:1:42"))) ? Each(itemContext => Line($"Mr. ")) : "");
         object? replace = Builtins.Replace(Builtins.ToLower(MethodInput("firstName")), "john", Each(itemContext => new Simplelist(itemContext).renderToUpper()));
         object? petsResult = (IsTruthy("pets") ? Annotate(
             new Func<EvaluationContext, EvaluationContext>[]

@@ -51,15 +51,6 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent name()
     {
         // Template:
-        // type.Matches('a','The')
-        // Source: "templates/docs.template":13:2
-        object? applyMatches() => Unsupported(
-            "Call Matches",
-            "templates/docs.template:13:2",
-            () => Get("type"),
-            () => new object?[] { "a", "The" });
-
-        // Template:
         // type.Case(
         //       'dash'," &#8212; "  // "em-dash"
         //       ,'comma', ', '
@@ -74,7 +65,7 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
             () => Get("type"),
             () => new object?[] { "dash", " &#8212; ", "comma", ", ", "a", "", "The", "", "blank", " ", "none", "" });
 
-        object? choice = (EvaluationContext.Condition(applyMatches()) ? Each(itemContext => new Docs(itemContext).renderType()) : "");
+        object? choice = (Context.TestCondition(Builtins.Matches(MethodInput("type"), "a", "The")) ? Each(itemContext => new Docs(itemContext).renderType()) : "");
         object? title = ApplySubtemplate("title", MethodInput("name"));
         object? @case = applyCase();
 

@@ -20,7 +20,7 @@ internal abstract class TemplateUnit(EvaluationContext context)
     protected object? MethodInput(string path) => MethodInput(itemContext => itemContext.Lookup(path));
     protected object? SubtemplateInput(string name) => MethodInput(itemContext => itemContext.Named(name));
     // Apply legacy truth rules to a lookup without converting its value to text.
-    protected bool IsTruthy(string path) => EvaluationContext.Condition(Get(path));
+    protected bool IsTruthy(string path) => context.TestCondition(Get(path));
     protected object? Get(string path) => context.Lookup(path);
     protected object? Named(string name) => context.Named(name);
     protected static TemplateContent Line(EvaluationContext.StructuredText text) => EvaluationContext.Text(text);

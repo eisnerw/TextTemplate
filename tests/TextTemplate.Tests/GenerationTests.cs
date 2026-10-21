@@ -30,15 +30,17 @@ public sealed class GenerationTests
         Assert.Fail($"{name}: first mismatch at {i}; expected {JsonSerializer.Serialize(expected[Math.Max(0, i - 25)..Math.Min(expected.Length, i + 65)])}; actual {JsonSerializer.Serialize(actual[Math.Max(0, i - 25)..Math.Min(actual.Length, i + 65)])}");
     }
 
-    [Fact]
-    public void ListContextsMatchNode()
+    [Theory]
+    [InlineData("list")]
+    [InlineData("regex")]
+    public void RuntimeCasesMatchNode(string suite)
     {
         string root = Path.Combine(Path.GetTempPath(), "texttemplate-lists-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(Path.Combine(root, "templates"));
         Directory.CreateDirectory(Path.Combine(root, "subtemplates"));
         try
         {
-            using var cases = JsonDocument.Parse(File.ReadAllText(Path.Combine(Repository(), "tests/node-reference/list-cases.json")));
+            using var cases = JsonDocument.Parse(File.ReadAllText(Path.Combine(Repository(), "tests/node-reference/" + suite + "-cases.json")));
             foreach (var item in cases.RootElement.EnumerateArray())
                 File.WriteAllText(Path.Combine(root, "templates", item.GetProperty("name").GetString() + ".template"), item.GetProperty("script").GetString());
             var parsed = new TextTemplateCompiler().CompileDirectory(root);
@@ -249,7 +251,7 @@ public sealed class GenerationTests
             Assert.Contains("private TemplateContent getWiki()", wikipedia);
             Assert.DoesNotContain("EvaluationContext.At(", wikipedia);
             Assert.Contains("Builtins.Replace(", wikipedia);
-            Assert.Contains("object? pattern()", wikipedia);
+            Assert.Contains("new TemplateRegex(", wikipedia);
             Assert.Contains("object? extract = Get(\"key.extract\");", wikipedia);
             File.WriteAllText(Path.Combine(root, "Generated.cs"), generated.Source);
             File.WriteAllText(Path.Combine(root, "Standalone.csproj"), """<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><StartupObject>Probe</StartupObject></PropertyGroup></Project>""");
@@ -258,6 +260,33 @@ public sealed class GenerationTests
                 using System;
                 public static class Probe {
                     public static void Main(string[] args) {
+                        if (args.Length > 0 && args[0] == "--regex-probe") {
+                            using var inputs = System.Text.Json.JsonDocument.Parse(System.IO.File.ReadAllText(args[1]));
+                            var results = new System.Collections.Generic.List<object>();
+                            foreach (var item in inputs.RootElement.EnumerateArray()) {
+                                var pattern = new TemplateRegex("/" + item.GetProperty("pattern").GetString() + "/" + item.GetProperty("flags").GetString(), "probe");
+                                string text = item.GetProperty("text").GetString();
+                                bool first = pattern.Test(text), second = pattern.Test(text);
+                                string replacement = pattern.Replace(text, item.GetProperty("replacement").GetString());
+                                bool third = pattern.Test(text);
+                                results.Add(new { first, second, replacement, third });
+                            }
+                            Console.Write(System.Text.Json.JsonSerializer.Serialize(results));
+                            return;
+                        }
+                        if (args.Length > 0 && args[0] == "--regex-errors") {
+                            foreach (string literal in new[] { "/(/", "/a/gg", "/(?i)a/" }) {
+                                try { _ = new TemplateRegex(literal, "sample.template:2:3"); throw new Exception("Invalid regex accepted."); }
+                                catch (InvalidOperationException e) { if (!e.Message.Contains("sample.template:2:3")) throw; }
+                            }
+                            try { _ = new TemplateRegex("/(a(b))+/", "sample.template:2:3"); throw new Exception("Unsupported regex accepted."); }
+                            catch (NotImplementedException e) { if (!e.Message.Contains("sample.template:2:3")) throw; }
+                            foreach (var method in new Func<object, object[], object>[] { Builtins.Contains, Builtins.StartsWith, Builtins.EndsWith }) {
+                                try { method("abc", new object[] { new TemplateRegex("/a/", "probe") }); throw new Exception("Regex argument accepted."); }
+                                catch (InvalidOperationException) { }
+                            }
+                            Console.Write("regex-errors-ok"); return;
+                        }
                         if (args.Length > 0 && args[0] == "--casing-probe") {
                             using var hash = System.Security.Cryptography.IncrementalHash.CreateHash(System.Security.Cryptography.HashAlgorithmName.SHA256);
                             for (int code = 0; code <= 0x10ffff; code++) {
@@ -306,6 +335,28 @@ public sealed class GenerationTests
                 """);
             Assert.True(nodeCasing.Exit == 0, nodeCasing.Error);
             Assert.Equal(nodeCasing.Output, casingProbe.Output);
+            string regexInputs = Path.Combine(Repository(), "tests/node-reference/regex-engine-cases.json");
+            var regexProbe = Run("dotnet", root, "output/Standalone.dll", "--regex-probe", regexInputs);
+            Assert.True(regexProbe.Exit == 0, regexProbe.Error);
+            var nodeRegex = Run("node", Repository(), "-e", """
+                const inputs = JSON.parse(require('node:fs').readFileSync(process.argv[1], 'utf8'));
+                process.stdout.write(JSON.stringify(inputs.map(item => {
+                    const pattern = new RegExp(item.pattern, item.flags);
+                    const first = pattern.test(item.text), second = pattern.test(item.text);
+                    const replacement = item.text.replace(pattern, item.replacement);
+                    const third = pattern.test(item.text);
+                    return {first, second, replacement, third};
+                })));
+                """, regexInputs);
+            Assert.True(nodeRegex.Exit == 0, nodeRegex.Error);
+            using var regexActual = JsonDocument.Parse(regexProbe.Output);
+            using var regexExpected = JsonDocument.Parse(nodeRegex.Output);
+            for (int i = 0; i < regexExpected.RootElement.GetArrayLength(); i++)
+                foreach (string field in new[] { "first", "second", "replacement", "third" })
+                    Match(regexExpected.RootElement[i].GetProperty(field).ToString(), regexActual.RootElement[i].GetProperty(field).ToString(), "regex engine " + i + " " + field);
+            var regexErrors = Run("dotnet", root, "output/Standalone.dll", "--regex-errors");
+            Assert.True(regexErrors.Exit == 0, regexErrors.Error);
+            Assert.Equal("regex-errors-ok", regexErrors.Output);
             Assert.Contains("Support/TemplateContent.cs", generated.Files.Keys);
             foreach (string dataName in new[] { "nested", "escapeTest", "simpledata" })
             {

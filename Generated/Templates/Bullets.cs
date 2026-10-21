@@ -255,16 +255,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":30:18
     private TemplateContent IsDomesticated()
     {
-        // Template:
-        // $0.Matches('dog','cat')
-        // Source: "templates/bullets.template":30:20
-        object? applyMatches() => Unsupported(
-            "Call Matches",
-            "templates/bullets.template:30:20",
-            () => Get("$0"),
-            () => new object?[] { "dog", "cat" });
-
-        object? matches = applyMatches();
+        object? matches = Builtins.Matches(MethodInput("$0"), "dog", "cat");
 
         return Line($"{matches}");
     }
@@ -281,7 +272,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
             "Call Where",
             "templates/bullets.template:29:22",
             () => Get("$0"),
-            () => new object?[] { !(EvaluationContext.Condition(ApplySubtemplate("IsDomesticated", MethodInput("type")))) });
+            () => new object?[] { !(Context.TestCondition(ApplySubtemplate("IsDomesticated", MethodInput("type")))) });
 
         object? where = applyWhere();
 

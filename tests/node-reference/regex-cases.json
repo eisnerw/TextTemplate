@@ -1,0 +1,560 @@
+[
+  {
+    "name": "regex-first",
+    "script": "{value.Replace(/a/,\"X\")}",
+    "data": {
+      "value": "aba"
+    },
+    "expected": "Xba"
+  },
+  {
+    "name": "regex-global",
+    "script": "{value.Replace(/a/g,\"X\")}",
+    "data": {
+      "value": "aba"
+    },
+    "expected": "XbX"
+  },
+  {
+    "name": "regex-ignore",
+    "script": "{value.Replace(/a/gi,\"X\")}",
+    "data": {
+      "value": "aA"
+    },
+    "expected": "XX"
+  },
+  {
+    "name": "regex-dot",
+    "script": "{value.Replace(/./g,\"X\")}",
+    "data": {
+      "value": "a\nb c"
+    },
+    "expected": "X\nX X"
+  },
+  {
+    "name": "regex-dotall",
+    "script": "{value.Replace(/./gs,\"X\")}",
+    "data": {
+      "value": "a\nb c"
+    },
+    "expected": "XXXXX"
+  },
+  {
+    "name": "regex-start",
+    "script": "{value.Replace(/^/gm,\"X\")}",
+    "data": {
+      "value": "a\nb c"
+    },
+    "expected": "Xa\nXb Xc"
+  },
+  {
+    "name": "regex-end",
+    "script": "{value.Replace(/$/gm,\"X\")}",
+    "data": {
+      "value": "a\nb c"
+    },
+    "expected": "aX\nbX cX"
+  },
+  {
+    "name": "regex-end-strict",
+    "script": "{value.Replace(/a$/,\"X\")}",
+    "data": {
+      "value": "a\n"
+    },
+    "expected": "a\n"
+  },
+  {
+    "name": "regex-digits",
+    "script": "{value.Replace(/\\d+/g,\"X\")}",
+    "data": {
+      "value": "1٢3"
+    },
+    "expected": "X٢X"
+  },
+  {
+    "name": "regex-word",
+    "script": "{value.Replace(/\\w+/g,\"X\")}",
+    "data": {
+      "value": "aİé_1"
+    },
+    "expected": "XİéX"
+  },
+  {
+    "name": "regex-space",
+    "script": "{value.Replace(/\\s/g,\"X\")}",
+    "data": {
+      "value": "  ﻿"
+    },
+    "expected": "XXX"
+  },
+  {
+    "name": "regex-class",
+    "script": "{value.Replace(/[a-z]+/gi,\"X\")}",
+    "data": {
+      "value": "abc XYZ"
+    },
+    "expected": "X X"
+  },
+  {
+    "name": "regex-negclass",
+    "script": "{value.Replace(/[^a]/gi,\"X\")}",
+    "data": {
+      "value": "aAbB"
+    },
+    "expected": "aAXX"
+  },
+  {
+    "name": "regex-emptyclass",
+    "script": "{value.Replace(/[]/g,\"X\")}",
+    "data": {
+      "value": "abc"
+    },
+    "expected": "abc"
+  },
+  {
+    "name": "regex-anyclass",
+    "script": "{value.Replace(/[^]/g,\"X\")}",
+    "data": {
+      "value": "a\nb"
+    },
+    "expected": "XXX"
+  },
+  {
+    "name": "regex-zerowidth",
+    "script": "{value.Replace(/(?=a)/g,\"X\")}",
+    "data": {
+      "value": "aba"
+    },
+    "expected": "XabXa"
+  },
+  {
+    "name": "regex-alternation",
+    "script": "{value.Replace(/ab|a/g,\"X\")}",
+    "data": {
+      "value": "aba"
+    },
+    "expected": "XX"
+  },
+  {
+    "name": "regex-lazy",
+    "script": "{value.Replace(/a.*?b/g,\"X\")}",
+    "data": {
+      "value": "a1ba2b"
+    },
+    "expected": "XX"
+  },
+  {
+    "name": "regex-lookbehind",
+    "script": "{value.Replace(/(?<=a)b/g,\"X\")}",
+    "data": {
+      "value": "ab cb ab"
+    },
+    "expected": "aX cb aX"
+  },
+  {
+    "name": "regex-backref",
+    "script": "{value.Replace(/(a)\\1/g,\"X\")}",
+    "data": {
+      "value": "aa ab aaa"
+    },
+    "expected": "X ab Xa"
+  },
+  {
+    "name": "regex-unmatched-backref",
+    "script": "{value.Replace(/(a|(b))\\2/,\"X\")}",
+    "data": {
+      "value": "a"
+    },
+    "expected": "X"
+  },
+  {
+    "name": "regex-named",
+    "script": "{value.Replace(/(?<a>a)(b)/g,\"X\")}",
+    "data": {
+      "value": "ab AB"
+    },
+    "expected": "X AB"
+  },
+  {
+    "name": "regex-case-unicode",
+    "script": "{value.Replace(/[a-z]+|[é]|[ß]|[σ]/gi,\"X\")}",
+    "data": {
+      "value": "İıſK éÉ ßSS Σσς"
+    },
+    "expected": "İıſK XX XX XXX"
+  },
+  {
+    "name": "regex-nul",
+    "script": "{value.Replace(/\\0/g,\"X\")}",
+    "data": {
+      "value": "a\u0000b"
+    },
+    "expected": "aXb"
+  },
+  {
+    "name": "regex-hex",
+    "script": "{value.Replace(/\\x61\\u0062/g,\"X\")}",
+    "data": {
+      "value": "ab"
+    },
+    "expected": "X"
+  },
+  {
+    "name": "regex-identity",
+    "script": "{value.Replace(/\\q/g,\"X\")}",
+    "data": {
+      "value": "q"
+    },
+    "expected": "X"
+  },
+  {
+    "name": "regex-boundary",
+    "script": "{value.Replace(/\\bİ\\b|\\bcat\\b/g,\"X\")}",
+    "data": {
+      "value": "İ cat cats"
+    },
+    "expected": "İ X cats"
+  },
+  {
+    "name": "regex-slash",
+    "script": "{value.Replace(/a\\/b/g,\"X\")}",
+    "data": {
+      "value": "a/b"
+    },
+    "expected": "X"
+  },
+  {
+    "name": "regex-quantifier",
+    "script": "{value.Replace(/a{2,3}/g,\"X\")}",
+    "data": {
+      "value": "aaaaa"
+    },
+    "expected": "XX"
+  },
+  {
+    "name": "regex-capture-repeat",
+    "script": "{value.Replace(/(a)+/g,\"X\")}",
+    "data": {
+      "value": "aaa"
+    },
+    "expected": "X"
+  },
+  {
+    "name": "regex-replacement-number",
+    "script": "{value.Replace(/(a)|(b)/g,\"$2-$1\")}",
+    "data": {
+      "value": "aba"
+    },
+    "expected": "-ab--a"
+  },
+  {
+    "name": "regex-replacement-tokens",
+    "script": "{value.Replace(/(a)|(b)/g,\"$$:$&:$`:$'\")}",
+    "data": {
+      "value": "aba"
+    },
+    "expected": "$:a::ba$:b:a:a$:a:ab:"
+  },
+  {
+    "name": "regex-replacement-fallback",
+    "script": "{value.Replace(/(a)|(b)/g,\"$10:$01:$00:$0:$99\")}",
+    "data": {
+      "value": "aba"
+    },
+    "expected": "a0:a:$00:$0:$990::$00:$0:$99a0:a:$00:$0:$99"
+  },
+  {
+    "name": "regex-replacement-unmatched",
+    "script": "{value.Replace(/(a)|(b)/g,\"$1-$2\")}",
+    "data": {
+      "value": "aba"
+    },
+    "expected": "a--ba-"
+  },
+  {
+    "name": "regex-replacement-named",
+    "script": "{value.Replace(/(?<first>a)(b)/g,\"$<first>:$2:$<missing>\")}",
+    "data": {
+      "value": "ab"
+    },
+    "expected": "a:b:"
+  },
+  {
+    "name": "regex-replacement-original-case",
+    "script": "{value.Replace(/(a)/gi,\"<$1>\")}",
+    "data": {
+      "value": "aA"
+    },
+    "expected": "<a><A>"
+  },
+  {
+    "name": "regex-matches-regex",
+    "script": "{value.Matches(/true/i)}",
+    "data": {
+      "value": "TRUE"
+    },
+    "expected": "true"
+  },
+  {
+    "name": "regex-matches-any",
+    "script": "{value.Matches(\"no\",/true/i,\"other\")}",
+    "data": {
+      "value": "TRUE"
+    },
+    "expected": "true"
+  },
+  {
+    "name": "regex-matches-missing",
+    "script": "{absent.Matches(/a/)}",
+    "data": {},
+    "expected": "false"
+  },
+  {
+    "name": "regex-matches-missing-empty",
+    "script": "{absent.Matches()}",
+    "data": {},
+    "expected": "true"
+  },
+  {
+    "name": "regex-matches-scalar",
+    "script": "{value.Matches(\"1\",\"2\")}",
+    "data": {
+      "value": "1"
+    },
+    "expected": "true"
+  },
+  {
+    "name": "regex-matches-numeric",
+    "script": "{value.Matches(\"01\")}",
+    "data": {
+      "value": 1
+    },
+    "expected": "true"
+  },
+  {
+    "name": "regex-matches-exponent",
+    "script": "{value.Matches(\"1e0\")}",
+    "data": {
+      "value": 1
+    },
+    "expected": "false"
+  },
+  {
+    "name": "regex-matches-strings",
+    "script": "{value.Matches(\"01\")}",
+    "data": {
+      "value": "1"
+    },
+    "expected": "false"
+  },
+  {
+    "name": "regex-assert-success",
+    "script": "{value.Assert(/a/,\"passed\",\"failed\")}",
+    "data": {
+      "value": "abc"
+    },
+    "expected": "passed"
+  },
+  {
+    "name": "regex-assert-fallback",
+    "script": "{value.Assert(/z/,\"passed\",\"failed\")}",
+    "data": {
+      "value": "abc"
+    },
+    "expected": "failed"
+  },
+  {
+    "name": "regex-assert-original",
+    "script": "{value.Assert(/a/)}",
+    "data": {
+      "value": "abc"
+    },
+    "expected": "abc"
+  },
+  {
+    "name": "regex-assert-failure",
+    "script": "{value.Assert(\"abd\")}",
+    "data": {
+      "value": "abc"
+    },
+    "expected": "ASSERT FAILURE:\nab--->Mismatch: c"
+  },
+  {
+    "name": "regex-assert-failure-regex",
+    "script": "{value.Assert(/z/)}",
+    "data": {
+      "value": "abc"
+    },
+    "expected": "ASSERT FAILURE:\n--->Mismatch: abc"
+  },
+  {
+    "name": "regex-assert-missing",
+    "script": "X{absent.Assert(/a/,\"passed\",\"failed\")}Y",
+    "data": {},
+    "expected": ""
+  },
+  {
+    "name": "regex-falsy",
+    "script": "{[{value=>[yes],[no]}].@Falsy(/^0$/)}",
+    "data": {
+      "value": "0"
+    },
+    "expected": "no"
+  },
+  {
+    "name": "regex-falsy-clear",
+    "script": "{[{[{value=>[yes],[no]}].@Falsy()}].@Falsy(/^0$/)}",
+    "data": {
+      "value": "0"
+    },
+    "expected": "yes"
+  },
+  {
+    "name": "regex-falsy-scope",
+    "script": "{[{value=>[yes],[no]}].@Falsy(/^0$/)}|{value=>[yes],[no]}",
+    "data": {
+      "value": "0"
+    },
+    "expected": "no|yes"
+  },
+  {
+    "name": "regex-falsy-global",
+    "script": "{[{pets:[{name=>[yes],[no]}]}].@Falsy(/a/g)}",
+    "data": {
+      "pets": [
+        {
+          "name": "a"
+        },
+        {
+          "name": "a"
+        },
+        {
+          "name": "a"
+        }
+      ]
+    },
+    "expected": "no\nyes\nno"
+  },
+  {
+    "name": "regex-falsy-global-empty",
+    "script": "{[{pets:[{name=>[yes],[no]}]}].@Falsy(/(?:)/g)}",
+    "data": {
+      "pets": [
+        {
+          "name": "a"
+        },
+        {
+          "name": "a"
+        }
+      ]
+    },
+    "expected": "no\nno"
+  },
+  {
+    "name": "regex-falsy-case",
+    "script": "{[{value=>[yes],[no]}].@Falsy(/no/i)}",
+    "data": {
+      "value": "NO"
+    },
+    "expected": "no"
+  },
+  {
+    "name": "regex-chain",
+    "script": "{value.Replace(/a/g,\"b\").Matches(/^b+b$/)}",
+    "data": {
+      "value": "aaa"
+    },
+    "expected": "true"
+  },
+  {
+    "name": "regex-named-argument",
+    "script": "{value.#match(/a/)}\nSubtemplates:\n{#match:[{$0.Matches($1)}]}",
+    "data": {
+      "value": "a"
+    },
+    "expected": "false"
+  },
+  {
+    "name": "regex-flags-string",
+    "script": "{value.IndexOf(/a/ig)}",
+    "data": {
+      "value": "/a/gi"
+    },
+    "expected": "0"
+  },
+  {
+    "name": "regex-assert-missing-tail",
+    "script": "{value.Assert(\"abcd\")}",
+    "data": {
+      "value": "abc"
+    },
+    "expected": "ASSERT FAILURE:\nabc--->Missing: d"
+  },
+  {
+    "name": "regex-assert-extra-tail",
+    "script": "{value.Assert(\"ab\")}",
+    "data": {
+      "value": "abc"
+    },
+    "expected": "ASSERT FAILURE:\nab--->Unexpected: c"
+  },
+  {
+    "name": "regex-groups-optional",
+    "script": "{value.Replace(/(a)?b/g,\"<$1>\")}",
+    "data": {
+      "value": "ab b"
+    },
+    "expected": "<a> <>"
+  },
+  {
+    "name": "regex-falsy-expression",
+    "script": "{[{value.Matches(/a/)=>[yes],[no]}].@Falsy(/true/)}",
+    "data": {
+      "value": "a"
+    },
+    "expected": "no"
+  },
+  {
+    "name": "regex-assert-regex-prefix",
+    "script": "{value.Assert(/aZ/)}",
+    "data": {
+      "value": "/abc"
+    },
+    "expected": "ASSERT FAILURE:\n--->Mismatch: /abc"
+  },
+  {
+    "name": "regex-assert-numeric",
+    "script": "{value.Assert(12)}",
+    "data": {
+      "value": "/abc"
+    },
+    "expected": "ASSERT FAILURE:\n--->Mismatch: /abc"
+  },
+  {
+    "name": "regex-falsy-shorter-input",
+    "script": "{[{pets:[{name=>[yes],[no]}]}].@Falsy(/a*/g)}",
+    "data": {
+      "pets": [
+        {
+          "name": "aa"
+        },
+        {
+          "name": "a"
+        },
+        {
+          "name": "a"
+        }
+      ]
+    },
+    "expected": "no\nyes\nno"
+  },
+  {
+    "name": "regex-matches-js-whitespace",
+    "script": "{value.Matches(expected)}",
+    "data": {
+      "value": 1,
+      "expected": "﻿1"
+    },
+    "expected": "true"
+  }
+]

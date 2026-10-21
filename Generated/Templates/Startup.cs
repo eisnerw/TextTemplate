@@ -357,7 +357,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent Click()
     {
         object? item2Result = (IsTruthy("$2") ? Each(itemContext => new Startup(itemContext).renderItem2()) : Each(itemContext => Line($"Click to see the Github project")));
-        object? choice = (!(EvaluationContext.Condition(Builtins.StartsWith(MethodInput("$1"), "/"))) ? Each(itemContext => Line($"https://")) : "");
+        object? choice = (!(Context.TestCondition(Builtins.StartsWith(MethodInput("$1"), "/"))) ? Each(itemContext => Line($"https://")) : "");
         object? item1 = Get("$1");
         object? item0 = Get("$0");
 
@@ -1076,22 +1076,6 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             () => new object?[] { EvaluationContext.ParseInteger("9"), "C", "-" });
 
         // Template:
-        // /True/i
-        // Source: "templates/startup.template":52:33
-        object? pattern() => Unsupported(
-            "Regex /True/i",
-            "templates/startup.template:52:33");
-
-        // Template:
-        // 'true'.Matches('yes','1',/True/i)
-        // Source: "templates/startup.template":52:8
-        object? applyMatches() => Unsupported(
-            "Call Matches",
-            "templates/startup.template:52:8",
-            () => "true",
-            () => new object?[] { "yes", "1", pattern() });
-
-        // Template:
         //    {.}
         // Source: "templates/startup.template":58:1
         object? bullet_5() => Unsupported(
@@ -1235,7 +1219,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         object? substr = Builtins.Substr(MethodInput(itemContext => " substringy"), EvaluationContext.ParseInteger("1"), EvaluationContext.ParseInteger("9"));
         object? align = applyAlign();
         object? toUpper = Builtins.ToUpper(MethodInput(itemContext => "case"));
-        object? choice = (EvaluationContext.Condition(applyMatches()) ? Each(itemContext => Line($"test")) : Each(itemContext => Line($"fail")));
+        object? choice = (Context.TestCondition(Builtins.Matches(MethodInput(itemContext => "true"), "yes", "1", new TemplateRegex("/True/i", "templates/startup.template:52:33"))) ? Each(itemContext => Line($"test")) : Each(itemContext => Line($"fail")));
         object? content_8 = InContext("{\"element1\":\"multiple\",\"element2\":\"values\"}", dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderChoice()));
         object? content_9 = bullet_5();
         object? subexample = Each(itemContext => itemContext.Named("subexample"));
@@ -1332,23 +1316,12 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":86:8
     private TemplateContent renderFalsy()
     {
-        // Template:
-        // /^0$/
-        // Source: "templates/startup.template":86:30
-        object? pattern() => Unsupported(
-            "Regex /^0$/",
-            "templates/startup.template:86:30");
-
-        // Template:
-        // #deadoralive.@Falsy(/^0$/)
-        // Source: "templates/startup.template":86:10
-        object? applyFalsy() => Unsupported(
-            "Call @Falsy",
-            "templates/startup.template:86:10",
-            () => Each(itemContext => itemContext.Named("deadoralive")),
-            () => new object?[] { pattern() });
-
-        object? falsy = applyFalsy();
+        object? falsy = Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithFalsy(new TemplateRegex("/^0$/", "templates/startup.template:86:30"))
+            },
+            annotatedContext => annotatedContext.Each(itemContext => itemContext.Named("deadoralive")));
 
         return Line($"{falsy}");
     }
@@ -1467,13 +1440,6 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             () => new object?[] { "M/D/YYYY" });
 
         // Template:
-        // /^d/i
-        // Source: "templates/startup.template":68:27
-        object? pattern() => Unsupported(
-            "Regex /^d/i",
-            "templates/startup.template:68:27");
-
-        // Template:
         // [{sign} 
         //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
         //                .@DateFormat('M/D/YYYY')
@@ -1483,7 +1449,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             "Call @DateTest",
             "templates/startup.template:65:37",
             () => applyDateFormat(),
-            () => new object?[] { pattern() });
+            () => new object?[] { new TemplateRegex("/^d/i", "templates/startup.template:68:27") });
 
         return applyDateTest();
     }
@@ -1529,7 +1495,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":55:10
     private TemplateContent renderChoice()
     {
-        object? choice = (EvaluationContext.Condition(Builtins.LessThan(MethodInput("element1"), Each(itemContext => new Startup(itemContext).renderElement2()))) ? Each(itemContext => new Startup(itemContext).renderElement1()) : "");
+        object? choice = (Context.TestCondition(Builtins.LessThan(MethodInput("element1"), Each(itemContext => new Startup(itemContext).renderElement2()))) ? Each(itemContext => new Startup(itemContext).renderElement1()) : "");
 
         return Line($"{choice}");
     }

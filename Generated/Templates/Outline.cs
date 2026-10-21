@@ -41,7 +41,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // {#Prepend:[{$0->[{$1}{$0}]}]}
     // {#Surround:[{$0->[{$1}{$0}{$1}]}]}
     // {#Quoted:[{$0->[{$0.#Surround('"')}]}]}
-    // {#data:[/data/people]}
+    // {#data:[{*}]}
     // Source: "templates/outline.template":1:1
     internal TemplateContent Evaluate()
     {
@@ -50,11 +50,13 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     }
 
     // Template:
-    // [/data/people]
+    // [{*}]
     // Source: "templates/outline.template":32:8
     private TemplateContent data()
     {
-        return Line($"/data/people");
+        object? content = Get("*");
+
+        return Line($"{content}");
     }
 
     // Template:
@@ -125,16 +127,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/outline.template":28:18
     private TemplateContent IsDomesticated()
     {
-        // Template:
-        // $0.Matches('dog','cat')
-        // Source: "templates/outline.template":28:20
-        object? applyMatches() => Unsupported(
-            "Call Matches",
-            "templates/outline.template:28:20",
-            () => Get("$0"),
-            () => new object?[] { "dog", "cat" });
-
-        object? matches = applyMatches();
+        object? matches = Builtins.Matches(MethodInput("$0"), "dog", "cat");
 
         return Line($"{matches}");
     }
@@ -151,7 +144,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
             "Call Where",
             "templates/outline.template:27:22",
             () => Get("$0"),
-            () => new object?[] { !(EvaluationContext.Condition(ApplySubtemplate("IsDomesticated", MethodInput("type")))) });
+            () => new object?[] { !(Context.TestCondition(ApplySubtemplate("IsDomesticated", MethodInput("type")))) });
 
         object? where = applyWhere();
 
@@ -371,7 +364,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         object? content_4 = bullet_4();
         object? petsResult = (IsTruthy("pets") ? Each(itemContext => new Outline(itemContext).renderCount()) : Each(itemContext => Line($"no pets")));
         object? content_5 = bullet_5();
-        object? choice = (EvaluationContext.Condition(Builtins.Contains(MethodInput("comment"), "\\n")) ? Each(itemContext => Line($"s")) : "");
+        object? choice = (Context.TestCondition(Builtins.Contains(MethodInput("comment"), "\\n")) ? Each(itemContext => Line($"s")) : "");
         object? comment = Get("comment");
 
         return Line($$"""
@@ -515,7 +508,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // {#Prepend:[{$0->[{$1}{$0}]}]}
     // {#Surround:[{$0->[{$1}{$0}{$1}]}]}
     // {#Quoted:[{$0->[{$0.#Surround('"')}]}]}
-    // {#data:[/data/people]}
+    // {#data:[{*}]}
     // Source: "templates/outline.template":18:44
     private void defineSubtemplates(SubtemplateDefinitions definitions)
     {
@@ -561,7 +554,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // {#Prepend:[{$0->[{$1}{$0}]}]}
     // {#Surround:[{$0->[{$1}{$0}{$1}]}]}
     // {#Quoted:[{$0->[{$0.#Surround('"')}]}]}
-    // {#data:[/data/people]}
+    // {#data:[{*}]}
     // Source: "templates/outline.template":1:1
     private TemplateContent renderOutline()
     {

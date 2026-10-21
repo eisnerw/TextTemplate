@@ -56,14 +56,60 @@ internal static class Builtins
     internal static object? LastIndexOf(object? value, params object?[] arguments) => StringMethod("LastIndexOf", value, arguments);
     internal static object? EndIndexOf(object? value, params object?[] arguments) => StringMethod("EndIndexOf", value, arguments);
 
+    internal static object? Matches(object? value, params object?[] arguments) => MatchOrAssert(value, arguments, false);
+    internal static object? Assert(object? value, params object?[] arguments) => MatchOrAssert(value, arguments, true);
+    private static object? MatchOrAssert(object? value, object?[] arguments, bool assertion)
+    {
+        value = EvaluationContext.Intermediate(value);
+        if (assertion && value is null or EvaluationContext.Missing) return value;
+        bool missing = value is null or EvaluationContext.Missing;
+        bool matches = missing && arguments.Length == 0;
+        if (!missing && arguments.Length > 0)
+        {
+            foreach (object? raw in arguments)
+            {
+                object? argument = EvaluationContext.Intermediate(raw);
+                if (argument is null) continue;
+                if (!matches)
+                {
+                    if (argument is TemplateRegex pattern) matches = pattern.Test(JsString(value));
+                    else
+                    {
+                        string a = JsString(argument), b = JsString(value);
+                        matches = a == b;
+                        const string numeric = @"^[-+]?([0-9]+|[0-9]+\.[0-9]*|[0-9]*\.[0-9]+)$";
+                        if (!matches && Regex.IsMatch(a.Trim(Whitespace.ToCharArray()), numeric) && Regex.IsMatch(b.Trim(Whitespace.ToCharArray()), numeric) && (argument is double || value is double) &&
+                            double.TryParse(a.Trim(Whitespace.ToCharArray()), NumberStyles.Float, CultureInfo.InvariantCulture, out double x) &&
+                            double.TryParse(b.Trim(Whitespace.ToCharArray()), NumberStyles.Float, CultureInfo.InvariantCulture, out double y)) matches = x == y;
+                    }
+                }
+                if (assertion) break;
+            }
+        }
+        if (!assertion) return matches;
+        if (matches) return arguments.Length > 1 ? arguments[1] : value;
+        if (arguments.Length > 2) return arguments[2];
+        if (arguments.Length == 0) throw new InvalidOperationException("Assert requires an expected value.");
+        if (value is not string actual) throw new InvalidOperationException("Assert failure requires a string receiver.");
+        if (EvaluationContext.Intermediate(arguments[0]) is not string expected)
+        {
+            if (actual.Length == 0) throw new InvalidOperationException("Assert failure requires a string expected value.");
+            return "ASSERT FAILURE:\n--->Mismatch: " + actual;
+        }
+        int position = 0;
+        while (position < actual.Length && position < expected.Length && actual[position] == expected[position]) position++;
+        return "ASSERT FAILURE:\n" + actual[..position] + "--->" + (position == actual.Length ? "Missing: " + expected[position..]
+            : position == expected.Length ? "Unexpected: " + actual[position..] : "Mismatch: " + actual[position..]);
+    }
     private static void Require(object?[] arguments, int minimum, int maximum)
     {
         if (arguments.Length < minimum || arguments.Length > maximum)
             throw new InvalidOperationException("Incorrect number of built-in method arguments.");
     }
-    private static string JsString(object? value)
+    internal static string JsString(object? value)
     {
         value = EvaluationContext.Intermediate(value);
+        if (value is TemplateRegex pattern) return pattern.ToString();
         return value is null ? "null" : value is EvaluationContext.Missing or EvaluationContext.Data or EvaluationContext.Arguments
             ? "[object Object]" : EvaluationContext.Compose(value) ?? "null";
     }
@@ -93,6 +139,8 @@ internal static class Builtins
         Require(arguments, method == "Replace" ? 2 : method == "LastIndexOf" ? 0 : 1,
             method == "LastIndexOf" ? int.MaxValue : method is "Replace" or "Substr" ? 2 : 1);
         if (value is EvaluationContext.Data or EvaluationContext.Arguments) return null;
+        if (method is "StartsWith" or "EndsWith" or "Contains" && EvaluationContext.Intermediate(arguments[0]) is TemplateRegex)
+            throw new InvalidOperationException(method + " does not accept a regular expression.");
         string text = JsString(value);
         string argument = arguments.Length == 0 ? "undefined" : JsString(arguments[0]);
         if (method is "StartsWith" or "EndsWith" or "Contains" or "Replace" or "Substr" && value is not string)
@@ -109,6 +157,8 @@ internal static class Builtins
                 return index < 0 ? -1d : value is not string || EvaluationContext.Intermediate(arguments[0]) is not string
                     ? double.NaN : (double)Math.Min(text.Length, index + argument.Length);
             case "Replace":
+                if (EvaluationContext.Intermediate(arguments[0]) is TemplateRegex pattern)
+                    return pattern.Replace(text, JsString(arguments[1]));
                 if (EvaluationContext.Intermediate(arguments[0]) is not string)
                     throw new NotImplementedException("Non-string Replace search operands are not implemented yet.");
                 string replacement = JsString(arguments[1]);

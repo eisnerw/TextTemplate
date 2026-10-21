@@ -1,0 +1,104 @@
+[
+  {
+    "pattern": "a",
+    "flags": "g",
+    "text": "a",
+    "replacement": "$12|$1|$2|$<first>|$$|$&|$`|$'"
+  },
+  {
+    "pattern": "(?:)",
+    "flags": "g",
+    "text": "ab",
+    "replacement": "$12|$1|$2|$<first>|$$|$&|$`|$'"
+  },
+  {
+    "pattern": "a",
+    "flags": "gi",
+    "text": "Aa",
+    "replacement": "$12|$1|$2|$<first>|$$|$&|$`|$'"
+  },
+  {
+    "pattern": "^|$",
+    "flags": "gm",
+    "text": "a\r\nb c ",
+    "replacement": "$12|$1|$2|$<first>|$$|$&|$`|$'"
+  },
+  {
+    "pattern": ".",
+    "flags": "g",
+    "text": "a\r\nb c",
+    "replacement": "$12|$1|$2|$<first>|$$|$&|$`|$'"
+  },
+  {
+    "pattern": ".",
+    "flags": "gs",
+    "text": "a\r\nb",
+    "replacement": "$12|$1|$2|$<first>|$$|$&|$`|$'"
+  },
+  {
+    "pattern": "(a)?b",
+    "flags": "g",
+    "text": "ab b",
+    "replacement": "$12|$1|$2|$<first>|$$|$&|$`|$'"
+  },
+  {
+    "pattern": "(?<first>a)(b)\\k<first>",
+    "flags": "gi",
+    "text": "abA",
+    "replacement": "$12|$1|$2|$<first>|$$|$&|$`|$'"
+  },
+  {
+    "pattern": "[A-z]",
+    "flags": "gi",
+    "text": "abc XYZ_`éİıſK",
+    "replacement": "$12|$1|$2|$<first>|$$|$&|$`|$'"
+  },
+  {
+    "pattern": "[^a-z]",
+    "flags": "gi",
+    "text": "abc XYZ_`éİıſK",
+    "replacement": "$12|$1|$2|$<first>|$$|$&|$`|$'"
+  },
+  {
+    "pattern": "\\b.\\b",
+    "flags": "gi",
+    "text": "a İ ı é",
+    "replacement": "$12|$1|$2|$<first>|$$|$&|$`|$'"
+  },
+  {
+    "pattern": "[\\D]",
+    "flags": "g",
+    "text": "1٢2",
+    "replacement": "$12|$1|$2|$<first>|$$|$&|$`|$'"
+  },
+  {
+    "pattern": "[\\S]",
+    "flags": "g",
+    "text": "  x",
+    "replacement": "$12|$1|$2|$<first>|$$|$&|$`|$'"
+  },
+  {
+    "pattern": "[\\b]",
+    "flags": "g",
+    "text": "a\bb",
+    "replacement": "$12|$1|$2|$<first>|$$|$&|$`|$'"
+  },
+  {
+    "pattern": "a(?!b)",
+    "flags": "g",
+    "text": "ac ab",
+    "replacement": "$12|$1|$2|$<first>|$$|$&|$`|$'"
+  },
+  {
+    "pattern": "(?<!a)b",
+    "flags": "g",
+    "text": "ab cb",
+    "replacement": "$12|$1|$2|$<first>|$$|$&|$`|$'"
+  },
+  {
+    "pattern": "(a)(b)(c)(d)(e)(f)(g)(h)(i)(j)(k)(l)",
+    "flags": "g",
+    "text": "abcdefghijkl",
+    "replacement": "$12|$1|$2|$<first>|$$|$&|$`|$'"
+  }
+]

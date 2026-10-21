@@ -2512,16 +2512,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":4:8
     private TemplateContent test()
     {
-        // Template:
-        // $0.Matches(1,2,3,4,5,6,7,8,9,10,11,12,13,14)
-        // Source: "subtemplates/doit.template":4:10
-        object? applyMatches() => Unsupported(
-            "Call Matches",
-            "subtemplates/doit.template:4:10",
-            () => Get("$0"),
-            () => new object?[] { EvaluationContext.ParseInteger("1"), EvaluationContext.ParseInteger("2"), EvaluationContext.ParseInteger("3"), EvaluationContext.ParseInteger("4"), EvaluationContext.ParseInteger("5"), EvaluationContext.ParseInteger("6"), EvaluationContext.ParseInteger("7"), EvaluationContext.ParseInteger("8"), EvaluationContext.ParseInteger("9"), EvaluationContext.ParseInteger("10"), EvaluationContext.ParseInteger("11"), EvaluationContext.ParseInteger("12"), EvaluationContext.ParseInteger("13"), EvaluationContext.ParseInteger("14") });
-
-        object? choice = (EvaluationContext.Condition(applyMatches()) ? Each(itemContext => new Doit(itemContext).renderItem0()) : "");
+        object? choice = (Context.TestCondition(Builtins.Matches(MethodInput("$0"), EvaluationContext.ParseInteger("1"), EvaluationContext.ParseInteger("2"), EvaluationContext.ParseInteger("3"), EvaluationContext.ParseInteger("4"), EvaluationContext.ParseInteger("5"), EvaluationContext.ParseInteger("6"), EvaluationContext.ParseInteger("7"), EvaluationContext.ParseInteger("8"), EvaluationContext.ParseInteger("9"), EvaluationContext.ParseInteger("10"), EvaluationContext.ParseInteger("11"), EvaluationContext.ParseInteger("12"), EvaluationContext.ParseInteger("13"), EvaluationContext.ParseInteger("14"))) ? Each(itemContext => new Doit(itemContext).renderItem0()) : "");
 
         return Line($"{choice}");
     }
@@ -2531,17 +2522,8 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":5:1
     private TemplateContent renderItem0()
     {
-        // Template:
-        // $1.Assert($2,'passed')
-        // Source: "subtemplates/doit.template":5:13
-        object? applyAssert() => Unsupported(
-            "Call Assert",
-            "subtemplates/doit.template:5:13",
-            () => Get("$1"),
-            () => new object?[] { Get("$2"), "passed" });
-
         object? item0 = Get("$0");
-        object? assert = applyAssert();
+        object? assert = Builtins.Assert(MethodInput("$1"), Get("$2"), "passed");
 
         return Line($"Test {item0} {assert}");
     }
@@ -3378,16 +3360,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":1:1
     private TemplateContent renderAssertContent()
     {
-        // Template:
-        // #tests.Assert(#expected,'ALL TESTS PASSED')
-        // Source: "subtemplates/doit.template":1:3
-        object? applyAssert() => Unsupported(
-            "Call Assert",
-            "subtemplates/doit.template:1:3",
-            () => Each(itemContext => itemContext.Named("tests")),
-            () => new object?[] { Each(itemContext => itemContext.Named("expected")), "ALL TESTS PASSED" });
-
-        object? assert = applyAssert();
+        object? assert = Builtins.Assert(SubtemplateInput("tests"), Each(itemContext => itemContext.Named("expected")), "ALL TESTS PASSED");
 
         return Line($"{assert}");
     }

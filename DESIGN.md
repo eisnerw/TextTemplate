@@ -363,7 +363,7 @@ and are also compiled and executed independently by the C# A/B harness.
 - `Substr` accepts JavaScript `parseInt` prefixes, including hex and trailing text;
   negative starts count from the end, and negative lengths produce empty text.
 - Missing receivers propagate; a list receiver passed to a search remains
-  distinct from a scalar string. Regex replacement and exact runtime error diagnostics need further characterization.
+  distinct from a scalar string. Exact runtime error diagnostics need further characterization; regex support is described below.
 
 ### Node casing and comparisons
 
@@ -384,3 +384,33 @@ becomes NaN). Other values compare ordinal UTF-16 strings, without locale collat
 This also corrects .NET regex/whitespace differences in the existing relational
 operators; BOM, U+0085, non-ASCII digits, and supplementary characters have Node
 regressions. Existing missing-value relational semantics remain unchanged.
+
+### Regex execution
+
+The frozen grammar permits regex literals with `g`, `i`, `m`, and `s` only.
+`visitRegex` and `callMethod` in the unchanged TypeScript interpreter identify
+`Replace`, `Matches`, `Assert`, `@Falsy`, and `@DateTest` as consumers. This batch
+implements the first four; `@DateTest` also constructs Moment date values and
+remains deferred with date parsing/formatting. No syntax has been changed.
+
+`StandaloneRegex.cs.txt` emits a standalone `TemplateRegex` adapter. .NET performs
+matching after translation of JavaScript character classes, dot, anchors, and
+case folding. Non-Unicode ignore-case matching canonicalizes UTF-16 units without
+expanding characters or folding non-ASCII characters into ASCII. Captures and
+replacement prefixes/suffixes always use original-input indexes/text.
+
+Regex replacement implements first/global matching, zero-width progress, `$$`,
+`$&`, prefix/suffix tokens, numbered captures with JavaScript digit fallback, and
+named captures. `test` retains global `lastIndex`; global replacement resets it.
+`@Falsy` shares regex state through inherited contexts, respects annotation scope,
+and supports clearing. Regex arguments to named template methods are omitted,
+matching the interpreter's argument-binding behavior.
+
+`regex-cases.json` contains independently captured Node template results.
+`regex-engine-cases.json` drives independent Node/C# probes of test/replace/test
+state and raw CR/LF input. Invalid patterns fail with their original source
+location. Valid but unfinished forms throw `NotImplementedException` at execution:
+repeated groups with nested captures (capture reset differs from .NET), forward
+or octal backreferences, Unicode/duplicate capture names, and certain legacy
+character-class/control escapes. Unselected branches retain deferred execution.
+These checks establish the characterized subset, not full ECMAScript regex parity.

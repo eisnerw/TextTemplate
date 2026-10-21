@@ -17,6 +17,7 @@ public sealed class CSharpEmitter
     private readonly Dictionary<SyntaxNode, string> definitionNames = new(ReferenceEqualityComparer.Instance);
     private readonly StringBuilder bodies = new();
     private string unitName = "";
+    private string sourcePath = "";
     private readonly Dictionary<string, string> sharedUnits = new(StringComparer.Ordinal);
     private sealed class MethodBody
     {
@@ -67,7 +68,7 @@ public sealed class CSharpEmitter
         var mainMap = new List<string>(); var sharedMap = new List<string>();
         var unitNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "GeneratedTemplates", "EvaluationContext", "TemplateContent", "TemplateUnit", "Builtins", "NodeCasing", "SubtemplateDefinitions", "GeneratedTemplateProgram", "Common",
+            "GeneratedTemplates", "EvaluationContext", "TemplateContent", "TemplateUnit", "Builtins", "NodeCasing", "TemplateRegex", "SubtemplateDefinitions", "GeneratedTemplateProgram", "Common",
             "System", "StringComparer", "StringComparison", "JsonElement", "JsonDocument", "JsonValueKind",
             "Dictionary", "List", "Func", "Action", "Regex", "CultureInfo", "Math", "Console", "File",
             "Exception", "ArgumentException", "InvalidOperationException", "NotImplementedException"
@@ -81,6 +82,7 @@ public sealed class CSharpEmitter
             bodies.Clear();
             methodNames.Clear();
             unitName = units[key];
+            sourcePath = source.Category + "/" + source.Name + ".template";
             methodNames.UnionWith(new[] { unitName, "Get", "Line", "Named", "InContext", "WithDefinitions", "Unsupported", "Annotate", "Builtins", "Import", "Context", "Each", "MethodInput", "IsTruthy", "SubtemplateInput", "ApplySubtemplate", "SubtemplateDefinitions", "DefineSubtemplates" });
             IndexDefinitions(source.Tree);
             if (source.Category == "subtemplates" && includes.Contains(source.Name)) EmitImport(source);
@@ -108,6 +110,7 @@ public sealed class CSharpEmitter
         files.Add("Support/TemplateUnit.cs", Header + UnitSupport);
         files.Add("Support/Builtins.cs", Header + ReadSupport("StandaloneBuiltins.cs.txt"));
         files.Add("Support/TemplateContent.cs", Header + ContentSupport);
+        files.Add("Support/TemplateRegex.cs", Header + ReadSupport("StandaloneRegex.cs.txt"));
         files.Add("Support/NodeCasing.cs", Header + ReadSupport("StandaloneCasing.cs.txt") + ReadSupport("StandaloneCasingData.cs.txt"));
         string result = Header + string.Join("\n", files.Values.Select(file => file[Header.Length..]));
         return new(result, diagnostics) { Files = files };
@@ -155,7 +158,7 @@ public sealed class CSharpEmitter
             protected object? MethodInput(string path) => MethodInput(itemContext => itemContext.Lookup(path));
             protected object? SubtemplateInput(string name) => MethodInput(itemContext => itemContext.Named(name));
             // Apply legacy truth rules to a lookup without converting its value to text.
-            protected bool IsTruthy(string path) => EvaluationContext.Condition(Get(path));
+            protected bool IsTruthy(string path) => context.TestCondition(Get(path));
             protected object? Get(string path) => context.Lookup(path);
             protected object? Named(string name) => context.Named(name);
             protected static TemplateContent Line(EvaluationContext.StructuredText text) => EvaluationContext.Text(text);
@@ -194,6 +197,8 @@ public sealed class CSharpEmitter
     private string? Annotation(SyntaxNode call, string context = "annotatedContext", bool lambda = true)
     {
         var args = call.Children.Skip(1).SelectMany(child => child.Children).ToList();
+        if (call.Value == "@Falsy" && (args.Count == 0 || args.Count == 1 && args[0].Kind == SyntaxKind.Regex))
+            return (lambda ? context + " => " : "") + context + ".WithFalsy(" + (args.Count == 0 ? "null" : "new TemplateRegex(" + Quote(args[0].Value!) + ", " + Quote(sourcePath + ":" + args[0].Span.Line + ":" + args[0].Span.Column) + ")") + ")";
         if (args.Count != 1 || args[0].Kind != SyntaxKind.String) return null;
         string value = DecodeString(args[0].Value!);
         if (call.Value == "@MissingValue") return (lambda ? context + " => " : "") + context + ".WithMissingValue(" + Quote(value) + ")";
@@ -477,7 +482,7 @@ public sealed class CSharpEmitter
         {
             SyntaxKind.Relational or SyntaxKind.Logical or SyntaxKind.Not or SyntaxKind.Group => Call(child),
             SyntaxKind.Identifier when !child.Value!.StartsWith('@') => "IsTruthy(" + Quote(child.Value) + ")",
-            _ => "EvaluationContext.Condition(" + Call(child) + ")"
+            _ => "Context.TestCondition(" + Call(child) + ")"
         };
         string location = source.Category + "/" + source.Name + ".template:" + node.Span.Line + ":" + node.Span.Column;
         string Stub()
@@ -566,7 +571,7 @@ public sealed class CSharpEmitter
                             string.Join(",\n                ", annotations.Select(call => Annotation(call))) + "\n            },\n            " + InChild(body, "annotatedContext") + ")";
                     }
                 }
-                else if (node.Value!.StartsWith('#') || node.Value is "Join" or "Trim" or "StartsWith" or "EndsWith" or "Contains" or "Replace" or "Substr" or "IndexOf" or "LastIndexOf" or "EndIndexOf" or "ToUpper" or "ToLower" or "GreaterThan" or "LessThan")
+                else if (node.Value!.StartsWith('#') || node.Value is "Join" or "Trim" or "StartsWith" or "EndsWith" or "Contains" or "Replace" or "Substr" or "IndexOf" or "LastIndexOf" or "EndIndexOf" or "ToUpper" or "ToLower" or "GreaterThan" or "LessThan" or "Matches" or "Assert")
                 {
                     string arguments = string.Join(", ", node.Children.Skip(1).SelectMany(child => child.Children).Select(Call));
                     expression = (!node.Value.StartsWith('#') ? "Builtins." + node.Value + "(" : "ApplySubtemplate(" + Quote(node.Value[1..]) + ", ") +
@@ -578,7 +583,10 @@ public sealed class CSharpEmitter
                 }
                 else expression = Stub();
                 break;
-            case SyntaxKind.Bullet: case SyntaxKind.InlineCall: case SyntaxKind.Regex:
+            case SyntaxKind.Regex:
+                expression = "new TemplateRegex(" + Quote(node.Value!) + ", " + Quote(location) + ")";
+                break;
+            case SyntaxKind.Bullet: case SyntaxKind.InlineCall:
                 expression = Stub(); break;
             default: expression = Stub(); break;
         }

@@ -1,4 +1,4 @@
-{"Hello"} {lastName}, {firstName.StartsWith('J')->[Mr. ]}{firstName.ToLower().Replace('john', [{firstName.ToUpper()}])} with {pets=>
+{"Hello"} {lastName}, {firstName.Matches(/jo/i)->[Mr. ]}{firstName.ToLower().Replace('john', [{firstName.ToUpper()}])} with {pets=>
    [{pets:#xformatPet}].@Include('#doInclude')
    ,[no pets]
 }!!

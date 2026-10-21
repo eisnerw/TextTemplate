@@ -22,7 +22,7 @@ dotnet run --no-build --project Generated -- --template hello --data-file /tmp/t
 
 Generation currently implements a subset of execution semantics. The complete
 reference collection compiles, but templates that reach unfinished features throw
-`NotImplementedException`. Most methods/annotations, inline calls, regexes, bullets, and URL
+`NotImplementedException`. Most methods/annotations, inline calls, bullets, and URL
 resolution still have stubs. Supported additions are literal shared `@Include`,
 literal `@MissingValue`, named subtemplate methods with scalar arguments, and
 list contexts and per-item inline/named evaluation, and `Join` with an optional
@@ -33,7 +33,17 @@ UTF-16 indexing, `parseInt` substring offsets, and split/join replacement behavi
 `ToUpper` and `ToLower` use frozen Node 24.22.0 / Unicode 17.0 casing tables,
 including expansions and contextual final sigma. `GreaterThan` and `LessThan`
 share the interpreter's integer-prefix numeric comparison and ordinal UTF-16
-string comparison with relational operators. Regex replacement remains unfinished. Exceptions from
+string comparison with relational operators. Regex literals support the frozen grammar's `g`, `i`, `m`, and `s` flags in
+`Replace`, `Matches`, `Assert`, and scoped `@Falsy` (including clearing with
+`@Falsy()`). Regex replacement follows JavaScript capture/substitution rules;
+string replacement retains its existing split/join behavior. `Contains`,
+`StartsWith`, and `EndsWith` reject regex arguments, as Node does.
+The emitted `Support/TemplateRegex.cs` adapts .NET matching with JavaScript
+character classes, anchors, non-Unicode case folding, and global state. Repeated
+groups containing nested captures, forward/octal backreferences, Unicode capture
+names, duplicate capture names, and some legacy character-class/control escapes
+remain source-located runtime stubs. `@DateTest` remains unfinished along with date
+parsing/formatting. No grammar changes or runtime Node dependency are introduced. Exceptions from
 emitted template logic identify the feature and original file, line, and column.
 Stubs do not run their operands; an unselected conditional branch does not throw.
 These are temporary implementation points, not language restrictions or successful

@@ -67,7 +67,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
             () => new object?[] { "h:mma" });
 
         object? toDate = applyToDate();
-        object? choice = (!(EvaluationContext.Condition(ApplySubtemplate("SameDay", MethodInput("$1"), Get("$0")))) ? Each(itemContext => new Events(itemContext).renderToUpper_2()) : "");
+        object? choice = (!(Context.TestCondition(ApplySubtemplate("SameDay", MethodInput("$1"), Get("$0")))) ? Each(itemContext => new Events(itemContext).renderToUpper_2()) : "");
         object? toDate_2 = applyToDate_2();
 
         return Line($"{toDate}-{choice}{toDate_2}");
@@ -96,8 +96,8 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/events.template":15:14
     private TemplateContent renderChoice()
     {
-        object? choice = (!(EvaluationContext.Condition(ApplySubtemplate("onHour", MethodInput("$0")))) ? Each(itemContext => Line($":mm")) : "");
-        object? choice_2 = (!(EvaluationContext.Condition(ApplySubtemplate("SameAMPM", MethodInput("$0"), Get("$1")))) ? Each(itemContext => Line($"a")) : "");
+        object? choice = (!(Context.TestCondition(ApplySubtemplate("onHour", MethodInput("$0")))) ? Each(itemContext => Line($":mm")) : "");
+        object? choice_2 = (!(Context.TestCondition(ApplySubtemplate("SameAMPM", MethodInput("$0"), Get("$1")))) ? Each(itemContext => Line($"a")) : "");
 
         return Line($"h{choice}{choice_2}");
     }
@@ -144,7 +144,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
             () => Get("$1"),
             () => new object?[] { "a" });
 
-        bool content = (EvaluationContext.Compare(applyToDate(), "=", applyToDate_2()) && EvaluationContext.Condition(ApplySubtemplate("SameDay", MethodInput("$0"), Get("$1"))));
+        bool content = (EvaluationContext.Compare(applyToDate(), "=", applyToDate_2()) && Context.TestCondition(ApplySubtemplate("SameDay", MethodInput("$0"), Get("$1"))));
 
         return Line($"{content}");
     }
@@ -188,13 +188,6 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     private object? renderDateFormat()
     {
         // Template:
-        // /(star|end)/i
-        // Source: "templates/events.template":7:13
-        object? pattern() => Unsupported(
-            "Regex /(star|end)/i",
-            "templates/events.template:7:13");
-
-        // Template:
         // [ `
         // {start.ToUpper()} 
         //    {group.OrderBy(start.ToDate('HHmm')):[{start.#formatTimes(end)}: {summary} 
@@ -206,7 +199,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
             "Call @DateTest",
             "templates/events.template:2:67",
             () => Each(itemContext => new Events(itemContext).renderToUpper()),
-            () => new object?[] { pattern() });
+            () => new object?[] { new TemplateRegex("/(star|end)/i", "templates/events.template:7:13") });
 
         // Template:
         // [ `
