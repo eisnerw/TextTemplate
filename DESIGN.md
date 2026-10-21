@@ -344,3 +344,43 @@ The end-to-end regression now includes `simpledata` with `nested`, `escapeTest`,
 and the three-pet `simpledata` dataset. This is incremental list support, not full
 language parity: filtering, grouping, bullets, general data formatting, and
 additional methods/annotations retain their existing deferred failure behavior.
+
+### Built-in string methods
+
+The first string-method batch translates `callMethod` in the unchanged TypeScript
+interpreter at `ccedefd87b012ff1173ee2f43323b6eb7c8bd268`. Implementations are emitted
+from `Generation/StandaloneBuiltins.cs.txt` into `Support/Builtins.cs`.
+The `builtin-*` cases in `tests/node-reference/list-cases.json` record Node results
+and are also compiled and executed independently by the C# A/B harness.
+
+- `Trim` uses ECMAScript whitespace, including BOM but excluding U+0085.
+- Searches are ordinal and index UTF-16 code units. `EndIndexOf` returns the end
+  of the first match, or -1 when absent.
+- String `Replace` uses split/join semantics: every occurrence is replaced,
+  replacement dollar signs are literal, and an empty search inserts separators
+  between UTF-16 units without leading/trailing separators. A missing replacement
+  is coerced to the legacy `[object Object]` string.
+- `Substr` accepts JavaScript `parseInt` prefixes, including hex and trailing text;
+  negative starts count from the end, and negative lengths produce empty text.
+- Missing receivers propagate; a list receiver passed to a search remains
+  distinct from a scalar string. Regex replacement and exact runtime error diagnostics need further characterization.
+
+### Node casing and comparisons
+
+`ToUpper` and `ToLower` match the reference Node 24.22.0 (Unicode 17.0, ICU 78.3)
+using captured scalar mappings and Unicode property ranges. The explicit
+`tools/unicode/capture-node-casing.mjs` command regenerates the frozen data; normal
+compilation and generated deployment need no Node runtime or host Unicode data.
+`Support/NodeCasing.cs` contains the emitted tables and conversion code, including
+expansions, supplementary characters, and the contextual final-sigma rule.
+An independent standalone-C#/Node probe compares casing hashes over every Unicode
+scalar; template A/B cases cover contextual casing, method chains, missing values,
+and invalid receivers. A future Node upgrade requires deliberate recharacterization.
+
+`GreaterThan` and `LessThan` use the same comparison helper as relational operators.
+Numeric recognition uses ASCII digits and JavaScript whitespace. Numeric-looking
+values compare their `parseInt` results (so 2.9 and 2.1 compare equal, while .5
+becomes NaN). Other values compare ordinal UTF-16 strings, without locale collation.
+This also corrects .NET regex/whitespace differences in the existing relational
+operators; BOM, U+0085, non-ASCII digits, and supplementary characters have Node
+regressions. Existing missing-value relational semantics remain unchanged.

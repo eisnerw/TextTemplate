@@ -12,6 +12,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Support/Builtins.cs" />
     <Compile Include="Support/EvaluationContext.cs" />
+    <Compile Include="Support/NodeCasing.cs" />
     <Compile Include="Support/TemplateContent.cs" />
     <Compile Include="Support/TemplateUnit.cs" />
     <Compile Include="Templates/Birthdays.cs" />
@@ -22,6 +23,7 @@
     <Compile Include="Templates/Outline.cs" />
     <Compile Include="Templates/Simple.cs" />
     <Compile Include="Templates/Simpledata.cs" />
+    <Compile Include="Templates/Simplelist.cs" />
     <Compile Include="Templates/Startup.cs" />
     <Compile Include="Templates/Tests.cs" />
     <Compile Include="Templates/Web.cs" />

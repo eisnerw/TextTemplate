@@ -60,10 +60,11 @@ public sealed class GenerationTests
                 string dataFile = Path.Combine(root, "data.json");
                 File.WriteAllText(dataFile, item.GetProperty("data").GetRawText());
                 var reference = Run("node", Repository(), "tools/node-reference/cli.mjs", "--template", name, "--template-root", root, "--data-file", dataFile);
-                Assert.True(reference.Exit == 0, reference.Error);
+                int expectedExit = item.TryGetProperty("exitCode", out var exitCode) ? exitCode.GetInt32() : 0;
+                Assert.True(reference.Exit == expectedExit, reference.Error);
                 Match(item.GetProperty("expected").GetString()!, reference.Output, name + " reference");
                 var actual = Run("dotnet", root, "output/GeneratedTemplates.dll", "--template", name, "--data-file", dataFile);
-                Assert.True(actual.Exit == 0, name + ": " + actual.Error);
+                Assert.True(actual.Exit == expectedExit, name + ": " + actual.Error);
                 Match(reference.Output, actual.Output, name + " " + item.GetProperty("data").GetRawText());
             }
         }
@@ -247,7 +248,8 @@ public sealed class GenerationTests
             string wikipedia = generated.Files["Templates/Wikipedia.cs"];
             Assert.Contains("private TemplateContent getWiki()", wikipedia);
             Assert.DoesNotContain("EvaluationContext.At(", wikipedia);
-            Assert.Contains("object? applyReplace()", wikipedia);
+            Assert.Contains("Builtins.Replace(", wikipedia);
+            Assert.Contains("object? pattern()", wikipedia);
             Assert.Contains("object? extract = Get(\"key.extract\");", wikipedia);
             File.WriteAllText(Path.Combine(root, "Generated.cs"), generated.Source);
             File.WriteAllText(Path.Combine(root, "Standalone.csproj"), """<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><StartupObject>Probe</StartupObject></PropertyGroup></Project>""");
@@ -256,6 +258,17 @@ public sealed class GenerationTests
                 using System;
                 public static class Probe {
                     public static void Main(string[] args) {
+                        if (args.Length > 0 && args[0] == "--casing-probe") {
+                            using var hash = System.Security.Cryptography.IncrementalHash.CreateHash(System.Security.Cryptography.HashAlgorithmName.SHA256);
+                            for (int code = 0; code <= 0x10ffff; code++) {
+                                if (code >= 0xd800 && code <= 0xdfff) continue;
+                                string text = char.ConvertFromUtf32(code);
+                                string result = Builtins.ToUpper(text) + "|" + Builtins.ToLower(text) + "\n";
+                                hash.AppendData(System.Text.Encoding.UTF8.GetBytes(result));
+                            }
+                            Console.Write(Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant());
+                            return;
+                        }
                         if (args.Length > 0 && args[0] == "--content-probe") {
                             TemplateContent inner = EvaluationContext.Text($"value {true}");
                             TemplateContent outer = EvaluationContext.Text($"before {inner} after");
@@ -280,6 +293,19 @@ public sealed class GenerationTests
             var contentProbe = Run("dotnet", root, "output/Standalone.dll", "--content-probe");
             Assert.True(contentProbe.Exit == 0, contentProbe.Output + contentProbe.Error);
             Assert.Equal("content-ok", contentProbe.Output);
+            var casingProbe = Run("dotnet", root, "output/Standalone.dll", "--casing-probe");
+            Assert.True(casingProbe.Exit == 0, casingProbe.Error);
+            var nodeCasing = Run("node", Repository(), "-e", """
+                const hash = require('node:crypto').createHash('sha256');
+                for (let code = 0; code <= 0x10ffff; code++) {
+                    if (code >= 0xd800 && code <= 0xdfff) continue;
+                    const text = String.fromCodePoint(code);
+                    hash.update(text.toUpperCase() + '|' + text.toLowerCase() + '\n');
+                }
+                process.stdout.write(hash.digest('hex'));
+                """);
+            Assert.True(nodeCasing.Exit == 0, nodeCasing.Error);
+            Assert.Equal(nodeCasing.Output, casingProbe.Output);
             Assert.Contains("Support/TemplateContent.cs", generated.Files.Keys);
             foreach (string dataName in new[] { "nested", "escapeTest", "simpledata" })
             {
@@ -293,8 +319,8 @@ public sealed class GenerationTests
             string input = Path.Combine(root, "input");
             Directory.CreateDirectory(Path.Combine(input, "templates"));
             Directory.CreateDirectory(Path.Combine(input, "subtemplates"));
-            File.WriteAllText(Path.Combine(input, "templates", "safe.template"), "{absent=>[{value.ToUpper()}],[safe]}");
-            File.WriteAllText(Path.Combine(input, "templates", "stub.template"), "{value.ToUpper()}");
+            File.WriteAllText(Path.Combine(input, "templates", "safe.template"), "{absent=>[{value.ToDate()}],[safe]}");
+            File.WriteAllText(Path.Combine(input, "templates", "stub.template"), "{value.ToDate()}");
             generated = new CSharpEmitter().Generate(new TextTemplateCompiler().CompileDirectory(input).Document!);
             File.WriteAllText(Path.Combine(root, "Generated.cs"), generated.Source);
             File.WriteAllText(Path.Combine(root, "Probe.cs"), """
@@ -313,7 +339,7 @@ public sealed class GenerationTests
             Assert.Equal(0, result.Exit);
             Assert.StartsWith("safe\n", result.Output);
             Assert.Contains("templates/stub.template:1:", result.Output);
-            Assert.Contains("Call ToUpper", result.Output);
+            Assert.Contains("Call ToDate", result.Output);
         }
         finally { Directory.Delete(root, true); }
     }
@@ -368,9 +394,9 @@ public sealed class GenerationTests
             Assert.Equal(0, Program.Main(["--root", root, "--format", "json", "--output", json]));
             Assert.True(JsonDocument.Parse(File.ReadAllText(json)).RootElement.GetProperty("sources").TryGetProperty("templates/hello.template", out _));
             byte[] original = File.ReadAllBytes(output);
-            File.WriteAllText(Path.Combine(root, "templates", "unsupported.template"), "{firstName.ToUpper()}");
+            File.WriteAllText(Path.Combine(root, "templates", "unsupported.template"), "{firstName.ToDate()}");
             Assert.Equal(0, Program.Main(["--root", root, "--output", output]));
-            Assert.Contains("Call ToUpper", File.ReadAllText(output));
+            Assert.Contains("Call ToDate", File.ReadAllText(output));
             Assert.Equal(0, Program.Main(["--root", root, "--template", "hello", "--output", output]));
             Assert.Equal(original, File.ReadAllBytes(output));
             File.WriteAllText(Path.Combine(root, "templates", "unsupported.template"), "{");

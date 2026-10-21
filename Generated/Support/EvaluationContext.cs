@@ -358,21 +358,15 @@ internal sealed class EvaluationContext
         if (lm) return rm || operation == "!=";
         if (rm) return operation == "!=";
         string a = Scalar(left!), b = Scalar(right!);
-        const string numeric = @"^[-+]?(\d+|\d+\.\d*|\d*\.\d+)$";
-        int order;
-        if (Regex.IsMatch(a.Trim(), numeric) && Regex.IsMatch(b.Trim(), numeric))
-        {
-            double x = ParseInteger(a), y = ParseInteger(b);
-            if (double.IsNaN(x) || double.IsNaN(y)) return operation == "!=";
-            order = x.CompareTo(y);
-        }
-        else order = string.CompareOrdinal(a, b);
+        int? comparison = Builtins.CompareStrings(a, b);
+        if (comparison is null) return operation == "!=";
+        int order = comparison.Value;
         return operation switch { "=" or "==" => order == 0, "!=" => order != 0, ">" => order > 0,
             "<" => order < 0, ">=" => order >= 0, "<=" => order <= 0, _ => throw new InvalidOperationException(operation) };
     }
     internal static double ParseInteger(string text)
     {
-        Match match = Regex.Match(text.TrimStart(), @"^[+-]?\d+");
+        Match match = Regex.Match(text.TrimStart(Builtins.Whitespace.ToCharArray()), @"^[+-]?[0-9]+");
         return match.Success ? double.Parse(match.Value, CultureInfo.InvariantCulture) : double.NaN;
     }
     internal static string Scalar(object value) => value switch

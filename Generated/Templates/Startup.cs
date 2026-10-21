@@ -356,17 +356,8 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":165:9
     private TemplateContent Click()
     {
-        // Template:
-        // $1.StartsWith('/')
-        // Source: "templates/startup.template":167:12
-        object? applyStartsWith() => Unsupported(
-            "Call StartsWith",
-            "templates/startup.template:167:12",
-            () => Get("$1"),
-            () => new object?[] { "/" });
-
         object? item2Result = (IsTruthy("$2") ? Each(itemContext => new Startup(itemContext).renderItem2()) : Each(itemContext => Line($"Click to see the Github project")));
-        object? choice = (!(EvaluationContext.Condition(applyStartsWith())) ? Each(itemContext => Line($"https://")) : "");
+        object? choice = (!(EvaluationContext.Condition(Builtins.StartsWith(MethodInput("$1"), "/"))) ? Each(itemContext => Line($"https://")) : "");
         object? item1 = Get("$1");
         object? item0 = Get("$0");
 
@@ -1076,32 +1067,6 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             "templates/startup.template:47:1");
 
         // Template:
-        // 'replacing'.Replace('ing','ement')
-        // Source: "templates/startup.template":48:8
-        object? applyReplace() => Unsupported(
-            "Call Replace",
-            "templates/startup.template:48:8",
-            () => "replacing",
-            () => new object?[] { "ing", "ement" });
-
-        // Template:
-        // ' trimming '.Trim()
-        // Source: "templates/startup.template":49:8
-        object? applyTrim() => Unsupported(
-            "Call Trim",
-            "templates/startup.template:49:8",
-            () => " trimming ");
-
-        // Template:
-        // ' substringy'.Substr(1,9)
-        // Source: "templates/startup.template":49:39
-        object? applySubstr() => Unsupported(
-            "Call Substr",
-            "templates/startup.template:49:39",
-            () => " substringy",
-            () => new object?[] { EvaluationContext.ParseInteger("1"), EvaluationContext.ParseInteger("9") });
-
-        // Template:
         // 'padding'.Align(9,'C','-')
         // Source: "templates/startup.template":50:8
         object? applyAlign() => Unsupported(
@@ -1109,14 +1074,6 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             "templates/startup.template:50:8",
             () => "padding",
             () => new object?[] { EvaluationContext.ParseInteger("9"), "C", "-" });
-
-        // Template:
-        // 'case'.ToUpper()
-        // Source: "templates/startup.template":51:20
-        object? applyToUpper() => Unsupported(
-            "Call ToUpper",
-            "templates/startup.template:51:20",
-            () => "case");
 
         // Template:
         // /True/i
@@ -1158,22 +1115,13 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             () => new object?[] { "DD" });
 
         // Template:
-        // lname.Substr(0,1)
-        // Source: "templates/startup.template":64:55
-        object? applySubstr_2() => Unsupported(
-            "Call Substr",
-            "templates/startup.template:64:55",
-            () => Get("lname"),
-            () => new object?[] { EvaluationContext.ParseInteger("0"), EvaluationContext.ParseInteger("1") });
-
-        // Template:
         // #externalData.Where(dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D')
         // Source: "templates/startup.template":64:11
         object? applyWhere() => Unsupported(
             "Call Where",
             "templates/startup.template:64:11",
             () => Each(itemContext => itemContext.Named("externalData")),
-            () => new object?[] { (EvaluationContext.Compare(applyToDate(), "=", "27") && EvaluationContext.Compare(applySubstr_2(), "=", "D")) });
+            () => new object?[] { (EvaluationContext.Compare(applyToDate(), "=", "27") && EvaluationContext.Compare(Builtins.Substr(MethodInput("lname"), EvaluationContext.ParseInteger("0"), EvaluationContext.ParseInteger("1")), "=", "D")) });
 
         // Template:
         // #externalData.Where(dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D')
@@ -1193,22 +1141,13 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             "templates/startup.template:70:1");
 
         // Template:
-        // dob.Substr(0,7)
-        // Source: "templates/startup.template":72:29
-        object? applySubstr_3() => Unsupported(
-            "Call Substr",
-            "templates/startup.template:72:29",
-            () => Get("dob"),
-            () => new object?[] { EvaluationContext.ParseInteger("0"), EvaluationContext.ParseInteger("7") });
-
-        // Template:
         // #externalData.Where(dob.Substr(0,7) = '1967-10')
         // Source: "templates/startup.template":72:9
         object? applyWhere_2() => Unsupported(
             "Call Where",
             "templates/startup.template:72:9",
             () => Each(itemContext => itemContext.Named("externalData")),
-            () => new object?[] { EvaluationContext.Compare(applySubstr_3(), "=", "1967-10") });
+            () => new object?[] { EvaluationContext.Compare(Builtins.Substr(MethodInput("dob"), EvaluationContext.ParseInteger("0"), EvaluationContext.ParseInteger("7")), "=", "1967-10") });
 
         // Template:
         //    {.}
@@ -1225,22 +1164,13 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             "templates/startup.template:83:1");
 
         // Template:
-        // dob.Substr(5,5)
-        // Source: "templates/startup.template":85:29
-        object? applySubstr_4() => Unsupported(
-            "Call Substr",
-            "templates/startup.template:85:29",
-            () => Get("dob"),
-            () => new object?[] { EvaluationContext.ParseInteger("5"), EvaluationContext.ParseInteger("5") });
-
-        // Template:
         // #externalData.Where(dob.Substr(5,5) = '01-25')
         // Source: "templates/startup.template":85:9
         object? applyWhere_3() => Unsupported(
             "Call Where",
             "templates/startup.template:85:9",
             () => Each(itemContext => itemContext.Named("externalData")),
-            () => new object?[] { EvaluationContext.Compare(applySubstr_4(), "=", "01-25") });
+            () => new object?[] { EvaluationContext.Compare(Builtins.Substr(MethodInput("dob"), EvaluationContext.ParseInteger("5"), EvaluationContext.ParseInteger("5")), "=", "01-25") });
 
         // Template:
         //    {.}
@@ -1300,11 +1230,11 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         object? content_5 = bullet_3();
         object? content_6 = InContext("{\"test\":\"value\"}", dataContext => new Startup(dataContext).renderMissingValue());
         object? content_7 = bullet_4();
-        object? replace = applyReplace();
-        object? trim = applyTrim();
-        object? substr = applySubstr();
+        object? replace = Builtins.Replace(MethodInput(itemContext => "replacing"), "ing", "ement");
+        object? trim = Builtins.Trim(MethodInput(itemContext => " trimming "));
+        object? substr = Builtins.Substr(MethodInput(itemContext => " substringy"), EvaluationContext.ParseInteger("1"), EvaluationContext.ParseInteger("9"));
         object? align = applyAlign();
-        object? toUpper = applyToUpper();
+        object? toUpper = Builtins.ToUpper(MethodInput(itemContext => "case"));
         object? choice = (EvaluationContext.Condition(applyMatches()) ? Each(itemContext => Line($"test")) : Each(itemContext => Line($"fail")));
         object? content_8 = InContext("{\"element1\":\"multiple\",\"element2\":\"values\"}", dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderChoice()));
         object? content_9 = bullet_5();
@@ -1599,16 +1529,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":55:10
     private TemplateContent renderChoice()
     {
-        // Template:
-        // element1.LessThan([{element2}])
-        // Source: "templates/startup.template":55:12
-        object? applyLessThan() => Unsupported(
-            "Call LessThan",
-            "templates/startup.template:55:12",
-            () => Get("element1"),
-            () => new object?[] { Each(itemContext => new Startup(itemContext).renderElement2()) });
-
-        object? choice = (EvaluationContext.Condition(applyLessThan()) ? Each(itemContext => new Startup(itemContext).renderElement1()) : "");
+        object? choice = (EvaluationContext.Condition(Builtins.LessThan(MethodInput("element1"), Each(itemContext => new Startup(itemContext).renderElement2()))) ? Each(itemContext => new Startup(itemContext).renderElement1()) : "");
 
         return Line($"{choice}");
     }

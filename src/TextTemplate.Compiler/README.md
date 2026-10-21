@@ -26,7 +26,14 @@ reference collection compiles, but templates that reach unfinished features thro
 resolution still have stubs. Supported additions are literal shared `@Include`,
 literal `@MissingValue`, named subtemplate methods with scalar arguments, and
 list contexts and per-item inline/named evaluation, and `Join` with an optional
-final separator (scalar input remains unchanged). Exceptions from
+final separator (scalar input remains unchanged). String methods now include
+`Trim`, `StartsWith`, `EndsWith`, `Contains`, string-search `Replace`, `Substr`,
+`IndexOf`, `LastIndexOf`, and `EndIndexOf`. These preserve JavaScript whitespace,
+UTF-16 indexing, `parseInt` substring offsets, and split/join replacement behavior.
+`ToUpper` and `ToLower` use frozen Node 24.22.0 / Unicode 17.0 casing tables,
+including expansions and contextual final sigma. `GreaterThan` and `LessThan`
+share the interpreter's integer-prefix numeric comparison and ordinal UTF-16
+string comparison with relational operators. Regex replacement remains unfinished. Exceptions from
 emitted template logic identify the feature and original file, line, and column.
 Stubs do not run their operands; an unselected conditional branch does not throw.
 These are temporary implementation points, not language restrictions or successful

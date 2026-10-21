@@ -336,15 +336,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":25:25
     private TemplateContent renderToLower()
     {
-        // Template:
-        // [{name}y].ToLower()
-        // Source: "templates/bullets.template":25:27
-        object? applyToLower() => Unsupported(
-            "Call ToLower",
-            "templates/bullets.template:25:27",
-            () => Each(itemContext => new Bullets(itemContext).renderName()));
-
-        object? toLower = applyToLower();
+        object? toLower = Builtins.ToLower(MethodInput(itemContext => new Bullets(itemContext).renderName()));
 
         return Line($"{toLower}");
     }
@@ -487,18 +479,6 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
             "templates/bullets.template:11:4");
 
         // Template:
-        // [{ 
-        //       lastName}{ 
-        //       firstName.#Prepend(', ')}{    
-        //       middleName.#Prepend(' ')
-        //    }].ToUpper()
-        // Source: "templates/bullets.template":11:27
-        object? applyToUpper() => Unsupported(
-            "Call ToUpper",
-            "templates/bullets.template:11:27",
-            () => Each(itemContext => new Bullets(itemContext).renderLastName()));
-
-        // Template:
         //       {.}
         // Source: "templates/bullets.template":16:1
         object? bullet_2() => Unsupported(
@@ -530,7 +510,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
 
         object? content = bullet();
         object? choice = (EvaluationContext.Compare(Get("^.^.$1"), "=", EvaluationContext.ParseInteger("2")) ? Each(itemContext => Line($".0")) : "");
-        object? quoted = ApplySubtemplate("Quoted", applyToUpper());
+        object? quoted = ApplySubtemplate("Quoted", Builtins.ToUpper(MethodInput(itemContext => new Bullets(itemContext).renderLastName())));
         object? content_2 = bullet_2();
         object? ifMissing = applyIfMissing();
         object? content_3 = bullet_3();

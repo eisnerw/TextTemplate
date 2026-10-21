@@ -59,14 +59,6 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
     private TemplateContent renderReplace()
     {
         // Template:
-        // *.ToJson()
-        // Source: "templates/wikipedia.template":5:35
-        object? applyToJson() => Unsupported(
-            "Call ToJson",
-            "templates/wikipedia.template:5:35",
-            () => Get("*"));
-
-        // Template:
         // /"\d+"/
         // Source: "templates/wikipedia.template":5:54
         object? pattern() => Unsupported(
@@ -74,15 +66,14 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
             "templates/wikipedia.template:5:54");
 
         // Template:
-        // *.ToJson().Replace(/"\d+"/,'"key"')
+        // *.ToJson()
         // Source: "templates/wikipedia.template":5:35
-        object? applyReplace() => Unsupported(
-            "Call Replace",
+        object? applyToJson() => Unsupported(
+            "Call ToJson",
             "templates/wikipedia.template:5:35",
-            () => applyToJson(),
-            () => new object?[] { pattern(), "\"key\"" });
+            () => Get("*"));
 
-        object? replace = applyReplace();
+        object? replace = Builtins.Replace(applyToJson(), pattern(), "\"key\"");
 
         return Line($"{replace}");
     }

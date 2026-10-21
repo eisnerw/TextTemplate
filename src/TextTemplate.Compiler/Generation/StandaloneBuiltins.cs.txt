@@ -1,0 +1,125 @@
+// Built-in template methods; distinct from user-defined template methods.
+internal static class Builtins
+{
+    internal static object? Join(object? value, params object?[] arguments)
+        => EvaluationContext.JoinValues(value, arguments);
+
+    // Adapted from TextTemplateInterpreter.ts, callMethod (Apache-2.0).
+    // eisnerw/texttemplate-editor, ccedefd87b012ff1173ee2f43323b6eb7c8bd268.
+    // ECMAScript WhiteSpace and LineTerminator, deliberately excluding U+0085.
+    internal const string Whitespace = "\u0009\u000a\u000b\u000c\u000d\u0020\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff";
+    internal static object? Trim(object? value, params object?[] arguments)
+    {
+        value = EvaluationContext.Intermediate(value);
+        if (value is null or EvaluationContext.Missing) return value;
+        if (value is not string text) throw new InvalidOperationException("Trim requires a string receiver.");
+        Require(arguments, 0, 0);
+        return text.Trim(Whitespace.ToCharArray());
+    }
+    internal static object? ToUpper(object? value, params object?[] arguments) => ChangeCase(value, true, arguments);
+    internal static object? ToLower(object? value, params object?[] arguments) => ChangeCase(value, false, arguments);
+    private static object? ChangeCase(object? value, bool upper, object?[] arguments)
+    {
+        value = EvaluationContext.Intermediate(value);
+        if (value is null or EvaluationContext.Missing) return value;
+        if (value is not string text) throw new InvalidOperationException("Casing requires a string receiver.");
+        Require(arguments, 0, 0);
+        return NodeCasing.Convert(text, upper);
+    }
+    internal static object? GreaterThan(object? value, params object?[] arguments) => Compare(value, true, arguments);
+    internal static object? LessThan(object? value, params object?[] arguments) => Compare(value, false, arguments);
+    private static object? Compare(object? value, bool greater, object?[] arguments)
+    {
+        value = EvaluationContext.Intermediate(value);
+        if (value is null or EvaluationContext.Missing) return value;
+        Require(arguments, 1, 1);
+        if (value is EvaluationContext.Data or EvaluationContext.Arguments) return null;
+        int? order = CompareStrings(JsString(value), JsString(arguments[0]));
+        return greater ? order > 0 : order < 0;
+    }
+    internal static int? CompareStrings(string left, string right)
+    {
+        const string numeric = @"^[-+]?([0-9]+|[0-9]+\.[0-9]*|[0-9]*\.[0-9]+)$";
+        if (Regex.IsMatch(left.Trim(Whitespace.ToCharArray()), numeric) && Regex.IsMatch(right.Trim(Whitespace.ToCharArray()), numeric))
+        {
+            double a = EvaluationContext.ParseInteger(left), b = EvaluationContext.ParseInteger(right);
+            return double.IsNaN(a) || double.IsNaN(b) ? null : a.CompareTo(b);
+        }
+        return string.CompareOrdinal(left, right);
+    }
+    internal static object? StartsWith(object? value, params object?[] arguments) => StringMethod("StartsWith", value, arguments);
+    internal static object? EndsWith(object? value, params object?[] arguments) => StringMethod("EndsWith", value, arguments);
+    internal static object? Contains(object? value, params object?[] arguments) => StringMethod("Contains", value, arguments);
+    internal static object? Replace(object? value, params object?[] arguments) => StringMethod("Replace", value, arguments);
+    internal static object? Substr(object? value, params object?[] arguments) => StringMethod("Substr", value, arguments);
+    internal static object? IndexOf(object? value, params object?[] arguments) => StringMethod("IndexOf", value, arguments);
+    internal static object? LastIndexOf(object? value, params object?[] arguments) => StringMethod("LastIndexOf", value, arguments);
+    internal static object? EndIndexOf(object? value, params object?[] arguments) => StringMethod("EndIndexOf", value, arguments);
+
+    private static void Require(object?[] arguments, int minimum, int maximum)
+    {
+        if (arguments.Length < minimum || arguments.Length > maximum)
+            throw new InvalidOperationException("Incorrect number of built-in method arguments.");
+    }
+    private static string JsString(object? value)
+    {
+        value = EvaluationContext.Intermediate(value);
+        return value is null ? "null" : value is EvaluationContext.Missing or EvaluationContext.Data or EvaluationContext.Arguments
+            ? "[object Object]" : EvaluationContext.Compose(value) ?? "null";
+    }
+    // JavaScript parseInt accepts a sign, hexadecimal prefix, and trailing text.
+    private static double ParseInteger(object? value)
+    {
+        string text = JsString(value).TrimStart(Whitespace.ToCharArray());
+        int position = 0, sign = 1, radix = 10;
+        if (text.StartsWith('-') || text.StartsWith('+')) { sign = text[0] == '-' ? -1 : 1; position++; }
+        if (text[position..].StartsWith("0x", StringComparison.OrdinalIgnoreCase)) { radix = 16; position += 2; }
+        int start = position;
+        double result = 0;
+        for (; position < text.Length; position++)
+        {
+            char c = text[position];
+            int digit = c is >= '0' and <= '9' ? c - '0' : c is >= 'a' and <= 'f' ? c - 'a' + 10 : c is >= 'A' and <= 'F' ? c - 'A' + 10 : -1;
+            if (digit < 0 || digit >= radix) break;
+            result = result * radix + digit;
+        }
+        if (position == start) throw new InvalidOperationException("Incorrect arguments for Substr.");
+        return sign * result;
+    }
+    private static object? StringMethod(string method, object? value, object?[] arguments)
+    {
+        value = EvaluationContext.Intermediate(value);
+        if (value is null or EvaluationContext.Missing) return value;
+        Require(arguments, method == "Replace" ? 2 : method == "LastIndexOf" ? 0 : 1,
+            method == "LastIndexOf" ? int.MaxValue : method is "Replace" or "Substr" ? 2 : 1);
+        if (value is EvaluationContext.Data or EvaluationContext.Arguments) return null;
+        string text = JsString(value);
+        string argument = arguments.Length == 0 ? "undefined" : JsString(arguments[0]);
+        if (method is "StartsWith" or "EndsWith" or "Contains" or "Replace" or "Substr" && value is not string)
+            throw new InvalidOperationException(method + " requires a string receiver.");
+        switch (method)
+        {
+            case "StartsWith": return text.StartsWith(argument, StringComparison.Ordinal);
+            case "EndsWith": return text.EndsWith(argument, StringComparison.Ordinal);
+            case "Contains": return text.Contains(argument, StringComparison.Ordinal);
+            case "IndexOf": return (double)text.IndexOf(argument, StringComparison.Ordinal);
+            case "LastIndexOf": return (double)(argument.Length == 0 ? text.Length : text.LastIndexOf(argument, StringComparison.Ordinal));
+            case "EndIndexOf":
+                int index = text.IndexOf(argument, StringComparison.Ordinal);
+                return index < 0 ? -1d : value is not string || EvaluationContext.Intermediate(arguments[0]) is not string
+                    ? double.NaN : (double)Math.Min(text.Length, index + argument.Length);
+            case "Replace":
+                if (EvaluationContext.Intermediate(arguments[0]) is not string)
+                    throw new NotImplementedException("Non-string Replace search operands are not implemented yet.");
+                string replacement = JsString(arguments[1]);
+                if (argument.Length != 0) return text.Replace(argument, replacement, StringComparison.Ordinal);
+                return string.Join(replacement, text.ToCharArray());
+            case "Substr":
+                double offset = ParseInteger(arguments[0]);
+                int start = (int)Math.Clamp(offset < 0 ? text.Length + offset : offset, 0, text.Length);
+                int length = arguments.Length == 1 ? text.Length - start : (int)Math.Clamp(ParseInteger(arguments[1]), 0, text.Length - start);
+                return text.Substring(start, length);
+            default: throw new InvalidOperationException("Unknown string method: " + method);
+        }
+    }
+}

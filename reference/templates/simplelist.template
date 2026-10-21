@@ -1,0 +1,9 @@
+{"Hello"} {lastName}, {firstName.StartsWith('J')->[Mr. ]}{firstName.ToLower().Replace('john', [{firstName.ToUpper()}])} with {pets=>
+   [{pets:#xformatPet}].@Include('#doInclude')
+   ,[no pets]
+}!!
+
+Subtemplates:
+
+{#formatPet:[a {type} named {name}]}
+{#anded:[{$0.Join(', ',' and ')}]}

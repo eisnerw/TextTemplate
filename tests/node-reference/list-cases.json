@@ -658,5 +658,789 @@
       ]
     },
     "expected": "Hello Smith, John with !!"
+  },
+  {
+    "name": "builtin-trim",
+    "script": "{value.Trim()}",
+    "data": {
+      "value": " \tHello ﻿"
+    },
+    "expected": "Hello"
+  },
+  {
+    "name": "builtin-trim-nel",
+    "script": "{value.Trim()}",
+    "data": {
+      "value": "Hello"
+    },
+    "expected": "Hello"
+  },
+  {
+    "name": "builtin-starts",
+    "script": "{value.StartsWith(\"ab\")}",
+    "data": {
+      "value": "abcabc"
+    },
+    "expected": "true"
+  },
+  {
+    "name": "builtin-ends",
+    "script": "{value.EndsWith(\"bc\")}",
+    "data": {
+      "value": "abcabc"
+    },
+    "expected": "true"
+  },
+  {
+    "name": "builtin-contains",
+    "script": "{value.Contains(\"ca\")}",
+    "data": {
+      "value": "abcabc"
+    },
+    "expected": "true"
+  },
+  {
+    "name": "builtin-contains-missing-argument",
+    "script": "{value.Contains(absent)}",
+    "data": {
+      "value": "null"
+    },
+    "expected": "false"
+  },
+  {
+    "name": "builtin-replace",
+    "script": "{value.Replace(\"ab\",\"$\")}",
+    "data": {
+      "value": "abcabc"
+    },
+    "expected": "$c$c"
+  },
+  {
+    "name": "builtin-replace-empty",
+    "script": "{value.Replace(\"\",\"-\")}",
+    "data": {
+      "value": "abc"
+    },
+    "expected": "a-b-c"
+  },
+  {
+    "name": "builtin-replace-null",
+    "script": "{value.Replace(\"b\",absent)}",
+    "data": {
+      "value": "abc"
+    },
+    "expected": "a[object Object]c"
+  },
+  {
+    "name": "builtin-substr",
+    "script": "{value.Substr(\"-3\",\"2\")}",
+    "data": {
+      "value": "abcdef"
+    },
+    "expected": "de"
+  },
+  {
+    "name": "builtin-substr-prefix",
+    "script": "{value.Substr(\"2x\",\"2.8\")}",
+    "data": {
+      "value": "abcdef"
+    },
+    "expected": "cd"
+  },
+  {
+    "name": "builtin-substr-hex",
+    "script": "{value.Substr(\"0x2\")}",
+    "data": {
+      "value": "abcdef"
+    },
+    "expected": "cdef"
+  },
+  {
+    "name": "builtin-index",
+    "script": "{value.IndexOf(\"bc\")}",
+    "data": {
+      "value": "abcabc"
+    },
+    "expected": "1"
+  },
+  {
+    "name": "builtin-last",
+    "script": "{value.LastIndexOf(\"bc\")}",
+    "data": {
+      "value": "abcabc"
+    },
+    "expected": "4"
+  },
+  {
+    "name": "builtin-end-index",
+    "script": "{value.EndIndexOf(\"bc\")}",
+    "data": {
+      "value": "abcabc"
+    },
+    "expected": "3"
+  },
+  {
+    "name": "builtin-index-emoji",
+    "script": "{value.IndexOf(\"b\")}",
+    "data": {
+      "value": "😀b"
+    },
+    "expected": "2"
+  },
+  {
+    "name": "builtin-index-number",
+    "script": "{value.IndexOf(\"2\")}",
+    "data": {
+      "value": 123
+    },
+    "expected": "1"
+  },
+  {
+    "name": "builtin-last-empty",
+    "script": "{value.LastIndexOf(\"\")}",
+    "data": {
+      "value": "abc"
+    },
+    "expected": "3"
+  },
+  {
+    "name": "builtin-trim-missing",
+    "script": "before{absent.Trim()}after",
+    "data": {},
+    "expected": ""
+  },
+  {
+    "name": "builtin-startswith-missing",
+    "script": "before{absent.StartsWith(\"a\")}after",
+    "data": {},
+    "expected": ""
+  },
+  {
+    "name": "builtin-endswith-missing",
+    "script": "before{absent.EndsWith(\"a\")}after",
+    "data": {},
+    "expected": ""
+  },
+  {
+    "name": "builtin-contains-missing",
+    "script": "before{absent.Contains(\"a\")}after",
+    "data": {},
+    "expected": ""
+  },
+  {
+    "name": "builtin-replace-missing",
+    "script": "before{absent.Replace(\"a\",\"b\")}after",
+    "data": {},
+    "expected": ""
+  },
+  {
+    "name": "builtin-substr-missing",
+    "script": "before{absent.Substr(\"1\")}after",
+    "data": {},
+    "expected": ""
+  },
+  {
+    "name": "builtin-indexof-missing",
+    "script": "before{absent.IndexOf(\"a\")}after",
+    "data": {},
+    "expected": ""
+  },
+  {
+    "name": "builtin-lastindexof-missing",
+    "script": "before{absent.LastIndexOf(\"a\")}after",
+    "data": {},
+    "expected": ""
+  },
+  {
+    "name": "builtin-endindexof-missing",
+    "script": "before{absent.EndIndexOf(\"a\")}after",
+    "data": {},
+    "expected": ""
+  },
+  {
+    "name": "builtin-startswith-boundary-27",
+    "script": "{value.StartsWith(\"x\")}",
+    "data": {
+      "value": "abc"
+    },
+    "expected": "false"
+  },
+  {
+    "name": "builtin-endswith-boundary-28",
+    "script": "{value.EndsWith(\"x\")}",
+    "data": {
+      "value": "abc"
+    },
+    "expected": "false"
+  },
+  {
+    "name": "builtin-contains-boundary-29",
+    "script": "{value.Contains(\"x\")}",
+    "data": {
+      "value": "abc"
+    },
+    "expected": "false"
+  },
+  {
+    "name": "builtin-indexof-boundary-30",
+    "script": "{value.IndexOf(\"x\")}",
+    "data": {
+      "value": "abc"
+    },
+    "expected": "-1"
+  },
+  {
+    "name": "builtin-lastindexof-boundary-31",
+    "script": "{value.LastIndexOf(\"x\")}",
+    "data": {
+      "value": "abc"
+    },
+    "expected": "-1"
+  },
+  {
+    "name": "builtin-endindexof-boundary-32",
+    "script": "{value.EndIndexOf(\"x\")}",
+    "data": {
+      "value": "abc"
+    },
+    "expected": "-1"
+  },
+  {
+    "name": "builtin-substr-boundary-33",
+    "script": "{value.Substr(\"99\")}",
+    "data": {
+      "value": "abc"
+    },
+    "expected": ""
+  },
+  {
+    "name": "builtin-substr-boundary-34",
+    "script": "{value.Substr(\"-99\",\"2\")}",
+    "data": {
+      "value": "abc"
+    },
+    "expected": "ab"
+  },
+  {
+    "name": "builtin-substr-boundary-35",
+    "script": "{value.Substr(\"2\",\"-1\")}",
+    "data": {
+      "value": "abc"
+    },
+    "expected": ""
+  },
+  {
+    "name": "builtin-trim-chain",
+    "script": "{value.Trim().Replace(\"a\",\"b\").Substr(\"1\").IndexOf(\"b\")}",
+    "data": {
+      "value": " aaa "
+    },
+    "expected": "0"
+  },
+  {
+    "name": "builtin-list-search",
+    "script": "X{pets:[{name}].Contains(\"A\")}Y",
+    "data": {
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": ""
+  },
+  {
+    "name": "builtin-trim-list-error",
+    "script": "{pets:[{name}].Trim()}",
+    "data": {
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "",
+    "exitCode": 1
+  },
+  {
+    "name": "builtin-trim-number-error",
+    "script": "{value.Trim()}",
+    "data": {
+      "value": 123
+    },
+    "expected": "",
+    "exitCode": 1
+  },
+  {
+    "name": "builtin-toupper0",
+    "script": "{value.ToUpper()}",
+    "data": {
+      "value": "Hello World"
+    },
+    "expected": "HELLO WORLD"
+  },
+  {
+    "name": "builtin-toupper1",
+    "script": "{value.ToUpper()}",
+    "data": {
+      "value": "straße ﬃ"
+    },
+    "expected": "STRASSE FFI"
+  },
+  {
+    "name": "builtin-toupper2",
+    "script": "{value.ToUpper()}",
+    "data": {
+      "value": "İIıi"
+    },
+    "expected": "İIII"
+  },
+  {
+    "name": "builtin-toupper3",
+    "script": "{value.ToUpper()}",
+    "data": {
+      "value": "ΟΣ ΟΣΑ ΑΣ́ ΑΣ́Α"
+    },
+    "expected": "ΟΣ ΟΣΑ ΑΣ́ ΑΣ́Α"
+  },
+  {
+    "name": "builtin-toupper4",
+    "script": "{value.ToUpper()}",
+    "data": {
+      "value": "𐐀𐐨 😀"
+    },
+    "expected": "𐐀𐐀 😀"
+  },
+  {
+    "name": "builtin-toupper5",
+    "script": "{value.ToUpper()}",
+    "data": {
+      "value": "éÈ ſ K"
+    },
+    "expected": "ÉÈ S K"
+  },
+  {
+    "name": "builtin-toupper6",
+    "script": "{value.ToUpper()}",
+    "data": {
+      "value": "  test﻿"
+    },
+    "expected": "  TEST﻿"
+  },
+  {
+    "name": "builtin-toupper-missing",
+    "script": "before{absent.ToUpper()}after",
+    "data": {},
+    "expected": ""
+  },
+  {
+    "name": "builtin-tolower0",
+    "script": "{value.ToLower()}",
+    "data": {
+      "value": "Hello World"
+    },
+    "expected": "hello world"
+  },
+  {
+    "name": "builtin-tolower1",
+    "script": "{value.ToLower()}",
+    "data": {
+      "value": "straße ﬃ"
+    },
+    "expected": "straße ﬃ"
+  },
+  {
+    "name": "builtin-tolower2",
+    "script": "{value.ToLower()}",
+    "data": {
+      "value": "İIıi"
+    },
+    "expected": "i̇iıi"
+  },
+  {
+    "name": "builtin-tolower3",
+    "script": "{value.ToLower()}",
+    "data": {
+      "value": "ΟΣ ΟΣΑ ΑΣ́ ΑΣ́Α"
+    },
+    "expected": "ος οσα ας́ ασ́α"
+  },
+  {
+    "name": "builtin-tolower4",
+    "script": "{value.ToLower()}",
+    "data": {
+      "value": "𐐀𐐨 😀"
+    },
+    "expected": "𐐨𐐨 😀"
+  },
+  {
+    "name": "builtin-tolower5",
+    "script": "{value.ToLower()}",
+    "data": {
+      "value": "éÈ ſ K"
+    },
+    "expected": "éè ſ k"
+  },
+  {
+    "name": "builtin-tolower6",
+    "script": "{value.ToLower()}",
+    "data": {
+      "value": "  test﻿"
+    },
+    "expected": "  test﻿"
+  },
+  {
+    "name": "builtin-tolower-missing",
+    "script": "before{absent.ToLower()}after",
+    "data": {},
+    "expected": ""
+  },
+  {
+    "name": "builtin-greaterthan0",
+    "script": "{a.GreaterThan(b)}",
+    "data": {
+      "a": "10",
+      "b": "2"
+    },
+    "expected": "true"
+  },
+  {
+    "name": "builtin-lessthan0",
+    "script": "{a.LessThan(b)}",
+    "data": {
+      "a": "10",
+      "b": "2"
+    },
+    "expected": "false"
+  },
+  {
+    "name": "builtin-compare0",
+    "script": "{a>b}|{a<b}|{a=b}",
+    "data": {
+      "a": "10",
+      "b": "2"
+    },
+    "expected": "true|false|false"
+  },
+  {
+    "name": "builtin-greaterthan1",
+    "script": "{a.GreaterThan(b)}",
+    "data": {
+      "a": "2.9",
+      "b": "2.1"
+    },
+    "expected": "false"
+  },
+  {
+    "name": "builtin-lessthan1",
+    "script": "{a.LessThan(b)}",
+    "data": {
+      "a": "2.9",
+      "b": "2.1"
+    },
+    "expected": "false"
+  },
+  {
+    "name": "builtin-compare1",
+    "script": "{a>b}|{a<b}|{a=b}",
+    "data": {
+      "a": "2.9",
+      "b": "2.1"
+    },
+    "expected": "false|false|true"
+  },
+  {
+    "name": "builtin-greaterthan2",
+    "script": "{a.GreaterThan(b)}",
+    "data": {
+      "a": ".5",
+      "b": ".4"
+    },
+    "expected": "false"
+  },
+  {
+    "name": "builtin-lessthan2",
+    "script": "{a.LessThan(b)}",
+    "data": {
+      "a": ".5",
+      "b": ".4"
+    },
+    "expected": "false"
+  },
+  {
+    "name": "builtin-compare2",
+    "script": "{a>b}|{a<b}|{a=b}",
+    "data": {
+      "a": ".5",
+      "b": ".4"
+    },
+    "expected": "false|false|false"
+  },
+  {
+    "name": "builtin-greaterthan3",
+    "script": "{a.GreaterThan(b)}",
+    "data": {
+      "a": "Z",
+      "b": "a"
+    },
+    "expected": "false"
+  },
+  {
+    "name": "builtin-lessthan3",
+    "script": "{a.LessThan(b)}",
+    "data": {
+      "a": "Z",
+      "b": "a"
+    },
+    "expected": "true"
+  },
+  {
+    "name": "builtin-compare3",
+    "script": "{a>b}|{a<b}|{a=b}",
+    "data": {
+      "a": "Z",
+      "b": "a"
+    },
+    "expected": "false|true|false"
+  },
+  {
+    "name": "builtin-greaterthan4",
+    "script": "{a.GreaterThan(b)}",
+    "data": {
+      "a": "ä",
+      "b": "z"
+    },
+    "expected": "true"
+  },
+  {
+    "name": "builtin-lessthan4",
+    "script": "{a.LessThan(b)}",
+    "data": {
+      "a": "ä",
+      "b": "z"
+    },
+    "expected": "false"
+  },
+  {
+    "name": "builtin-compare4",
+    "script": "{a>b}|{a<b}|{a=b}",
+    "data": {
+      "a": "ä",
+      "b": "z"
+    },
+    "expected": "true|false|false"
+  },
+  {
+    "name": "builtin-greaterthan5",
+    "script": "{a.GreaterThan(b)}",
+    "data": {
+      "a": "😀",
+      "b": ""
+    },
+    "expected": "false"
+  },
+  {
+    "name": "builtin-lessthan5",
+    "script": "{a.LessThan(b)}",
+    "data": {
+      "a": "😀",
+      "b": ""
+    },
+    "expected": "true"
+  },
+  {
+    "name": "builtin-compare5",
+    "script": "{a>b}|{a<b}|{a=b}",
+    "data": {
+      "a": "😀",
+      "b": ""
+    },
+    "expected": "false|true|false"
+  },
+  {
+    "name": "builtin-greaterthan6",
+    "script": "{a.GreaterThan(b)}",
+    "data": {
+      "a": "١",
+      "b": "2"
+    },
+    "expected": "true"
+  },
+  {
+    "name": "builtin-lessthan6",
+    "script": "{a.LessThan(b)}",
+    "data": {
+      "a": "١",
+      "b": "2"
+    },
+    "expected": "false"
+  },
+  {
+    "name": "builtin-compare6",
+    "script": "{a>b}|{a<b}|{a=b}",
+    "data": {
+      "a": "١",
+      "b": "2"
+    },
+    "expected": "true|false|false"
+  },
+  {
+    "name": "builtin-greaterthan7",
+    "script": "{a.GreaterThan(b)}",
+    "data": {
+      "a": "﻿10",
+      "b": "2"
+    },
+    "expected": "true"
+  },
+  {
+    "name": "builtin-lessthan7",
+    "script": "{a.LessThan(b)}",
+    "data": {
+      "a": "﻿10",
+      "b": "2"
+    },
+    "expected": "false"
+  },
+  {
+    "name": "builtin-compare7",
+    "script": "{a>b}|{a<b}|{a=b}",
+    "data": {
+      "a": "﻿10",
+      "b": "2"
+    },
+    "expected": "true|false|false"
+  },
+  {
+    "name": "builtin-greaterthan8",
+    "script": "{a.GreaterThan(b)}",
+    "data": {
+      "a": "10",
+      "b": "2"
+    },
+    "expected": "true"
+  },
+  {
+    "name": "builtin-lessthan8",
+    "script": "{a.LessThan(b)}",
+    "data": {
+      "a": "10",
+      "b": "2"
+    },
+    "expected": "false"
+  },
+  {
+    "name": "builtin-compare8",
+    "script": "{a>b}|{a<b}|{a=b}",
+    "data": {
+      "a": "10",
+      "b": "2"
+    },
+    "expected": "true|false|false"
+  },
+  {
+    "name": "builtin-ToUpper-numeric-error",
+    "script": "{value.ToUpper()}",
+    "data": {
+      "value": 123
+    },
+    "expected": "",
+    "exitCode": 1
+  },
+  {
+    "name": "builtin-ToUpper-list-error",
+    "script": "{pets:[{name}].ToUpper()}",
+    "data": {
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "",
+    "exitCode": 1
+  },
+  {
+    "name": "builtin-ToUpper-replacement",
+    "script": "[{absent.ToUpper()}].@MissingValue(' mixed Case ')",
+    "data": {},
+    "expected": ""
+  },
+  {
+    "name": "builtin-ToLower-numeric-error",
+    "script": "{value.ToLower()}",
+    "data": {
+      "value": 123
+    },
+    "expected": "",
+    "exitCode": 1
+  },
+  {
+    "name": "builtin-ToLower-list-error",
+    "script": "{pets:[{name}].ToLower()}",
+    "data": {
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "",
+    "exitCode": 1
+  },
+  {
+    "name": "builtin-ToLower-replacement",
+    "script": "[{absent.ToLower()}].@MissingValue(' mixed Case ')",
+    "data": {},
+    "expected": ""
+  },
+  {
+    "name": "builtin-lower-context",
+    "script": "{value.ToLower()}",
+    "data": {
+      "value": "Σ ΑΣ ΣΑ ΑΣΑ ΑΣ' ΑΣ'Α ᾼΣ ΑΣͅ ΑΣͅΑ"
+    },
+    "expected": "σ ας σα ασα ας' ασ'α ᾳς αςͅ ασͅα"
+  },
+  {
+    "name": "builtin-upper-lower-chain",
+    "script": "{value.ToUpper().ToLower().GreaterThan(\"a\")}",
+    "data": {
+      "value": "straße"
+    },
+    "expected": "true"
+  },
+  {
+    "name": "builtin-greater-missing",
+    "script": "X{absent.GreaterThan(\"a\")}Y",
+    "data": {},
+    "expected": ""
+  },
+  {
+    "name": "builtin-less-list",
+    "script": "X{pets:[{name}].LessThan(\"a\")}Y",
+    "data": {
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": ""
   }
 ]

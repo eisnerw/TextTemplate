@@ -67,7 +67,7 @@ public sealed class CSharpEmitter
         var mainMap = new List<string>(); var sharedMap = new List<string>();
         var unitNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "GeneratedTemplates", "EvaluationContext", "TemplateContent", "TemplateUnit", "Builtins", "SubtemplateDefinitions", "GeneratedTemplateProgram", "Common",
+            "GeneratedTemplates", "EvaluationContext", "TemplateContent", "TemplateUnit", "Builtins", "NodeCasing", "SubtemplateDefinitions", "GeneratedTemplateProgram", "Common",
             "System", "StringComparer", "StringComparison", "JsonElement", "JsonDocument", "JsonValueKind",
             "Dictionary", "List", "Func", "Action", "Regex", "CultureInfo", "Math", "Console", "File",
             "Exception", "ArgumentException", "InvalidOperationException", "NotImplementedException"
@@ -106,8 +106,9 @@ public sealed class CSharpEmitter
         files.Add("Support/EvaluationContext.cs", Header + runtime[..programStart]);
         files.Add("Program.cs", Header + runtime[programStart..]);
         files.Add("Support/TemplateUnit.cs", Header + UnitSupport);
-        files.Add("Support/Builtins.cs", Header + BuiltinSupport);
+        files.Add("Support/Builtins.cs", Header + ReadSupport("StandaloneBuiltins.cs.txt"));
         files.Add("Support/TemplateContent.cs", Header + ContentSupport);
+        files.Add("Support/NodeCasing.cs", Header + ReadSupport("StandaloneCasing.cs.txt") + ReadSupport("StandaloneCasingData.cs.txt"));
         string result = Header + string.Join("\n", files.Values.Select(file => file[Header.Length..]));
         return new(result, diagnostics) { Files = files };
     }
@@ -133,14 +134,12 @@ public sealed class CSharpEmitter
         }
         """;
 
-    private const string BuiltinSupport = """
-        // Built-in template methods; distinct from user-defined template methods.
-        internal static class Builtins
-        {
-            internal static object? Join(object? value, params object?[] arguments)
-                => EvaluationContext.JoinValues(value, arguments);
-        }
-        """;
+    private static string ReadSupport(string name)
+    {
+        using var stream = typeof(CSharpEmitter).Assembly.GetManifestResourceStream("TextTemplate.Compiler.Generation." + name)!;
+        using var reader = new StreamReader(stream);
+        return reader.ReadToEnd();
+    }
 
     private const string UnitSupport = """
         // Short instance helpers keep compatibility machinery out of template bodies.
@@ -567,10 +566,10 @@ public sealed class CSharpEmitter
                             string.Join(",\n                ", annotations.Select(call => Annotation(call))) + "\n            },\n            " + InChild(body, "annotatedContext") + ")";
                     }
                 }
-                else if (node.Value!.StartsWith('#') || node.Value == "Join")
+                else if (node.Value!.StartsWith('#') || node.Value is "Join" or "Trim" or "StartsWith" or "EndsWith" or "Contains" or "Replace" or "Substr" or "IndexOf" or "LastIndexOf" or "EndIndexOf" or "ToUpper" or "ToLower" or "GreaterThan" or "LessThan")
                 {
                     string arguments = string.Join(", ", node.Children.Skip(1).SelectMany(child => child.Children).Select(Call));
-                    expression = (node.Value == "Join" ? "Builtins.Join(" : "ApplySubtemplate(" + Quote(node.Value[1..]) + ", ") +
+                    expression = (!node.Value.StartsWith('#') ? "Builtins." + node.Value + "(" : "ApplySubtemplate(" + Quote(node.Value[1..]) + ", ") +
                         (node.Children[0].Kind == SyntaxKind.Call || receiver.Value?.StartsWith('^') == true ? Call(node.Children[0]) : node.Children[0].Kind == SyntaxKind.Identifier && !node.Children[0].Value!.StartsWith('@')
                             ? "MethodInput(" + Quote(node.Children[0].Value!) + ")"
                             : node.Children[0].Kind == SyntaxKind.NamedSubtemplate

@@ -1,0 +1,52 @@
+// Default (locale-independent) Unicode casing matching the reference Node runtime.
+internal static partial class NodeCasing
+{
+    internal static string Convert(string text, bool upper)
+    {
+        List<int> codes = new();
+        for (int i = 0; i < text.Length; i++)
+        {
+            if (char.IsHighSurrogate(text[i]) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]))
+                codes.Add(char.ConvertToUtf32(text[i], text[++i]));
+            else codes.Add(text[i]); // Preserve unpaired UTF-16 surrogates, as JavaScript does.
+        }
+        var result = new System.Text.StringBuilder(text.Length);
+        bool precededByCased = false;
+        for (int i = 0; i < codes.Count; i++)
+        {
+            int code = codes[i];
+            if (!upper && code == 0x3a3 && precededByCased && !FollowedByCased(codes, i + 1))
+                result.Append('\u03c2'); // Contextual final sigma.
+            else if ((upper ? UpperExpansions : LowerExpansions).TryGetValue(code, out string? expansion))
+                result.Append(expansion);
+            else
+            {
+                int[] ranges = upper ? Upper : Lower;
+                int range = Find(ranges, 3, code);
+                int mapped = range < 0 ? code : code + ranges[range + 2];
+                if (mapped <= 0xffff) result.Append((char)mapped);
+                else result.Append(char.ConvertFromUtf32(mapped));
+            }
+            if (Find(CaseIgnorable, 2, code) < 0) precededByCased = Find(Cased, 2, code) >= 0;
+        }
+        return result.ToString();
+    }
+    private static bool FollowedByCased(List<int> codes, int start)
+    {
+        for (int i = start; i < codes.Count; i++)
+            if (Find(CaseIgnorable, 2, codes[i]) < 0) return Find(Cased, 2, codes[i]) >= 0;
+        return false;
+    }
+    private static int Find(int[] ranges, int stride, int code)
+    {
+        int low = 0, high = ranges.Length / stride - 1;
+        while (low <= high)
+        {
+            int middle = (low + high) / 2, offset = middle * stride;
+            if (code < ranges[offset]) high = middle - 1;
+            else if (code > ranges[offset + 1]) low = middle + 1;
+            else return offset;
+        }
+        return -1;
+    }
+}

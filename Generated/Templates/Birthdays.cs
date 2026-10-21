@@ -46,21 +46,13 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     private TemplateContent ungrouped()
     {
         // Template:
-        // lname.ToUpper()
-        // Source: "templates/birthdays.template":21:47
-        object? applyToUpper() => Unsupported(
-            "Call ToUpper",
-            "templates/birthdays.template:21:47",
-            () => Get("lname"));
-
-        // Template:
         // '/data/famousBirthdays'.OrderBy(lname.ToUpper())
         // Source: "templates/birthdays.template":21:15
         object? applyOrderBy() => Unsupported(
             "Call OrderBy",
             "templates/birthdays.template:21:15",
             () => "/data/famousBirthdays",
-            () => new object?[] { applyToUpper() });
+            () => new object?[] { Builtins.ToUpper(MethodInput("lname")) });
 
         object? orderBy = InContext(applyOrderBy(), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderName_2()));
 

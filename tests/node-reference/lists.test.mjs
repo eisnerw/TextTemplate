@@ -19,7 +19,7 @@ for (const item of cases) test('list characterization: ' + item.name, () => {
       '--template-text', item.script, '--template-root', root, '--data-file', path.join(root, 'data.json')],
       { encoding: 'utf8', timeout: 15000, env: { ...process.env, TZ: 'UTC' } });
     assert.ifError(result.error);
-    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.status, item.exitCode ?? 0, result.stderr);
     assert.equal(result.stdout, item.expected);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });

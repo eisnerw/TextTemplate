@@ -206,15 +206,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/outline.template":23:25
     private TemplateContent renderToLower()
     {
-        // Template:
-        // [{name}y].ToLower()
-        // Source: "templates/outline.template":23:27
-        object? applyToLower() => Unsupported(
-            "Call ToLower",
-            "templates/outline.template:23:27",
-            () => Each(itemContext => new Outline(itemContext).renderName()));
-
-        object? toLower = applyToLower();
+        object? toLower = Builtins.ToLower(MethodInput(itemContext => new Outline(itemContext).renderName()));
 
         return Line($"{toLower}");
     }
@@ -334,18 +326,6 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
             "templates/outline.template:2:4");
 
         // Template:
-        // [{ 
-        //       lastName}{ 
-        //       firstName.#Prepend(', ')}{    
-        //       middleName.#Prepend(' ')
-        //    }].ToUpper()
-        // Source: "templates/outline.template":2:9
-        object? applyToUpper() => Unsupported(
-            "Call ToUpper",
-            "templates/outline.template:2:9",
-            () => Each(itemContext => new Outline(itemContext).renderLastName()));
-
-        // Template:
         //       {.}
         // Source: "templates/outline.template":7:1
         object? bullet_2() => Unsupported(
@@ -382,17 +362,8 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
             "Bullet       {.}",
             "templates/outline.template:16:1");
 
-        // Template:
-        // comment.Contains("\\n")
-        // Source: "templates/outline.template":16:19
-        object? applyContains() => Unsupported(
-            "Call Contains",
-            "templates/outline.template:16:19",
-            () => Get("comment"),
-            () => new object?[] { "\\n" });
-
         object? content = bullet();
-        object? quoted = ApplySubtemplate("Quoted", applyToUpper());
+        object? quoted = ApplySubtemplate("Quoted", Builtins.ToUpper(MethodInput(itemContext => new Outline(itemContext).renderLastName())));
         object? content_2 = bullet_2();
         object? ifMissing = applyIfMissing();
         object? content_3 = bullet_3();
@@ -400,7 +371,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         object? content_4 = bullet_4();
         object? petsResult = (IsTruthy("pets") ? Each(itemContext => new Outline(itemContext).renderCount()) : Each(itemContext => Line($"no pets")));
         object? content_5 = bullet_5();
-        object? choice = (EvaluationContext.Condition(applyContains()) ? Each(itemContext => Line($"s")) : "");
+        object? choice = (EvaluationContext.Condition(Builtins.Contains(MethodInput("comment"), "\\n")) ? Each(itemContext => Line($"s")) : "");
         object? comment = Get("comment");
 
         return Line($$"""

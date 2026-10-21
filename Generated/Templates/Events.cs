@@ -86,15 +86,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
             "templates/events.template:17:24",
             () => Get("$1"));
 
-        // Template:
-        // $1.ToDate().ToUpper()
-        // Source: "templates/events.template":17:24
-        object? applyToUpper() => Unsupported(
-            "Call ToUpper",
-            "templates/events.template:17:24",
-            () => applyToDate());
-
-        object? toUpper = applyToUpper();
+        object? toUpper = Builtins.ToUpper(applyToDate());
 
         return Line($"{toUpper} at ");
     }
@@ -258,14 +250,6 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderToUpper()
     {
         // Template:
-        // start.ToUpper()
-        // Source: "templates/events.template":3:2
-        object? applyToUpper() => Unsupported(
-            "Call ToUpper",
-            "templates/events.template:3:2",
-            () => Get("start"));
-
-        // Template:
         // start.ToDate('HHmm')
         // Source: "templates/events.template":4:19
         object? applyToDate() => Unsupported(
@@ -283,7 +267,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
             () => Get("group"),
             () => new object?[] { applyToDate() });
 
-        object? toUpper = applyToUpper();
+        object? toUpper = Builtins.ToUpper(MethodInput("start"));
         object? orderBy = InContext(applyOrderBy(), dataContext => dataContext.Each(itemContext => new Events(itemContext).renderFormatTimes()));
 
         return Line($$"""

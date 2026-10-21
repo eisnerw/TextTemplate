@@ -19,6 +19,7 @@ public static class GeneratedTemplates
         ["outline"] = context => new Outline(context).Evaluate(),
         ["simple"] = context => new Simple(context).Evaluate(),
         ["simpledata"] = context => new Simpledata(context).Evaluate(),
+        ["simplelist"] = context => new Simplelist(context).Evaluate(),
         ["startup"] = context => new Startup(context).Evaluate(),
         ["tests"] = context => new Tests(context).Evaluate(),
         ["web"] = context => new Web(context).Evaluate(),

@@ -5,6 +5,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Generation/StandaloneCasing.cs.txt" WithCulture="false" LogicalName="TextTemplate.Compiler.Generation.StandaloneCasing.cs.txt" />
+    <EmbeddedResource Include="Generation/StandaloneCasingData.cs.txt" WithCulture="false" LogicalName="TextTemplate.Compiler.Generation.StandaloneCasingData.cs.txt" />
+    <EmbeddedResource Include="Generation/StandaloneBuiltins.cs.txt" WithCulture="false" LogicalName="TextTemplate.Compiler.Generation.StandaloneBuiltins.cs.txt" />
     <EmbeddedResource Include="Generation/StandaloneRuntime.cs.txt" WithCulture="false" LogicalName="TextTemplate.Compiler.Generation.StandaloneRuntime.cs.txt" />
   </ItemGroup>
 
