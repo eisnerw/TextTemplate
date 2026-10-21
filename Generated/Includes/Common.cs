@@ -1018,15 +1018,8 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":323:41
     private TemplateContent renderLastName_11()
     {
-        // Template:
-        //     {.}
-        // Source: "subtemplates/doit.template":325:1
-        object? bullet() => Unsupported(
-            "Bullet     {.}",
-            "subtemplates/doit.template:325:1");
-
         object? lastName = Get("lastName");
-        object? content = bullet();
+        object? content = "{.}";
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Doit(itemContext).renderName_12()));
 
         return Line($$"""
@@ -1180,15 +1173,8 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":283:18
     private TemplateContent renderLastName_10()
     {
-        // Template:
-        //     {.}
-        // Source: "subtemplates/doit.template":285:1
-        object? bullet() => Unsupported(
-            "Bullet     {.}",
-            "subtemplates/doit.template:285:1");
-
         object? lastName = Get("lastName");
-        object? content = bullet();
+        object? content = "{.}";
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Doit(itemContext).renderName_11()));
 
         return Line($$"""
@@ -1337,15 +1323,8 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":242:18
     private TemplateContent renderLastName_9()
     {
-        // Template:
-        //     {.}
-        // Source: "subtemplates/doit.template":244:1
-        object? bullet() => Unsupported(
-            "Bullet     {.}",
-            "subtemplates/doit.template:244:1");
-
         object? lastName = Get("lastName");
-        object? content = bullet();
+        object? content = "{.}";
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Doit(itemContext).renderName_10()));
 
         return Line($$"""
@@ -1362,15 +1341,8 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":244:15
     private TemplateContent renderName_10()
     {
-        // Template:
-        //         {.}
-        // Source: "subtemplates/doit.template":245:1
-        object? bullet() => Unsupported(
-            "Bullet         {.}",
-            "subtemplates/doit.template:245:1");
-
         object? name = Get("name");
-        object? content = bullet();
+        object? content = "{.}";
         object? content_2 = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Doit(itemContext).renderFirstName_6()));
 
         return Line($$"""
@@ -1503,15 +1475,8 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":200:71
     private TemplateContent renderLastName_8()
     {
-        // Template:
-        //     {.}
-        // Source: "subtemplates/doit.template":202:1
-        object? bullet() => Unsupported(
-            "Bullet     {.}",
-            "subtemplates/doit.template:202:1");
-
         object? lastName = Get("lastName");
-        object? content = bullet();
+        object? content = "{.}";
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Doit(itemContext).renderName_9()));
 
         return Line($$"""
@@ -1545,15 +1510,8 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":203:15
     private TemplateContent renderFirstName_5()
     {
-        // Template:
-        //              {.}
-        // Source: "subtemplates/doit.template":204:1
-        object? bullet() => Unsupported(
-            "Bullet              {.}",
-            "subtemplates/doit.template:204:1");
-
         object? firstName = Get("firstName");
-        object? content = bullet();
+        object? content = "{.}";
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Doit(itemContext).renderType_4()));
 
         return Line($$"""
@@ -1626,14 +1584,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":189:15
     private TemplateContent renderName_8()
     {
-        // Template:
-        // {.}
-        // Source: "subtemplates/doit.template":190:5
-        object? bullet() => Unsupported(
-            "Bullet {.}",
-            "subtemplates/doit.template:190:5");
-
-        object? content = bullet();
+        object? content = "{.}";
         object? name = Get("name");
 
         return Line($"{content} {name}");
@@ -1807,15 +1758,8 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":140:41
     private TemplateContent renderName_6()
     {
-        // Template:
-        //          {.}
-        // Source: "subtemplates/doit.template":141:1
-        object? bullet() => Unsupported(
-            "Bullet          {.}",
-            "subtemplates/doit.template:141:1");
-
         object? name = Get("name");
-        object? content = bullet();
+        object? content = "{.}";
         object? content_2 = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Doit(itemContext).renderFirstName_4()));
 
         return Line($$"""
@@ -1830,15 +1774,8 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":141:19
     private TemplateContent renderFirstName_4()
     {
-        // Template:
-        //             {.}
-        // Source: "subtemplates/doit.template":142:1
-        object? bullet() => Unsupported(
-            "Bullet             {.}",
-            "subtemplates/doit.template:142:1");
-
         object? firstName = Get("firstName");
-        object? content = bullet();
+        object? content = "{.}";
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Doit(itemContext).renderType_3()));
 
         return Line($$"""
@@ -1973,23 +1910,9 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":100:17
     private TemplateContent renderName_5()
     {
-        // Template:
-        //     {.}
-        // Source: "subtemplates/doit.template":101:1
-        object? bullet() => Unsupported(
-            "Bullet     {.}",
-            "subtemplates/doit.template:101:1");
-
-        // Template:
-        //          {.}
-        // Source: "subtemplates/doit.template":102:1
-        object? bullet_2() => Unsupported(
-            "Bullet          {.}",
-            "subtemplates/doit.template:102:1");
-
-        object? content = bullet();
+        object? content = "{.}";
         object? name = Get("name");
-        object? content_2 = bullet_2();
+        object? content_2 = "{.}";
         object? content_3 = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Doit(itemContext).renderFirstName_2()));
 
         return Line($$"""
@@ -2005,15 +1928,8 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":102:19
     private TemplateContent renderFirstName_2()
     {
-        // Template:
-        //             {.}
-        // Source: "subtemplates/doit.template":103:1
-        object? bullet() => Unsupported(
-            "Bullet             {.}",
-            "subtemplates/doit.template:103:1");
-
         object? firstName = Get("firstName");
-        object? content = bullet();
+        object? content = "{.}";
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Doit(itemContext).renderType_2()));
 
         return Line($$"""
@@ -2131,14 +2047,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":59:17
     private TemplateContent renderLastName_6()
     {
-        // Template:
-        // {.}
-        // Source: "subtemplates/doit.template":60:1
-        object? bullet() => Unsupported(
-            "Bullet {.}",
-            "subtemplates/doit.template:60:1");
-
-        object? content = bullet();
+        object? content = "{.}";
         object? lastName = Get("lastName");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Doit(itemContext).renderName_4()));
 
@@ -2156,23 +2065,9 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":60:21
     private TemplateContent renderName_4()
     {
-        // Template:
-        //     {.}
-        // Source: "subtemplates/doit.template":61:1
-        object? bullet() => Unsupported(
-            "Bullet     {.}",
-            "subtemplates/doit.template:61:1");
-
-        // Template:
-        //          {.}
-        // Source: "subtemplates/doit.template":62:1
-        object? bullet_2() => Unsupported(
-            "Bullet          {.}",
-            "subtemplates/doit.template:62:1");
-
-        object? content = bullet();
+        object? content = "{.}";
         object? name = Get("name");
-        object? content_2 = bullet_2();
+        object? content_2 = "{.}";
         object? content_3 = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Doit(itemContext).renderFirstName()));
 
         return Line($$"""
@@ -2188,15 +2083,8 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":62:19
     private TemplateContent renderFirstName()
     {
-        // Template:
-        //               {.}
-        // Source: "subtemplates/doit.template":63:1
-        object? bullet() => Unsupported(
-            "Bullet               {.}",
-            "subtemplates/doit.template:63:1");
-
         object? firstName = Get("firstName");
-        object? content = bullet();
+        object? content = "{.}";
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Doit(itemContext).renderType()));
 
         return Line($$"""
@@ -2262,14 +2150,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":45:41
     private TemplateContent renderLastName_5()
     {
-        // Template:
-        // {.}
-        // Source: "subtemplates/doit.template":46:1
-        object? bullet() => Unsupported(
-            "Bullet {.}",
-            "subtemplates/doit.template:46:1");
-
-        object? content = bullet();
+        object? content = "{.}";
         object? lastName = Get("lastName");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Doit(itemContext).renderName_3()));
 
@@ -2285,14 +2166,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":46:21
     private TemplateContent renderName_3()
     {
-        // Template:
-        //     {.}
-        // Source: "subtemplates/doit.template":47:1
-        object? bullet() => Unsupported(
-            "Bullet     {.}",
-            "subtemplates/doit.template:47:1");
-
-        object? content = bullet();
+        object? content = "{.}";
         object? name = Get("name");
 
         return Line($$"""
@@ -2346,14 +2220,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":32:40
     private TemplateContent renderLastName_4()
     {
-        // Template:
-        // {.}
-        // Source: "subtemplates/doit.template":33:1
-        object? bullet() => Unsupported(
-            "Bullet {.}",
-            "subtemplates/doit.template:33:1");
-
-        object? content = bullet();
+        object? content = "{.}";
         object? lastName = Get("lastName");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Doit(itemContext).renderName_2()));
 

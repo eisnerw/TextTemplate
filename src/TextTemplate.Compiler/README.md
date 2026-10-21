@@ -61,7 +61,8 @@ Built-in language methods use `Builtins.Join(...)`, with their entry points in
 Generated lookups use `IsTruthy(path)` for legacy truth checks and
 `MethodInput(path)` to collect a method input across current item contexts.
 Complex method inputs use the deferred `MethodInput(itemContext => ...)` overload.
-The executable accepts `--template NAME` and optional `--data-file FILE`; rendered
+The executable accepts `--template NAME`, optional `--data-file FILE`, and
+`--data-root DIRECTORY`; rendered
 text goes exactly to stdout, and execution errors go to stderr with exit code 1.
 
 For debugging, runtime data, evaluation contexts, missing values, and structured
@@ -327,3 +328,40 @@ exported definitions, literal missing-value annotations, and annotation ordering
 Computed/local includes and other include annotations remain explicit runtime stubs.
 `GenerationResult.Files` exposes the deterministic source map; `Source` retains the
 combined-file form for existing callers.
+
+Named data contexts such as `{#data:[/data/people]}` resolve `/data/people` to
+`people.json` under `--data-root`. Names may be URL encoded; directories and HTTP
+resources are not supported. Missing or invalid files fail without publishing output.
+`--data-file` still supplies the initial context independently. Embedded callers can
+pass the directory as `GeneratedTemplates.Render(name, data, dataRoot)`.
+
+```sh
+dotnet run --project Generated -- --template outline --data-root reference/data
+```
+
+Data loading is supported independently of outline formatting: outline may still
+reach runtime stubs for other unfinished features.
+
+`@MultilineStyle` currently validates and stores literal style arguments in the
+inherited context; an empty argument list clears the setting. As an explicitly
+authorized intermediate step, composition does not apply these styles yet. This
+allows chains containing supported annotations such as `@MissingValue` to run,
+but does not establish multiline formatting parity.
+
+Bullet nodes currently emit the literal `{.}` marker, as an explicitly authorized
+placeholder. Hierarchical bullet formatting and numbering remain unimplemented.
+
+`IfMissing` returns its first argument for Missing, empty string, zero, or false;
+other values pass through. Explicit null receivers remain null, matching the
+legacy call dispatch. No arguments yields missing output on fallback; extra
+arguments are ignored. Characterized against Node in `ifmissing-cases.json`.
+
+`Count()` returns a numeric list size (rendered as decimal text), zero for Missing,
+and one for scalar or dictionary receivers. Explicit null passes through. Argument
+lists count truthy, non-missing items. `Count(predicate)` remains unimplemented.
+Node comparisons are recorded in `count-cases.json`.
+
+Named template methods accept object/list receivers as `$0` and object/list
+arguments as `$1`, `$2`, etc. These retain their existing data parent links; the
+method call context is a child of the caller. Node comparisons cover field lookup,
+list counts and iteration, arguments, and parent access (`named-data-cases.json`).

@@ -1,0 +1,100 @@
+[
+  {
+    "name": "count-list",
+    "script": "{value.Count()}",
+    "data": {
+      "value": [
+        {
+          "a": 1
+        },
+        {
+          "a": 2
+        }
+      ]
+    },
+    "expected": "2"
+  },
+  {
+    "name": "count-single",
+    "script": "{value.Count()}",
+    "data": {
+      "value": [
+        {
+          "a": 1
+        }
+      ]
+    },
+    "expected": "1"
+  },
+  {
+    "name": "count-empty",
+    "script": "{value.Count()}",
+    "data": {
+      "value": []
+    },
+    "expected": "0"
+  },
+  {
+    "name": "count-missing",
+    "script": "{value.Count()}",
+    "data": {},
+    "expected": "0"
+  },
+  {
+    "name": "count-null",
+    "script": "{value.Count()}",
+    "data": {
+      "value": null
+    },
+    "expected": ""
+  },
+  {
+    "name": "count-text",
+    "script": "{value.Count()}",
+    "data": {
+      "value": "abc"
+    },
+    "expected": "1"
+  },
+  {
+    "name": "count-zero",
+    "script": "{value.Count()}",
+    "data": {
+      "value": 0
+    },
+    "expected": "1"
+  },
+  {
+    "name": "count-false",
+    "script": "{value.Count()}",
+    "data": {
+      "value": false
+    },
+    "expected": "1"
+  },
+  {
+    "name": "count-empty-text",
+    "script": "{value.Count()}",
+    "data": {
+      "value": ""
+    },
+    "expected": "0"
+  },
+  {
+    "name": "count-arguments",
+    "script": "{value.Count()}",
+    "data": [
+      {
+        "value": "a"
+      },
+      {
+        "value": false
+      },
+      {},
+      {
+        "value": "b"
+      }
+    ],
+    "expected": "2"
+  }
+]

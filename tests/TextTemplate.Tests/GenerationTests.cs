@@ -33,6 +33,11 @@ public sealed class GenerationTests
     [Theory]
     [InlineData("list")]
     [InlineData("regex")]
+    [InlineData("resource")]
+    [InlineData("annotation")]
+    [InlineData("ifmissing")]
+    [InlineData("count")]
+    [InlineData("named-data")]
     public void RuntimeCasesMatchNode(string suite)
     {
         string root = Path.Combine(Path.GetTempPath(), "texttemplate-lists-" + Guid.NewGuid().ToString("N"));
@@ -59,15 +64,20 @@ public sealed class GenerationTests
             foreach (var item in cases.RootElement.EnumerateArray())
             {
                 string name = item.GetProperty("name").GetString()!;
+                string resourceRoot = Path.Combine(root, "resources");
+                Directory.CreateDirectory(resourceRoot);
+                using (var resources = JsonDocument.Parse(File.ReadAllText(Path.Combine(Repository(), "reference/fixtures/data.json"))))
+                    foreach (var resource in resources.RootElement.EnumerateObject())
+                        File.WriteAllText(Path.Combine(resourceRoot, resource.Name + ".json"), resource.Value.GetRawText());
                 string dataFile = Path.Combine(root, "data.json");
                 File.WriteAllText(dataFile, item.GetProperty("data").GetRawText());
                 var reference = Run("node", Repository(), "tools/node-reference/cli.mjs", "--template", name, "--template-root", root, "--data-file", dataFile);
                 int expectedExit = item.TryGetProperty("exitCode", out var exitCode) ? exitCode.GetInt32() : 0;
                 Assert.True(reference.Exit == expectedExit, reference.Error);
                 Match(item.GetProperty("expected").GetString()!, reference.Output, name + " reference");
-                var actual = Run("dotnet", root, "output/GeneratedTemplates.dll", "--template", name, "--data-file", dataFile);
+                var actual = Run("dotnet", root, "output/GeneratedTemplates.dll", "--template", name, "--data-file", dataFile, "--data-root", resourceRoot);
                 Assert.True(actual.Exit == expectedExit, name + ": " + actual.Error);
-                Match(reference.Output, actual.Output, name + " " + item.GetProperty("data").GetRawText());
+                Match(expectedExit == 0 ? reference.Output : "", actual.Output, name + " " + item.GetProperty("data").GetRawText());
             }
         }
         finally { Directory.Delete(root, true); }

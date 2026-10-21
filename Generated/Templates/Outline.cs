@@ -41,7 +41,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // {#Prepend:[{$0->[{$1}{$0}]}]}
     // {#Surround:[{$0->[{$1}{$0}{$1}]}]}
     // {#Quoted:[{$0->[{$0.#Surround('"')}]}]}
-    // {#data:[{*}]}
+    // {#data:[/data/people]}
     // Source: "templates/outline.template":1:1
     internal TemplateContent Evaluate()
     {
@@ -50,13 +50,11 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     }
 
     // Template:
-    // [{*}]
+    // [/data/people]
     // Source: "templates/outline.template":32:8
     private TemplateContent data()
     {
-        object? content = Get("*");
-
-        return Line($"{content}");
+        return Line($"/data/people");
     }
 
     // Template:
@@ -236,58 +234,13 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/outline.template":1:15
     private object? renderMissingValue()
     {
-        // Template:
-        // [
-        //    {.} {[{ 
-        //       lastName}{ 
-        //       firstName.#Prepend(', ')}{    
-        //       middleName.#Prepend(' ')
-        //    }].ToUpper().#Quoted()} 
-        //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
-        //       {.} FirstName: {firstName}  
-        //       {.} Pets {pets=>[({pets.Count()}):  
-        //          {.} Domesticated ({pets.#Domesticated().Count()}): 
-        //             {.} {pets.#Domesticated():[{#formatPet}]}  
-        //          {.} Non-domesticated ({pets.#NonDomesticated().Count()}): 
-        //             {.} {pets.#NonDomesticated():[{#formatPet}]}    
-        //    ],[no pets]
-        //    }
-        //       {.} Comment{comment.Contains("\\n")->[s]}: {comment}  
-        // ].@MultilineStyle('IndentAllButFirst', 'Padded')
-        // Source: "templates/outline.template":1:15
-        object? applyMultilineStyle() => Unsupported(
-            "Call @MultilineStyle",
-            "templates/outline.template:1:15",
-            () => Each(itemContext => new Outline(itemContext).renderQuoted()),
-            () => new object?[] { "IndentAllButFirst", "Padded" });
-
-        // Template:
-        // [
-        //    {.} {[{ 
-        //       lastName}{ 
-        //       firstName.#Prepend(', ')}{    
-        //       middleName.#Prepend(' ')
-        //    }].ToUpper().#Quoted()} 
-        //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
-        //       {.} FirstName: {firstName}  
-        //       {.} Pets {pets=>[({pets.Count()}):  
-        //          {.} Domesticated ({pets.#Domesticated().Count()}): 
-        //             {.} {pets.#Domesticated():[{#formatPet}]}  
-        //          {.} Non-domesticated ({pets.#NonDomesticated().Count()}): 
-        //             {.} {pets.#NonDomesticated():[{#formatPet}]}    
-        //    ],[no pets]
-        //    }
-        //       {.} Comment{comment.Contains("\\n")->[s]}: {comment}  
-        // ].@MultilineStyle('IndentAllButFirst', 'Padded')
-        //  .@MissingValue('No Information Provided')
-        // Source: "templates/outline.template":1:15
-        object? applyMissingValue() => Unsupported(
-            "Call @MissingValue",
-            "templates/outline.template:1:15",
-            () => applyMultilineStyle(),
-            () => new object?[] { "No Information Provided" });
-
-        return applyMissingValue();
+        return Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithMultilineStyle("IndentAllButFirst", "Padded"),
+                annotatedContext => annotatedContext.WithMissingValue("No Information Provided")
+            },
+            annotatedContext => annotatedContext.Each(itemContext => new Outline(itemContext).renderQuoted()));
     }
 
     // Template:
@@ -311,59 +264,15 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/outline.template":1:15
     private TemplateContent renderQuoted()
     {
-        // Template:
-        // {.}
-        // Source: "templates/outline.template":2:4
-        object? bullet() => Unsupported(
-            "Bullet {.}",
-            "templates/outline.template:2:4");
-
-        // Template:
-        //       {.}
-        // Source: "templates/outline.template":7:1
-        object? bullet_2() => Unsupported(
-            "Bullet       {.}",
-            "templates/outline.template:7:1");
-
-        // Template:
-        // lastName.IfMissing('No Last Name')
-        // Source: "templates/outline.template":7:22
-        object? applyIfMissing() => Unsupported(
-            "Call IfMissing",
-            "templates/outline.template:7:22",
-            () => Get("lastName"),
-            () => new object?[] { "No Last Name" });
-
-        // Template:
-        //       {.}
-        // Source: "templates/outline.template":8:1
-        object? bullet_3() => Unsupported(
-            "Bullet       {.}",
-            "templates/outline.template:8:1");
-
-        // Template:
-        //       {.}
-        // Source: "templates/outline.template":9:1
-        object? bullet_4() => Unsupported(
-            "Bullet       {.}",
-            "templates/outline.template:9:1");
-
-        // Template:
-        //       {.}
-        // Source: "templates/outline.template":16:1
-        object? bullet_5() => Unsupported(
-            "Bullet       {.}",
-            "templates/outline.template:16:1");
-
-        object? content = bullet();
+        object? content = "{.}";
         object? quoted = ApplySubtemplate("Quoted", Builtins.ToUpper(MethodInput(itemContext => new Outline(itemContext).renderLastName())));
-        object? content_2 = bullet_2();
-        object? ifMissing = applyIfMissing();
-        object? content_3 = bullet_3();
+        object? content_2 = "{.}";
+        object? ifMissing = Builtins.IfMissing(MethodInput("lastName"), "No Last Name");
+        object? content_3 = "{.}";
         object? firstName = Get("firstName");
-        object? content_4 = bullet_4();
+        object? content_4 = "{.}";
         object? petsResult = (IsTruthy("pets") ? Each(itemContext => new Outline(itemContext).renderCount()) : Each(itemContext => Line($"no pets")));
-        object? content_5 = bullet_5();
+        object? content_5 = "{.}";
         object? choice = (Context.TestCondition(Builtins.Contains(MethodInput("comment"), "\\n")) ? Each(itemContext => Line($"s")) : "");
         object? comment = Get("comment");
 
@@ -386,66 +295,14 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/outline.template":9:23
     private TemplateContent renderCount()
     {
-        // Template:
-        // pets.Count()
-        // Source: "templates/outline.template":9:26
-        object? applyCount() => Unsupported(
-            "Call Count",
-            "templates/outline.template:9:26",
-            () => Get("pets"));
-
-        // Template:
-        //          {.}
-        // Source: "templates/outline.template":10:1
-        object? bullet() => Unsupported(
-            "Bullet          {.}",
-            "templates/outline.template:10:1");
-
-        // Template:
-        // pets.#Domesticated().Count()
-        // Source: "templates/outline.template":10:29
-        object? applyCount_2() => Unsupported(
-            "Call Count",
-            "templates/outline.template:10:29",
-            () => ApplySubtemplate("Domesticated", MethodInput("pets")));
-
-        // Template:
-        //             {.}
-        // Source: "templates/outline.template":11:1
-        object? bullet_2() => Unsupported(
-            "Bullet             {.}",
-            "templates/outline.template:11:1");
-
-        // Template:
-        //          {.}
-        // Source: "templates/outline.template":12:1
-        object? bullet_3() => Unsupported(
-            "Bullet          {.}",
-            "templates/outline.template:12:1");
-
-        // Template:
-        // pets.#NonDomesticated().Count()
-        // Source: "templates/outline.template":12:33
-        object? applyCount_3() => Unsupported(
-            "Call Count",
-            "templates/outline.template:12:33",
-            () => ApplySubtemplate("NonDomesticated", MethodInput("pets")));
-
-        // Template:
-        //             {.}
-        // Source: "templates/outline.template":13:1
-        object? bullet_4() => Unsupported(
-            "Bullet             {.}",
-            "templates/outline.template:13:1");
-
-        object? count = applyCount();
-        object? content = bullet();
-        object? count_2 = applyCount_2();
-        object? content_2 = bullet_2();
+        object? count = Builtins.Count(MethodInput("pets"));
+        object? content = "{.}";
+        object? count_2 = Builtins.Count(ApplySubtemplate("Domesticated", MethodInput("pets")));
+        object? content_2 = "{.}";
         object? domesticated = InContext(ApplySubtemplate("Domesticated", MethodInput("pets")), dataContext => dataContext.Each(itemContext => new Outline(itemContext).renderFormatPet()));
-        object? content_3 = bullet_3();
-        object? count_3 = applyCount_3();
-        object? content_4 = bullet_4();
+        object? content_3 = "{.}";
+        object? count_3 = Builtins.Count(ApplySubtemplate("NonDomesticated", MethodInput("pets")));
+        object? content_4 = "{.}";
         object? nonDomesticated = InContext(ApplySubtemplate("NonDomesticated", MethodInput("pets")), dataContext => dataContext.Each(itemContext => new Outline(itemContext).renderFormatPet_2()));
 
         return Line($$"""
@@ -508,7 +365,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // {#Prepend:[{$0->[{$1}{$0}]}]}
     // {#Surround:[{$0->[{$1}{$0}{$1}]}]}
     // {#Quoted:[{$0->[{$0.#Surround('"')}]}]}
-    // {#data:[{*}]}
+    // {#data:[/data/people]}
     // Source: "templates/outline.template":18:44
     private void defineSubtemplates(SubtemplateDefinitions definitions)
     {
@@ -554,7 +411,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // {#Prepend:[{$0->[{$1}{$0}]}]}
     // {#Surround:[{$0->[{$1}{$0}{$1}]}]}
     // {#Quoted:[{$0->[{$0.#Surround('"')}]}]}
-    // {#data:[{*}]}
+    // {#data:[/data/people]}
     // Source: "templates/outline.template":1:1
     private TemplateContent renderOutline()
     {

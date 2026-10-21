@@ -1,0 +1,88 @@
+[
+  {
+    "name": "ifmissing-missing",
+    "script": "{value.IfMissing('fallback')}",
+    "data": {},
+    "expected": "fallback"
+  },
+  {
+    "name": "ifmissing-null",
+    "script": "{value.IfMissing('fallback')}",
+    "data": {
+      "value": null
+    },
+    "expected": ""
+  },
+  {
+    "name": "ifmissing-empty",
+    "script": "{value.IfMissing('fallback')}",
+    "data": {
+      "value": ""
+    },
+    "expected": "fallback"
+  },
+  {
+    "name": "ifmissing-zero",
+    "script": "{value.IfMissing('fallback')}",
+    "data": {
+      "value": 0
+    },
+    "expected": "fallback"
+  },
+  {
+    "name": "ifmissing-false",
+    "script": "{value.IfMissing('fallback')}",
+    "data": {
+      "value": false
+    },
+    "expected": "fallback"
+  },
+  {
+    "name": "ifmissing-text",
+    "script": "{value.IfMissing('fallback')}",
+    "data": {
+      "value": "hello"
+    },
+    "expected": "hello"
+  },
+  {
+    "name": "ifmissing-number",
+    "script": "{value.IfMissing('fallback')}",
+    "data": {
+      "value": 2
+    },
+    "expected": "2"
+  },
+  {
+    "name": "ifmissing-no-args",
+    "script": "{value.IfMissing()}",
+    "data": {},
+    "expected": ""
+  },
+  {
+    "name": "ifmissing-extra",
+    "script": "{value.IfMissing('first','second')}",
+    "data": {},
+    "expected": "first"
+  },
+  {
+    "name": "ifmissing-inline",
+    "script": "{value.IfMissing([fallback])}",
+    "data": {},
+    "expected": "fallback"
+  },
+  {
+    "name": "ifmissing-replacement",
+    "script": "{[{value.IfMissing('fallback')}].@MissingValue('replacement')}",
+    "data": {},
+    "expected": "fallback"
+  },
+  {
+    "name": "ifmissing-falsy",
+    "script": "{[{value.IfMissing('fallback')}].@Falsy(/hello/)}",
+    "data": {
+      "value": "hello"
+    },
+    "expected": "hello"
+  }
+]

@@ -13,17 +13,18 @@ public static class GeneratedTemplateProgram
     {
         try
         {
-            string? template = null, dataFile = null;
+            string? template = null, dataFile = null, dataRoot = null;
             for (int i = 0; i < args.Length; i++)
             {
                 if (args[i] == "--template" && template is null && i + 1 < args.Length) template = args[++i];
                 else if (args[i] == "--data-file" && dataFile is null && i + 1 < args.Length) dataFile = args[++i];
-                else if (args[i] == "--help") { Console.WriteLine("Usage: --template NAME [--data-file FILE]"); return 0; }
+                else if (args[i] == "--data-root" && dataRoot is null && i + 1 < args.Length) dataRoot = args[++i];
+                else if (args[i] == "--help") { Console.WriteLine("Usage: --template NAME [--data-file FILE] [--data-root DIRECTORY]"); return 0; }
                 else throw new ArgumentException("Unknown or incomplete argument: " + args[i]);
             }
             if (template is null) throw new ArgumentException("Specify --template NAME.");
             using JsonDocument? data = dataFile is null ? null : JsonDocument.Parse(File.ReadAllText(dataFile));
-            string result = GeneratedTemplates.Render(template, data?.RootElement);
+            string result = GeneratedTemplates.Render(template, data?.RootElement, dataRoot);
             Console.Write(result);
             return 0;
         }

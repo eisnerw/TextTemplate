@@ -252,85 +252,22 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":168:12
     private TemplateContent examples()
     {
-        // Template:
-        // {.}
-        // Source: "templates/startup.template":169:1
-        object? bullet() => Unsupported(
-            "Bullet {.}",
-            "templates/startup.template:169:1");
-
-        // Template:
-        //    {.}
-        // Source: "templates/startup.template":173:1
-        object? bullet_2() => Unsupported(
-            "Bullet    {.}",
-            "templates/startup.template:173:1");
-
-        // Template:
-        //    {.}
-        // Source: "templates/startup.template":174:1
-        object? bullet_3() => Unsupported(
-            "Bullet    {.}",
-            "templates/startup.template:174:1");
-
-        // Template:
-        //    {.}
-        // Source: "templates/startup.template":175:1
-        object? bullet_4() => Unsupported(
-            "Bullet    {.}",
-            "templates/startup.template:175:1");
-
-        // Template:
-        //    {.}
-        // Source: "templates/startup.template":176:1
-        object? bullet_5() => Unsupported(
-            "Bullet    {.}",
-            "templates/startup.template:176:1");
-
-        // Template:
-        //    {.}
-        // Source: "templates/startup.template":177:1
-        object? bullet_6() => Unsupported(
-            "Bullet    {.}",
-            "templates/startup.template:177:1");
-
-        // Template:
-        //    {.}
-        // Source: "templates/startup.template":178:1
-        object? bullet_7() => Unsupported(
-            "Bullet    {.}",
-            "templates/startup.template:178:1");
-
-        // Template:
-        //    {.}
-        // Source: "templates/startup.template":179:1
-        object? bullet_8() => Unsupported(
-            "Bullet    {.}",
-            "templates/startup.template:179:1");
-
-        // Template:
-        //    {.}
-        // Source: "templates/startup.template":180:1
-        object? bullet_9() => Unsupported(
-            "Bullet    {.}",
-            "templates/startup.template:180:1");
-
-        object? content = bullet();
-        object? content_2 = bullet_2();
+        object? content = "{.}";
+        object? content_2 = "{.}";
         object? click = ApplySubtemplate("Click", MethodInput(itemContext => "A simple template"), "/load/simple", "Simple template");
-        object? content_3 = bullet_3();
+        object? content_3 = "{.}";
         object? click_2 = ApplySubtemplate("Click", MethodInput(itemContext => "A demonstration of outlining"), "/load/outline", "Outline template");
-        object? content_4 = bullet_4();
+        object? content_4 = "{.}";
         object? click_3 = ApplySubtemplate("Click", MethodInput(itemContext => "A demonstration of bullets"), "/load/bullets", "Bullets template");
-        object? content_5 = bullet_5();
+        object? content_5 = "{.}";
         object? click_4 = ApplySubtemplate("Click", MethodInput(itemContext => "Use of Assert() for validating template output"), "/load/tests", "Tests template");
-        object? content_6 = bullet_6();
+        object? content_6 = "{.}";
         object? click_5 = ApplySubtemplate("Click", MethodInput(itemContext => "Some interesting ways of using TextTemplate with the web"), "/load/web", "Web template");
-        object? content_7 = bullet_7();
+        object? content_7 = "{.}";
         object? click_6 = ApplySubtemplate("Click", MethodInput(itemContext => "Date manipulation for a \"To Do\" list"), "/load/events", "Events template");
-        object? content_8 = bullet_8();
+        object? content_8 = "{.}";
         object? click_7 = ApplySubtemplate("Click", MethodInput(itemContext => "A demonstration of grouping and order"), "/load/birthdays", "Birthdays template");
-        object? content_9 = bullet_9();
+        object? content_9 = "{.}";
         object? click_8 = ApplySubtemplate("Click", MethodInput(itemContext => "Experimental application of a computed url to call ElasticSearch"), "/load/elastic", "Calling elastic");
 
         return Line($$"""
@@ -419,62 +356,13 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":142:9
     private TemplateContent goals()
     {
-        // Template:
-        // 	{.}
-        // Source: "templates/startup.template":145:1
-        object? bullet() => Unsupported(
-            "Bullet     {.}",
-            "templates/startup.template:145:1");
-
-        // Template:
-        // 	{.}
-        // Source: "templates/startup.template":147:1
-        object? bullet_2() => Unsupported(
-            "Bullet     {.}",
-            "templates/startup.template:147:1");
-
-        // Template:
-        // 	{.}
-        // Source: "templates/startup.template":149:1
-        object? bullet_3() => Unsupported(
-            "Bullet     {.}",
-            "templates/startup.template:149:1");
-
-        // Template:
-        // 	{.}
-        // Source: "templates/startup.template":153:1
-        object? bullet_4() => Unsupported(
-            "Bullet     {.}",
-            "templates/startup.template:153:1");
-
-        // Template:
-        // 	{.}
-        // Source: "templates/startup.template":155:1
-        object? bullet_5() => Unsupported(
-            "Bullet     {.}",
-            "templates/startup.template:155:1");
-
-        // Template:
-        // 	{.}
-        // Source: "templates/startup.template":158:1
-        object? bullet_6() => Unsupported(
-            "Bullet     {.}",
-            "templates/startup.template:158:1");
-
-        // Template:
-        // 	{.}
-        // Source: "templates/startup.template":159:1
-        object? bullet_7() => Unsupported(
-            "Bullet     {.}",
-            "templates/startup.template:159:1");
-
-        object? content = bullet();
-        object? content_2 = bullet_2();
-        object? content_3 = bullet_3();
-        object? content_4 = bullet_4();
-        object? content_5 = bullet_5();
-        object? content_6 = bullet_6();
-        object? content_7 = bullet_7();
+        object? content = "{.}";
+        object? content_2 = "{.}";
+        object? content_3 = "{.}";
+        object? content_4 = "{.}";
+        object? content_5 = "{.}";
+        object? content_6 = "{.}";
+        object? content_7 = "{.}";
 
         return Line($$"""
             The goals of the project (not necessarily achieved with version 1) are to create a language that is:
@@ -1039,34 +927,6 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderIntro()
     {
         // Template:
-        // {.}
-        // Source: "templates/startup.template":7:1
-        object? bullet() => Unsupported(
-            "Bullet {.}",
-            "templates/startup.template:7:1");
-
-        // Template:
-        //    {.}
-        // Source: "templates/startup.template":30:1
-        object? bullet_2() => Unsupported(
-            "Bullet    {.}",
-            "templates/startup.template:30:1");
-
-        // Template:
-        //    {.}
-        // Source: "templates/startup.template":43:1
-        object? bullet_3() => Unsupported(
-            "Bullet    {.}",
-            "templates/startup.template:43:1");
-
-        // Template:
-        //    {.}
-        // Source: "templates/startup.template":47:1
-        object? bullet_4() => Unsupported(
-            "Bullet    {.}",
-            "templates/startup.template:47:1");
-
-        // Template:
         // 'padding'.Align(9,'C','-')
         // Source: "templates/startup.template":50:8
         object? applyAlign() => Unsupported(
@@ -1074,20 +934,6 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             "templates/startup.template:50:8",
             () => "padding",
             () => new object?[] { EvaluationContext.ParseInteger("9"), "C", "-" });
-
-        // Template:
-        //    {.}
-        // Source: "templates/startup.template":58:1
-        object? bullet_5() => Unsupported(
-            "Bullet    {.}",
-            "templates/startup.template:58:1");
-
-        // Template:
-        //    {.}
-        // Source: "templates/startup.template":60:1
-        object? bullet_6() => Unsupported(
-            "Bullet    {.}",
-            "templates/startup.template:60:1");
 
         // Template:
         // dob.ToDate('DD')
@@ -1118,13 +964,6 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             () => new object?[] { Get("sign"), "group" });
 
         // Template:
-        //    {.}
-        // Source: "templates/startup.template":70:1
-        object? bullet_7() => Unsupported(
-            "Bullet    {.}",
-            "templates/startup.template:70:1");
-
-        // Template:
         // #externalData.Where(dob.Substr(0,7) = '1967-10')
         // Source: "templates/startup.template":72:9
         object? applyWhere_2() => Unsupported(
@@ -1132,20 +971,6 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             "templates/startup.template:72:9",
             () => Each(itemContext => itemContext.Named("externalData")),
             () => new object?[] { EvaluationContext.Compare(Builtins.Substr(MethodInput("dob"), EvaluationContext.ParseInteger("0"), EvaluationContext.ParseInteger("7")), "=", "1967-10") });
-
-        // Template:
-        //    {.}
-        // Source: "templates/startup.template":78:1
-        object? bullet_8() => Unsupported(
-            "Bullet    {.}",
-            "templates/startup.template:78:1");
-
-        // Template:
-        //    {.}
-        // Source: "templates/startup.template":83:1
-        object? bullet_9() => Unsupported(
-            "Bullet    {.}",
-            "templates/startup.template:83:1");
 
         // Template:
         // #externalData.Where(dob.Substr(5,5) = '01-25')
@@ -1156,64 +981,15 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             () => Each(itemContext => itemContext.Named("externalData")),
             () => new object?[] { EvaluationContext.Compare(Builtins.Substr(MethodInput("dob"), EvaluationContext.ParseInteger("5"), EvaluationContext.ParseInteger("5")), "=", "01-25") });
 
-        // Template:
-        //    {.}
-        // Source: "templates/startup.template":88:1
-        object? bullet_10() => Unsupported(
-            "Bullet    {.}",
-            "templates/startup.template:88:1");
-
-        // Template:
-        // {.}
-        // Source: "templates/startup.template":91:1
-        object? bullet_11() => Unsupported(
-            "Bullet {.}",
-            "templates/startup.template:91:1");
-
-        // Template:
-        //      {.}
-        // Source: "templates/startup.template":96:1
-        object? bullet_12() => Unsupported(
-            "Bullet      {.}",
-            "templates/startup.template:96:1");
-
-        // Template:
-        //      {.}
-        // Source: "templates/startup.template":100:1
-        object? bullet_13() => Unsupported(
-            "Bullet      {.}",
-            "templates/startup.template:100:1");
-
-        // Template:
-        //      {.}
-        // Source: "templates/startup.template":104:1
-        object? bullet_14() => Unsupported(
-            "Bullet      {.}",
-            "templates/startup.template:104:1");
-
-        // Template:
-        //      {.}
-        // Source: "templates/startup.template":110:1
-        object? bullet_15() => Unsupported(
-            "Bullet      {.}",
-            "templates/startup.template:110:1");
-
-        // Template:
-        // {.}
-        // Source: "templates/startup.template":114:1
-        object? bullet_16() => Unsupported(
-            "Bullet {.}",
-            "templates/startup.template:114:1");
-
-        object? content = bullet();
+        object? content = "{.}";
         object? intro = Each(itemContext => itemContext.Named("intro"));
         object? content_2 = InContext("{\"first\":\"Hello\", \"second\":\"World\"}", dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderFirst()));
         object? goals = Each(itemContext => itemContext.Named("goals"));
-        object? content_3 = bullet_2();
+        object? content_3 = "{.}";
         object? content_4 = InContext("{\"pets\":[ \n      {\"type\":\"cat\"}\n      ,{\"type\":\"dog\"}\n      ,{\"type\":\"tiger\"}\n   ]}", dataContext => new Startup(dataContext).renderBulletStyle());
-        object? content_5 = bullet_3();
+        object? content_5 = "{.}";
         object? content_6 = InContext("{\"test\":\"value\"}", dataContext => new Startup(dataContext).renderMissingValue());
-        object? content_7 = bullet_4();
+        object? content_7 = "{.}";
         object? replace = Builtins.Replace(MethodInput(itemContext => "replacing"), "ing", "ement");
         object? trim = Builtins.Trim(MethodInput(itemContext => " trimming "));
         object? substr = Builtins.Substr(MethodInput(itemContext => " substringy"), EvaluationContext.ParseInteger("1"), EvaluationContext.ParseInteger("9"));
@@ -1221,28 +997,28 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         object? toUpper = Builtins.ToUpper(MethodInput(itemContext => "case"));
         object? choice = (Context.TestCondition(Builtins.Matches(MethodInput(itemContext => "true"), "yes", "1", new TemplateRegex("/True/i", "templates/startup.template:52:33"))) ? Each(itemContext => Line($"test")) : Each(itemContext => Line($"fail")));
         object? content_8 = InContext("{\"element1\":\"multiple\",\"element2\":\"values\"}", dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderChoice()));
-        object? content_9 = bullet_5();
+        object? content_9 = "{.}";
         object? subexample = Each(itemContext => itemContext.Named("subexample"));
-        object? content_10 = bullet_6();
+        object? content_10 = "{.}";
         object? groupBy = InContext(applyGroupBy(), dataContext => new Startup(dataContext).renderDateTest());
-        object? content_11 = bullet_7();
+        object? content_11 = "{.}";
         object? where = InContext(applyWhere_2(), dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderDob()));
-        object? content_12 = bullet_8();
+        object? content_12 = "{.}";
         object? content_13 = InContext("{\"data\":\"Joan's <data>\"}", dataContext => new Startup(dataContext).renderEncodeFor());
-        object? content_14 = bullet_9();
+        object? content_14 = "{.}";
         object? where_2 = InContext(applyWhere_3(), dataContext => new Startup(dataContext).renderJoin_2());
-        object? content_15 = bullet_10();
-        object? content_16 = bullet_11();
-        object? content_17 = bullet_12();
+        object? content_15 = "{.}";
+        object? content_16 = "{.}";
+        object? content_17 = "{.}";
         object? click = ApplySubtemplate("Click", MethodInput(itemContext => "Microsoft's Monaco Editor"), "github.com/microsoft/monaco-editor");
-        object? content_18 = bullet_13();
+        object? content_18 = "{.}";
         object? click_2 = ApplySubtemplate("Click", MethodInput(itemContext => "ANTLR (ANother Tool for Language Recognition)"), "www.antlr.org/", "click to go to the ANTLR website");
-        object? content_19 = bullet_14();
+        object? content_19 = "{.}";
         object? click_3 = ApplySubtemplate("Click", MethodInput(itemContext => "The \"calc-monaco-editor\" project"), "github.com/Strumenta/calc-monaco-editor");
         object? click_4 = ApplySubtemplate("Click", MethodInput(itemContext => "article"), "tomassetti.me/writing-a-browser-based-editor-using-monaco-and-antlr/", "Click to go to the article");
-        object? content_20 = bullet_15();
+        object? content_20 = "{.}";
         object? click_5 = ApplySubtemplate("Click", MethodInput(itemContext => "Moment.js"), "momentjs.com", "Click to go to the website");
-        object? content_21 = bullet_16();
+        object? content_21 = "{.}";
         object? click_6 = ApplySubtemplate("Click", MethodInput(itemContext => "here"), "/load/docs", "Click to see the documentation using TextTemplate");
         object? click_7 = ApplySubtemplate("Click", MethodInput(itemContext => "here"), "/runonserver/docs", "Click to see the documentation rendered on the server");
         object? click_8 = ApplySubtemplate("Click", MethodInput(itemContext => "/runonserver/events"), "/runonserver/events", "Click to see the events template");
@@ -1593,14 +1369,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":40:11
     private TemplateContent renderType_2()
     {
-        // Template:
-        // {.}
-        // Source: "templates/startup.template":41:8
-        object? bullet() => Unsupported(
-            "Bullet {.}",
-            "templates/startup.template:41:8");
-
-        object? content = bullet();
+        object? content = "{.}";
         object? type = Get("type");
 
         return Line($"{content} {type}s");

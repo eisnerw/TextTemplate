@@ -1,0 +1,29 @@
+[
+  {
+    "name": "resource-list",
+    "script": "{#data:[{firstName}]}\nSubtemplates:\n{#data:[/data/people]}",
+    "data": {},
+    "expected": "Doris\nJohn"
+  },
+  {
+    "name": "resource-parent",
+    "script": "{#data:[{firstName}:{^.label}]}\nSubtemplates:\n{#data:[/data/people]}",
+    "data": {
+      "label": "outer"
+    },
+    "expected": ""
+  },
+  {
+    "name": "resource-missing",
+    "script": "{#data:[{error}]}\nSubtemplates:\n{#data:[/data/absent]}",
+    "data": {},
+    "expected": "Data absent not found",
+    "exitCode": 1
+  },
+  {
+    "name": "resource-encoded",
+    "script": "{#data:[{firstName}]}\nSubtemplates:\n{#data:[/data/%70eople]}",
+    "data": {},
+    "expected": "Doris\nJohn"
+  }
+]

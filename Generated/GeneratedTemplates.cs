@@ -34,10 +34,10 @@ public static class GeneratedTemplates
         ["xformatPet"] = context => new XformatPet(context).Evaluate(),
         ["xformatPets"] = context => new XformatPets(context).Evaluate(),
     };
-    public static string Render(string name, JsonElement? data = null)
+    public static string Render(string name, JsonElement? data = null, string? dataRoot = null)
     {
         if (!Templates.TryGetValue(name, out Func<EvaluationContext, object?>? template)) throw new ArgumentException("Unknown template: " + name);
-        return (string)EvaluationContext.At("templates/" + name + ".template:1:1", () => EvaluationContext.Compose(template(new EvaluationContext(data, Shared))) ?? "")!;
+        return (string)EvaluationContext.At("templates/" + name + ".template:1:1", () => EvaluationContext.Compose(template(new EvaluationContext(data, Shared, dataRoot))) ?? "")!;
     }
 
 }

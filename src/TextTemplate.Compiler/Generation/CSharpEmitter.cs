@@ -101,9 +101,9 @@ public sealed class CSharpEmitter
             "public static class GeneratedTemplates\n{\n" +
             "    private static readonly Dictionary<string, Func<EvaluationContext, object?>> Templates = new(StringComparer.Ordinal)\n    {\n" + string.Join("\n", mainMap) + "\n    };\n" +
             "    private static readonly Dictionary<string, Func<EvaluationContext, object?>> Shared = new(StringComparer.Ordinal)\n    {\n" + string.Join("\n", sharedMap) + "\n    };\n" +
-            "    public static string Render(string name, JsonElement? data = null)\n    {\n" +
+            "    public static string Render(string name, JsonElement? data = null, string? dataRoot = null)\n    {\n" +
             "        if (!Templates.TryGetValue(name, out Func<EvaluationContext, object?>? template)) throw new ArgumentException(\"Unknown template: \" + name);\n" +
-            "        return (string)EvaluationContext.At(\"templates/\" + name + \".template:1:1\", () => EvaluationContext.Compose(template(new EvaluationContext(data, Shared))) ?? \"\")!;\n    }\n\n" + "}\n");
+            "        return (string)EvaluationContext.At(\"templates/\" + name + \".template:1:1\", () => EvaluationContext.Compose(template(new EvaluationContext(data, Shared, dataRoot))) ?? \"\")!;\n    }\n\n" + "}\n");
         int programStart = runtime.IndexOf("public static class GeneratedTemplateProgram", StringComparison.Ordinal);
         files.Add("Support/EvaluationContext.cs", Header + runtime[..programStart]);
         files.Add("Program.cs", Header + runtime[programStart..]);
@@ -197,6 +197,8 @@ public sealed class CSharpEmitter
     private string? Annotation(SyntaxNode call, string context = "annotatedContext", bool lambda = true)
     {
         var args = call.Children.Skip(1).SelectMany(child => child.Children).ToList();
+        if (call.Value == "@MultilineStyle" && args.All(arg => arg.Kind == SyntaxKind.String))
+            return (lambda ? context + " => " : "") + context + ".WithMultilineStyle(" + string.Join(", ", args.Select(arg => Quote(DecodeString(arg.Value!)))) + ")";
         if (call.Value == "@Falsy" && (args.Count == 0 || args.Count == 1 && args[0].Kind == SyntaxKind.Regex))
             return (lambda ? context + " => " : "") + context + ".WithFalsy(" + (args.Count == 0 ? "null" : "new TemplateRegex(" + Quote(args[0].Value!) + ", " + Quote(sourcePath + ":" + args[0].Span.Line + ":" + args[0].Span.Column) + ")") + ")";
         if (args.Count != 1 || args[0].Kind != SyntaxKind.String) return null;
@@ -571,7 +573,7 @@ public sealed class CSharpEmitter
                             string.Join(",\n                ", annotations.Select(call => Annotation(call))) + "\n            },\n            " + InChild(body, "annotatedContext") + ")";
                     }
                 }
-                else if (node.Value!.StartsWith('#') || node.Value is "Join" or "Trim" or "StartsWith" or "EndsWith" or "Contains" or "Replace" or "Substr" or "IndexOf" or "LastIndexOf" or "EndIndexOf" or "ToUpper" or "ToLower" or "GreaterThan" or "LessThan" or "Matches" or "Assert")
+                else if (node.Value!.StartsWith('#') || (node.Value == "Count" && !node.Children.Skip(1).SelectMany(child => child.Children).Any()) || node.Value is "IfMissing" or "Join" or "Trim" or "StartsWith" or "EndsWith" or "Contains" or "Replace" or "Substr" or "IndexOf" or "LastIndexOf" or "EndIndexOf" or "ToUpper" or "ToLower" or "GreaterThan" or "LessThan" or "Matches" or "Assert")
                 {
                     string arguments = string.Join(", ", node.Children.Skip(1).SelectMany(child => child.Children).Select(Call));
                     expression = (!node.Value.StartsWith('#') ? "Builtins." + node.Value + "(" : "ApplySubtemplate(" + Quote(node.Value[1..]) + ", ") +
@@ -586,7 +588,10 @@ public sealed class CSharpEmitter
             case SyntaxKind.Regex:
                 expression = "new TemplateRegex(" + Quote(node.Value!) + ", " + Quote(location) + ")";
                 break;
-            case SyntaxKind.Bullet: case SyntaxKind.InlineCall:
+            // Temporary literal marker until hierarchical bullet rendering is implemented.
+            case SyntaxKind.Bullet:
+                expression = Quote("{.}"); break;
+            case SyntaxKind.InlineCall:
                 expression = Stub(); break;
             default: expression = Stub(); break;
         }

@@ -414,3 +414,38 @@ repeated groups with nested captures (capture reset differs from .NET), forward
 or octal backreferences, Unicode/duplicate capture names, and certain legacy
 character-class/control escapes. Unselected branches retain deferred execution.
 These checks establish the characterized subset, not full ECMAScript regex parity.
+
+### Local named data resources
+
+Generated programs accept `--data-root DIRECTORY` (also the optional third argument
+of `GeneratedTemplates.Render`). A `/data/NAME` context loads `NAME.json`, preserving
+the current context as its parent. Node characterization covers list loading, URL
+encoding, parent lookup, and missing resources in `resource-cases.json`. Missing
+resources fail before stdout publication; Node reports an error and also returns
+error text, which is intentionally suppressed by the generated host's error policy.
+HTTP and other resource namespaces remain unfinished. No runtime interpreter or
+TextTemplate assembly is required.
+
+`@MultilineStyle` currently validates and stores literal style arguments in the
+inherited context; an empty argument list clears the setting. As an explicitly
+authorized intermediate step, composition does not apply these styles yet. This
+allows chains containing supported annotations such as `@MissingValue` to run,
+but does not establish multiline formatting parity.
+
+Bullet nodes currently emit the literal `{.}` marker, as an explicitly authorized
+placeholder. Hierarchical bullet formatting and numbering remain unimplemented.
+
+`IfMissing` returns its first argument for Missing, empty string, zero, or false;
+other values pass through. Explicit null receivers remain null, matching the
+legacy call dispatch. No arguments yields missing output on fallback; extra
+arguments are ignored. Characterized against Node in `ifmissing-cases.json`.
+
+`Count()` returns a numeric list size (rendered as decimal text), zero for Missing,
+and one for scalar or dictionary receivers. Explicit null passes through. Argument
+lists count truthy, non-missing items. `Count(predicate)` remains unimplemented.
+Node comparisons are recorded in `count-cases.json`.
+
+Named template methods accept object/list receivers as `$0` and object/list
+arguments as `$1`, `$2`, etc. These retain their existing data parent links; the
+method call context is a child of the caller. Node comparisons cover field lookup,
+list counts and iteration, arguments, and parent access (`named-data-cases.json`).

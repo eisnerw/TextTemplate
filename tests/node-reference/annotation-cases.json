@@ -1,0 +1,14 @@
+[
+  {
+    "name": "multiline-annotation-chain",
+    "script": "{[{absent}].@MultilineStyle('IndentAllButFirst','Padded').@MissingValue('missing')}",
+    "data": {},
+    "expected": "missing"
+  },
+  {
+    "name": "multiline-annotation-clear",
+    "script": "{[hello].@MultilineStyle()}",
+    "data": {},
+    "expected": "hello"
+  }
+]

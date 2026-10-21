@@ -29,4 +29,4 @@ Subtemplates:
 {#Prepend:[{$0->[{$1}{$0}]}]}
 {#Surround:[{$0->[{$1}{$0}{$1}]}]}
 {#Quoted:[{$0->[{$0.#Surround('"')}]}]}
-{#data:[{*}]}
+{#data:[/data/people]}

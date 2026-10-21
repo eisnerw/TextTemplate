@@ -105,8 +105,11 @@ internal sealed class EvaluationContext
             ? $"Missing({JsonSerializer.Serialize(Key)})"
             : $"Missing({JsonSerializer.Serialize(Key)}, replacement: {JsonSerializer.Serialize(Replacement)})";
     }
+    private readonly string? dataRoot;
     private string? missingText;
     private TemplateRegex? falsy;
+    // Stored for future multiline rendering; currently does not alter composition.
+    internal IReadOnlyList<string>? MultilineStyle { get; private set; }
     private Missing MissingValue(string key) => new(key, missingText?.Replace("{key}", key));
     internal readonly Data? Current;
     internal readonly Dictionary<string, Func<EvaluationContext, object?>> Shared;
@@ -118,10 +121,12 @@ internal sealed class EvaluationContext
     {
         Current = current;
         Shared = parent.Shared;
+        dataRoot = parent.dataRoot;
         Locals = new(parent.Locals, StringComparer.Ordinal);
         recursion = parent.recursion;
         missingText = parent.missingText;
         falsy = parent.falsy;
+        MultilineStyle = parent.MultilineStyle;
     }
 
     [System.Runtime.CompilerServices.InterpolatedStringHandler]
@@ -137,9 +142,10 @@ internal sealed class EvaluationContext
     }
     internal static TemplateContent Text(StructuredText text) => new(text.ToFragments());
 
-    internal EvaluationContext(JsonElement? data, Dictionary<string, Func<EvaluationContext, object?>> shared)
+    internal EvaluationContext(JsonElement? data, Dictionary<string, Func<EvaluationContext, object?>> shared, string? dataRoot = null)
     {
         Shared = shared;
+        this.dataRoot = dataRoot;
         if (data.HasValue && data.Value.ValueKind != JsonValueKind.Null) Current = ReadData(data.Value, null);
     }
     private static Data ReadData(JsonElement value, Data? parent)
@@ -252,7 +258,33 @@ internal sealed class EvaluationContext
         if (value is string text)
         {
             if (text.StartsWith('/') || text.StartsWith("http", StringComparison.OrdinalIgnoreCase))
-                throw new NotImplementedException("Resource data contexts are not implemented in the initial generated runtime.");
+            {
+                if (dataRoot is null) throw new InvalidOperationException("Specify --data-root DIRECTORY to resolve " + text + ".");
+                if (!text.StartsWith("/data/", StringComparison.Ordinal) || text[6..].IndexOfAny(new[] { '/', '?', '#' }) >= 0)
+                    throw new NotImplementedException("Unsupported resource path: " + text);
+                string name = Uri.UnescapeDataString(text[6..]);
+                if (name.Length == 0 || name is "." or ".." || name.IndexOfAny(new[] { '/', '\\' }) >= 0)
+                    throw new InvalidOperationException("Invalid data resource name: " + name);
+                string path = Path.Combine(dataRoot, name + ".json");
+                if (!File.Exists(path)) throw new InvalidOperationException("Data " + name + " not found");
+                using JsonDocument resource = JsonDocument.Parse(File.ReadAllText(path));
+                JsonElement loaded = resource.RootElement;
+                if (loaded.ValueKind is JsonValueKind.Null or JsonValueKind.False ||
+                    (loaded.ValueKind == JsonValueKind.String && loaded.GetString() == "") ||
+                    (loaded.ValueKind == JsonValueKind.Number && loaded.GetDouble() == 0))
+                    throw new InvalidOperationException("Data " + name + " not found");
+                if (loaded.ValueKind == JsonValueKind.Object && loaded.TryGetProperty("error", out JsonElement error))
+                    throw new InvalidOperationException(error.ToString());
+                if (loaded.ValueKind == JsonValueKind.Object && loaded.TryGetProperty("Result", out JsonElement result) && result.ValueKind == JsonValueKind.String && result.GetString() != "")
+                    loaded = JsonSerializer.SerializeToElement(result.GetString()!.Replace("\r", ""));
+                if (loaded.ValueKind == JsonValueKind.String && loaded.GetString() is string json && (json.StartsWith('{') || json.StartsWith('[')))
+                {
+                    using JsonDocument nested = JsonDocument.Parse(json);
+                    value = ReadData(nested.RootElement, Current);
+                }
+                else value = ReadData(loaded, Current);
+                return body(new EvaluationContext(this, (Data)value));
+            }
             if (!text.StartsWith('{') && !text.StartsWith('[')) return text;
             using JsonDocument parsed = JsonDocument.Parse(text);
             value = ReadData(parsed.RootElement, Current);
@@ -277,6 +309,17 @@ internal sealed class EvaluationContext
     }
     internal bool TestCondition(object? value)
         => Condition(value) && !(falsy?.Test(Builtins.JsString(value)) ?? false);
+    internal EvaluationContext WithMultilineStyle(params string[] styles)
+    {
+        bool tabbed = Array.IndexOf(styles, "Tabbed") >= 0;
+        foreach (string style in styles)
+            if (style is not ("Indented" or "IndentAllButFirst" or "Padded" or "Tabbed" or "Trimmed" or "Offset") ||
+                (tabbed && style is ("Indented" or "IndentAllButFirst")))
+                throw new InvalidOperationException("ERROR: invalid argument for multiline style");
+        EvaluationContext child = new EvaluationContext(this, Current);
+        child.MultilineStyle = styles.Length == 0 ? null : Array.AsReadOnly((string[])styles.Clone());
+        return child;
+    }
     internal EvaluationContext WithMissingValue(string replacement)
     {
         EvaluationContext child = new EvaluationContext(this, Current);
@@ -299,13 +342,11 @@ internal sealed class EvaluationContext
     internal object? CallNamed(string name, object? value, params object?[] arguments)
     {
         value = Intermediate(value);
-        if (value is Data) throw new NotImplementedException("Object receivers for named methods are not implemented yet.");
         Data data = new Data(new(StringComparer.Ordinal), Current);
         data.Values["$0"] = value;
         for (int i = 0; i < arguments.Length; i++)
         {
             object? argument = Intermediate(arguments[i]);
-            if (argument is Data) throw new NotImplementedException("Object arguments for named methods are not implemented yet.");
             if (argument is not Missing and not TemplateRegex) data.Values["$" + (i + 1)] = argument;
         }
         return new EvaluationContext(this, data).Named(name);
@@ -352,6 +393,7 @@ internal sealed class EvaluationContext
     {
         if (value is TemplateContent content)
             return content.Fragments.Length == 1 ? Intermediate(content.Fragments[0]) : Compose(content);
+        if (value is RenderedList) return Compose(value);
         return value is object?[] sequence ? sequence.Length == 1 ? Intermediate(sequence[0]) : Compose(value) : value;
     }
     internal static bool Condition(object? value)
@@ -405,6 +447,24 @@ internal sealed class EvaluationContext
             // Traverse fragments directly: ToString would lose missing-line and indentation behavior.
             if (item is TemplateContent templateContent) { foreach (object? fragment in templateContent.Fragments) Visit(fragment, indent); return; }
             if (item is object?[] sequence) { foreach (object? child in sequence) Visit(child, indent); return; }
+            if (item is Data data)
+            {
+                if (data.Items is not null)
+                {
+                    List<string> scalars = new();
+                    bool scalarList = true;
+                    foreach (Data child in data.Items)
+                    {
+                        if (!child.Values.TryGetValue("_", out object? scalar) || !Condition(scalar)) { scalarList = false; break; }
+                        scalars.Add(Scalar(scalar!));
+                    }
+                    // Raw object-data lists retain their layout. A dictionary contributes
+                    // no text unless its scalar '_' value can be interpolated.
+                    item = scalarList ? string.Join(", ", scalars) : new RenderedList(new List<object?>(data.Items));
+                }
+                else if (data.Values.TryGetValue("_", out object? scalar) && Condition(scalar)) item = scalar;
+                else return;
+            }
             if (item is Arguments arguments) item = new RenderedList(arguments.Items);
             if (item is RenderedList rendered)
             {
@@ -432,21 +492,6 @@ internal sealed class EvaluationContext
                     first = false;
                 }
                 return;
-            }
-            if (item is Data data)
-            {
-                if (data.Items is not null)
-                {
-                    List<string> scalars = new List<string>();
-                    foreach (Data child in data.Items)
-                    {
-                        if (!child.Values.TryGetValue("_", out object? scalar) || !Condition(scalar))
-                            throw new NotImplementedException("Non-scalar data formatting is not implemented yet.");
-                        scalars.Add(Scalar(scalar!));
-                    }
-                    item = string.Join(", ", scalars);
-                }
-                else if (data.Values.TryGetValue("_", out object? scalar) && Condition(scalar)) item = scalar;
             }
             if (item is Missing missing) item = missing.Replacement;
             if (item is null) { lines[^1] = ""; skipping = true; return; }

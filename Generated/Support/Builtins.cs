@@ -17,6 +17,29 @@ internal static class Builtins
     // eisnerw/texttemplate-editor, ccedefd87b012ff1173ee2f43323b6eb7c8bd268.
     // ECMAScript WhiteSpace and LineTerminator, deliberately excluding U+0085.
     internal const string Whitespace = "\u0009\u000a\u000b\u000c\u000d\u0020\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff";
+    internal static object? Count(object? value)
+    {
+        value = EvaluationContext.Intermediate(value);
+        // Legacy dispatch skips explicit null before reaching Count.
+        if (value is null) return null;
+        if (value is EvaluationContext.Missing) return 0d;
+        if (value is EvaluationContext.Data { Items: { } items }) return (double)items.Count;
+        if (value is EvaluationContext.Arguments arguments)
+        {
+            int count = 0;
+            foreach (object? item in arguments.Items)
+                if (EvaluationContext.Condition(item)) count++;
+            return (double)count;
+        }
+        return 1d;
+    }
+    internal static object? IfMissing(object? value, params object?[] arguments)
+    {
+        value = EvaluationContext.Intermediate(value);
+        // callMethod skips null receivers before its IfMissing branch.
+        if (value is null) return null;
+        return EvaluationContext.Condition(value) ? value : arguments.Length == 0 ? null : arguments[0];
+    }
     internal static object? Trim(object? value, params object?[] arguments)
     {
         value = EvaluationContext.Intermediate(value);

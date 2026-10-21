@@ -1442,5 +1442,281 @@
       ]
     },
     "expected": ""
+  },
+  {
+    "name": "raw-data-root-1",
+    "script": "{*}",
+    "data": [
+      {
+        "name": "A"
+      }
+    ],
+    "expected": ""
+  },
+  {
+    "name": "raw-data-named-1",
+    "script": "{#data}\nSubtemplates:\n{#data:[{*}]}",
+    "data": [
+      {
+        "name": "A"
+      }
+    ],
+    "expected": ""
+  },
+  {
+    "name": "raw-data-context-1",
+    "script": "X{#data:[{name}]}Y\nSubtemplates:\n{#data:[{*}]}",
+    "data": [
+      {
+        "name": "A"
+      }
+    ],
+    "expected": "XAY"
+  },
+  {
+    "name": "raw-data-inline-1",
+    "script": "X{[{*}]}Y",
+    "data": [
+      {
+        "name": "A"
+      }
+    ],
+    "expected": "XY"
+  },
+  {
+    "name": "raw-data-direct-context-1",
+    "script": "X{*:[{name}]}Y",
+    "data": [
+      {
+        "name": "A"
+      }
+    ],
+    "expected": "XAY"
+  },
+  {
+    "name": "raw-data-root-2",
+    "script": "{*}",
+    "data": [
+      {
+        "name": "A"
+      },
+      {
+        "name": "B"
+      }
+    ],
+    "expected": "\n"
+  },
+  {
+    "name": "raw-data-named-2",
+    "script": "{#data}\nSubtemplates:\n{#data:[{*}]}",
+    "data": [
+      {
+        "name": "A"
+      },
+      {
+        "name": "B"
+      }
+    ],
+    "expected": "\n"
+  },
+  {
+    "name": "raw-data-context-2",
+    "script": "X{#data:[{name}]}Y\nSubtemplates:\n{#data:[{*}]}",
+    "data": [
+      {
+        "name": "A"
+      },
+      {
+        "name": "B"
+      }
+    ],
+    "expected": "X\nY"
+  },
+  {
+    "name": "raw-data-inline-2",
+    "script": "X{[{*}]}Y",
+    "data": [
+      {
+        "name": "A"
+      },
+      {
+        "name": "B"
+      }
+    ],
+    "expected": "X\n   \n   Y"
+  },
+  {
+    "name": "raw-data-direct-context-2",
+    "script": "X{*:[{name}]}Y",
+    "data": [
+      {
+        "name": "A"
+      },
+      {
+        "name": "B"
+      }
+    ],
+    "expected": "X\n   A\n   BY"
+  },
+  {
+    "name": "raw-data-root-3",
+    "script": "{*}",
+    "data": [
+      {
+        "name": "A"
+      },
+      {
+        "name": "B"
+      },
+      {
+        "name": "C"
+      }
+    ],
+    "expected": "\n\n"
+  },
+  {
+    "name": "raw-data-named-3",
+    "script": "{#data}\nSubtemplates:\n{#data:[{*}]}",
+    "data": [
+      {
+        "name": "A"
+      },
+      {
+        "name": "B"
+      },
+      {
+        "name": "C"
+      }
+    ],
+    "expected": "\n\n"
+  },
+  {
+    "name": "raw-data-context-3",
+    "script": "X{#data:[{name}]}Y\nSubtemplates:\n{#data:[{*}]}",
+    "data": [
+      {
+        "name": "A"
+      },
+      {
+        "name": "B"
+      },
+      {
+        "name": "C"
+      }
+    ],
+    "expected": "X\n\nY"
+  },
+  {
+    "name": "raw-data-inline-3",
+    "script": "X{[{*}]}Y",
+    "data": [
+      {
+        "name": "A"
+      },
+      {
+        "name": "B"
+      },
+      {
+        "name": "C"
+      }
+    ],
+    "expected": "X\n   \n   \n   Y"
+  },
+  {
+    "name": "raw-data-direct-context-3",
+    "script": "X{*:[{name}]}Y",
+    "data": [
+      {
+        "name": "A"
+      },
+      {
+        "name": "B"
+      },
+      {
+        "name": "C"
+      }
+    ],
+    "expected": "X\n   A\n   B\n   CY"
+  },
+  {
+    "name": "raw-data-dictionary-context",
+    "script": "X{#data:[{name}]}Y\nSubtemplates:\n{#data:[{*}]}",
+    "data": {
+      "name": "A"
+    },
+    "expected": "XAY"
+  },
+  {
+    "name": "raw-data-nested-list",
+    "script": "X{pets}Y",
+    "data": {
+      "pets": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "X\n   \n   Y"
+  },
+  {
+    "name": "raw-data-mixed",
+    "script": "X{#data}Y\nSubtemplates:\n{#data:[{*}]}",
+    "data": [
+      {
+        "name": "A"
+      },
+      {
+        "name": "B"
+      }
+    ],
+    "expected": "X\n   \n   Y"
+  },
+  {
+    "name": "outline-people-data-context",
+    "script": "People:{#data:[\n   {.} {[{ \n      lastName}{ \n      firstName.#Prepend(', ')}{    \n      middleName.#Prepend(' ')\n   }].ToUpper().#Quoted()} \n      {.} Lastname: {lastName.IfMissing('No Last Name')}   \n      {.} FirstName: {firstName}  \n      {.} Pets {pets=>[({pets.Count()}):  \n         {.} Domesticated ({pets.#Domesticated().Count()}): \n            {.} {pets.#Domesticated():[{#formatPet}]}  \n         {.} Non-domesticated ({pets.#NonDomesticated().Count()}): \n            {.} {pets.#NonDomesticated():[{#formatPet}]}    \n   ],[no pets]\n   }\n      {.} Comment{comment.Contains(\"\\\\n\")->[s]}: {comment}  \n].@MultilineStyle('IndentAllButFirst', 'Padded')\n .@MissingValue('No Information Provided')}       \n \nSubtemplates:  \n\n{#formatPet:[  \n   a {type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')}  `   \n   {type} named {name} \n]}\n{#Domesticated: [{$0.Where(type.#IsDomesticated())}]}\n{#NonDomesticated: [{$0.Where(!type.#IsDomesticated())}]} \n{#IsDomesticated:[{$0.Matches('dog','cat')}]}  \n{#Prepend:[{$0->[{$1}{$0}]}]}\n{#Surround:[{$0->[{$1}{$0}{$1}]}]}\n{#Quoted:[{$0->[{$0.#Surround('\"')}]}]}\n{#data:[{*}]}",
+    "data": [
+      {
+        "firstName": "Doris",
+        "lastName": "Johnson",
+        "pets": [
+          {
+            "type": "dog",
+            "name": "Buddy"
+          },
+          {
+            "type": "lion",
+            "name": "Ralph"
+          },
+          {
+            "type": "tiger",
+            "name": "Stripes"
+          }
+        ],
+        "comment": "Doris seems to have a good relationship with her pets.\nShe is known to have multiple non-domesticated pets"
+      },
+      {
+        "firstName": "John",
+        "lastName": "Smith",
+        "pets": [
+          {
+            "type": "dog",
+            "name": "Toto"
+          },
+          {
+            "type": "cat",
+            "name": "Dolly"
+          },
+          {
+            "type": "zebra",
+            "name": "Stripes"
+          }
+        ],
+        "comment": "John mostly likes domesticated pets"
+      }
+    ],
+    "expected": "People:\n"
   }
 ]

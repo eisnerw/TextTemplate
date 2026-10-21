@@ -276,25 +276,11 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/events.template":4:41
     private TemplateContent renderFormatTimes()
     {
-        // Template:
-        //       {.}
-        // Source: "templates/events.template":5:1
-        object? bullet() => Unsupported(
-            "Bullet       {.}",
-            "templates/events.template:5:1");
-
-        // Template:
-        //       {.}
-        // Source: "templates/events.template":6:1
-        object? bullet_2() => Unsupported(
-            "Bullet       {.}",
-            "templates/events.template:6:1");
-
         object? formatTimes = ApplySubtemplate("formatTimes", MethodInput("start"), Get("end"));
         object? summary = Get("summary");
-        object? content = bullet();
+        object? content = "{.}";
         object? description = Get("description");
-        object? content_2 = bullet_2();
+        object? content_2 = "{.}";
         object? location = Get("location");
 
         return Line($$"""

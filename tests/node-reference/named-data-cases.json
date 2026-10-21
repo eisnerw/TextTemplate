@@ -1,0 +1,134 @@
+[
+  {
+    "name": "named-data-object",
+    "script": "{value.#show()}\nSubtemplates:\n{#show:[{$0.name}]}",
+    "data": {
+      "label": "outer",
+      "value": {
+        "name": "Ada"
+      },
+      "items": [
+        {
+          "name": "Ada"
+        },
+        {
+          "name": "Grace"
+        }
+      ],
+      "other": {
+        "name": "Lin"
+      }
+    },
+    "expected": "Ada"
+  },
+  {
+    "name": "named-data-list",
+    "script": "{items.#show()}\nSubtemplates:\n{#show:[{$0.Count()}]}",
+    "data": {
+      "label": "outer",
+      "value": {
+        "name": "Ada"
+      },
+      "items": [
+        {
+          "name": "Ada"
+        },
+        {
+          "name": "Grace"
+        }
+      ],
+      "other": {
+        "name": "Lin"
+      }
+    },
+    "expected": "2"
+  },
+  {
+    "name": "named-data-iterate",
+    "script": "{items.#show()}\nSubtemplates:\n{#show:[{$0:[{name}]}]}",
+    "data": {
+      "label": "outer",
+      "value": {
+        "name": "Ada"
+      },
+      "items": [
+        {
+          "name": "Ada"
+        },
+        {
+          "name": "Grace"
+        }
+      ],
+      "other": {
+        "name": "Lin"
+      }
+    },
+    "expected": "Ada\nGrace"
+  },
+  {
+    "name": "named-data-parent",
+    "script": "{value.#show()}\nSubtemplates:\n{#show:[{$0.name}/{^.label}/{$0.^.label}]}",
+    "data": {
+      "label": "outer",
+      "value": {
+        "name": "Ada"
+      },
+      "items": [
+        {
+          "name": "Ada"
+        },
+        {
+          "name": "Grace"
+        }
+      ],
+      "other": {
+        "name": "Lin"
+      }
+    },
+    "expected": "Ada/outer/outer"
+  },
+  {
+    "name": "named-data-argument",
+    "script": "{value.#show(other)}\nSubtemplates:\n{#show:[{$0.name}/{$1.name}]}",
+    "data": {
+      "label": "outer",
+      "value": {
+        "name": "Ada"
+      },
+      "items": [
+        {
+          "name": "Ada"
+        },
+        {
+          "name": "Grace"
+        }
+      ],
+      "other": {
+        "name": "Lin"
+      }
+    },
+    "expected": "Ada/Lin"
+  },
+  {
+    "name": "named-data-list-argument",
+    "script": "{value.#show(items)}\nSubtemplates:\n{#show:[{$1.Count()}]}",
+    "data": {
+      "label": "outer",
+      "value": {
+        "name": "Ada"
+      },
+      "items": [
+        {
+          "name": "Ada"
+        },
+        {
+          "name": "Grace"
+        }
+      ],
+      "other": {
+        "name": "Lin"
+      }
+    },
+    "expected": "2"
+  }
+]

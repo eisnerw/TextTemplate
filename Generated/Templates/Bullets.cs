@@ -156,15 +156,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":35:12
     private TemplateContent ndpetcnt()
     {
-        // Template:
-        // pets.#NonDomesticated().Count()
-        // Source: "templates/bullets.template":35:14
-        object? applyCount() => Unsupported(
-            "Call Count",
-            "templates/bullets.template:35:14",
-            () => ApplySubtemplate("NonDomesticated", MethodInput("pets")));
-
-        object? count = applyCount();
+        object? count = Builtins.Count(ApplySubtemplate("NonDomesticated", MethodInput("pets")));
 
         return Line($"{count}");
     }
@@ -174,15 +166,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":34:11
     private TemplateContent dpetcnt()
     {
-        // Template:
-        // pets.#Domesticated().Count()
-        // Source: "templates/bullets.template":34:13
-        object? applyCount() => Unsupported(
-            "Call Count",
-            "templates/bullets.template:34:13",
-            () => ApplySubtemplate("Domesticated", MethodInput("pets")));
-
-        object? count = applyCount();
+        object? count = Builtins.Count(ApplySubtemplate("Domesticated", MethodInput("pets")));
 
         return Line($"{count}");
     }
@@ -462,51 +446,14 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":10:29
     private TemplateContent renderChoice()
     {
-        // Template:
-        // {.}
-        // Source: "templates/bullets.template":11:4
-        object? bullet() => Unsupported(
-            "Bullet {.}",
-            "templates/bullets.template:11:4");
-
-        // Template:
-        //       {.}
-        // Source: "templates/bullets.template":16:1
-        object? bullet_2() => Unsupported(
-            "Bullet       {.}",
-            "templates/bullets.template:16:1");
-
-        // Template:
-        // lastName.IfMissing('No Last Name')
-        // Source: "templates/bullets.template":16:22
-        object? applyIfMissing() => Unsupported(
-            "Call IfMissing",
-            "templates/bullets.template:16:22",
-            () => Get("lastName"),
-            () => new object?[] { "No Last Name" });
-
-        // Template:
-        //       {.}
-        // Source: "templates/bullets.template":17:1
-        object? bullet_3() => Unsupported(
-            "Bullet       {.}",
-            "templates/bullets.template:17:1");
-
-        // Template:
-        //       {.}
-        // Source: "templates/bullets.template":18:1
-        object? bullet_4() => Unsupported(
-            "Bullet       {.}",
-            "templates/bullets.template:18:1");
-
-        object? content = bullet();
+        object? content = "{.}";
         object? choice = (EvaluationContext.Compare(Get("^.^.$1"), "=", EvaluationContext.ParseInteger("2")) ? Each(itemContext => Line($".0")) : "");
         object? quoted = ApplySubtemplate("Quoted", Builtins.ToUpper(MethodInput(itemContext => new Bullets(itemContext).renderLastName())));
-        object? content_2 = bullet_2();
-        object? ifMissing = applyIfMissing();
-        object? content_3 = bullet_3();
+        object? content_2 = "{.}";
+        object? ifMissing = Builtins.IfMissing(MethodInput("lastName"), "No Last Name");
+        object? content_3 = "{.}";
         object? firstName = Get("firstName");
-        object? content_4 = bullet_4();
+        object? content_4 = "{.}";
         object? petsResult = (IsTruthy("pets") ? Each(itemContext => new Bullets(itemContext).renderCount()) : Each(itemContext => Line($"no pets")));
 
         return Line($$"""
@@ -525,33 +472,11 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":18:23
     private TemplateContent renderCount()
     {
-        // Template:
-        // pets.Count()
-        // Source: "templates/bullets.template":18:26
-        object? applyCount() => Unsupported(
-            "Call Count",
-            "templates/bullets.template:18:26",
-            () => Get("pets"));
-
-        // Template:
-        //          {.}
-        // Source: "templates/bullets.template":19:1
-        object? bullet() => Unsupported(
-            "Bullet          {.}",
-            "templates/bullets.template:19:1");
-
-        // Template:
-        //          {.}
-        // Source: "templates/bullets.template":20:1
-        object? bullet_2() => Unsupported(
-            "Bullet          {.}",
-            "templates/bullets.template:20:1");
-
-        object? count = applyCount();
-        object? content = bullet();
+        object? count = Builtins.Count(MethodInput("pets"));
+        object? content = "{.}";
         object? choice = (EvaluationContext.Compare(Each(itemContext => itemContext.Named("dpetcnt")), ">", EvaluationContext.ParseInteger("1")) ? Each(itemContext => new Bullets(itemContext).renderDpetcnt()) : "");
         object? domesticated = InContext(ApplySubtemplate("Domesticated", MethodInput("pets")), dataContext => dataContext.Each(itemContext => new Bullets(itemContext).renderFormatPet()));
-        object? content_2 = bullet_2();
+        object? content_2 = "{.}";
         object? choice_2 = (EvaluationContext.Compare(Each(itemContext => itemContext.Named("ndpetcnt")), ">", EvaluationContext.ParseInteger("1")) ? Each(itemContext => new Bullets(itemContext).renderNdpetcnt()) : "");
         object? nonDomesticated = InContext(ApplySubtemplate("NonDomesticated", MethodInput("pets")), dataContext => dataContext.Each(itemContext => new Bullets(itemContext).renderFormatPet_2()));
 
