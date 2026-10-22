@@ -470,8 +470,8 @@ and the unimplemented conditional `Count` form.
 
 `Case(match, result, ..., default)` compiles to a C# switch with lazy guarded
 cases and result branches. Matching preserves legacy ordinal string equality and
-integer-parsed numeric equality. TODO: characterize even-length and too-short
-argument forms; these remain runtime stubs. Node cases: `switch-cases.json`.
+integer-parsed numeric equality. An even argument count omits the default and preserves the receiver when no case
+matches. TODO: characterize too-short argument forms; these remain runtime stubs. Node cases: `switch-cases.json`.
 
 `@Include` accepts computed names, including `[{'#style'}{$1}]`. Compiled import
 bindings resolve local definitions before shared units and retain their annotations

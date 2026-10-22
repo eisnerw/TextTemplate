@@ -70,5 +70,45 @@
       "value": null
     },
     "expected": ""
+  },
+  {
+    "name": "case-even-first",
+    "script": "{value.Case('cat','yes','dog','no')}",
+    "data": {
+      "value": "cat"
+    },
+    "expected": "yes"
+  },
+  {
+    "name": "case-even-last",
+    "script": "{value.Case('cat','yes','dog',[woof])}",
+    "data": {
+      "value": "dog"
+    },
+    "expected": "woof"
+  },
+  {
+    "name": "case-even-unmatched",
+    "script": "{value.Case('cat','yes','dog','no')}",
+    "data": {
+      "value": "bird"
+    },
+    "expected": "bird"
+  },
+  {
+    "name": "case-even-number",
+    "script": "{value.Case('cat','yes','dog','no')}",
+    "data": {
+      "value": 12
+    },
+    "expected": "12"
+  },
+  {
+    "name": "case-even-lazy",
+    "script": "{value.Case('cat','yes','dog',[{value.Unknown()}])}",
+    "data": {
+      "value": "cat"
+    },
+    "expected": "yes"
   }
 ]

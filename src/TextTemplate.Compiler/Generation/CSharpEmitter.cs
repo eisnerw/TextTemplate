@@ -632,8 +632,8 @@ public sealed class CSharpEmitter
                 else if (node.Value == "Case")
                 {
                     var caseArgs = node.Children.Skip(1).SelectMany(child => child.Children).ToList();
-                    // TODO: Characterize legacy even-length and too-short Case argument forms.
-                    if (caseArgs.Count < 3 || caseArgs.Count % 2 == 0) expression = Stub();
+                    // TODO: Characterize too-short Case argument forms (fewer than three arguments).
+                    if (caseArgs.Count < 3) expression = Stub();
                     else
                     {
                         string function = Unique("selectCase", current.Names);
@@ -648,7 +648,7 @@ public sealed class CSharpEmitter
                         for (int i = 0; i < caseArgs.Count - 1; i += 2)
                             body.Append("                case var candidate when Builtins.CaseMatches(candidate, ").Append(Call(caseArgs[i])).Append("):\n")
                                 .Append("                    return EvaluationContext.Intermediate(").Append(Call(caseArgs[i + 1])).Append(");\n");
-                        body.Append("                default:\n                    return EvaluationContext.Intermediate(").Append(Call(caseArgs[^1])).Append(");\n")
+                        body.Append("                default:\n                    return ").Append(caseArgs.Count % 2 == 0 ? "value" : "EvaluationContext.Intermediate(" + Call(caseArgs[^1]) + ")").Append(";\n")
                             .Append("            }\n        }\n\n");
                         current.Functions.Add(body.ToString());
                         expression = "EvaluationContext.Invoke(" + input + ", " + function + ")";

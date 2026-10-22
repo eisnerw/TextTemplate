@@ -200,13 +200,37 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
         //          ,'link','text-decoration: underline;color:blue'
         //       )
         // Source: "templates/web.template":27:5
-        object? applyCase() => Unsupported(
-            "Call Case",
-            "templates/web.template:27:5",
-            () => Get("$0"),
-            () => new object?[] { "italic", "font-style:italic", "normal", "font-weight:normal;white-space:normal", "bold", "font-weight:bold", "red", "color:red", "blue", "color:blue", "black", "color:black", "outlined-red-dots", "outline-color:red;outline-style:dotted", "underline", "text-decoration: underline", "link", "text-decoration: underline;color:blue" });
+        object? selectCase(object? value)
+        {
+            value = EvaluationContext.Intermediate(value);
+            if (value is null or EvaluationContext.Missing) return value;
+            if (value is EvaluationContext.Data or EvaluationContext.Arguments) return null;
+            switch (value)
+            {
+                case var candidate when Builtins.CaseMatches(candidate, "italic"):
+                    return EvaluationContext.Intermediate("font-style:italic");
+                case var candidate when Builtins.CaseMatches(candidate, "normal"):
+                    return EvaluationContext.Intermediate("font-weight:normal;white-space:normal");
+                case var candidate when Builtins.CaseMatches(candidate, "bold"):
+                    return EvaluationContext.Intermediate("font-weight:bold");
+                case var candidate when Builtins.CaseMatches(candidate, "red"):
+                    return EvaluationContext.Intermediate("color:red");
+                case var candidate when Builtins.CaseMatches(candidate, "blue"):
+                    return EvaluationContext.Intermediate("color:blue");
+                case var candidate when Builtins.CaseMatches(candidate, "black"):
+                    return EvaluationContext.Intermediate("color:black");
+                case var candidate when Builtins.CaseMatches(candidate, "outlined-red-dots"):
+                    return EvaluationContext.Intermediate("outline-color:red;outline-style:dotted");
+                case var candidate when Builtins.CaseMatches(candidate, "underline"):
+                    return EvaluationContext.Intermediate("text-decoration: underline");
+                case var candidate when Builtins.CaseMatches(candidate, "link"):
+                    return EvaluationContext.Intermediate("text-decoration: underline;color:blue");
+                default:
+                    return value;
+            }
+        }
 
-        object? @case = applyCase();
+        object? @case = EvaluationContext.Invoke(MethodInput(itemContext => itemContext.Lookup("$0")), selectCase);
         object? item1Result = (IsTruthy("$1") ? Each(itemContext => new Web(itemContext).renderStyleCases()) : "");
 
         return Line($$"""

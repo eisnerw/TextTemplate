@@ -59,15 +59,33 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
         //       ,'blank', ' '
         //       ,'none', '')
         // Source: "templates/docs.template":13:53
-        object? applyCase() => Unsupported(
-            "Call Case",
-            "templates/docs.template:13:53",
-            () => Get("type"),
-            () => new object?[] { "dash", " &#8212; ", "comma", ", ", "a", "", "The", "", "blank", " ", "none", "" });
+        object? selectCase(object? value)
+        {
+            value = EvaluationContext.Intermediate(value);
+            if (value is null or EvaluationContext.Missing) return value;
+            if (value is EvaluationContext.Data or EvaluationContext.Arguments) return null;
+            switch (value)
+            {
+                case var candidate when Builtins.CaseMatches(candidate, "dash"):
+                    return EvaluationContext.Intermediate(" &#8212; ");
+                case var candidate when Builtins.CaseMatches(candidate, "comma"):
+                    return EvaluationContext.Intermediate(", ");
+                case var candidate when Builtins.CaseMatches(candidate, "a"):
+                    return EvaluationContext.Intermediate("");
+                case var candidate when Builtins.CaseMatches(candidate, "The"):
+                    return EvaluationContext.Intermediate("");
+                case var candidate when Builtins.CaseMatches(candidate, "blank"):
+                    return EvaluationContext.Intermediate(" ");
+                case var candidate when Builtins.CaseMatches(candidate, "none"):
+                    return EvaluationContext.Intermediate("");
+                default:
+                    return value;
+            }
+        }
 
         object? choice = (Context.TestCondition(EvaluationContext.Invoke(MethodInput("type"), methodValue => Builtins.Matches(methodValue, "a", "The"))) ? Each(itemContext => new Docs(itemContext).renderType()) : "");
         object? title = EvaluationContext.Invoke(MethodInput("name"), methodValue_2 => ApplySubtemplate("title", methodValue_2));
-        object? @case = applyCase();
+        object? @case = EvaluationContext.Invoke(MethodInput(itemContext => itemContext.Lookup("type")), selectCase);
 
         return Line($"{choice}{title}{@case}");
     }
