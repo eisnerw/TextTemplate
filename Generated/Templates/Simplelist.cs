@@ -67,6 +67,20 @@ internal sealed class Simplelist(EvaluationContext context) : TemplateUnit(conte
         return Line($"{toUpper}");
     }
 
+    internal EvaluationContext includeFormatPet()
+    {
+        EvaluationContext included = Context;
+        _ = new Simplelist(included).formatPet();
+        return included;
+    }
+
+    internal EvaluationContext includeAnded()
+    {
+        EvaluationContext included = Context;
+        _ = new Simplelist(included).anded();
+        return included;
+    }
+
     // Template:
     //
     //
@@ -77,8 +91,8 @@ internal sealed class Simplelist(EvaluationContext context) : TemplateUnit(conte
     // Source: "templates/simplelist.template":4:4
     private void defineSubtemplates(SubtemplateDefinitions definitions)
     {
-        definitions.Add("formatPet", definitionContext => definitionContext.Each(itemContext => new Simplelist(itemContext).formatPet()));
-        definitions.Add("anded", definitionContext => definitionContext.Each(itemContext => new Simplelist(itemContext).anded()));
+        definitions.Add("formatPet", definitionContext => definitionContext.Each(itemContext => new Simplelist(itemContext).formatPet()), includedContext => new Simplelist(includedContext).includeFormatPet());
+        definitions.Add("anded", definitionContext => definitionContext.Each(itemContext => new Simplelist(itemContext).anded()), includedContext => new Simplelist(includedContext).includeAnded());
     }
 
     // Template:
@@ -100,7 +114,7 @@ internal sealed class Simplelist(EvaluationContext context) : TemplateUnit(conte
         object? petsResult = (IsTruthy("pets") ? Annotate(
             new Func<EvaluationContext, EvaluationContext>[]
             {
-                annotatedContext => annotatedContext.Include("doInclude", includedContext => new DoInclude(includedContext).Import())
+                annotatedContext => annotatedContext.Include(EvaluationContext.Compose("#doInclude"))
             },
             annotatedContext => annotatedContext.Each(itemContext => new Simplelist(itemContext).renderContent())) : Each(itemContext => Line($"no pets")));
 

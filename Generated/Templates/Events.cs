@@ -286,6 +286,34 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
         return Line($"{formatTimes}: {summary} {content}Notes: {description}{content_2}Location {location}");
     }
 
+    internal EvaluationContext includeSameDay()
+    {
+        EvaluationContext included = Context;
+        _ = new Events(included).SameDay();
+        return included;
+    }
+
+    internal EvaluationContext includeSameAMPM()
+    {
+        EvaluationContext included = Context;
+        _ = new Events(included).SameAMPM();
+        return included;
+    }
+
+    internal EvaluationContext includeOnHour()
+    {
+        EvaluationContext included = Context;
+        _ = new Events(included).onHour();
+        return included;
+    }
+
+    internal EvaluationContext includeFormatTimes()
+    {
+        EvaluationContext included = Context;
+        _ = new Events(included).formatTimes();
+        return included;
+    }
+
     // Template:
     //
     // Subtemplates:
@@ -303,10 +331,10 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/events.template":7:72
     private void defineSubtemplates(SubtemplateDefinitions definitions)
     {
-        definitions.Add("SameDay", definitionContext => definitionContext.Each(itemContext => new Events(itemContext).SameDay()));
-        definitions.Add("SameAMPM", definitionContext => definitionContext.Each(itemContext => new Events(itemContext).SameAMPM()));
-        definitions.Add("onHour", definitionContext => definitionContext.Each(itemContext => new Events(itemContext).onHour()));
-        definitions.Add("formatTimes", definitionContext => definitionContext.Each(itemContext => new Events(itemContext).formatTimes()));
+        definitions.Add("SameDay", definitionContext => definitionContext.Each(itemContext => new Events(itemContext).SameDay()), includedContext => new Events(includedContext).includeSameDay());
+        definitions.Add("SameAMPM", definitionContext => definitionContext.Each(itemContext => new Events(itemContext).SameAMPM()), includedContext => new Events(includedContext).includeSameAMPM());
+        definitions.Add("onHour", definitionContext => definitionContext.Each(itemContext => new Events(itemContext).onHour()), includedContext => new Events(includedContext).includeOnHour());
+        definitions.Add("formatTimes", definitionContext => definitionContext.Each(itemContext => new Events(itemContext).formatTimes()), includedContext => new Events(includedContext).includeFormatTimes());
     }
 
     // Template:

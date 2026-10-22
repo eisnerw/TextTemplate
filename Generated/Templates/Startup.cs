@@ -1071,6 +1071,68 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         return Line($"Interpolation example: {first} {second}!!");
     }
 
+    internal EvaluationContext includeOverview()
+    {
+        EvaluationContext included = Context;
+        included = included.WithBulletStyle("I.", "(a)", "•", "1.");
+        included = included.WithBulletMode("explicit");
+        _ = new Startup(included).renderIntro();
+        return included;
+    }
+
+    internal EvaluationContext includeIntro()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeGoals()
+    {
+        EvaluationContext included = Context;
+        _ = new Startup(included).goals();
+        return included;
+    }
+
+    internal EvaluationContext includeSubexample()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeDeadoralive()
+    {
+        EvaluationContext included = Context;
+        _ = new Startup(included).deadoralive();
+        return included;
+    }
+
+    internal EvaluationContext includeClick()
+    {
+        EvaluationContext included = Context;
+        _ = new Startup(included).Click();
+        return included;
+    }
+
+    internal EvaluationContext includeExamples()
+    {
+        EvaluationContext included = Context;
+        _ = new Startup(included).examples();
+        return included;
+    }
+
+    internal EvaluationContext includeNotes()
+    {
+        EvaluationContext included = Context;
+        _ = new Startup(included).notes();
+        return included;
+    }
+
+    internal EvaluationContext includeExternalData()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
     // Template:
     //
     //
@@ -1264,15 +1326,15 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":3:12
     private void defineSubtemplates(SubtemplateDefinitions definitions)
     {
-        definitions.Add("overview", definitionContext => new Startup(definitionContext).overview());
-        definitions.Add("intro", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).intro()));
-        definitions.Add("goals", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).goals()));
-        definitions.Add("subexample", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).subexample()));
-        definitions.Add("deadoralive", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).deadoralive()));
-        definitions.Add("Click", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).Click()));
-        definitions.Add("examples", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).examples()));
-        definitions.Add("notes", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).notes()));
-        definitions.Add("externalData", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).externalData()));
+        definitions.Add("overview", definitionContext => new Startup(definitionContext).overview(), includedContext => new Startup(includedContext).includeOverview());
+        definitions.Add("intro", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).intro()), includedContext => new Startup(includedContext).includeIntro());
+        definitions.Add("goals", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).goals()), includedContext => new Startup(includedContext).includeGoals());
+        definitions.Add("subexample", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).subexample()), includedContext => new Startup(includedContext).includeSubexample());
+        definitions.Add("deadoralive", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).deadoralive()), includedContext => new Startup(includedContext).includeDeadoralive());
+        definitions.Add("Click", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).Click()), includedContext => new Startup(includedContext).includeClick());
+        definitions.Add("examples", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).examples()), includedContext => new Startup(includedContext).includeExamples());
+        definitions.Add("notes", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).notes()), includedContext => new Startup(includedContext).includeNotes());
+        definitions.Add("externalData", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).externalData()), includedContext => new Startup(includedContext).includeExternalData());
     }
 
     // Template:

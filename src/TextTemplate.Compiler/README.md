@@ -23,7 +23,7 @@ dotnet run --no-build --project Generated -- --template hello --data-file /tmp/t
 Generation currently implements a subset of execution semantics. The complete
 reference collection compiles, but templates that reach unfinished features throw
 `NotImplementedException`. Some methods/annotations, inline calls, and HTTP
-resolution still have stubs. Supported additions are literal shared `@Include`,
+resolution still have stubs. Supported additions include local/shared `@Include` with computed names,
 literal `@MissingValue`, named subtemplate methods with scalar arguments, and
 list contexts and per-item inline/named evaluation, and `Join` with an optional
 final separator (scalar input remains unchanged). String methods now include
@@ -388,3 +388,12 @@ and the unimplemented conditional `Count` form.
 cases and result branches. Matching preserves legacy ordinal string equality and
 integer-parsed numeric equality. TODO: characterize even-length and too-short
 argument forms; these remain runtime stubs. Node cases: `switch-cases.json`.
+
+`@Include` accepts computed names, including `[{'#style'}{$1}]`. Compiled import
+bindings resolve local definitions before shared units and retain their annotations
+and exported definitions within the caller's annotated scope. Include bodies run
+without publishing their text. Dynamic selection retains all available shared units
+in selected-template builds; no runtime template parsing is used. Included units
+with unsupported non-annotation call chains still have explicit runtime stubs.
+`dynamic-include-cases.json` checks local/shared dispatch, exports, scope, and all five
+style choices from an unfiltered copy of the bullets template.

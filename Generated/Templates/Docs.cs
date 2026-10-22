@@ -215,6 +215,20 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
         return Line($"{name}{text}");
     }
 
+    internal EvaluationContext includeTitle()
+    {
+        EvaluationContext included = Context;
+        _ = new Docs(included).title();
+        return included;
+    }
+
+    internal EvaluationContext includeName()
+    {
+        EvaluationContext included = Context;
+        _ = new Docs(included).name();
+        return included;
+    }
+
     // Template:
     //
     //
@@ -232,8 +246,8 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/docs.template":8:66
     private void defineSubtemplates(SubtemplateDefinitions definitions)
     {
-        definitions.Add("title", definitionContext => definitionContext.Each(itemContext => new Docs(itemContext).title()));
-        definitions.Add("name", definitionContext => definitionContext.Each(itemContext => new Docs(itemContext).name()));
+        definitions.Add("title", definitionContext => definitionContext.Each(itemContext => new Docs(itemContext).title()), includedContext => new Docs(includedContext).includeTitle());
+        definitions.Add("name", definitionContext => definitionContext.Each(itemContext => new Docs(itemContext).name()), includedContext => new Docs(includedContext).includeName());
     }
 
     // Template:

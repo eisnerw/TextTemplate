@@ -171,6 +171,46 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
         return Line($"{elasticSpec}");
     }
 
+    internal EvaluationContext includeElasticQuery()
+    {
+        EvaluationContext included = Context;
+        _ = new Elastic(included).elasticQuery();
+        return included;
+    }
+
+    internal EvaluationContext includeElasticSpec()
+    {
+        EvaluationContext included = Context;
+        _ = new Elastic(included).elasticSpec();
+        return included;
+    }
+
+    internal EvaluationContext includeElasticUrl()
+    {
+        EvaluationContext included = Context;
+        _ = new Elastic(included).elasticUrl();
+        return included;
+    }
+
+    internal EvaluationContext includeElasticQueryString()
+    {
+        EvaluationContext included = Context;
+        _ = new Elastic(included).elasticQueryString();
+        return included;
+    }
+
+    internal EvaluationContext includeColon()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeAt()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
     // Template:
     //
     // Subtemplates:
@@ -183,12 +223,12 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/elastic.template":6:67
     private void defineSubtemplates(SubtemplateDefinitions definitions)
     {
-        definitions.Add("elasticQuery", definitionContext => definitionContext.Each(itemContext => new Elastic(itemContext).elasticQuery()));
-        definitions.Add("elasticSpec", definitionContext => definitionContext.Each(itemContext => new Elastic(itemContext).elasticSpec()));
-        definitions.Add("elasticUrl", definitionContext => definitionContext.Each(itemContext => new Elastic(itemContext).elasticUrl()));
-        definitions.Add("elasticQueryString", definitionContext => definitionContext.Each(itemContext => new Elastic(itemContext).elasticQueryString()));
-        definitions.Add("colon", definitionContext => definitionContext.Each(itemContext => new Elastic(itemContext).colon()));
-        definitions.Add("at", definitionContext => definitionContext.Each(itemContext => new Elastic(itemContext).at()));
+        definitions.Add("elasticQuery", definitionContext => definitionContext.Each(itemContext => new Elastic(itemContext).elasticQuery()), includedContext => new Elastic(includedContext).includeElasticQuery());
+        definitions.Add("elasticSpec", definitionContext => definitionContext.Each(itemContext => new Elastic(itemContext).elasticSpec()), includedContext => new Elastic(includedContext).includeElasticSpec());
+        definitions.Add("elasticUrl", definitionContext => definitionContext.Each(itemContext => new Elastic(itemContext).elasticUrl()), includedContext => new Elastic(includedContext).includeElasticUrl());
+        definitions.Add("elasticQueryString", definitionContext => definitionContext.Each(itemContext => new Elastic(itemContext).elasticQueryString()), includedContext => new Elastic(includedContext).includeElasticQueryString());
+        definitions.Add("colon", definitionContext => definitionContext.Each(itemContext => new Elastic(itemContext).colon()), includedContext => new Elastic(includedContext).includeColon());
+        definitions.Add("at", definitionContext => definitionContext.Each(itemContext => new Elastic(itemContext).at()), includedContext => new Elastic(includedContext).includeAt());
     }
 
     // Template:

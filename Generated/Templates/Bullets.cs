@@ -318,39 +318,12 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":10:14
     private object? showStyles()
     {
-        // Template:
-        // [People:{#data:[
-        //    {.}{^.^.$1 = 2->[.0]} {[{ 
-        //       lastName}{ 
-        //       firstName.#Prepend(', ')}{    
-        //       middleName.#Prepend(' ')
-        //    }].ToUpper().#Quoted()} 
-        //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
-        //       {.} FirstName: {firstName}  
-        //       {.} Pets {pets=>[({pets.Count()}):  
-        //          {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
-        //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
-        //    ],[no pets]
-        //    } //
-        // ].@MissingValue('No Information Provided')}].@Include([{'#style'}{$1}])
-        // Source: "templates/bullets.template":10:14
-        object? applyInclude() => Unsupported(
-            "Call @Include",
-            "templates/bullets.template:10:14",
-            () => Each(itemContext => new Bullets(itemContext).renderPeople()),
-            () => new object?[] { Each(itemContext => new Bullets(itemContext).renderContent()) });
-
-        return applyInclude();
-    }
-
-    // Template:
-    // [{'#style'}{$1}]
-    // Source: "templates/bullets.template":23:55
-    private TemplateContent renderContent()
-    {
-        object? item1 = Get("$1");
-
-        return Line($"#style{item1}");
+        return Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.Include(EvaluationContext.Compose(annotatedContext.Each(includeArgumentContext => new Bullets(includeArgumentContext).renderContent())))
+            },
+            annotatedContext => annotatedContext.Each(itemContext => new Bullets(itemContext).renderPeople()));
     }
 
     // Template:
@@ -509,11 +482,139 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     }
 
     // Template:
+    // [{'#style'}{$1}]
+    // Source: "templates/bullets.template":23:55
+    private TemplateContent renderContent()
+    {
+        object? item1 = Get("$1");
+        item1 = "2";
+        return Line($"#style{item1}");
+    }
+
+    // Template:
     // [1]
     // Source: "templates/bullets.template":9:15
     private TemplateContent styleNumber()
     {
         return Line($"1");
+    }
+
+    internal EvaluationContext includeStyleNumber()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeShowStyles()
+    {
+        EvaluationContext included = Context;
+        included = included.Include(EvaluationContext.Compose(included.Each(includeArgumentContext => new Bullets(includeArgumentContext).renderContent())));
+        _ = new Bullets(included).renderPeople();
+        return included;
+    }
+
+    internal EvaluationContext includeFormatPet()
+    {
+        EvaluationContext included = Context;
+        _ = new Bullets(included).formatPet();
+        return included;
+    }
+
+    internal EvaluationContext includeDomesticated()
+    {
+        EvaluationContext included = Context;
+        _ = new Bullets(included).Domesticated();
+        return included;
+    }
+
+    internal EvaluationContext includeNonDomesticated()
+    {
+        EvaluationContext included = Context;
+        _ = new Bullets(included).NonDomesticated();
+        return included;
+    }
+
+    internal EvaluationContext includeIsDomesticated()
+    {
+        EvaluationContext included = Context;
+        _ = new Bullets(included).IsDomesticated();
+        return included;
+    }
+
+    internal EvaluationContext includePrepend()
+    {
+        EvaluationContext included = Context;
+        _ = new Bullets(included).Prepend();
+        return included;
+    }
+
+    internal EvaluationContext includeSurround()
+    {
+        EvaluationContext included = Context;
+        _ = new Bullets(included).Surround();
+        return included;
+    }
+
+    internal EvaluationContext includeQuoted()
+    {
+        EvaluationContext included = Context;
+        _ = new Bullets(included).Quoted();
+        return included;
+    }
+
+    internal EvaluationContext includeDpetcnt()
+    {
+        EvaluationContext included = Context;
+        _ = new Bullets(included).dpetcnt();
+        return included;
+    }
+
+    internal EvaluationContext includeNdpetcnt()
+    {
+        EvaluationContext included = Context;
+        _ = new Bullets(included).ndpetcnt();
+        return included;
+    }
+
+    internal EvaluationContext includeStyle1()
+    {
+        EvaluationContext included = Context;
+        included = included.WithBulletStyle("I.", "(a)", "•", "i.");
+        return included;
+    }
+
+    internal EvaluationContext includeStyle2()
+    {
+        EvaluationContext included = Context;
+        included = included.WithBulletStyle("1", "1.1", "1.1.1", "1(a)");
+        return included;
+    }
+
+    internal EvaluationContext includeStyle3()
+    {
+        EvaluationContext included = Context;
+        included = included.WithBulletStyle("-");
+        return included;
+    }
+
+    internal EvaluationContext includeStyle4()
+    {
+        EvaluationContext included = Context;
+        included = included.WithBulletStyle("");
+        return included;
+    }
+
+    internal EvaluationContext includeStyle5()
+    {
+        EvaluationContext included = Context;
+        included = included.WithBulletStyle(" I", "•", "A.", "(1)");
+        return included;
+    }
+
+    internal EvaluationContext includeData()
+    {
+        EvaluationContext included = Context;
+        return included;
     }
 
     // Template:
@@ -557,23 +658,23 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":5:20
     private void defineSubtemplates(SubtemplateDefinitions definitions)
     {
-        definitions.Add("styleNumber", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).styleNumber()));
-        definitions.Add("showStyles", definitionContext => new Bullets(definitionContext).showStyles());
-        definitions.Add("formatPet", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).formatPet()));
-        definitions.Add("Domesticated", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).Domesticated()));
-        definitions.Add("NonDomesticated", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).NonDomesticated()));
-        definitions.Add("IsDomesticated", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).IsDomesticated()));
-        definitions.Add("Prepend", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).Prepend()));
-        definitions.Add("Surround", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).Surround()));
-        definitions.Add("Quoted", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).Quoted()));
-        definitions.Add("dpetcnt", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).dpetcnt()));
-        definitions.Add("ndpetcnt", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).ndpetcnt()));
-        definitions.Add("style1", definitionContext => new Bullets(definitionContext).style1());
-        definitions.Add("style2", definitionContext => new Bullets(definitionContext).style2());
-        definitions.Add("style3", definitionContext => new Bullets(definitionContext).style3());
-        definitions.Add("style4", definitionContext => new Bullets(definitionContext).style4());
-        definitions.Add("style5", definitionContext => new Bullets(definitionContext).style5());
-        definitions.Add("data", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).data()));
+        definitions.Add("styleNumber", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).styleNumber()), includedContext => new Bullets(includedContext).includeStyleNumber());
+        definitions.Add("showStyles", definitionContext => new Bullets(definitionContext).showStyles(), includedContext => new Bullets(includedContext).includeShowStyles());
+        definitions.Add("formatPet", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).formatPet()), includedContext => new Bullets(includedContext).includeFormatPet());
+        definitions.Add("Domesticated", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).Domesticated()), includedContext => new Bullets(includedContext).includeDomesticated());
+        definitions.Add("NonDomesticated", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).NonDomesticated()), includedContext => new Bullets(includedContext).includeNonDomesticated());
+        definitions.Add("IsDomesticated", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).IsDomesticated()), includedContext => new Bullets(includedContext).includeIsDomesticated());
+        definitions.Add("Prepend", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).Prepend()), includedContext => new Bullets(includedContext).includePrepend());
+        definitions.Add("Surround", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).Surround()), includedContext => new Bullets(includedContext).includeSurround());
+        definitions.Add("Quoted", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).Quoted()), includedContext => new Bullets(includedContext).includeQuoted());
+        definitions.Add("dpetcnt", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).dpetcnt()), includedContext => new Bullets(includedContext).includeDpetcnt());
+        definitions.Add("ndpetcnt", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).ndpetcnt()), includedContext => new Bullets(includedContext).includeNdpetcnt());
+        definitions.Add("style1", definitionContext => new Bullets(definitionContext).style1(), includedContext => new Bullets(includedContext).includeStyle1());
+        definitions.Add("style2", definitionContext => new Bullets(definitionContext).style2(), includedContext => new Bullets(includedContext).includeStyle2());
+        definitions.Add("style3", definitionContext => new Bullets(definitionContext).style3(), includedContext => new Bullets(includedContext).includeStyle3());
+        definitions.Add("style4", definitionContext => new Bullets(definitionContext).style4(), includedContext => new Bullets(includedContext).includeStyle4());
+        definitions.Add("style5", definitionContext => new Bullets(definitionContext).style5(), includedContext => new Bullets(includedContext).includeStyle5());
+        definitions.Add("data", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).data()), includedContext => new Bullets(includedContext).includeData());
     }
 
     // Template:

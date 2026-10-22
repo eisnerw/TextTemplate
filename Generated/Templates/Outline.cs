@@ -332,6 +332,61 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         return Line($"{lastName}{prepend}{prepend_2}");
     }
 
+    internal EvaluationContext includeFormatPet()
+    {
+        EvaluationContext included = Context;
+        _ = new Outline(included).formatPet();
+        return included;
+    }
+
+    internal EvaluationContext includeDomesticated()
+    {
+        EvaluationContext included = Context;
+        _ = new Outline(included).Domesticated();
+        return included;
+    }
+
+    internal EvaluationContext includeNonDomesticated()
+    {
+        EvaluationContext included = Context;
+        _ = new Outline(included).NonDomesticated();
+        return included;
+    }
+
+    internal EvaluationContext includeIsDomesticated()
+    {
+        EvaluationContext included = Context;
+        _ = new Outline(included).IsDomesticated();
+        return included;
+    }
+
+    internal EvaluationContext includePrepend()
+    {
+        EvaluationContext included = Context;
+        _ = new Outline(included).Prepend();
+        return included;
+    }
+
+    internal EvaluationContext includeSurround()
+    {
+        EvaluationContext included = Context;
+        _ = new Outline(included).Surround();
+        return included;
+    }
+
+    internal EvaluationContext includeQuoted()
+    {
+        EvaluationContext included = Context;
+        _ = new Outline(included).Quoted();
+        return included;
+    }
+
+    internal EvaluationContext includeData()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
     // Template:
     //        
     //  
@@ -351,14 +406,14 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/outline.template":18:44
     private void defineSubtemplates(SubtemplateDefinitions definitions)
     {
-        definitions.Add("formatPet", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).formatPet()));
-        definitions.Add("Domesticated", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).Domesticated()));
-        definitions.Add("NonDomesticated", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).NonDomesticated()));
-        definitions.Add("IsDomesticated", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).IsDomesticated()));
-        definitions.Add("Prepend", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).Prepend()));
-        definitions.Add("Surround", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).Surround()));
-        definitions.Add("Quoted", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).Quoted()));
-        definitions.Add("data", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).data()));
+        definitions.Add("formatPet", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).formatPet()), includedContext => new Outline(includedContext).includeFormatPet());
+        definitions.Add("Domesticated", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).Domesticated()), includedContext => new Outline(includedContext).includeDomesticated());
+        definitions.Add("NonDomesticated", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).NonDomesticated()), includedContext => new Outline(includedContext).includeNonDomesticated());
+        definitions.Add("IsDomesticated", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).IsDomesticated()), includedContext => new Outline(includedContext).includeIsDomesticated());
+        definitions.Add("Prepend", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).Prepend()), includedContext => new Outline(includedContext).includePrepend());
+        definitions.Add("Surround", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).Surround()), includedContext => new Outline(includedContext).includeSurround());
+        definitions.Add("Quoted", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).Quoted()), includedContext => new Outline(includedContext).includeQuoted());
+        definitions.Add("data", definitionContext => definitionContext.Each(itemContext => new Outline(itemContext).data()), includedContext => new Outline(includedContext).includeData());
     }
 
     // Template:

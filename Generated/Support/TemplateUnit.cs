@@ -30,7 +30,9 @@ internal abstract class TemplateUnit(EvaluationContext context)
     protected sealed class SubtemplateDefinitions
     {
         internal Dictionary<string, Func<EvaluationContext, object?>> Bindings { get; } = new(StringComparer.Ordinal);
-        public void Add(string name, Func<EvaluationContext, object?> body) => Bindings[name] = body;
+        internal Dictionary<string, Func<EvaluationContext, EvaluationContext>> Imports { get; } = new(StringComparer.Ordinal);
+        public void Add(string name, Func<EvaluationContext, object?> body, Func<EvaluationContext, EvaluationContext> import)
+        { Bindings[name] = body; Imports[name] = import; }
     }
     private static SubtemplateDefinitions Register(Action<SubtemplateDefinitions> register)
     {
@@ -39,9 +41,15 @@ internal abstract class TemplateUnit(EvaluationContext context)
         return definitions;
     }
     protected TResult WithDefinitions<TResult>(Action<SubtemplateDefinitions> register, Func<EvaluationContext, TResult> body)
-        => context.Scope(Register(register).Bindings, body);
+        {
+        var definitions = Register(register);
+        return context.Scope(definitions.Bindings, body, definitions.Imports);
+    }
     protected EvaluationContext DefineSubtemplates(Action<SubtemplateDefinitions> register)
-        => context.Define(Register(register).Bindings);
+        {
+        var definitions = Register(register);
+        return context.Define(definitions.Bindings, definitions.Imports);
+    }
     protected static object? Unsupported(string feature, string location, params Func<object?>[] operands)
         => EvaluationContext.At(location, () => EvaluationContext.NotImplemented(feature, operands));
 }

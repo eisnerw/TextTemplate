@@ -41,6 +41,7 @@ public sealed class GenerationTests
     [InlineData("switch")]
     [InlineData("multiline")]
     [InlineData("bullet")]
+    [InlineData("dynamic-include")]
     public void RuntimeCasesMatchNode(string suite)
     {
         string root = Path.Combine(Path.GetTempPath(), "texttemplate-lists-" + Guid.NewGuid().ToString("N"));
@@ -50,7 +51,12 @@ public sealed class GenerationTests
         {
             using var cases = JsonDocument.Parse(File.ReadAllText(Path.Combine(Repository(), "tests/node-reference/" + suite + "-cases.json")));
             foreach (var item in cases.RootElement.EnumerateArray())
+            {
                 File.WriteAllText(Path.Combine(root, "templates", item.GetProperty("name").GetString() + ".template"), item.GetProperty("script").GetString());
+                if (item.TryGetProperty("shared", out var shared))
+                    foreach (var entry in shared.EnumerateObject())
+                        File.WriteAllText(Path.Combine(root, "subtemplates", entry.Name + ".template"), entry.Value.GetString());
+            }
             var parsed = new TextTemplateCompiler().CompileDirectory(root);
             Assert.True(parsed.Success, string.Join("\n", parsed.Diagnostics));
             var generated = new CSharpEmitter().Generate(parsed.Document!);

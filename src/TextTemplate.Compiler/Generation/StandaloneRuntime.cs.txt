@@ -109,6 +109,7 @@ internal sealed class EvaluationContext
     private Missing MissingValue(string key) => new(key, missingText?.Replace("{key}", key));
     internal readonly Data? Current;
     internal readonly Dictionary<string, Func<EvaluationContext, object?>> Shared;
+    private Dictionary<string, Func<EvaluationContext, EvaluationContext>> imports = new(StringComparer.Ordinal);
     internal Dictionary<string, Func<EvaluationContext, object?>> Locals = new(StringComparer.Ordinal);
     private sealed class CallDepth { internal int Value; }
     private readonly CallDepth recursion = new();
@@ -119,6 +120,7 @@ internal sealed class EvaluationContext
         Shared = parent.Shared;
         dataRoot = parent.dataRoot;
         Locals = new(parent.Locals, StringComparer.Ordinal);
+        imports = new(parent.imports, StringComparer.Ordinal);
         recursion = parent.recursion;
         missingText = parent.missingText;
         falsy = parent.falsy;
@@ -142,9 +144,10 @@ internal sealed class EvaluationContext
     }
     internal static TemplateContent Text(StructuredText text) => new(text.ToFragments());
 
-    internal EvaluationContext(JsonElement? data, Dictionary<string, Func<EvaluationContext, object?>> shared, string? dataRoot = null)
+    internal EvaluationContext(JsonElement? data, Dictionary<string, Func<EvaluationContext, object?>> shared, string? dataRoot = null, Dictionary<string, Func<EvaluationContext, EvaluationContext>>? imports = null)
     {
         Shared = shared;
+        if (imports is not null) this.imports = new(imports, StringComparer.Ordinal);
         this.dataRoot = dataRoot;
         if (data.HasValue && data.Value.ValueKind != JsonValueKind.Null) Current = ReadData(data.Value, null);
     }
@@ -305,10 +308,11 @@ internal sealed class EvaluationContext
     }
     // Adapted from invokeMethods, visitNamedSubtemplate and callMethod in the preserved interpreter.
     // Annotations run before their receiver, with exported include definitions scoped to that call.
-    internal EvaluationContext Define(Dictionary<string, Func<EvaluationContext, object?>> definitions)
+    internal EvaluationContext Define(Dictionary<string, Func<EvaluationContext, object?>> definitions, Dictionary<string, Func<EvaluationContext, EvaluationContext>>? includes = null)
     {
         EvaluationContext child = new EvaluationContext(this, Current);
         foreach (KeyValuePair<string, Func<EvaluationContext, object?>> entry in definitions) child.Locals[entry.Key] = entry.Value;
+        if (includes is not null) foreach (var entry in includes) child.imports[entry.Key] = entry.Value;
         return child;
     }
     internal EvaluationContext WithFalsy(TemplateRegex? pattern)
@@ -412,9 +416,15 @@ internal sealed class EvaluationContext
             return child.RenderValue(result);
         return result;
     }
+    internal EvaluationContext Include(string? name)
+    {
+        if (name is null || !name.StartsWith('#') || !imports.TryGetValue(name[1..], out var load))
+            throw new InvalidOperationException("Error loading subtemplate \"" + name + "\": include not found");
+        return Include(name[1..], load);
+    }
     internal EvaluationContext Include(string name, Func<EvaluationContext, EvaluationContext> load)
     {
-        if (Locals.ContainsKey(name)) throw new NotImplementedException("Locally bound include units are not implemented yet: " + name);
+        if (imports.TryGetValue(name, out var bound)) load = bound;
         if (++recursion.Value > 20) { recursion.Value--; throw new InvalidOperationException("Include recursion exceeds 20 levels."); }
         try { return load(new EvaluationContext(this, Current)); }
         finally { recursion.Value--; }
@@ -455,10 +465,11 @@ internal sealed class EvaluationContext
         if (kept.Count < 2) return string.Join("", kept);
         return string.Join(separator, kept.GetRange(0, kept.Count - 1)) + lastSeparator + kept[^1];
     }
-    internal TResult Scope<TResult>(Dictionary<string, Func<EvaluationContext, object?>> definitions, Func<EvaluationContext, TResult> body)
+    internal TResult Scope<TResult>(Dictionary<string, Func<EvaluationContext, object?>> definitions, Func<EvaluationContext, TResult> body, Dictionary<string, Func<EvaluationContext, EvaluationContext>>? includes = null)
     {
         EvaluationContext child = new EvaluationContext(this, Current);
         foreach (KeyValuePair<string, Func<EvaluationContext, object?>> entry in definitions) child.Locals[entry.Key] = entry.Value;
+        if (includes is not null) foreach (var entry in includes) child.imports[entry.Key] = entry.Value;
         return body(child);
     }
     internal object? Named(string name)

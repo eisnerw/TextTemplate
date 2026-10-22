@@ -81,6 +81,27 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // {#formatGitRepos:[- {name}{description->[ ({description})]}]} 
     // ]
     // Source: "templates/web.template":47:12
+    private TemplateContent renderThisisanexampleofanexter()
+    {
+        object? content = InContext("https://api.github.com/users/eisnerw/repos", dataContext => dataContext.Each(itemContext => itemContext.Named("formatGitRepos")));
+
+        return Line($$"""
+            This is an example of an external data source (in this case, Github)
+            
+            my repos: {{content}}
+            """);
+    }
+
+    // Template:
+    // [
+    // This is an example of an external data source (in this case, Github)
+    //
+    // my repos: {'https://api.github.com/users/eisnerw/repos': #formatGitRepos}
+    // Subtemplates:    
+    //
+    // {#formatGitRepos:[- {name}{description->[ ({description})]}]} 
+    // ]
+    // Source: "templates/web.template":47:12
     private TemplateContent external()
     {
         return WithDefinitions(externalDefinitions,
@@ -286,6 +307,53 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
         return Line($"Hello {style} {style_2}!!");
     }
 
+    internal EvaluationContext includeStyle()
+    {
+        EvaluationContext included = Context;
+        _ = new Web(included).Style();
+        return included;
+    }
+
+    internal EvaluationContext includeToHtml()
+    {
+        EvaluationContext included = Context;
+        _ = new Web(included).ToHtml();
+        return included;
+    }
+
+    internal EvaluationContext includeTag()
+    {
+        EvaluationContext included = Context;
+        _ = new Web(included).Tag();
+        return included;
+    }
+
+    internal EvaluationContext includeClick()
+    {
+        throw new NotImplementedException("templates/web.template:22:9: This include unit requires unsupported execution features.");
+    }
+
+    internal EvaluationContext includeStyleCases()
+    {
+        EvaluationContext included = Context;
+        _ = new Web(included).StyleCases();
+        return included;
+    }
+
+    internal EvaluationContext includeOptionalStyle()
+    {
+        EvaluationContext included = Context;
+        _ = new Web(included).OptionalStyle();
+        return included;
+    }
+
+    internal EvaluationContext includeFormatGitRepos()
+    {
+        EvaluationContext included = Context;
+        _ = new Web(included).formatGitRepos();
+        return included;
+    }
+
     // Template:
     //
     // Subtemplates:    
@@ -294,7 +362,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/web.template":50:74
     private void externalDefinitions(SubtemplateDefinitions definitions)
     {
-        definitions.Add("formatGitRepos", definitionContext => definitionContext.Each(itemContext => new Web(itemContext).formatGitRepos()));
+        definitions.Add("formatGitRepos", definitionContext => definitionContext.Each(itemContext => new Web(itemContext).formatGitRepos()), includedContext => new Web(includedContext).includeFormatGitRepos());
     }
 
     // Template:
@@ -316,6 +384,31 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
             
             my repos: {{content}}
             """);
+    }
+
+    internal EvaluationContext includeFormatGitRepos_2()
+    {
+        EvaluationContext included = Context;
+        _ = new Web(included).formatGitRepos();
+        return included;
+    }
+
+    // Template:
+    //
+    // Subtemplates:    
+    //
+    // {#formatGitRepos:[- {name}{description->[ ({description})]}]}
+    // Source: "templates/web.template":50:74
+    private void defineIncludedSubtemplates(SubtemplateDefinitions definitions)
+    {
+        definitions.Add("formatGitRepos", definitionContext => new Web(definitionContext).formatGitRepos(), includedContext => new Web(includedContext).includeFormatGitRepos_2());
+    }
+
+    internal EvaluationContext includeExternal()
+    {
+        EvaluationContext included = DefineSubtemplates(defineIncludedSubtemplates);
+        _ = new Web(included).renderThisisanexampleofanexter();
+        return included;
     }
 
     // Template:
@@ -363,13 +456,13 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/web.template":14:12
     private void defineSubtemplates(SubtemplateDefinitions definitions)
     {
-        definitions.Add("Style", definitionContext => definitionContext.Each(itemContext => new Web(itemContext).Style()));
-        definitions.Add("ToHtml", definitionContext => definitionContext.Each(itemContext => new Web(itemContext).ToHtml()));
-        definitions.Add("Tag", definitionContext => definitionContext.Each(itemContext => new Web(itemContext).Tag()));
-        definitions.Add("Click", definitionContext => new Web(definitionContext).Click());
-        definitions.Add("StyleCases", definitionContext => definitionContext.Each(itemContext => new Web(itemContext).StyleCases()));
-        definitions.Add("OptionalStyle", definitionContext => definitionContext.Each(itemContext => new Web(itemContext).OptionalStyle()));
-        definitions.Add("external", definitionContext => definitionContext.Each(itemContext => new Web(itemContext).external()));
+        definitions.Add("Style", definitionContext => definitionContext.Each(itemContext => new Web(itemContext).Style()), includedContext => new Web(includedContext).includeStyle());
+        definitions.Add("ToHtml", definitionContext => definitionContext.Each(itemContext => new Web(itemContext).ToHtml()), includedContext => new Web(includedContext).includeToHtml());
+        definitions.Add("Tag", definitionContext => definitionContext.Each(itemContext => new Web(itemContext).Tag()), includedContext => new Web(includedContext).includeTag());
+        definitions.Add("Click", definitionContext => new Web(definitionContext).Click(), includedContext => new Web(includedContext).includeClick());
+        definitions.Add("StyleCases", definitionContext => definitionContext.Each(itemContext => new Web(itemContext).StyleCases()), includedContext => new Web(includedContext).includeStyleCases());
+        definitions.Add("OptionalStyle", definitionContext => definitionContext.Each(itemContext => new Web(itemContext).OptionalStyle()), includedContext => new Web(includedContext).includeOptionalStyle());
+        definitions.Add("external", definitionContext => definitionContext.Each(itemContext => new Web(itemContext).external()), includedContext => new Web(includedContext).includeExternal());
     }
 
     // Template:

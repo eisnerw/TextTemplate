@@ -34,10 +34,19 @@ public static class GeneratedTemplates
         ["xformatPet"] = context => new XformatPet(context).Evaluate(),
         ["xformatPets"] = context => new XformatPets(context).Evaluate(),
     };
+    private static readonly Dictionary<string, Func<EvaluationContext, EvaluationContext>> Imports = new(StringComparer.Ordinal)
+    {
+        ["doInclude"] = context => new DoInclude(context).Import(),
+        ["doit"] = context => new Doit(context).Import(),
+        ["formatGitRepos"] = context => new FormatGitRepos(context).Import(),
+        ["formatGitReposAnded"] = context => new FormatGitReposAnded(context).Import(),
+        ["xformatPet"] = context => new XformatPet(context).Import(),
+        ["xformatPets"] = context => new XformatPets(context).Import(),
+    };
     public static string Render(string name, JsonElement? data = null, string? dataRoot = null)
     {
         if (!Templates.TryGetValue(name, out Func<EvaluationContext, object?>? template)) throw new ArgumentException("Unknown template: " + name);
-        return (string)EvaluationContext.At("templates/" + name + ".template:1:1", () => new EvaluationContext(data, Shared, dataRoot).Render(template) ?? "")!;
+        return (string)EvaluationContext.At("templates/" + name + ".template:1:1", () => new EvaluationContext(data, Shared, dataRoot, Imports).Render(template) ?? "")!;
     }
 
 }

@@ -408,7 +408,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // Source: "subtemplates/doit.template":1:1
     internal TemplateContent Evaluate()
     {
-        object? assert = Each(itemContext => new Doit(itemContext).renderAssert());
+        object? assert = Each(itemContext => new Doit(itemContext).renderAssert_2());
 
         return Line($"{assert}");
     }
@@ -810,10 +810,414 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // ]}
     // {#data:[/data/people]}]
     // Source: "subtemplates/doit.template":1:1
+    private TemplateContent renderAssert_2()
+    {
+        return WithDefinitions(renderAssert_2Definitions,
+            definitionContext => new Doit(definitionContext).renderAssert_2Content());
+    }
+
+    // Template:
+    // [{#tests.Assert(#expected,'ALL TESTS PASSED')}
+    //
+    // Subtemplates:
+    // {#test:[{$0.Matches(1,2,3,4,5,6,7,8,9,10,11,12,13,14)->
+    // [Test {$0} {$1.Assert($2,'passed')}]}]}
+    // {#test1:[
+    // Explicit Single Indent{#data:[
+    //    {lastName}]}]}
+    // {#test1Result:[
+    // Explicit Single Indent
+    //    Johnson
+    //    Smith]}
+    // {#test2:[
+    // Implied Single Indent {#data:[{lastName}]}]}
+    // {#test2Result:[
+    // Implied Single Indent 
+    //    Johnson
+    //    Smith]}
+    // {#test3:[
+    // Implied Double Indent{#data:[{lastName}{pets:[{name}]}]}]}
+    // {#test3Result:[
+    // Implied Double Indent
+    //    Johnson
+    //       Buddy
+    //       Ralph
+    //       Stripes
+    //    Smith
+    //       Toto
+    //       Dolly
+    //       Stripes]}
+    // {#test4:[
+    // Bulleted Implied Bulleted Indent{#data:[ //
+    // {.} {lastName}{pets:[{name}]}]}]}
+    // {#test4Result:[
+    // Bulleted Implied Bulleted Indent
+    // (0.0) Johnson
+    //    (1.0) Buddy
+    //    (1.1) Ralph
+    //    (1.2) Stripes
+    // (0.1) Smith
+    //    (1.0) Toto
+    //    (1.1) Dolly
+    //    (1.2) Stripes]}
+    // {#test5:[
+    // Bulleted Explicit Bulleted Indent{#data:[ //
+    // {.} {lastName}{pets:[ //
+    //     {.} {name}]}]}]}
+    // {#test5Result:[
+    // Bulleted Explicit Bulleted Indent
+    // (0.0) Johnson
+    //     (1.0) Buddy
+    //     (1.1) Ralph
+    //     (1.2) Stripes
+    // (0.1) Smith
+    //     (1.0) Toto
+    //     (1.1) Dolly
+    //     (1.2) Stripes]}
+    // {#test6:[
+    // Hierarchy{#data:[ //
+    // {.} {lastName}{pets:[ //
+    //     {.} {name} who is owned by 
+    //          {.} {^.^:[{firstName} who owns
+    //               {.} {pets:[{type}]}]}]}]}]}
+    // {#test6Result:[
+    // Hierarchy
+    // (0.0) Johnson
+    //     (1.0) Buddy who is owned by 
+    //          (2.0) Doris who owns
+    //               (3.0) dog
+    //               (3.1) lion
+    //               (3.2) tiger
+    //     (1.1) Ralph who is owned by 
+    //          (2.0) Doris who owns
+    //               (3.0) dog
+    //               (3.1) lion
+    //               (3.2) tiger
+    //     (1.2) Stripes who is owned by 
+    //          (2.0) Doris who owns
+    //               (3.0) dog
+    //               (3.1) lion
+    //               (3.2) tiger
+    // (0.1) Smith
+    //     (1.0) Toto who is owned by 
+    //          (2.0) John who owns
+    //               (3.0) dog
+    //               (3.1) cat
+    //               (3.2) zebra
+    //     (1.1) Dolly who is owned by 
+    //          (2.0) John who owns
+    //               (3.0) dog
+    //               (3.1) cat
+    //               (3.2) zebra
+    //     (1.2) Stripes who is owned by 
+    //          (2.0) John who owns
+    //               (3.0) dog
+    //               (3.1) cat
+    //               (3.2) zebra]}
+    // {#test7:[
+    // Hierarchy that transitions from indent to bullet {#data:[ //
+    // {lastName}{pets:[ //
+    //     {.} {name} who is owned by 
+    //          {.} {^.^:[{firstName} who owns
+    //             {.} {pets:[{type}]}]}]}]}]}
+    // {#test7Result:[
+    // Hierarchy that transitions from indent to bullet 
+    // Johnson
+    //     (0.0) Buddy who is owned by 
+    //          (1.0) Doris who owns
+    //             (2.0) dog
+    //             (2.1) lion
+    //             (2.2) tiger
+    //     (0.1) Ralph who is owned by 
+    //          (1.0) Doris who owns
+    //             (2.0) dog
+    //             (2.1) lion
+    //             (2.2) tiger
+    //     (0.2) Stripes who is owned by 
+    //          (1.0) Doris who owns
+    //             (2.0) dog
+    //             (2.1) lion
+    //             (2.2) tiger
+    // Smith
+    //     (0.0) Toto who is owned by 
+    //          (1.0) John who owns
+    //             (2.0) dog
+    //             (2.1) cat
+    //             (2.2) zebra
+    //     (0.1) Dolly who is owned by 
+    //          (1.0) John who owns
+    //             (2.0) dog
+    //             (2.1) cat
+    //             (2.2) zebra
+    //     (0.2) Stripes who is owned by 
+    //          (1.0) John who owns
+    //             (2.0) dog
+    //             (2.1) cat
+    //             (2.2) zebra]}
+    // {#test8:[
+    // Hierarchy that also transitions from indent to bullet {#data:[ //
+    //   {firstName} {lastName} who owns {pets:[{name} who is owned by 
+    //          {.} {^.^:[{firstName} who owns
+    //             {.} {pets:[{type}]}]}]}]}]}
+    // {#test8Result:[
+    // Hierarchy that also transitions from indent to bullet 
+    //   Doris Johnson who owns 
+    //       Buddy who is owned by 
+    //          (0.0) Doris who owns
+    //             (1.0) dog
+    //             (1.1) lion
+    //             (1.2) tiger
+    //       Ralph who is owned by 
+    //          (0.0) Doris who owns
+    //             (1.0) dog
+    //             (1.1) lion
+    //             (1.2) tiger
+    //       Stripes who is owned by 
+    //          (0.0) Doris who owns
+    //             (1.0) dog
+    //             (1.1) lion
+    //             (1.2) tiger
+    //   John Smith who owns 
+    //       Toto who is owned by 
+    //          (0.0) John who owns
+    //             (1.0) dog
+    //             (1.1) cat
+    //             (1.2) zebra
+    //       Dolly who is owned by 
+    //          (0.0) John who owns
+    //             (1.0) dog
+    //             (1.1) cat
+    //             (1.2) zebra
+    //       Stripes who is owned by 
+    //          (0.0) John who owns
+    //             (1.0) dog
+    //             (1.1) cat
+    //             (1.2) zebra]}
+    // {#test9:[
+    // Continued list {#data:[{pets:[{name}]}]}]}
+    // {#test9Result:[
+    // Continued list 
+    //    Buddy
+    //    Ralph
+    //    Stripes
+    //    Toto
+    //    Dolly
+    //    Stripes]}
+    // {#test10:[
+    // Bulleted Continued list ` 
+    // {#data:[{pets:[ 
+    //     {.} {name}]}]}]}
+    // {#test10Result:[
+    // Bulleted Continued list 
+    //     (0.0) Buddy
+    //     (0.1) Ralph
+    //     (0.2) Stripes
+    //     (0.3) Toto
+    //     (0.4) Dolly
+    //     (0.5) Stripes]}
+    // {#test11:[
+    // Hierarchy that also transitions from indent to bullet and back {#data:[ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //          {^.^:[{firstName} who owns 
+    //              {.} {pets:[{type} // 
+    //             ]}]}]}]}]}
+    // {#test11Result:[
+    // Hierarchy that also transitions from indent to bullet and back 
+    // Johnson who owns 
+    //     (0.0) Buddy who is owned by 
+    //          Doris who owns 
+    //              (1.0) dog
+    //              (1.1) lion
+    //              (1.2) tiger
+    //     (0.1) Ralph who is owned by 
+    //          Doris who owns 
+    //              (1.0) dog
+    //              (1.1) lion
+    //              (1.2) tiger
+    //     (0.2) Stripes who is owned by 
+    //          Doris who owns 
+    //              (1.0) dog
+    //              (1.1) lion
+    //              (1.2) tiger
+    // Smith who owns 
+    //     (0.0) Toto who is owned by 
+    //          John who owns 
+    //              (1.0) dog
+    //              (1.1) cat
+    //              (1.2) zebra
+    //     (0.1) Dolly who is owned by 
+    //          John who owns 
+    //              (1.0) dog
+    //              (1.1) cat
+    //              (1.2) zebra
+    //     (0.2) Stripes who is owned by 
+    //          John who owns 
+    //              (1.0) dog
+    //              (1.1) cat
+    //              (1.2) zebra]}
+    // {#test12:[
+    // Additional variation of hierarchy that also transitions from indent to bullet `
+    //  and back {#data:[ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //         {.} {^.^:[{firstName} who owns {pets:[{type} //  
+    //             ]}]}]}]}]}
+    // {#test12Result:[
+    // Additional variation of hierarchy that also transitions from indent to bullet and back 
+    // Johnson who owns 
+    //     (0.0) Buddy who is owned by 
+    //         (1.0) Doris who owns 
+    //            (2.0) dog
+    //            (2.1) lion
+    //            (2.2) tiger
+    //     (0.1) Ralph who is owned by 
+    //         (1.0) Doris who owns 
+    //            (2.0) dog
+    //            (2.1) lion
+    //            (2.2) tiger
+    //     (0.2) Stripes who is owned by 
+    //         (1.0) Doris who owns 
+    //            (2.0) dog
+    //            (2.1) lion
+    //            (2.2) tiger
+    // Smith who owns 
+    //     (0.0) Toto who is owned by 
+    //         (1.0) John who owns 
+    //            (2.0) dog
+    //            (2.1) cat
+    //            (2.2) zebra
+    //     (0.1) Dolly who is owned by 
+    //         (1.0) John who owns 
+    //            (2.0) dog
+    //            (2.1) cat
+    //            (2.2) zebra
+    //     (0.2) Stripes who is owned by 
+    //         (1.0) John who owns 
+    //            (2.0) dog
+    //            (2.1) cat
+    //            (2.2) zebra]}
+    // {#test13:[
+    // Yet another variation of hierarchy that also transitions from indent to bullet `
+    //  and back {#data:[ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //         {^.^:[{firstName} who owns {pets:[{type} //  
+    //             ]}]}]}]}]}
+    // {#test13Result:[
+    // Yet another variation of hierarchy that also transitions from indent to bullet and back 
+    // Johnson who owns 
+    //     (0.0) Buddy who is owned by 
+    //         Doris who owns 
+    //            dog
+    //            lion
+    //            tiger
+    //     (0.1) Ralph who is owned by 
+    //         Doris who owns 
+    //            dog
+    //            lion
+    //            tiger
+    //     (0.2) Stripes who is owned by 
+    //         Doris who owns 
+    //            dog
+    //            lion
+    //            tiger
+    // Smith who owns 
+    //     (0.0) Toto who is owned by 
+    //         John who owns 
+    //            dog
+    //            cat
+    //            zebra
+    //     (0.1) Dolly who is owned by 
+    //         John who owns 
+    //            dog
+    //            cat
+    //            zebra
+    //     (0.2) Stripes who is owned by 
+    //         John who owns 
+    //            dog
+    //            cat
+    //            zebra]}
+    // {#test14:[
+    // Indent under indent under bullet {#data:[ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //              {^.^:[{firstName} who owns 
+    //                  {pets:[{type} //  
+    //             ]}]}]}]}]}
+    // {#test14Result:[
+    // Indent under indent under bullet 
+    // Johnson who owns 
+    //     (0.0) Buddy who is owned by 
+    //              Doris who owns 
+    //                  dog
+    //                  lion
+    //                  tiger
+    //     (0.1) Ralph who is owned by 
+    //              Doris who owns 
+    //                  dog
+    //                  lion
+    //                  tiger
+    //     (0.2) Stripes who is owned by 
+    //              Doris who owns 
+    //                  dog
+    //                  lion
+    //                  tiger
+    // Smith who owns 
+    //     (0.0) Toto who is owned by 
+    //              John who owns 
+    //                  dog
+    //                  cat
+    //                  zebra
+    //     (0.1) Dolly who is owned by 
+    //              John who owns 
+    //                  dog
+    //                  cat
+    //                  zebra
+    //     (0.2) Stripes who is owned by 
+    //              John who owns 
+    //                  dog
+    //                  cat
+    //                  zebra]}
+    // {#tests:[ //
+    // {'1'.#test(#test1,#test1Result)}
+    // {'2'.#test(#test2,#test2Result)}
+    // {'3'.#test(#test3,#test3Result)}
+    // {'4'.#test(#test4,#test4Result)}
+    // {'5'.#test(#test5,#test5Result)}
+    // {'6'.#test(#test6,#test6Result)}
+    // {'7'.#test(#test7,#test7Result)}
+    // {'8'.#test(#test8,#test8Result)}
+    // {'9'.#test(#test9,#test9Result)}
+    // {'10'.#test(#test10,#test10Result)}
+    // {'11'.#test(#test11,#test11Result)}
+    // {'12'.#test(#test12,#test12Result)}
+    // {'13'.#test(#test13,#test13Result)}
+    // {'14'.#test(#test14,#test14Result)}
+    // ]}
+    // {#expected:[ //
+    // Test 1 passed
+    // Test 2 passed
+    // Test 3 passed
+    // Test 4 passed
+    // Test 5 passed
+    // Test 6 passed
+    // Test 7 passed
+    // Test 8 passed
+    // Test 9 passed
+    // Test 10 passed
+    // Test 11 passed
+    // Test 12 passed
+    // Test 13 passed
+    // Test 14 passed
+    // ]}
+    // {#data:[/data/people]}]
+    // Source: "subtemplates/doit.template":1:1
     private TemplateContent renderAssert()
     {
-        return WithDefinitions(renderAssertDefinitions,
-            definitionContext => new Doit(definitionContext).renderAssertContent());
+        object? assert = EvaluationContext.Invoke(SubtemplateInput("tests"), methodValue => Builtins.Assert(methodValue, Each(itemContext => itemContext.Named("expected")), "ALL TESTS PASSED"));
+
+        return Line($"{assert}");
     }
 
     // Template:
@@ -2353,6 +2757,214 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
         return Line($"Test {item0} {assert}");
     }
 
+    internal EvaluationContext includeTest()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test();
+        return included;
+    }
+
+    internal EvaluationContext includeTest1()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test1();
+        return included;
+    }
+
+    internal EvaluationContext includeTest1Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest2()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test2();
+        return included;
+    }
+
+    internal EvaluationContext includeTest2Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest3()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test3();
+        return included;
+    }
+
+    internal EvaluationContext includeTest3Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest4()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test4();
+        return included;
+    }
+
+    internal EvaluationContext includeTest4Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest5()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test5();
+        return included;
+    }
+
+    internal EvaluationContext includeTest5Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest6()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test6();
+        return included;
+    }
+
+    internal EvaluationContext includeTest6Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest7()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test7();
+        return included;
+    }
+
+    internal EvaluationContext includeTest7Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest8()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test8();
+        return included;
+    }
+
+    internal EvaluationContext includeTest8Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest9()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test9();
+        return included;
+    }
+
+    internal EvaluationContext includeTest9Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest10()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test10();
+        return included;
+    }
+
+    internal EvaluationContext includeTest10Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest11()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test11();
+        return included;
+    }
+
+    internal EvaluationContext includeTest11Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest12()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test12();
+        return included;
+    }
+
+    internal EvaluationContext includeTest12Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest13()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test13();
+        return included;
+    }
+
+    internal EvaluationContext includeTest13Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest14()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test14();
+        return included;
+    }
+
+    internal EvaluationContext includeTest14Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTests()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).tests();
+        return included;
+    }
+
+    internal EvaluationContext includeExpected()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeData()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
     // Template:
     //
     //
@@ -2750,40 +3362,688 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // ]}
     // {#data:[/data/people]}
     // Source: "subtemplates/doit.template":1:47
-    private void renderAssertDefinitions(SubtemplateDefinitions definitions)
+    private void defineIncludedSubtemplates(SubtemplateDefinitions definitions)
     {
-        definitions.Add("test", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test()));
-        definitions.Add("test1", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test1()));
-        definitions.Add("test1Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test1Result()));
-        definitions.Add("test2", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test2()));
-        definitions.Add("test2Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test2Result()));
-        definitions.Add("test3", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test3()));
-        definitions.Add("test3Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test3Result()));
-        definitions.Add("test4", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test4()));
-        definitions.Add("test4Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test4Result()));
-        definitions.Add("test5", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test5()));
-        definitions.Add("test5Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test5Result()));
-        definitions.Add("test6", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test6()));
-        definitions.Add("test6Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test6Result()));
-        definitions.Add("test7", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test7()));
-        definitions.Add("test7Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test7Result()));
-        definitions.Add("test8", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test8()));
-        definitions.Add("test8Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test8Result()));
-        definitions.Add("test9", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test9()));
-        definitions.Add("test9Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test9Result()));
-        definitions.Add("test10", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test10()));
-        definitions.Add("test10Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test10Result()));
-        definitions.Add("test11", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test11()));
-        definitions.Add("test11Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test11Result()));
-        definitions.Add("test12", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test12()));
-        definitions.Add("test12Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test12Result()));
-        definitions.Add("test13", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test13()));
-        definitions.Add("test13Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test13Result()));
-        definitions.Add("test14", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test14()));
-        definitions.Add("test14Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test14Result()));
-        definitions.Add("tests", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).tests()));
-        definitions.Add("expected", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).expected()));
-        definitions.Add("data", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).data()));
+        definitions.Add("test", definitionContext => new Doit(definitionContext).test(), includedContext => new Doit(includedContext).includeTest());
+        definitions.Add("test1", definitionContext => new Doit(definitionContext).test1(), includedContext => new Doit(includedContext).includeTest1());
+        definitions.Add("test1Result", definitionContext => new Doit(definitionContext).test1Result(), includedContext => new Doit(includedContext).includeTest1Result());
+        definitions.Add("test2", definitionContext => new Doit(definitionContext).test2(), includedContext => new Doit(includedContext).includeTest2());
+        definitions.Add("test2Result", definitionContext => new Doit(definitionContext).test2Result(), includedContext => new Doit(includedContext).includeTest2Result());
+        definitions.Add("test3", definitionContext => new Doit(definitionContext).test3(), includedContext => new Doit(includedContext).includeTest3());
+        definitions.Add("test3Result", definitionContext => new Doit(definitionContext).test3Result(), includedContext => new Doit(includedContext).includeTest3Result());
+        definitions.Add("test4", definitionContext => new Doit(definitionContext).test4(), includedContext => new Doit(includedContext).includeTest4());
+        definitions.Add("test4Result", definitionContext => new Doit(definitionContext).test4Result(), includedContext => new Doit(includedContext).includeTest4Result());
+        definitions.Add("test5", definitionContext => new Doit(definitionContext).test5(), includedContext => new Doit(includedContext).includeTest5());
+        definitions.Add("test5Result", definitionContext => new Doit(definitionContext).test5Result(), includedContext => new Doit(includedContext).includeTest5Result());
+        definitions.Add("test6", definitionContext => new Doit(definitionContext).test6(), includedContext => new Doit(includedContext).includeTest6());
+        definitions.Add("test6Result", definitionContext => new Doit(definitionContext).test6Result(), includedContext => new Doit(includedContext).includeTest6Result());
+        definitions.Add("test7", definitionContext => new Doit(definitionContext).test7(), includedContext => new Doit(includedContext).includeTest7());
+        definitions.Add("test7Result", definitionContext => new Doit(definitionContext).test7Result(), includedContext => new Doit(includedContext).includeTest7Result());
+        definitions.Add("test8", definitionContext => new Doit(definitionContext).test8(), includedContext => new Doit(includedContext).includeTest8());
+        definitions.Add("test8Result", definitionContext => new Doit(definitionContext).test8Result(), includedContext => new Doit(includedContext).includeTest8Result());
+        definitions.Add("test9", definitionContext => new Doit(definitionContext).test9(), includedContext => new Doit(includedContext).includeTest9());
+        definitions.Add("test9Result", definitionContext => new Doit(definitionContext).test9Result(), includedContext => new Doit(includedContext).includeTest9Result());
+        definitions.Add("test10", definitionContext => new Doit(definitionContext).test10(), includedContext => new Doit(includedContext).includeTest10());
+        definitions.Add("test10Result", definitionContext => new Doit(definitionContext).test10Result(), includedContext => new Doit(includedContext).includeTest10Result());
+        definitions.Add("test11", definitionContext => new Doit(definitionContext).test11(), includedContext => new Doit(includedContext).includeTest11());
+        definitions.Add("test11Result", definitionContext => new Doit(definitionContext).test11Result(), includedContext => new Doit(includedContext).includeTest11Result());
+        definitions.Add("test12", definitionContext => new Doit(definitionContext).test12(), includedContext => new Doit(includedContext).includeTest12());
+        definitions.Add("test12Result", definitionContext => new Doit(definitionContext).test12Result(), includedContext => new Doit(includedContext).includeTest12Result());
+        definitions.Add("test13", definitionContext => new Doit(definitionContext).test13(), includedContext => new Doit(includedContext).includeTest13());
+        definitions.Add("test13Result", definitionContext => new Doit(definitionContext).test13Result(), includedContext => new Doit(includedContext).includeTest13Result());
+        definitions.Add("test14", definitionContext => new Doit(definitionContext).test14(), includedContext => new Doit(includedContext).includeTest14());
+        definitions.Add("test14Result", definitionContext => new Doit(definitionContext).test14Result(), includedContext => new Doit(includedContext).includeTest14Result());
+        definitions.Add("tests", definitionContext => new Doit(definitionContext).tests(), includedContext => new Doit(includedContext).includeTests());
+        definitions.Add("expected", definitionContext => new Doit(definitionContext).expected(), includedContext => new Doit(includedContext).includeExpected());
+        definitions.Add("data", definitionContext => new Doit(definitionContext).data(), includedContext => new Doit(includedContext).includeData());
+    }
+
+    internal EvaluationContext Import()
+    {
+        EvaluationContext included = DefineSubtemplates(defineIncludedSubtemplates);
+        _ = new Doit(included).renderAssert();
+        return included;
+    }
+
+    internal EvaluationContext includeTest_2()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test();
+        return included;
+    }
+
+    internal EvaluationContext includeTest1_2()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test1();
+        return included;
+    }
+
+    internal EvaluationContext includeTest1Result_2()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest2_2()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test2();
+        return included;
+    }
+
+    internal EvaluationContext includeTest2Result_2()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest3_2()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test3();
+        return included;
+    }
+
+    internal EvaluationContext includeTest3Result_2()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest4_2()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test4();
+        return included;
+    }
+
+    internal EvaluationContext includeTest4Result_2()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest5_2()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test5();
+        return included;
+    }
+
+    internal EvaluationContext includeTest5Result_2()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest6_2()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test6();
+        return included;
+    }
+
+    internal EvaluationContext includeTest6Result_2()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest7_2()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test7();
+        return included;
+    }
+
+    internal EvaluationContext includeTest7Result_2()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest8_2()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test8();
+        return included;
+    }
+
+    internal EvaluationContext includeTest8Result_2()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest9_2()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test9();
+        return included;
+    }
+
+    internal EvaluationContext includeTest9Result_2()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest10_2()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test10();
+        return included;
+    }
+
+    internal EvaluationContext includeTest10Result_2()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest11_2()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test11();
+        return included;
+    }
+
+    internal EvaluationContext includeTest11Result_2()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest12_2()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test12();
+        return included;
+    }
+
+    internal EvaluationContext includeTest12Result_2()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest13_2()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test13();
+        return included;
+    }
+
+    internal EvaluationContext includeTest13Result_2()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest14_2()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).test14();
+        return included;
+    }
+
+    internal EvaluationContext includeTest14Result_2()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTests_2()
+    {
+        EvaluationContext included = Context;
+        _ = new Doit(included).tests();
+        return included;
+    }
+
+    internal EvaluationContext includeExpected_2()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeData_2()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    // Template:
+    //
+    //
+    // Subtemplates:
+    // {#test:[{$0.Matches(1,2,3,4,5,6,7,8,9,10,11,12,13,14)->
+    // [Test {$0} {$1.Assert($2,'passed')}]}]}
+    // {#test1:[
+    // Explicit Single Indent{#data:[
+    //    {lastName}]}]}
+    // {#test1Result:[
+    // Explicit Single Indent
+    //    Johnson
+    //    Smith]}
+    // {#test2:[
+    // Implied Single Indent {#data:[{lastName}]}]}
+    // {#test2Result:[
+    // Implied Single Indent 
+    //    Johnson
+    //    Smith]}
+    // {#test3:[
+    // Implied Double Indent{#data:[{lastName}{pets:[{name}]}]}]}
+    // {#test3Result:[
+    // Implied Double Indent
+    //    Johnson
+    //       Buddy
+    //       Ralph
+    //       Stripes
+    //    Smith
+    //       Toto
+    //       Dolly
+    //       Stripes]}
+    // {#test4:[
+    // Bulleted Implied Bulleted Indent{#data:[ //
+    // {.} {lastName}{pets:[{name}]}]}]}
+    // {#test4Result:[
+    // Bulleted Implied Bulleted Indent
+    // (0.0) Johnson
+    //    (1.0) Buddy
+    //    (1.1) Ralph
+    //    (1.2) Stripes
+    // (0.1) Smith
+    //    (1.0) Toto
+    //    (1.1) Dolly
+    //    (1.2) Stripes]}
+    // {#test5:[
+    // Bulleted Explicit Bulleted Indent{#data:[ //
+    // {.} {lastName}{pets:[ //
+    //     {.} {name}]}]}]}
+    // {#test5Result:[
+    // Bulleted Explicit Bulleted Indent
+    // (0.0) Johnson
+    //     (1.0) Buddy
+    //     (1.1) Ralph
+    //     (1.2) Stripes
+    // (0.1) Smith
+    //     (1.0) Toto
+    //     (1.1) Dolly
+    //     (1.2) Stripes]}
+    // {#test6:[
+    // Hierarchy{#data:[ //
+    // {.} {lastName}{pets:[ //
+    //     {.} {name} who is owned by 
+    //          {.} {^.^:[{firstName} who owns
+    //               {.} {pets:[{type}]}]}]}]}]}
+    // {#test6Result:[
+    // Hierarchy
+    // (0.0) Johnson
+    //     (1.0) Buddy who is owned by 
+    //          (2.0) Doris who owns
+    //               (3.0) dog
+    //               (3.1) lion
+    //               (3.2) tiger
+    //     (1.1) Ralph who is owned by 
+    //          (2.0) Doris who owns
+    //               (3.0) dog
+    //               (3.1) lion
+    //               (3.2) tiger
+    //     (1.2) Stripes who is owned by 
+    //          (2.0) Doris who owns
+    //               (3.0) dog
+    //               (3.1) lion
+    //               (3.2) tiger
+    // (0.1) Smith
+    //     (1.0) Toto who is owned by 
+    //          (2.0) John who owns
+    //               (3.0) dog
+    //               (3.1) cat
+    //               (3.2) zebra
+    //     (1.1) Dolly who is owned by 
+    //          (2.0) John who owns
+    //               (3.0) dog
+    //               (3.1) cat
+    //               (3.2) zebra
+    //     (1.2) Stripes who is owned by 
+    //          (2.0) John who owns
+    //               (3.0) dog
+    //               (3.1) cat
+    //               (3.2) zebra]}
+    // {#test7:[
+    // Hierarchy that transitions from indent to bullet {#data:[ //
+    // {lastName}{pets:[ //
+    //     {.} {name} who is owned by 
+    //          {.} {^.^:[{firstName} who owns
+    //             {.} {pets:[{type}]}]}]}]}]}
+    // {#test7Result:[
+    // Hierarchy that transitions from indent to bullet 
+    // Johnson
+    //     (0.0) Buddy who is owned by 
+    //          (1.0) Doris who owns
+    //             (2.0) dog
+    //             (2.1) lion
+    //             (2.2) tiger
+    //     (0.1) Ralph who is owned by 
+    //          (1.0) Doris who owns
+    //             (2.0) dog
+    //             (2.1) lion
+    //             (2.2) tiger
+    //     (0.2) Stripes who is owned by 
+    //          (1.0) Doris who owns
+    //             (2.0) dog
+    //             (2.1) lion
+    //             (2.2) tiger
+    // Smith
+    //     (0.0) Toto who is owned by 
+    //          (1.0) John who owns
+    //             (2.0) dog
+    //             (2.1) cat
+    //             (2.2) zebra
+    //     (0.1) Dolly who is owned by 
+    //          (1.0) John who owns
+    //             (2.0) dog
+    //             (2.1) cat
+    //             (2.2) zebra
+    //     (0.2) Stripes who is owned by 
+    //          (1.0) John who owns
+    //             (2.0) dog
+    //             (2.1) cat
+    //             (2.2) zebra]}
+    // {#test8:[
+    // Hierarchy that also transitions from indent to bullet {#data:[ //
+    //   {firstName} {lastName} who owns {pets:[{name} who is owned by 
+    //          {.} {^.^:[{firstName} who owns
+    //             {.} {pets:[{type}]}]}]}]}]}
+    // {#test8Result:[
+    // Hierarchy that also transitions from indent to bullet 
+    //   Doris Johnson who owns 
+    //       Buddy who is owned by 
+    //          (0.0) Doris who owns
+    //             (1.0) dog
+    //             (1.1) lion
+    //             (1.2) tiger
+    //       Ralph who is owned by 
+    //          (0.0) Doris who owns
+    //             (1.0) dog
+    //             (1.1) lion
+    //             (1.2) tiger
+    //       Stripes who is owned by 
+    //          (0.0) Doris who owns
+    //             (1.0) dog
+    //             (1.1) lion
+    //             (1.2) tiger
+    //   John Smith who owns 
+    //       Toto who is owned by 
+    //          (0.0) John who owns
+    //             (1.0) dog
+    //             (1.1) cat
+    //             (1.2) zebra
+    //       Dolly who is owned by 
+    //          (0.0) John who owns
+    //             (1.0) dog
+    //             (1.1) cat
+    //             (1.2) zebra
+    //       Stripes who is owned by 
+    //          (0.0) John who owns
+    //             (1.0) dog
+    //             (1.1) cat
+    //             (1.2) zebra]}
+    // {#test9:[
+    // Continued list {#data:[{pets:[{name}]}]}]}
+    // {#test9Result:[
+    // Continued list 
+    //    Buddy
+    //    Ralph
+    //    Stripes
+    //    Toto
+    //    Dolly
+    //    Stripes]}
+    // {#test10:[
+    // Bulleted Continued list ` 
+    // {#data:[{pets:[ 
+    //     {.} {name}]}]}]}
+    // {#test10Result:[
+    // Bulleted Continued list 
+    //     (0.0) Buddy
+    //     (0.1) Ralph
+    //     (0.2) Stripes
+    //     (0.3) Toto
+    //     (0.4) Dolly
+    //     (0.5) Stripes]}
+    // {#test11:[
+    // Hierarchy that also transitions from indent to bullet and back {#data:[ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //          {^.^:[{firstName} who owns 
+    //              {.} {pets:[{type} // 
+    //             ]}]}]}]}]}
+    // {#test11Result:[
+    // Hierarchy that also transitions from indent to bullet and back 
+    // Johnson who owns 
+    //     (0.0) Buddy who is owned by 
+    //          Doris who owns 
+    //              (1.0) dog
+    //              (1.1) lion
+    //              (1.2) tiger
+    //     (0.1) Ralph who is owned by 
+    //          Doris who owns 
+    //              (1.0) dog
+    //              (1.1) lion
+    //              (1.2) tiger
+    //     (0.2) Stripes who is owned by 
+    //          Doris who owns 
+    //              (1.0) dog
+    //              (1.1) lion
+    //              (1.2) tiger
+    // Smith who owns 
+    //     (0.0) Toto who is owned by 
+    //          John who owns 
+    //              (1.0) dog
+    //              (1.1) cat
+    //              (1.2) zebra
+    //     (0.1) Dolly who is owned by 
+    //          John who owns 
+    //              (1.0) dog
+    //              (1.1) cat
+    //              (1.2) zebra
+    //     (0.2) Stripes who is owned by 
+    //          John who owns 
+    //              (1.0) dog
+    //              (1.1) cat
+    //              (1.2) zebra]}
+    // {#test12:[
+    // Additional variation of hierarchy that also transitions from indent to bullet `
+    //  and back {#data:[ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //         {.} {^.^:[{firstName} who owns {pets:[{type} //  
+    //             ]}]}]}]}]}
+    // {#test12Result:[
+    // Additional variation of hierarchy that also transitions from indent to bullet and back 
+    // Johnson who owns 
+    //     (0.0) Buddy who is owned by 
+    //         (1.0) Doris who owns 
+    //            (2.0) dog
+    //            (2.1) lion
+    //            (2.2) tiger
+    //     (0.1) Ralph who is owned by 
+    //         (1.0) Doris who owns 
+    //            (2.0) dog
+    //            (2.1) lion
+    //            (2.2) tiger
+    //     (0.2) Stripes who is owned by 
+    //         (1.0) Doris who owns 
+    //            (2.0) dog
+    //            (2.1) lion
+    //            (2.2) tiger
+    // Smith who owns 
+    //     (0.0) Toto who is owned by 
+    //         (1.0) John who owns 
+    //            (2.0) dog
+    //            (2.1) cat
+    //            (2.2) zebra
+    //     (0.1) Dolly who is owned by 
+    //         (1.0) John who owns 
+    //            (2.0) dog
+    //            (2.1) cat
+    //            (2.2) zebra
+    //     (0.2) Stripes who is owned by 
+    //         (1.0) John who owns 
+    //            (2.0) dog
+    //            (2.1) cat
+    //            (2.2) zebra]}
+    // {#test13:[
+    // Yet another variation of hierarchy that also transitions from indent to bullet `
+    //  and back {#data:[ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //         {^.^:[{firstName} who owns {pets:[{type} //  
+    //             ]}]}]}]}]}
+    // {#test13Result:[
+    // Yet another variation of hierarchy that also transitions from indent to bullet and back 
+    // Johnson who owns 
+    //     (0.0) Buddy who is owned by 
+    //         Doris who owns 
+    //            dog
+    //            lion
+    //            tiger
+    //     (0.1) Ralph who is owned by 
+    //         Doris who owns 
+    //            dog
+    //            lion
+    //            tiger
+    //     (0.2) Stripes who is owned by 
+    //         Doris who owns 
+    //            dog
+    //            lion
+    //            tiger
+    // Smith who owns 
+    //     (0.0) Toto who is owned by 
+    //         John who owns 
+    //            dog
+    //            cat
+    //            zebra
+    //     (0.1) Dolly who is owned by 
+    //         John who owns 
+    //            dog
+    //            cat
+    //            zebra
+    //     (0.2) Stripes who is owned by 
+    //         John who owns 
+    //            dog
+    //            cat
+    //            zebra]}
+    // {#test14:[
+    // Indent under indent under bullet {#data:[ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //              {^.^:[{firstName} who owns 
+    //                  {pets:[{type} //  
+    //             ]}]}]}]}]}
+    // {#test14Result:[
+    // Indent under indent under bullet 
+    // Johnson who owns 
+    //     (0.0) Buddy who is owned by 
+    //              Doris who owns 
+    //                  dog
+    //                  lion
+    //                  tiger
+    //     (0.1) Ralph who is owned by 
+    //              Doris who owns 
+    //                  dog
+    //                  lion
+    //                  tiger
+    //     (0.2) Stripes who is owned by 
+    //              Doris who owns 
+    //                  dog
+    //                  lion
+    //                  tiger
+    // Smith who owns 
+    //     (0.0) Toto who is owned by 
+    //              John who owns 
+    //                  dog
+    //                  cat
+    //                  zebra
+    //     (0.1) Dolly who is owned by 
+    //              John who owns 
+    //                  dog
+    //                  cat
+    //                  zebra
+    //     (0.2) Stripes who is owned by 
+    //              John who owns 
+    //                  dog
+    //                  cat
+    //                  zebra]}
+    // {#tests:[ //
+    // {'1'.#test(#test1,#test1Result)}
+    // {'2'.#test(#test2,#test2Result)}
+    // {'3'.#test(#test3,#test3Result)}
+    // {'4'.#test(#test4,#test4Result)}
+    // {'5'.#test(#test5,#test5Result)}
+    // {'6'.#test(#test6,#test6Result)}
+    // {'7'.#test(#test7,#test7Result)}
+    // {'8'.#test(#test8,#test8Result)}
+    // {'9'.#test(#test9,#test9Result)}
+    // {'10'.#test(#test10,#test10Result)}
+    // {'11'.#test(#test11,#test11Result)}
+    // {'12'.#test(#test12,#test12Result)}
+    // {'13'.#test(#test13,#test13Result)}
+    // {'14'.#test(#test14,#test14Result)}
+    // ]}
+    // {#expected:[ //
+    // Test 1 passed
+    // Test 2 passed
+    // Test 3 passed
+    // Test 4 passed
+    // Test 5 passed
+    // Test 6 passed
+    // Test 7 passed
+    // Test 8 passed
+    // Test 9 passed
+    // Test 10 passed
+    // Test 11 passed
+    // Test 12 passed
+    // Test 13 passed
+    // Test 14 passed
+    // ]}
+    // {#data:[/data/people]}
+    // Source: "subtemplates/doit.template":1:47
+    private void renderAssert_2Definitions(SubtemplateDefinitions definitions)
+    {
+        definitions.Add("test", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test()), includedContext => new Doit(includedContext).includeTest_2());
+        definitions.Add("test1", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test1()), includedContext => new Doit(includedContext).includeTest1_2());
+        definitions.Add("test1Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test1Result()), includedContext => new Doit(includedContext).includeTest1Result_2());
+        definitions.Add("test2", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test2()), includedContext => new Doit(includedContext).includeTest2_2());
+        definitions.Add("test2Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test2Result()), includedContext => new Doit(includedContext).includeTest2Result_2());
+        definitions.Add("test3", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test3()), includedContext => new Doit(includedContext).includeTest3_2());
+        definitions.Add("test3Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test3Result()), includedContext => new Doit(includedContext).includeTest3Result_2());
+        definitions.Add("test4", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test4()), includedContext => new Doit(includedContext).includeTest4_2());
+        definitions.Add("test4Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test4Result()), includedContext => new Doit(includedContext).includeTest4Result_2());
+        definitions.Add("test5", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test5()), includedContext => new Doit(includedContext).includeTest5_2());
+        definitions.Add("test5Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test5Result()), includedContext => new Doit(includedContext).includeTest5Result_2());
+        definitions.Add("test6", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test6()), includedContext => new Doit(includedContext).includeTest6_2());
+        definitions.Add("test6Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test6Result()), includedContext => new Doit(includedContext).includeTest6Result_2());
+        definitions.Add("test7", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test7()), includedContext => new Doit(includedContext).includeTest7_2());
+        definitions.Add("test7Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test7Result()), includedContext => new Doit(includedContext).includeTest7Result_2());
+        definitions.Add("test8", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test8()), includedContext => new Doit(includedContext).includeTest8_2());
+        definitions.Add("test8Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test8Result()), includedContext => new Doit(includedContext).includeTest8Result_2());
+        definitions.Add("test9", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test9()), includedContext => new Doit(includedContext).includeTest9_2());
+        definitions.Add("test9Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test9Result()), includedContext => new Doit(includedContext).includeTest9Result_2());
+        definitions.Add("test10", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test10()), includedContext => new Doit(includedContext).includeTest10_2());
+        definitions.Add("test10Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test10Result()), includedContext => new Doit(includedContext).includeTest10Result_2());
+        definitions.Add("test11", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test11()), includedContext => new Doit(includedContext).includeTest11_2());
+        definitions.Add("test11Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test11Result()), includedContext => new Doit(includedContext).includeTest11Result_2());
+        definitions.Add("test12", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test12()), includedContext => new Doit(includedContext).includeTest12_2());
+        definitions.Add("test12Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test12Result()), includedContext => new Doit(includedContext).includeTest12Result_2());
+        definitions.Add("test13", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test13()), includedContext => new Doit(includedContext).includeTest13_2());
+        definitions.Add("test13Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test13Result()), includedContext => new Doit(includedContext).includeTest13Result_2());
+        definitions.Add("test14", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test14()), includedContext => new Doit(includedContext).includeTest14_2());
+        definitions.Add("test14Result", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).test14Result()), includedContext => new Doit(includedContext).includeTest14Result_2());
+        definitions.Add("tests", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).tests()), includedContext => new Doit(includedContext).includeTests_2());
+        definitions.Add("expected", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).expected()), includedContext => new Doit(includedContext).includeExpected_2());
+        definitions.Add("data", definitionContext => definitionContext.Each(itemContext => new Doit(itemContext).data()), includedContext => new Doit(includedContext).includeData_2());
     }
 
     // Template:
@@ -3183,7 +4443,7 @@ internal sealed class Doit(EvaluationContext context) : TemplateUnit(context)
     // ]}
     // {#data:[/data/people]}]
     // Source: "subtemplates/doit.template":1:1
-    private TemplateContent renderAssertContent()
+    private TemplateContent renderAssert_2Content()
     {
         object? assert = EvaluationContext.Invoke(SubtemplateInput("tests"), methodValue => Builtins.Assert(methodValue, Each(itemContext => itemContext.Named("expected")), "ALL TESTS PASSED"));
 
@@ -3233,6 +4493,13 @@ internal sealed class FormatGitRepos(EvaluationContext context) : TemplateUnit(c
         object? description = Get("description");
 
         return Line($" ({description})");
+    }
+
+    internal EvaluationContext Import()
+    {
+        EvaluationContext included = Context;
+        _ = new FormatGitRepos(included).renderContent();
+        return included;
     }
 
 }
@@ -3296,6 +4563,13 @@ internal sealed class FormatGitReposAnded(EvaluationContext context) : TemplateU
         return Line($" ({description})");
     }
 
+    internal EvaluationContext Import()
+    {
+        EvaluationContext included = Context;
+        _ = new FormatGitReposAnded(included).renderContent();
+        return included;
+    }
+
 }
 
 internal sealed class XformatPet(EvaluationContext context) : TemplateUnit(context)
@@ -3320,6 +4594,13 @@ internal sealed class XformatPet(EvaluationContext context) : TemplateUnit(conte
         object? a = Each(itemContext => itemContext.Named("a"));
 
         return Line($"a {type} named {name}{a}");
+    }
+
+    internal EvaluationContext Import()
+    {
+        EvaluationContext included = Context;
+        _ = new XformatPet(included).renderType();
+        return included;
     }
 
 }
@@ -3371,6 +4652,13 @@ internal sealed class XformatPets(EvaluationContext context) : TemplateUnit(cont
         object? name = Get("name");
 
         return Line($"a big {type} named \"{name}\"");
+    }
+
+    internal EvaluationContext Import()
+    {
+        EvaluationContext included = Context;
+        _ = new XformatPets(included).renderContent();
+        return included;
     }
 
 }

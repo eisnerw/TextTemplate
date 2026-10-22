@@ -91,6 +91,27 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
         return Line($"{extract}");
     }
 
+    internal EvaluationContext includeGetWiki()
+    {
+        EvaluationContext included = Context;
+        _ = new Wikipedia(included).getWiki();
+        return included;
+    }
+
+    internal EvaluationContext includeWiki()
+    {
+        EvaluationContext included = Context;
+        _ = new Wikipedia(included).Wiki();
+        return included;
+    }
+
+    internal EvaluationContext includeWikiapi()
+    {
+        EvaluationContext included = Context;
+        _ = new Wikipedia(included).wikiapi();
+        return included;
+    }
+
     // Template:
     //
     //
@@ -101,9 +122,9 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/wikipedia.template":1:27
     private void defineSubtemplates(SubtemplateDefinitions definitions)
     {
-        definitions.Add("getWiki", definitionContext => definitionContext.Each(itemContext => new Wikipedia(itemContext).getWiki()));
-        definitions.Add("Wiki", definitionContext => definitionContext.Each(itemContext => new Wikipedia(itemContext).Wiki()));
-        definitions.Add("wikiapi", definitionContext => definitionContext.Each(itemContext => new Wikipedia(itemContext).wikiapi()));
+        definitions.Add("getWiki", definitionContext => definitionContext.Each(itemContext => new Wikipedia(itemContext).getWiki()), includedContext => new Wikipedia(includedContext).includeGetWiki());
+        definitions.Add("Wiki", definitionContext => definitionContext.Each(itemContext => new Wikipedia(itemContext).Wiki()), includedContext => new Wikipedia(includedContext).includeWiki());
+        definitions.Add("wikiapi", definitionContext => definitionContext.Each(itemContext => new Wikipedia(itemContext).wikiapi()), includedContext => new Wikipedia(includedContext).includeWikiapi());
     }
 
     // Template:

@@ -65,6 +65,20 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
         return EvaluationContext.Invoke(SubtemplateInput("xformatPet"), methodValue => ApplySubtemplate("anded", methodValue));
     }
 
+    internal EvaluationContext includeFormatPet()
+    {
+        EvaluationContext included = Context;
+        _ = new Simpledata(included).formatPet();
+        return included;
+    }
+
+    internal EvaluationContext includeAnded()
+    {
+        EvaluationContext included = Context;
+        _ = new Simpledata(included).anded();
+        return included;
+    }
+
     // Template:
     //
     //
@@ -75,8 +89,8 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
     // Source: "templates/simpledata.template":4:4
     private void defineSubtemplates(SubtemplateDefinitions definitions)
     {
-        definitions.Add("formatPet", definitionContext => definitionContext.Each(itemContext => new Simpledata(itemContext).formatPet()));
-        definitions.Add("anded", definitionContext => definitionContext.Each(itemContext => new Simpledata(itemContext).anded()));
+        definitions.Add("formatPet", definitionContext => definitionContext.Each(itemContext => new Simpledata(itemContext).formatPet()), includedContext => new Simpledata(includedContext).includeFormatPet());
+        definitions.Add("anded", definitionContext => definitionContext.Each(itemContext => new Simpledata(itemContext).anded()), includedContext => new Simpledata(includedContext).includeAnded());
     }
 
     // Template:
@@ -97,7 +111,7 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
         object? petsResult = (IsTruthy("pets") ? Annotate(
             new Func<EvaluationContext, EvaluationContext>[]
             {
-                annotatedContext => annotatedContext.Include("doInclude", includedContext => new DoInclude(includedContext).Import())
+                annotatedContext => annotatedContext.Include(EvaluationContext.Compose("#doInclude"))
             },
             annotatedContext => annotatedContext.Each(itemContext => new Simpledata(itemContext).renderContent())) : Each(itemContext => Line($"no pets")));
 

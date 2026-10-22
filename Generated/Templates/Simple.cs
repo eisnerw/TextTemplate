@@ -87,6 +87,20 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
         return EvaluationContext.Invoke(SubtemplateInput("formatPet"), methodValue => ApplySubtemplate("anded", methodValue));
     }
 
+    internal EvaluationContext includeFormatPet()
+    {
+        EvaluationContext included = Context;
+        _ = new Simple(included).formatPet();
+        return included;
+    }
+
+    internal EvaluationContext includeAnded()
+    {
+        EvaluationContext included = Context;
+        _ = new Simple(included).anded();
+        return included;
+    }
+
     // Template:
     //
     //
@@ -97,8 +111,8 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/simple.template":11:6
     private void defineSubtemplates(SubtemplateDefinitions definitions)
     {
-        definitions.Add("formatPet", definitionContext => definitionContext.Each(itemContext => new Simple(itemContext).formatPet()));
-        definitions.Add("anded", definitionContext => definitionContext.Each(itemContext => new Simple(itemContext).anded()));
+        definitions.Add("formatPet", definitionContext => definitionContext.Each(itemContext => new Simple(itemContext).formatPet()), includedContext => new Simple(includedContext).includeFormatPet());
+        definitions.Add("anded", definitionContext => definitionContext.Each(itemContext => new Simple(itemContext).anded()), includedContext => new Simple(includedContext).includeAnded());
     }
 
     // Template:

@@ -434,6 +434,49 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
         return Line($"{ungrouped}");
     }
 
+    internal EvaluationContext includeGrouping()
+    {
+        EvaluationContext included = Context;
+        included = included.WithFalsy(new TemplateRegex("/^0$/", "templates/birthdays.template:5:75"));
+        _ = new Birthdays(included).renderCase();
+        return included;
+    }
+
+    internal EvaluationContext includeByDate()
+    {
+        EvaluationContext included = Context;
+        _ = new Birthdays(included).byDate();
+        return included;
+    }
+
+    internal EvaluationContext includeBySign()
+    {
+        EvaluationContext included = Context;
+        _ = new Birthdays(included).bySign();
+        return included;
+    }
+
+    internal EvaluationContext includeName()
+    {
+        EvaluationContext included = Context;
+        _ = new Birthdays(included).name();
+        return included;
+    }
+
+    internal EvaluationContext includeDate()
+    {
+        EvaluationContext included = Context;
+        _ = new Birthdays(included).date();
+        return included;
+    }
+
+    internal EvaluationContext includeUngrouped()
+    {
+        EvaluationContext included = Context;
+        _ = new Birthdays(included).ungrouped();
+        return included;
+    }
+
     // Template:
     //  
     // Subtemplates:
@@ -458,12 +501,12 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/birthdays.template":3:18
     private void defineSubtemplates(SubtemplateDefinitions definitions)
     {
-        definitions.Add("grouping", definitionContext => new Birthdays(definitionContext).grouping());
-        definitions.Add("byDate", definitionContext => definitionContext.Each(itemContext => new Birthdays(itemContext).byDate()));
-        definitions.Add("bySign", definitionContext => definitionContext.Each(itemContext => new Birthdays(itemContext).bySign()));
-        definitions.Add("name", definitionContext => definitionContext.Each(itemContext => new Birthdays(itemContext).name()));
-        definitions.Add("date", definitionContext => definitionContext.Each(itemContext => new Birthdays(itemContext).date()));
-        definitions.Add("ungrouped", definitionContext => definitionContext.Each(itemContext => new Birthdays(itemContext).ungrouped()));
+        definitions.Add("grouping", definitionContext => new Birthdays(definitionContext).grouping(), includedContext => new Birthdays(includedContext).includeGrouping());
+        definitions.Add("byDate", definitionContext => definitionContext.Each(itemContext => new Birthdays(itemContext).byDate()), includedContext => new Birthdays(includedContext).includeByDate());
+        definitions.Add("bySign", definitionContext => definitionContext.Each(itemContext => new Birthdays(itemContext).bySign()), includedContext => new Birthdays(includedContext).includeBySign());
+        definitions.Add("name", definitionContext => definitionContext.Each(itemContext => new Birthdays(itemContext).name()), includedContext => new Birthdays(includedContext).includeName());
+        definitions.Add("date", definitionContext => definitionContext.Each(itemContext => new Birthdays(itemContext).date()), includedContext => new Birthdays(includedContext).includeDate());
+        definitions.Add("ungrouped", definitionContext => definitionContext.Each(itemContext => new Birthdays(itemContext).ungrouped()), includedContext => new Birthdays(includedContext).includeUngrouped());
     }
 
     // Template:

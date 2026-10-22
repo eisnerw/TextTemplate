@@ -51,6 +51,12 @@ internal sealed class DoInclude(EvaluationContext context) : TemplateUnit(contex
         return Line($"");
     }
 
+    internal EvaluationContext includeA()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
     // Template:
     // [
     // Subtemplates:
@@ -59,7 +65,7 @@ internal sealed class DoInclude(EvaluationContext context) : TemplateUnit(contex
     // Source: "subtemplates/doInclude.template":1:1
     private void defineIncludedSubtemplates(SubtemplateDefinitions definitions)
     {
-        definitions.Add("a", definitionContext => new DoInclude(definitionContext).a());
+        definitions.Add("a", definitionContext => new DoInclude(definitionContext).a(), includedContext => new DoInclude(includedContext).includeA());
     }
 
     internal EvaluationContext Import()

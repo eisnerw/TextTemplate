@@ -2799,6 +2799,235 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
         return Line($"Test {item0} {assert}");
     }
 
+    internal EvaluationContext includeTest()
+    {
+        EvaluationContext included = Context;
+        _ = new Tests(included).test();
+        return included;
+    }
+
+    internal EvaluationContext includeTest1()
+    {
+        EvaluationContext included = Context;
+        _ = new Tests(included).test1();
+        return included;
+    }
+
+    internal EvaluationContext includeTest1Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest2()
+    {
+        EvaluationContext included = Context;
+        _ = new Tests(included).test2();
+        return included;
+    }
+
+    internal EvaluationContext includeTest2Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest3()
+    {
+        EvaluationContext included = Context;
+        _ = new Tests(included).test3();
+        return included;
+    }
+
+    internal EvaluationContext includeTest3Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest4()
+    {
+        EvaluationContext included = Context;
+        _ = new Tests(included).test4();
+        return included;
+    }
+
+    internal EvaluationContext includeTest4Result()
+    {
+        throw new NotImplementedException("templates/tests.template:34:15: This include unit requires unsupported execution features.");
+    }
+
+    internal EvaluationContext includeTest5()
+    {
+        throw new NotImplementedException("templates/tests.template:44:9: This include unit requires unsupported execution features.");
+    }
+
+    internal EvaluationContext includeTest5Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest6()
+    {
+        throw new NotImplementedException("templates/tests.template:58:9: This include unit requires unsupported execution features.");
+    }
+
+    internal EvaluationContext includeTest6Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest7()
+    {
+        EvaluationContext included = Context;
+        _ = new Tests(included).test7();
+        return included;
+    }
+
+    internal EvaluationContext includeTest7Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest8()
+    {
+        EvaluationContext included = Context;
+        _ = new Tests(included).test8();
+        return included;
+    }
+
+    internal EvaluationContext includeTest8Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest9()
+    {
+        EvaluationContext included = Context;
+        _ = new Tests(included).test9();
+        return included;
+    }
+
+    internal EvaluationContext includeTest9Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest10()
+    {
+        EvaluationContext included = Context;
+        _ = new Tests(included).test10();
+        return included;
+    }
+
+    internal EvaluationContext includeTest10Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest11()
+    {
+        EvaluationContext included = Context;
+        _ = new Tests(included).test11();
+        return included;
+    }
+
+    internal EvaluationContext includeTest11Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest12()
+    {
+        EvaluationContext included = Context;
+        _ = new Tests(included).test12();
+        return included;
+    }
+
+    internal EvaluationContext includeTest12Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest13()
+    {
+        EvaluationContext included = Context;
+        _ = new Tests(included).test13();
+        return included;
+    }
+
+    internal EvaluationContext includeTest13Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest14()
+    {
+        EvaluationContext included = Context;
+        _ = new Tests(included).test14();
+        return included;
+    }
+
+    internal EvaluationContext includeTest14Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest15()
+    {
+        EvaluationContext included = Context;
+        _ = new Tests(included).test15();
+        return included;
+    }
+
+    internal EvaluationContext includeTest15Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTest16()
+    {
+        EvaluationContext included = Context;
+        _ = new Tests(included).test16();
+        return included;
+    }
+
+    internal EvaluationContext includeTest16Result()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeTests()
+    {
+        EvaluationContext included = Context;
+        _ = new Tests(included).tests();
+        return included;
+    }
+
+    internal EvaluationContext includeExpected()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
+    internal EvaluationContext includeData()
+    {
+        EvaluationContext included = Context;
+        return included;
+    }
+
     // Template:
     //
     //
@@ -3322,42 +3551,42 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":1:46
     private void defineSubtemplates(SubtemplateDefinitions definitions)
     {
-        definitions.Add("test", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test()));
-        definitions.Add("test1", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test1()));
-        definitions.Add("test1Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test1Result()));
-        definitions.Add("test2", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test2()));
-        definitions.Add("test2Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test2Result()));
-        definitions.Add("test3", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test3()));
-        definitions.Add("test3Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test3Result()));
-        definitions.Add("test4", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test4()));
-        definitions.Add("test4Result", definitionContext => new Tests(definitionContext).test4Result());
-        definitions.Add("test5", definitionContext => new Tests(definitionContext).test5());
-        definitions.Add("test5Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test5Result()));
-        definitions.Add("test6", definitionContext => new Tests(definitionContext).test6());
-        definitions.Add("test6Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test6Result()));
-        definitions.Add("test7", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test7()));
-        definitions.Add("test7Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test7Result()));
-        definitions.Add("test8", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test8()));
-        definitions.Add("test8Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test8Result()));
-        definitions.Add("test9", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test9()));
-        definitions.Add("test9Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test9Result()));
-        definitions.Add("test10", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test10()));
-        definitions.Add("test10Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test10Result()));
-        definitions.Add("test11", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test11()));
-        definitions.Add("test11Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test11Result()));
-        definitions.Add("test12", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test12()));
-        definitions.Add("test12Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test12Result()));
-        definitions.Add("test13", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test13()));
-        definitions.Add("test13Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test13Result()));
-        definitions.Add("test14", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test14()));
-        definitions.Add("test14Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test14Result()));
-        definitions.Add("test15", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test15()));
-        definitions.Add("test15Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test15Result()));
-        definitions.Add("test16", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test16()));
-        definitions.Add("test16Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test16Result()));
-        definitions.Add("tests", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).tests()));
-        definitions.Add("expected", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).expected()));
-        definitions.Add("data", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).data()));
+        definitions.Add("test", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test()), includedContext => new Tests(includedContext).includeTest());
+        definitions.Add("test1", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test1()), includedContext => new Tests(includedContext).includeTest1());
+        definitions.Add("test1Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test1Result()), includedContext => new Tests(includedContext).includeTest1Result());
+        definitions.Add("test2", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test2()), includedContext => new Tests(includedContext).includeTest2());
+        definitions.Add("test2Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test2Result()), includedContext => new Tests(includedContext).includeTest2Result());
+        definitions.Add("test3", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test3()), includedContext => new Tests(includedContext).includeTest3());
+        definitions.Add("test3Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test3Result()), includedContext => new Tests(includedContext).includeTest3Result());
+        definitions.Add("test4", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test4()), includedContext => new Tests(includedContext).includeTest4());
+        definitions.Add("test4Result", definitionContext => new Tests(definitionContext).test4Result(), includedContext => new Tests(includedContext).includeTest4Result());
+        definitions.Add("test5", definitionContext => new Tests(definitionContext).test5(), includedContext => new Tests(includedContext).includeTest5());
+        definitions.Add("test5Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test5Result()), includedContext => new Tests(includedContext).includeTest5Result());
+        definitions.Add("test6", definitionContext => new Tests(definitionContext).test6(), includedContext => new Tests(includedContext).includeTest6());
+        definitions.Add("test6Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test6Result()), includedContext => new Tests(includedContext).includeTest6Result());
+        definitions.Add("test7", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test7()), includedContext => new Tests(includedContext).includeTest7());
+        definitions.Add("test7Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test7Result()), includedContext => new Tests(includedContext).includeTest7Result());
+        definitions.Add("test8", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test8()), includedContext => new Tests(includedContext).includeTest8());
+        definitions.Add("test8Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test8Result()), includedContext => new Tests(includedContext).includeTest8Result());
+        definitions.Add("test9", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test9()), includedContext => new Tests(includedContext).includeTest9());
+        definitions.Add("test9Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test9Result()), includedContext => new Tests(includedContext).includeTest9Result());
+        definitions.Add("test10", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test10()), includedContext => new Tests(includedContext).includeTest10());
+        definitions.Add("test10Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test10Result()), includedContext => new Tests(includedContext).includeTest10Result());
+        definitions.Add("test11", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test11()), includedContext => new Tests(includedContext).includeTest11());
+        definitions.Add("test11Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test11Result()), includedContext => new Tests(includedContext).includeTest11Result());
+        definitions.Add("test12", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test12()), includedContext => new Tests(includedContext).includeTest12());
+        definitions.Add("test12Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test12Result()), includedContext => new Tests(includedContext).includeTest12Result());
+        definitions.Add("test13", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test13()), includedContext => new Tests(includedContext).includeTest13());
+        definitions.Add("test13Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test13Result()), includedContext => new Tests(includedContext).includeTest13Result());
+        definitions.Add("test14", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test14()), includedContext => new Tests(includedContext).includeTest14());
+        definitions.Add("test14Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test14Result()), includedContext => new Tests(includedContext).includeTest14Result());
+        definitions.Add("test15", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test15()), includedContext => new Tests(includedContext).includeTest15());
+        definitions.Add("test15Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test15Result()), includedContext => new Tests(includedContext).includeTest15Result());
+        definitions.Add("test16", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test16()), includedContext => new Tests(includedContext).includeTest16());
+        definitions.Add("test16Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test16Result()), includedContext => new Tests(includedContext).includeTest16Result());
+        definitions.Add("tests", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).tests()), includedContext => new Tests(includedContext).includeTests());
+        definitions.Add("expected", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).expected()), includedContext => new Tests(includedContext).includeExpected());
+        definitions.Add("data", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).data()), includedContext => new Tests(includedContext).includeData());
     }
 
     // Template:
