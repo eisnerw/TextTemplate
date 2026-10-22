@@ -609,22 +609,22 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":483:9
     private TemplateContent tests()
     {
-        object? test = ApplySubtemplate("test", MethodInput(itemContext => "1"), Each(itemContext => itemContext.Named("test1")), Each(itemContext => itemContext.Named("test1Result")));
-        object? test_2 = ApplySubtemplate("test", MethodInput(itemContext => "2"), Each(itemContext => itemContext.Named("test2")), Each(itemContext => itemContext.Named("test2Result")));
-        object? test_3 = ApplySubtemplate("test", MethodInput(itemContext => "3"), Each(itemContext => itemContext.Named("test3")), Each(itemContext => itemContext.Named("test3Result")));
-        object? test_4 = ApplySubtemplate("test", MethodInput(itemContext => "4"), Each(itemContext => itemContext.Named("test4")), Each(itemContext => itemContext.Named("test4Result")));
-        object? test_5 = ApplySubtemplate("test", MethodInput(itemContext => "5"), Each(itemContext => itemContext.Named("test5")), Each(itemContext => itemContext.Named("test5Result")));
-        object? test_6 = ApplySubtemplate("test", MethodInput(itemContext => "6"), Each(itemContext => itemContext.Named("test6")), Each(itemContext => itemContext.Named("test6Result")));
-        object? test_7 = ApplySubtemplate("test", MethodInput(itemContext => "7"), Each(itemContext => itemContext.Named("test7")), Each(itemContext => itemContext.Named("test7Result")));
-        object? test_8 = ApplySubtemplate("test", MethodInput(itemContext => "8"), Each(itemContext => itemContext.Named("test8")), Each(itemContext => itemContext.Named("test8Result")));
-        object? test_9 = ApplySubtemplate("test", MethodInput(itemContext => "9"), Each(itemContext => itemContext.Named("test9")), Each(itemContext => itemContext.Named("test9Result")));
-        object? test_10 = ApplySubtemplate("test", MethodInput(itemContext => "10"), Each(itemContext => itemContext.Named("test10")), Each(itemContext => itemContext.Named("test10Result")));
-        object? test_11 = ApplySubtemplate("test", MethodInput(itemContext => "11"), Each(itemContext => itemContext.Named("test11")), Each(itemContext => itemContext.Named("test11Result")));
-        object? test_12 = ApplySubtemplate("test", MethodInput(itemContext => "12"), Each(itemContext => itemContext.Named("test12")), Each(itemContext => itemContext.Named("test12Result")));
-        object? test_13 = ApplySubtemplate("test", MethodInput(itemContext => "13"), Each(itemContext => itemContext.Named("test13")), Each(itemContext => itemContext.Named("test13Result")));
-        object? test_14 = ApplySubtemplate("test", MethodInput(itemContext => "14"), Each(itemContext => itemContext.Named("test14")), Each(itemContext => itemContext.Named("test14Result")));
-        object? test_15 = ApplySubtemplate("test", MethodInput(itemContext => "15"), Each(itemContext => itemContext.Named("test15")), Each(itemContext => itemContext.Named("test15Result")));
-        object? test_16 = ApplySubtemplate("test", MethodInput(itemContext => "16"), Each(itemContext => itemContext.Named("test16")), Each(itemContext => itemContext.Named("test16Result")));
+        object? test = EvaluationContext.Invoke(MethodInput(itemContext => "1"), methodValue => ApplySubtemplate("test", methodValue, Each(itemContext => itemContext.Named("test1")), Each(itemContext => itemContext.Named("test1Result"))));
+        object? test_2 = EvaluationContext.Invoke(MethodInput(itemContext => "2"), methodValue_2 => ApplySubtemplate("test", methodValue_2, Each(itemContext => itemContext.Named("test2")), Each(itemContext => itemContext.Named("test2Result"))));
+        object? test_3 = EvaluationContext.Invoke(MethodInput(itemContext => "3"), methodValue_3 => ApplySubtemplate("test", methodValue_3, Each(itemContext => itemContext.Named("test3")), Each(itemContext => itemContext.Named("test3Result"))));
+        object? test_4 = EvaluationContext.Invoke(MethodInput(itemContext => "4"), methodValue_4 => ApplySubtemplate("test", methodValue_4, Each(itemContext => itemContext.Named("test4")), Each(itemContext => itemContext.Named("test4Result"))));
+        object? test_5 = EvaluationContext.Invoke(MethodInput(itemContext => "5"), methodValue_5 => ApplySubtemplate("test", methodValue_5, Each(itemContext => itemContext.Named("test5")), Each(itemContext => itemContext.Named("test5Result"))));
+        object? test_6 = EvaluationContext.Invoke(MethodInput(itemContext => "6"), methodValue_6 => ApplySubtemplate("test", methodValue_6, Each(itemContext => itemContext.Named("test6")), Each(itemContext => itemContext.Named("test6Result"))));
+        object? test_7 = EvaluationContext.Invoke(MethodInput(itemContext => "7"), methodValue_7 => ApplySubtemplate("test", methodValue_7, Each(itemContext => itemContext.Named("test7")), Each(itemContext => itemContext.Named("test7Result"))));
+        object? test_8 = EvaluationContext.Invoke(MethodInput(itemContext => "8"), methodValue_8 => ApplySubtemplate("test", methodValue_8, Each(itemContext => itemContext.Named("test8")), Each(itemContext => itemContext.Named("test8Result"))));
+        object? test_9 = EvaluationContext.Invoke(MethodInput(itemContext => "9"), methodValue_9 => ApplySubtemplate("test", methodValue_9, Each(itemContext => itemContext.Named("test9")), Each(itemContext => itemContext.Named("test9Result"))));
+        object? test_10 = EvaluationContext.Invoke(MethodInput(itemContext => "10"), methodValue_10 => ApplySubtemplate("test", methodValue_10, Each(itemContext => itemContext.Named("test10")), Each(itemContext => itemContext.Named("test10Result"))));
+        object? test_11 = EvaluationContext.Invoke(MethodInput(itemContext => "11"), methodValue_11 => ApplySubtemplate("test", methodValue_11, Each(itemContext => itemContext.Named("test11")), Each(itemContext => itemContext.Named("test11Result"))));
+        object? test_12 = EvaluationContext.Invoke(MethodInput(itemContext => "12"), methodValue_12 => ApplySubtemplate("test", methodValue_12, Each(itemContext => itemContext.Named("test12")), Each(itemContext => itemContext.Named("test12Result"))));
+        object? test_13 = EvaluationContext.Invoke(MethodInput(itemContext => "13"), methodValue_13 => ApplySubtemplate("test", methodValue_13, Each(itemContext => itemContext.Named("test13")), Each(itemContext => itemContext.Named("test13Result"))));
+        object? test_14 = EvaluationContext.Invoke(MethodInput(itemContext => "14"), methodValue_14 => ApplySubtemplate("test", methodValue_14, Each(itemContext => itemContext.Named("test14")), Each(itemContext => itemContext.Named("test14Result"))));
+        object? test_15 = EvaluationContext.Invoke(MethodInput(itemContext => "15"), methodValue_15 => ApplySubtemplate("test", methodValue_15, Each(itemContext => itemContext.Named("test15")), Each(itemContext => itemContext.Named("test15Result"))));
+        object? test_16 = EvaluationContext.Invoke(MethodInput(itemContext => "16"), methodValue_16 => ApplySubtemplate("test", methodValue_16, Each(itemContext => itemContext.Named("test16")), Each(itemContext => itemContext.Named("test16Result"))));
 
         return Line($$"""
             
@@ -898,11 +898,11 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":427:24
     private TemplateContent renderLastName_16()
     {
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n\u0001{.} ");
         object? lastName = Get("lastName");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_13()));
 
-        return Line($"{content} {lastName}{pets}");
+        return Line($"{content}{lastName}{pets}");
     }
 
     // Template:
@@ -911,10 +911,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":428:21
     private TemplateContent renderType_13()
     {
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n \u0001{.} ");
         object? type = Get("type");
 
-        return Line($"{content} {type}");
+        return Line($"{content}{type}");
     }
 
     // Template:
@@ -1002,11 +1002,11 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":419:24
     private TemplateContent renderLastName_14()
     {
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n   \u0001{.} ");
         object? lastName = Get("lastName");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_11()));
 
-        return Line($"{content} {lastName}{pets}");
+        return Line($"{content}{lastName}{pets}");
     }
 
     // Template:
@@ -1061,11 +1061,11 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":415:24
     private TemplateContent renderLastName_13()
     {
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n   \u0001{.} ");
         object? lastName = Get("lastName");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_10()));
 
-        return Line($"{content} {lastName}{pets}");
+        return Line($"{content}{lastName}{pets}");
     }
 
     // Template:
@@ -1114,10 +1114,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":408:24
     private TemplateContent renderDomesticated()
     {
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n\u0001{.} ");
         object? domesticated = Each(itemContext => new Tests(itemContext).renderDomesticated_2());
 
-        return Line($"{content} Pets {domesticated}");
+        return Line($"{content}Pets {domesticated}");
     }
 
     // Template:
@@ -1127,10 +1127,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":409:11
     private TemplateContent renderDomesticated_2()
     {
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n      \u0001{.} ");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_9()));
 
-        return Line($"{content} Domesticated{pets}");
+        return Line($"{content}Domesticated{pets}");
     }
 
     // Template:
@@ -1245,13 +1245,12 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderLastName_12()
     {
         object? lastName = Get("lastName");
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n    \u0001{.} ");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_13()));
 
         return Line($$"""
             
-            {{lastName}} who owns 
-            {{content}} {{pets}}
+            {{lastName}} who owns {{content}}{{pets}}
             """);
     }
 
@@ -1401,13 +1400,12 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderLastName_11()
     {
         object? lastName = Get("lastName");
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n    \u0001{.} ");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_12()));
 
         return Line($$"""
             
-            {{lastName}} who owns 
-            {{content}} {{pets}}
+            {{lastName}} who owns {{content}}{{pets}}
             """);
     }
 
@@ -1556,13 +1554,12 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderLastName_10()
     {
         object? lastName = Get("lastName");
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n    \u0001{.} ");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_11()));
 
         return Line($$"""
             
-            {{lastName}} who owns 
-            {{content}} {{pets}}
+            {{lastName}} who owns {{content}}{{pets}}
             """);
     }
 
@@ -1706,13 +1703,12 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderLastName_9()
     {
         object? lastName = Get("lastName");
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n    \u0001{.} ");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_10()));
 
         return Line($$"""
             
-            {{lastName}} who owns 
-            {{content}} {{pets}}
+            {{lastName}} who owns {{content}}{{pets}}
             """);
     }
 
@@ -1724,13 +1720,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderName_10()
     {
         object? name = Get("name");
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n        \u0001{.} ");
         object? content_2 = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_6()));
 
-        return Line($$"""
-            {{name}} who is owned by 
-            {{content}} {{content_2}}
-            """);
+        return Line($"{name} who is owned by {content}{content_2}");
     }
 
     // Template:
@@ -1858,13 +1851,12 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderLastName_8()
     {
         object? lastName = Get("lastName");
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n    \u0001{.} ");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_9()));
 
         return Line($$"""
             
-            {{lastName}} who owns 
-            {{content}} {{pets}}
+            {{lastName}} who owns {{content}}{{pets}}
             """);
     }
 
@@ -1893,13 +1885,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderFirstName_5()
     {
         object? firstName = Get("firstName");
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n             \u0001{.} ");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_4()));
 
-        return Line($$"""
-            {{firstName}} who owns 
-            {{content}} {{pets}}
-            """);
+        return Line($"{firstName} who owns {content}{pets}");
     }
 
     // Template:
@@ -1966,10 +1955,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":189:15
     private TemplateContent renderName_8()
     {
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n    \u0001{.} ");
         object? name = Get("name");
 
-        return Line($"{content} {name}");
+        return Line($"{content}{name}");
     }
 
     // Template:
@@ -2141,13 +2130,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderName_6()
     {
         object? name = Get("name");
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n         \u0001{.} ");
         object? content_2 = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_4()));
 
-        return Line($$"""
-            {{name}} who is owned by 
-            {{content}} {{content_2}}
-            """);
+        return Line($"{name} who is owned by {content}{content_2}");
     }
 
     // Template:
@@ -2157,13 +2143,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderFirstName_4()
     {
         object? firstName = Get("firstName");
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n            \u0001{.} ");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_3()));
 
-        return Line($$"""
-            {{firstName}} who owns
-            {{content}} {{pets}}
-            """);
+        return Line($"{firstName} who owns{content}{pets}");
     }
 
     // Template:
@@ -2292,16 +2275,12 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":100:17
     private TemplateContent renderName_5()
     {
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n    \u0001{.} ");
         object? name = Get("name");
-        object? content_2 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content_2 = Context.CreateBullet("\n         \u0001{.} ");
         object? content_3 = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_2()));
 
-        return Line($$"""
-            
-            {{content}} {{name}} who is owned by 
-            {{content_2}} {{content_3}}
-            """);
+        return Line($"{content}{name} who is owned by {content_2}{content_3}");
     }
 
     // Template:
@@ -2311,13 +2290,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderFirstName_2()
     {
         object? firstName = Get("firstName");
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n            \u0001{.} ");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_2()));
 
-        return Line($$"""
-            {{firstName}} who owns
-            {{content}} {{pets}}
-            """);
+        return Line($"{firstName} who owns{content}{pets}");
     }
 
     // Template:
@@ -2455,14 +2431,11 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":59:17
     private TemplateContent renderLastName_6()
     {
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n\u0001{.} ");
         object? lastName = Get("lastName");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_4()));
 
-        return Line($$"""
-            
-            {{content}} {{lastName}}{{pets}}
-            """);
+        return Line($"{content}{lastName}{pets}");
     }
 
     // Template:
@@ -2473,16 +2446,12 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":60:21
     private TemplateContent renderName_4()
     {
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n    \u0001{.} ");
         object? name = Get("name");
-        object? content_2 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content_2 = Context.CreateBullet("\n         \u0001{.} ");
         object? content_3 = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName()));
 
-        return Line($$"""
-            
-            {{content}} {{name}} who is owned by 
-            {{content_2}} {{content_3}}
-            """);
+        return Line($"{content}{name} who is owned by {content_2}{content_3}");
     }
 
     // Template:
@@ -2492,13 +2461,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderFirstName()
     {
         object? firstName = Get("firstName");
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n              \u0001{.} ");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType()));
 
-        return Line($$"""
-            {{firstName}} who owns
-            {{content}} {{pets}}
-            """);
+        return Line($"{firstName} who owns{content}{pets}");
     }
 
     // Template:
@@ -2580,14 +2546,11 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":45:41
     private TemplateContent renderLastName_5()
     {
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n\u0001{.} ");
         object? lastName = Get("lastName");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_3()));
 
-        return Line($$"""
-            
-            {{content}} {{lastName}}{{pets}}
-            """);
+        return Line($"{content}{lastName}{pets}");
     }
 
     // Template:
@@ -2596,13 +2559,10 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":46:21
     private TemplateContent renderName_3()
     {
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n    \u0001{.} ");
         object? name = Get("name");
 
-        return Line($$"""
-            
-            {{content}} {{name}}
-            """);
+        return Line($"{content}{name}");
     }
 
     // Template:
@@ -2667,14 +2627,11 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":32:40
     private TemplateContent renderLastName_4()
     {
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n\u0001{.} ");
         object? lastName = Get("lastName");
         object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_2()));
 
-        return Line($$"""
-            
-            {{content}} {{lastName}}{{pets}}
-            """);
+        return Line($"{content}{lastName}{pets}");
     }
 
     // Template:
@@ -2826,7 +2783,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":4:8
     private TemplateContent test()
     {
-        object? choice = (Context.TestCondition(Builtins.Matches(MethodInput("$0"), EvaluationContext.ParseInteger("1"), EvaluationContext.ParseInteger("2"), EvaluationContext.ParseInteger("3"), EvaluationContext.ParseInteger("4"), EvaluationContext.ParseInteger("5"), EvaluationContext.ParseInteger("6"), EvaluationContext.ParseInteger("7"), EvaluationContext.ParseInteger("8"), EvaluationContext.ParseInteger("9"), EvaluationContext.ParseInteger("10"), EvaluationContext.ParseInteger("11"), EvaluationContext.ParseInteger("12"), EvaluationContext.ParseInteger("13"), EvaluationContext.ParseInteger("14"), EvaluationContext.ParseInteger("15"), EvaluationContext.ParseInteger("16"))) ? Each(itemContext => new Tests(itemContext).renderItem0()) : "");
+        object? choice = (Context.TestCondition(EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Matches(methodValue, EvaluationContext.ParseInteger("1"), EvaluationContext.ParseInteger("2"), EvaluationContext.ParseInteger("3"), EvaluationContext.ParseInteger("4"), EvaluationContext.ParseInteger("5"), EvaluationContext.ParseInteger("6"), EvaluationContext.ParseInteger("7"), EvaluationContext.ParseInteger("8"), EvaluationContext.ParseInteger("9"), EvaluationContext.ParseInteger("10"), EvaluationContext.ParseInteger("11"), EvaluationContext.ParseInteger("12"), EvaluationContext.ParseInteger("13"), EvaluationContext.ParseInteger("14"), EvaluationContext.ParseInteger("15"), EvaluationContext.ParseInteger("16")))) ? Each(itemContext => new Tests(itemContext).renderItem0()) : "");
 
         return Line($"{choice}");
     }
@@ -2837,7 +2794,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderItem0()
     {
         object? item0 = Get("$0");
-        object? assert = Builtins.Assert(MethodInput("$1"), Get("$2"), "passed");
+        object? assert = EvaluationContext.Invoke(MethodInput("$1"), methodValue => Builtins.Assert(methodValue, Get("$2"), "passed"));
 
         return Line($"Test {item0} {assert}");
     }
@@ -3926,7 +3883,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":1:1
     private TemplateContent renderTests()
     {
-        object? assert = Builtins.Assert(SubtemplateInput("tests"), Each(itemContext => itemContext.Named("expected")), "ALL TESTS PASSED");
+        object? assert = EvaluationContext.Invoke(SubtemplateInput("tests"), methodValue => Builtins.Assert(methodValue, Each(itemContext => itemContext.Named("expected")), "ALL TESTS PASSED"));
 
         return Line($"{assert}");
     }

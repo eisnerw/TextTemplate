@@ -22,7 +22,7 @@ dotnet run --no-build --project Generated -- --template hello --data-file /tmp/t
 
 Generation currently implements a subset of execution semantics. The complete
 reference collection compiles, but templates that reach unfinished features throw
-`NotImplementedException`. Most methods/annotations, inline calls, bullets, and URL
+`NotImplementedException`. Some methods/annotations, inline calls, and HTTP
 resolution still have stubs. Supported additions are literal shared `@Include`,
 literal `@MissingValue`, named subtemplate methods with scalar arguments, and
 list contexts and per-item inline/named evaluation, and `Join` with an optional
@@ -99,7 +99,7 @@ dotnet run --project Generated -- --template simpledata --data-file reference/da
 
 List items inherit definitions and annotations, retain parent links, and preserve
 structured content until composition. `Join(', ', ' and ')` uses the final separator
-between the last two retained items. Filtering, grouping, bullets, and general
+between the last two retained items. Filtering, grouping, and general
 object formatting remain unfinished.
 
 ## Compiler options
@@ -349,11 +349,20 @@ those styles until composition knows their insertion point. Rendering supports
 combinations. It preserves the legacy four-space indentation, first-output-line
 exception, ECMAScript trimming, trailing blank-line removal, and padding newline.
 Literal template text and internal `$n` strings are not styled again. Dynamic style
-arguments remain a TODO; bullet numbering remains independently unfinished.
+arguments remain a TODO.
 Exact Node/C# comparisons are recorded in `multiline-cases.json`.
 
-Bullet nodes currently emit the literal `{.}` marker, as an explicitly authorized
-placeholder. Hierarchical bullet formatting and numbering remain unimplemented.
+Bullets retain their newline, indentation, and following spaces as structured
+markers. Final rendering assigns levels by indentation and tracks counters through
+nested lists and returns to earlier levels. `@BulletStyle` supports literal styles,
+numeric/alphabetic/Roman counters, initializers such as `1:10` and `i:iv`, compound
+styles such as `1.1`, padding, and per-level style fallback. `@BulletMode` supports
+implicit and explicit reset behavior; `@DefaultIndent` controls automatic list
+indentation. Changing bullet styles resolves that scope before restoring the caller's
+styles, matching Node. A missing line can still establish a bullet level.
+Characterization cases are in `bullet-cases.json`; the unfiltered outline fixture
+isolates layout from the unfinished `Where` filter. Dynamic annotation arguments
+remain TODOs. No full-outline filtering parity is claimed.
 
 `IfMissing` returns its first argument for Missing, empty string, zero, or false;
 other values pass through. Explicit null receivers remain null, matching the
@@ -372,7 +381,7 @@ list counts and iteration, arguments, and parent access (`named-data-cases.json`
 
 TODO: `Where` is currently an authorized pass-through: it returns its receiver
 unchanged and does not evaluate its predicate. Implement per-item filtering before
-claiming legacy parity. TODOs in source also track literal bullets, dynamic multiline style arguments,
+claiming legacy parity. TODOs in source also track dynamic style arguments,
 and the unimplemented conditional `Count` form.
 
 `Case(match, result, ..., default)` compiles to a C# switch with lazy guarded

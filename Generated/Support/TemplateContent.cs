@@ -13,6 +13,6 @@ public sealed class TemplateContent
 {
     internal object?[] Fragments { get; }
     internal TemplateContent(object?[] fragments) => Fragments = fragments;
-    public string Render() => EvaluationContext.Compose(this) ?? "";
+    public string Render() => new EvaluationContext(null, new Dictionary<string, Func<EvaluationContext, object?>>()).Render(_ => this) ?? "";
     public override string ToString() => Render();
 }

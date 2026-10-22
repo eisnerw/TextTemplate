@@ -71,16 +71,12 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":40:10
     private object? style5()
     {
-        // Template:
-        // [].@BulletStyle(' I', '•', 'A.', '(1)')
-        // Source: "templates/bullets.template":40:10
-        object? applyBulletStyle() => Unsupported(
-            "Call @BulletStyle",
-            "templates/bullets.template:40:10",
-            () => Each(itemContext => Line($"")),
-            () => new object?[] { " I", "•", "A.", "(1)" });
-
-        return applyBulletStyle();
+        return Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithBulletStyle(" I", "•", "A.", "(1)")
+            },
+            annotatedContext => annotatedContext.Each(itemContext => Line($"")));
     }
 
     // Template:
@@ -88,16 +84,12 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":39:10
     private object? style4()
     {
-        // Template:
-        // [].@BulletStyle('')
-        // Source: "templates/bullets.template":39:10
-        object? applyBulletStyle() => Unsupported(
-            "Call @BulletStyle",
-            "templates/bullets.template:39:10",
-            () => Each(itemContext => Line($"")),
-            () => new object?[] { "" });
-
-        return applyBulletStyle();
+        return Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithBulletStyle("")
+            },
+            annotatedContext => annotatedContext.Each(itemContext => Line($"")));
     }
 
     // Template:
@@ -105,16 +97,12 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":38:10
     private object? style3()
     {
-        // Template:
-        // [].@BulletStyle('-')
-        // Source: "templates/bullets.template":38:10
-        object? applyBulletStyle() => Unsupported(
-            "Call @BulletStyle",
-            "templates/bullets.template:38:10",
-            () => Each(itemContext => Line($"")),
-            () => new object?[] { "-" });
-
-        return applyBulletStyle();
+        return Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithBulletStyle("-")
+            },
+            annotatedContext => annotatedContext.Each(itemContext => Line($"")));
     }
 
     // Template:
@@ -122,16 +110,12 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":37:10
     private object? style2()
     {
-        // Template:
-        // [].@BulletStyle('1','1.1','1.1.1','1(a)')
-        // Source: "templates/bullets.template":37:10
-        object? applyBulletStyle() => Unsupported(
-            "Call @BulletStyle",
-            "templates/bullets.template:37:10",
-            () => Each(itemContext => Line($"")),
-            () => new object?[] { "1", "1.1", "1.1.1", "1(a)" });
-
-        return applyBulletStyle();
+        return Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithBulletStyle("1", "1.1", "1.1.1", "1(a)")
+            },
+            annotatedContext => annotatedContext.Each(itemContext => Line($"")));
     }
 
     // Template:
@@ -139,16 +123,12 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":36:10
     private object? style1()
     {
-        // Template:
-        // [].@BulletStyle('I.','(a)','•','i.')
-        // Source: "templates/bullets.template":36:10
-        object? applyBulletStyle() => Unsupported(
-            "Call @BulletStyle",
-            "templates/bullets.template:36:10",
-            () => Each(itemContext => Line($"")),
-            () => new object?[] { "I.", "(a)", "•", "i." });
-
-        return applyBulletStyle();
+        return Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithBulletStyle("I.", "(a)", "•", "i.")
+            },
+            annotatedContext => annotatedContext.Each(itemContext => Line($"")));
     }
 
     // Template:
@@ -156,7 +136,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":35:12
     private TemplateContent ndpetcnt()
     {
-        object? count = Builtins.Count(ApplySubtemplate("NonDomesticated", MethodInput("pets")));
+        object? count = EvaluationContext.Invoke(EvaluationContext.Invoke(MethodInput("pets"), methodValue => ApplySubtemplate("NonDomesticated", methodValue)), methodValue_2 => Builtins.Count(methodValue_2));
 
         return Line($"{count}");
     }
@@ -166,7 +146,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":34:11
     private TemplateContent dpetcnt()
     {
-        object? count = Builtins.Count(ApplySubtemplate("Domesticated", MethodInput("pets")));
+        object? count = EvaluationContext.Invoke(EvaluationContext.Invoke(MethodInput("pets"), methodValue => ApplySubtemplate("Domesticated", methodValue)), methodValue_2 => Builtins.Count(methodValue_2));
 
         return Line($"{count}");
     }
@@ -186,7 +166,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":33:16
     private TemplateContent renderSurround()
     {
-        object? surround = ApplySubtemplate("Surround", MethodInput("$0"), "\"");
+        object? surround = EvaluationContext.Invoke(MethodInput("$0"), methodValue => ApplySubtemplate("Surround", methodValue, "\""));
 
         return Line($"{surround}");
     }
@@ -239,7 +219,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":30:18
     private TemplateContent IsDomesticated()
     {
-        object? matches = Builtins.Matches(MethodInput("$0"), "dog", "cat");
+        object? matches = EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Matches(methodValue, "dog", "cat"));
 
         return Line($"{matches}");
     }
@@ -249,7 +229,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":29:20
     private TemplateContent NonDomesticated()
     {
-        object? where = Builtins.Where(MethodInput("$0"));
+        object? where = EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Where(methodValue));
 
         return Line($"{where}");
     }
@@ -259,7 +239,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":28:17
     private TemplateContent Domesticated()
     {
-        object? where = Builtins.Where(MethodInput("$0"));
+        object? where = EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Where(methodValue));
 
         return Line($"{where}");
     }
@@ -275,9 +255,9 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
         // Template:
         // type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')
         // Source: "templates/bullets.template":25:7
-        object? selectCase()
+        object? selectCase(object? value)
         {
-            object? value = EvaluationContext.Intermediate(MethodInput(itemContext => itemContext.Lookup("type")));
+            value = EvaluationContext.Intermediate(value);
             if (value is null or EvaluationContext.Missing) return value;
             if (value is EvaluationContext.Data or EvaluationContext.Arguments) return null;
             switch (value)
@@ -293,7 +273,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
             }
         }
 
-        object? @case = selectCase();
+        object? @case = EvaluationContext.Invoke(MethodInput(itemContext => itemContext.Lookup("type")), selectCase);
         object? type = Get("type");
         object? name = Get("name");
 
@@ -305,7 +285,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":25:25
     private TemplateContent renderToLower()
     {
-        object? toLower = Builtins.ToLower(MethodInput(itemContext => new Bullets(itemContext).renderName()));
+        object? toLower = EvaluationContext.Invoke(MethodInput(itemContext => new Bullets(itemContext).renderName()), methodValue => Builtins.ToLower(methodValue));
 
         return Line($"{toLower}");
     }
@@ -440,22 +420,17 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":10:29
     private TemplateContent renderChoice()
     {
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n   \u0001{.}");
         object? choice = (EvaluationContext.Compare(Get("^.^.$1"), "=", EvaluationContext.ParseInteger("2")) ? Each(itemContext => Line($".0")) : "");
-        object? quoted = ApplySubtemplate("Quoted", Builtins.ToUpper(MethodInput(itemContext => new Bullets(itemContext).renderLastName())));
-        object? content_2 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
-        object? ifMissing = Builtins.IfMissing(MethodInput("lastName"), "No Last Name");
-        object? content_3 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? quoted = EvaluationContext.Invoke(EvaluationContext.Invoke(MethodInput(itemContext => new Bullets(itemContext).renderLastName()), methodValue => Builtins.ToUpper(methodValue)), methodValue_2 => ApplySubtemplate("Quoted", methodValue_2));
+        object? content_2 = Context.CreateBullet("\n      \u0001{.} ");
+        object? ifMissing = EvaluationContext.Invoke(MethodInput("lastName"), methodValue_3 => Builtins.IfMissing(methodValue_3, "No Last Name"));
+        object? content_3 = Context.CreateBullet("\n      \u0001{.} ");
         object? firstName = Get("firstName");
-        object? content_4 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content_4 = Context.CreateBullet("\n      \u0001{.} ");
         object? petsResult = (IsTruthy("pets") ? Each(itemContext => new Bullets(itemContext).renderCount()) : Each(itemContext => Line($"no pets")));
 
-        return Line($$"""
-            {{content}}{{choice}} {{quoted}} 
-            {{content_2}} Lastname: {{ifMissing}}   
-            {{content_3}} FirstName: {{firstName}}  
-            {{content_4}} Pets {{petsResult}}
-            """);
+        return Line($"{content}{choice} {quoted} {content_2}Lastname: {ifMissing}   {content_3}FirstName: {firstName}  {content_4}Pets {petsResult}");
     }
 
     // Template:
@@ -466,19 +441,15 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":18:23
     private TemplateContent renderCount()
     {
-        object? count = Builtins.Count(MethodInput("pets"));
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? count = EvaluationContext.Invoke(MethodInput("pets"), methodValue => Builtins.Count(methodValue));
+        object? content = Context.CreateBullet("\n         \u0001{.} ");
         object? choice = (EvaluationContext.Compare(Each(itemContext => itemContext.Named("dpetcnt")), ">", EvaluationContext.ParseInteger("1")) ? Each(itemContext => new Bullets(itemContext).renderDpetcnt()) : "");
-        object? domesticated = InContext(ApplySubtemplate("Domesticated", MethodInput("pets")), dataContext => dataContext.Each(itemContext => new Bullets(itemContext).renderFormatPet()));
-        object? content_2 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? domesticated = InContext(EvaluationContext.Invoke(MethodInput("pets"), methodValue_2 => ApplySubtemplate("Domesticated", methodValue_2)), dataContext => dataContext.Each(itemContext => new Bullets(itemContext).renderFormatPet()));
+        object? content_2 = Context.CreateBullet("\n         \u0001{.} ");
         object? choice_2 = (EvaluationContext.Compare(Each(itemContext => itemContext.Named("ndpetcnt")), ">", EvaluationContext.ParseInteger("1")) ? Each(itemContext => new Bullets(itemContext).renderNdpetcnt()) : "");
-        object? nonDomesticated = InContext(ApplySubtemplate("NonDomesticated", MethodInput("pets")), dataContext => dataContext.Each(itemContext => new Bullets(itemContext).renderFormatPet_2()));
+        object? nonDomesticated = InContext(EvaluationContext.Invoke(MethodInput("pets"), methodValue_3 => ApplySubtemplate("NonDomesticated", methodValue_3)), dataContext => dataContext.Each(itemContext => new Bullets(itemContext).renderFormatPet_2()));
 
-        return Line($$"""
-            ({{count}}):  
-            {{content}} Domesticated{{choice}}: {{domesticated}}  
-            {{content_2}} Non-domesticated{{choice_2}}: {{nonDomesticated}}
-            """);
+        return Line($"({count}):  {content}Domesticated{choice}: {domesticated}  {content_2}Non-domesticated{choice_2}: {nonDomesticated}");
     }
 
     // Template:
@@ -531,8 +502,8 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderLastName()
     {
         object? lastName = Get("lastName");
-        object? prepend = ApplySubtemplate("Prepend", MethodInput("firstName"), ", ");
-        object? prepend_2 = ApplySubtemplate("Prepend", MethodInput("middleName"), " ");
+        object? prepend = EvaluationContext.Invoke(MethodInput("firstName"), methodValue => ApplySubtemplate("Prepend", methodValue, ", "));
+        object? prepend_2 = EvaluationContext.Invoke(MethodInput("middleName"), methodValue_2 => ApplySubtemplate("Prepend", methodValue_2, " "));
 
         return Line($"{lastName}{prepend}{prepend_2}");
     }
@@ -650,7 +621,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":1:1
     private TemplateContent renderBullets()
     {
-        object? showStyles = ApplySubtemplate("showStyles", MethodInput(itemContext => ""), EvaluationContext.ParseInteger("1"));
+        object? showStyles = EvaluationContext.Invoke(MethodInput(itemContext => ""), methodValue => ApplySubtemplate("showStyles", methodValue, EvaluationContext.ParseInteger("1")));
 
         return Line($$"""
             Shows use of bullet styles as well as modular subtemplates, automatic bulleting, and indenting only for multiple values.  You can see different bullet styles by changing the parameter to #showStyles from 1 through 5

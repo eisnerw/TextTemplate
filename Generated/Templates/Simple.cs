@@ -38,7 +38,7 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/simple.template":16:9
     private TemplateContent anded()
     {
-        object? join = Builtins.Join(MethodInput("$0"), ", ", " and ");
+        object? join = EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Join(methodValue, ", ", " and "));
 
         return Line($"{join}");
     }
@@ -84,7 +84,7 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/simple.template":9:11
     private object? renderAnded()
     {
-        return ApplySubtemplate("anded", SubtemplateInput("formatPet"));
+        return EvaluationContext.Invoke(SubtemplateInput("formatPet"), methodValue => ApplySubtemplate("anded", methodValue));
     }
 
     // Template:

@@ -429,5 +429,37 @@
       "value": " one \n  two  \n\n"
     },
     "expected": "head\n  one\n      two\nend"
+  },
+  {
+    "name": "style-later-casing",
+    "script": "{[head\n   Prefix: {value.ToUpper()}].@MultilineStyle('IndentAllButFirst','Padded')}\nSubtemplates:\n{#echo:[{$0}]}",
+    "data": {
+      "value": "one\ntwo"
+    },
+    "expected": "head\n   Prefix: ONE\n       TWO\n"
+  },
+  {
+    "name": "style-later-replace",
+    "script": "{[head\n   Prefix: {value.Replace('one','ONE')}].@MultilineStyle('IndentAllButFirst','Padded')}\nSubtemplates:\n{#echo:[{$0}]}",
+    "data": {
+      "value": "one\ntwo"
+    },
+    "expected": "head\n   Prefix: ONE\n       two\n"
+  },
+  {
+    "name": "style-later-case",
+    "script": "{[head\n   Prefix: {value.Case('no',[one\ntwo],[other\nvalue])}].@MultilineStyle('IndentAllButFirst','Padded')}\nSubtemplates:\n{#echo:[{$0}]}",
+    "data": {
+      "value": "one\ntwo"
+    },
+    "expected": "head\n   Prefix: other\n       value\n"
+  },
+  {
+    "name": "style-later-named",
+    "script": "{[head\n   Prefix: {value.#echo()}].@MultilineStyle('IndentAllButFirst','Padded')}\nSubtemplates:\n{#echo:[{$0}]}",
+    "data": {
+      "value": "one\ntwo"
+    },
+    "expected": "head\n   Prefix: one\n       two\n"
   }
 ]

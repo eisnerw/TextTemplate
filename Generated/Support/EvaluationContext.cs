@@ -108,6 +108,11 @@ internal sealed class EvaluationContext
     private readonly string? dataRoot;
     private string? missingText;
     private TemplateRegex? falsy;
+    private IReadOnlyList<string>? bulletStyles;
+    private string bulletMode = "implicit";
+    private string? defaultIndent;
+    private sealed class BulletState { internal BulletIndent? Current; }
+    private readonly BulletState bulletState = new();
     // Preserve styles on each multiline value until its insertion point is known.
     internal IReadOnlyList<string>? MultilineStyle { get; private set; }
     private Missing MissingValue(string key) => new(key, missingText?.Replace("{key}", key));
@@ -126,6 +131,10 @@ internal sealed class EvaluationContext
         recursion = parent.recursion;
         missingText = parent.missingText;
         falsy = parent.falsy;
+        bulletStyles = parent.bulletStyles;
+        bulletMode = parent.bulletMode;
+        defaultIndent = parent.defaultIndent;
+        bulletState = parent.bulletState;
         MultilineStyle = parent.MultilineStyle;
     }
 
@@ -235,7 +244,7 @@ internal sealed class EvaluationContext
     [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
     internal sealed record Multiline(string Text, IReadOnlyList<string> Styles);
     [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
-    internal sealed record RenderedList(List<object?> Items)
+    internal sealed record RenderedList(List<object?> Items, string? DefaultIndent = null)
     {
         public override string ToString() => DebugSummary(this);
     }
@@ -253,7 +262,7 @@ internal sealed class EvaluationContext
             object? result = body(new EvaluationContext(this, item));
             if (Compose(result) is not null) results.Add(result);
         }
-        return results.Count switch { 0 => MissingValue("list"), 1 => results[0], _ => new RenderedList(results) };
+        return results.Count switch { 0 => MissingValue("list"), 1 => results[0], _ => new RenderedList(results, defaultIndent) };
     }
     internal object? Receiver(Func<EvaluationContext, object?> body)
     {
@@ -319,6 +328,73 @@ internal sealed class EvaluationContext
     }
     internal bool TestCondition(object? value)
         => Condition(value) && !(falsy?.Test(Builtins.JsString(value)) ?? false);
+    internal sealed record Bullet(string Marker, string? DefaultIndent);
+    internal Bullet CreateBullet(string marker) => new(marker, defaultIndent);
+    internal EvaluationContext WithBulletStyle(params string[] styles)
+    {
+        EvaluationContext child = new(this, Current);
+        child.bulletStyles = Array.AsReadOnly((string[])styles.Clone());
+        return child;
+    }
+    internal EvaluationContext WithBulletMode(string mode)
+    {
+        mode = NodeCasing.Convert(mode, false);
+        if (mode is not ("implicit" or "explicit")) throw new InvalidOperationException("Invalid Bullet Mode");
+        EvaluationContext child = new(this, Current);
+        child.bulletMode = mode;
+        return child;
+    }
+    internal EvaluationContext WithDefaultIndent(string? amount)
+    {
+        double width = amount is null ? 0 : ParseInteger(amount);
+        if (amount is not null && (double.IsNaN(width) || width < 1 || width > 25))
+            throw new InvalidOperationException("@DefaultIndent takes a numerical argument between 1 and 25");
+        EvaluationContext child = new(this, Current);
+        child.defaultIndent = amount is null ? null : new string(' ', (int)width);
+        return child;
+    }
+    internal string? Render(Func<EvaluationContext, object?> template) => RenderValue(template(this));
+    private string? RenderValue(object? value)
+    {
+        var keys = new List<string>();
+        return ResolveBullets(Compose(value, keys), keys);
+    }
+    private string? ResolveBullets(string? text, List<string> keys)
+    {
+        if (text is null) return null;
+        string[] lines = text.Split('\n');
+        foreach (string line in lines)
+        {
+            Match found = Regex.Match(line, @"^[ \t]*\x01\{\.\}");
+            if (found.Success && !keys.Contains(found.Value)) keys.Add(found.Value);
+        }
+        // Stable length ordering defines levels, including equal-width but different indents.
+        for (int i = 1; i < keys.Count; i++)
+        {
+            string key = keys[i]; int j = i;
+            while (j > 0 && keys[j - 1].Length > key.Length) { keys[j] = keys[j - 1]; j--; }
+            keys[j] = key;
+        }
+        if (keys.Count == 0) return text;
+        for (int i = 0; i < lines.Length; i++)
+        {
+            string line = lines[i];
+            Match found = Regex.Match(line, @"^([ \t]*)\x01\{\.\}");
+            if (found.Success)
+            {
+                var current = new BulletIndent(found.Groups[1].Value, bulletState.Current, keys.IndexOf(found.Value));
+                bulletState.Current = current;
+                lines[i] = current.Indent + current.Format(bulletStyles) + line[found.Length..];
+            }
+            else if (bulletMode == "implicit" && line.Trim(Builtins.Whitespace.ToCharArray()).Length > 0)
+            {
+                int width = Regex.Match(line, @"^[ \t]*").Length;
+                while (bulletState.Current is { } current && current.Indent.Length > width)
+                    bulletState.Current = current.Parent;
+            }
+        }
+        return string.Join("\n", lines);
+    }
     internal EvaluationContext WithMultilineStyle(params string[] styles)
     {
         bool tabbed = Array.IndexOf(styles, "Tabbed") >= 0;
@@ -340,7 +416,10 @@ internal sealed class EvaluationContext
     {
         EvaluationContext child = new EvaluationContext(this, Current);
         foreach (Func<EvaluationContext, EvaluationContext> annotation in annotations) child = annotation(child);
-        return body(child);
+        object? result = body(child);
+        if (JsonSerializer.Serialize(bulletStyles) != JsonSerializer.Serialize(child.bulletStyles))
+            return child.RenderValue(result);
+        return result;
     }
     internal EvaluationContext Include(string name, Func<EvaluationContext, EvaluationContext> load)
     {
@@ -399,6 +478,12 @@ internal sealed class EvaluationContext
         try { return method(this); }
         finally { recursion.Value--; }
     }
+    internal static object? Invoke(object? value, Func<object?, object?> method)
+    {
+        if (value is not Multiline multiline) return method(value);
+        object? result = Intermediate(method(multiline.Text));
+        return result is string text && text.Contains('\n') ? new Multiline(text, multiline.Styles) : result;
+    }
     internal static object? Intermediate(object? value)
     {
         if (value is TemplateContent content)
@@ -448,15 +533,34 @@ internal sealed class EvaluationContext
         return text[..e] + "e" + (exponent >= 0 ? "+" : "-") + Math.Abs(exponent).ToString(CultureInfo.InvariantCulture);
     }
     // Retain the fragment hierarchy until rendering; a missing value removes its entire line.
-    internal static string? Compose(object? value)
+    internal static string? Compose(object? value, List<string>? bulletKeys = null)
     {
         List<string> lines = new List<string> { "" };
         bool skipping = false;
+        void VisitSequence(IReadOnlyList<object?> fragments, string? indent)
+        {
+            for (int i = 0; i < fragments.Count; i++)
+            {
+                if (fragments[i] is Bullet bullet)
+                {
+                    Visit(bullet.Marker);
+                    var rest = new List<object?>();
+                    for (i++; i < fragments.Count; i++) rest.Add(fragments[i]);
+                    VisitSequence(rest, bullet.Marker);
+                    return;
+                }
+                string prefix = Regex.Match(lines[^1], @"^[ \t]*(?:\x01\{\.\})?").Value;
+                if (indent?.Contains("\x01{.}") == true && !prefix.Contains("\x01{.}") && prefix.Length > 0)
+                    indent = prefix;
+                Visit(fragments[i], indent);
+            }
+        }
         void Visit(object? item, string? indent = null)
         {
             // Traverse fragments directly: ToString would lose missing-line and indentation behavior.
-            if (item is TemplateContent templateContent) { foreach (object? fragment in templateContent.Fragments) Visit(fragment, indent); return; }
-            if (item is object?[] sequence) { foreach (object? child in sequence) Visit(child, indent); return; }
+            if (item is TemplateContent templateContent) { VisitSequence(templateContent.Fragments, indent); return; }
+            if (item is object?[] sequence) { VisitSequence(sequence, indent); return; }
+            if (item is Bullet bullet) { Visit(bullet.Marker); return; }
             if (item is Data data)
             {
                 if (data.Items is not null)
@@ -479,10 +583,30 @@ internal sealed class EvaluationContext
             if (item is RenderedList rendered)
             {
                 if (rendered.Items.Count == 0) return;
+                string preview = Compose(rendered.Items[0]) ?? "";
+                bool startsWithBullet = Regex.IsMatch(preview, @"^\s*\x01\{\.\}");
+                if (indent?.Contains("\x01{.}") == true)
+                {
+                    bool unfinished = Regex.IsMatch(lines[^1], @"^[ \t]*\x01\{\.\}[ \t]*$");
+                    string nextBullet = Regex.Replace(indent, @"([ \t]*\x01\{\.\})", (rendered.DefaultIndent ?? "   ") + "$1");
+                    for (int i = 0; i < rendered.Items.Count; i++)
+                    {
+                        object? child = rendered.Items[i];
+                        string marker = unfinished ? indent : nextBullet;
+                        if (i == 0 && unfinished) Visit(child, indent);
+                        else
+                        {
+                            string firstMarker = startsWithBullet ? FirstBullet(child) : marker;
+                            if (i > 0 && !indent.Contains('\n') && !firstMarker.Contains('\n')) Visit("\n");
+                            if (!startsWithBullet) VisitSequence(new object?[] { new Bullet(marker, rendered.DefaultIndent), child }, indent);
+                            else Visit(child, indent);
+                        }
+                    }
+                    return;
+                }
                 bool emptyLine = lines[^1] == "";
                 string lastIndent = Regex.Match(lines[^1], @"^[ \t]*").Value;
-                string? nextIndent = "   " + (indent ?? lastIndent);
-                string preview = Compose(rendered.Items[0]) ?? "";
+                string? nextIndent = (rendered.DefaultIndent ?? "   ") + (indent ?? lastIndent);
                 if (Regex.Match(preview, @"^[ \t]*").Length > lastIndent.Length) nextIndent = null;
                 bool incomplete = lines[^1] == indent;
                 if (incomplete) nextIndent = indent;
@@ -494,8 +618,8 @@ internal sealed class EvaluationContext
                     if (preview.StartsWith('\n')) nextIndent = indent;
                     else if (!(incomplete && first) && (!emptyLine || !first))
                     {
-                        Visit("\n" + nextIndent);
-                        if (!string.IsNullOrEmpty(nextIndent) && content is string text)
+                        Visit("\n" + (startsWithBullet ? "" : nextIndent));
+                        if (!startsWithBullet && !string.IsNullOrEmpty(nextIndent) && content is string text)
                             content = text.Replace("\n", "\n" + nextIndent);
                     }
                     Visit(content, nextIndent);
@@ -538,10 +662,22 @@ internal sealed class EvaluationContext
                 }
                 else
                 {
+                    Match bulletMatch = Regex.Match(parts[i], @"^[ \t]*\x01\{\.\}");
+                    if (bulletMatch.Success)
+                    {
+                        if (bulletKeys is not null && !bulletKeys.Contains(bulletMatch.Value)) bulletKeys.Add(bulletMatch.Value);
+                        if (lines[^1] != "") lines.Add("");
+                    }
                     lines[^1] += parts[i];
                     if (i < parts.Length - 1) lines.Add("");
                 }
             }
+        }
+        string FirstBullet(object? item)
+        {
+            if (item is TemplateContent content && content.Fragments.Length > 0) return FirstBullet(content.Fragments[0]);
+            if (item is object?[] sequence && sequence.Length > 0) return FirstBullet(sequence[0]);
+            return item is Bullet bullet ? bullet.Marker : "";
         }
         Visit(value);
         if (skipping)

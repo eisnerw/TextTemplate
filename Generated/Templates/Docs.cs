@@ -65,8 +65,8 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
             () => Get("type"),
             () => new object?[] { "dash", " &#8212; ", "comma", ", ", "a", "", "The", "", "blank", " ", "none", "" });
 
-        object? choice = (Context.TestCondition(Builtins.Matches(MethodInput("type"), "a", "The")) ? Each(itemContext => new Docs(itemContext).renderType()) : "");
-        object? title = ApplySubtemplate("title", MethodInput("name"));
+        object? choice = (Context.TestCondition(EvaluationContext.Invoke(MethodInput("type"), methodValue => Builtins.Matches(methodValue, "a", "The"))) ? Each(itemContext => new Docs(itemContext).renderType()) : "");
+        object? title = EvaluationContext.Invoke(MethodInput("name"), methodValue_2 => ApplySubtemplate("title", methodValue_2));
         object? @case = applyCase();
 
         return Line($"{choice}{title}{@case}");
@@ -122,39 +122,13 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/docs.template":1:58
     private object? renderMissingValue()
     {
-        // Template:
-        // [ //
-        //
-        // {.} {#name}{text}{contents->[ //
-        //    {contents:[{#name}{text}{contents->[ 
-        //       {contents:[ 
-        //          {#name}{text}
-        //       ]}
-        //    ]}]}]}].@BulletStyle('I.','(a)','•','i.')
-        // Source: "templates/docs.template":1:58
-        object? applyBulletStyle() => Unsupported(
-            "Call @BulletStyle",
-            "templates/docs.template:1:58",
-            () => Each(itemContext => new Docs(itemContext).renderName_2()),
-            () => new object?[] { "I.", "(a)", "•", "i." });
-
-        // Template:
-        // [ //
-        //
-        // {.} {#name}{text}{contents->[ //
-        //    {contents:[{#name}{text}{contents->[ 
-        //       {contents:[ 
-        //          {#name}{text}
-        //       ]}
-        //    ]}]}]}].@BulletStyle('I.','(a)','•','i.').@MissingValue('')
-        // Source: "templates/docs.template":1:58
-        object? applyMissingValue() => Unsupported(
-            "Call @MissingValue",
-            "templates/docs.template:1:58",
-            () => applyBulletStyle(),
-            () => new object?[] { "" });
-
-        return applyMissingValue();
+        return Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithBulletStyle("I.", "(a)", "•", "i."),
+                annotatedContext => annotatedContext.WithMissingValue("")
+            },
+            annotatedContext => annotatedContext.Each(itemContext => new Docs(itemContext).renderName_2()));
     }
 
     // Template:
@@ -169,15 +143,14 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/docs.template":1:58
     private TemplateContent renderName_2()
     {
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n\u0001{.} ");
         object? name = Each(itemContext => itemContext.Named("name"));
         object? text = Get("text");
         object? contentsResult = (IsTruthy("contents") ? Each(itemContext => new Docs(itemContext).renderContent()) : "");
 
         return Line($$"""
             
-            
-            {{content}} {{name}}{{text}}{{contentsResult}}
+            {{content}}{{name}}{{text}}{{contentsResult}}
             """);
     }
 

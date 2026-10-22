@@ -40,6 +40,7 @@ public sealed class GenerationTests
     [InlineData("named-data")]
     [InlineData("switch")]
     [InlineData("multiline")]
+    [InlineData("bullet")]
     public void RuntimeCasesMatchNode(string suite)
     {
         string root = Path.Combine(Path.GetTempPath(), "texttemplate-lists-" + Guid.NewGuid().ToString("N"));
@@ -179,7 +180,8 @@ public sealed class GenerationTests
             Assert.Contains("private TemplateContent Evaluate_2()", generated.Source);
             Assert.Contains("IsTruthy(\"firstName\")", generated.Source);
             Assert.Contains("MethodInput(\"firstName\")", generated.Source);
-            Assert.Contains("Builtins.Join(MethodInput(\"firstName\")", generated.Source);
+            Assert.Contains("EvaluationContext.Invoke(MethodInput(\"firstName\")", generated.Source);
+            Assert.Contains("=> Builtins.Join(", generated.Source);
             Assert.Contains("Support/Builtins.cs", generated.Files.Keys);
             Assert.Contains("Templates/Builtins_2.cs", generated.Files.Keys);
             Assert.Contains("private TemplateContent Join()", generated.Source);
@@ -247,7 +249,8 @@ public sealed class GenerationTests
             Assert.Contains("Includes/DoInclude.cs", generated.Files.Keys);
             Assert.Contains("Includes/Common.cs", generated.Files.Keys);
             string simpledata = generated.Files["Templates/Simpledata.cs"];
-            Assert.Contains("ApplySubtemplate(\"anded\", SubtemplateInput(\"xformatPet\"))", simpledata);
+            Assert.Contains("EvaluationContext.Invoke(SubtemplateInput(\"xformatPet\")", simpledata);
+            Assert.Contains("=> ApplySubtemplate(\"anded\",", simpledata);
             Assert.Contains("dataContext => new Simpledata(dataContext)", simpledata);
             Assert.Contains("definitionContext => definitionContext.Each(itemContext =>", simpledata);
             Assert.Contains("annotatedContext => annotatedContext.Include", simpledata);

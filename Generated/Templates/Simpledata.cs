@@ -31,7 +31,7 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
     // Source: "templates/simpledata.template":9:9
     private TemplateContent anded()
     {
-        object? join = Builtins.Join(MethodInput("$0"), ", ", " and ");
+        object? join = EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Join(methodValue, ", ", " and "));
 
         return Line($"{join}");
     }
@@ -62,7 +62,7 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
     // Source: "templates/simpledata.template":2:11
     private object? renderAnded()
     {
-        return ApplySubtemplate("anded", SubtemplateInput("xformatPet"));
+        return EvaluationContext.Invoke(SubtemplateInput("xformatPet"), methodValue => ApplySubtemplate("anded", methodValue));
     }
 
     // Template:

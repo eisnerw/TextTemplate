@@ -7,6 +7,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Generation/StandaloneCasing.cs.txt" WithCulture="false" LogicalName="TextTemplate.Compiler.Generation.StandaloneCasing.cs.txt" />
     <EmbeddedResource Include="Generation/StandaloneCasingData.cs.txt" WithCulture="false" LogicalName="TextTemplate.Compiler.Generation.StandaloneCasingData.cs.txt" />
+    <EmbeddedResource Include="Generation/StandaloneBullets.cs.txt" WithCulture="false" LogicalName="TextTemplate.Compiler.Generation.StandaloneBullets.cs.txt" />
     <EmbeddedResource Include="Generation/StandaloneRegex.cs.txt" WithCulture="false" LogicalName="TextTemplate.Compiler.Generation.StandaloneRegex.cs.txt" />
     <EmbeddedResource Include="Generation/StandaloneBuiltins.cs.txt" WithCulture="false" LogicalName="TextTemplate.Compiler.Generation.StandaloneBuiltins.cs.txt" />
     <EmbeddedResource Include="Generation/StandaloneRuntime.cs.txt" WithCulture="false" LogicalName="TextTemplate.Compiler.Generation.StandaloneRuntime.cs.txt" />

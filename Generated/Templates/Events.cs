@@ -67,7 +67,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
             () => new object?[] { "h:mma" });
 
         object? toDate = applyToDate();
-        object? choice = (!(Context.TestCondition(ApplySubtemplate("SameDay", MethodInput("$1"), Get("$0")))) ? Each(itemContext => new Events(itemContext).renderToUpper_2()) : "");
+        object? choice = (!(Context.TestCondition(EvaluationContext.Invoke(MethodInput("$1"), methodValue => ApplySubtemplate("SameDay", methodValue, Get("$0"))))) ? Each(itemContext => new Events(itemContext).renderToUpper_2()) : "");
         object? toDate_2 = applyToDate_2();
 
         return Line($"{toDate}-{choice}{toDate_2}");
@@ -86,7 +86,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
             "templates/events.template:17:24",
             () => Get("$1"));
 
-        object? toUpper = Builtins.ToUpper(applyToDate());
+        object? toUpper = EvaluationContext.Invoke(applyToDate(), methodValue => Builtins.ToUpper(methodValue));
 
         return Line($"{toUpper} at ");
     }
@@ -96,8 +96,8 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/events.template":15:14
     private TemplateContent renderChoice()
     {
-        object? choice = (!(Context.TestCondition(ApplySubtemplate("onHour", MethodInput("$0")))) ? Each(itemContext => Line($":mm")) : "");
-        object? choice_2 = (!(Context.TestCondition(ApplySubtemplate("SameAMPM", MethodInput("$0"), Get("$1")))) ? Each(itemContext => Line($"a")) : "");
+        object? choice = (!(Context.TestCondition(EvaluationContext.Invoke(MethodInput("$0"), methodValue => ApplySubtemplate("onHour", methodValue)))) ? Each(itemContext => Line($":mm")) : "");
+        object? choice_2 = (!(Context.TestCondition(EvaluationContext.Invoke(MethodInput("$0"), methodValue_2 => ApplySubtemplate("SameAMPM", methodValue_2, Get("$1"))))) ? Each(itemContext => Line($"a")) : "");
 
         return Line($"h{choice}{choice_2}");
     }
@@ -144,7 +144,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
             () => Get("$1"),
             () => new object?[] { "a" });
 
-        bool content = (EvaluationContext.Compare(applyToDate(), "=", applyToDate_2()) && Context.TestCondition(ApplySubtemplate("SameDay", MethodInput("$0"), Get("$1"))));
+        bool content = (EvaluationContext.Compare(applyToDate(), "=", applyToDate_2()) && Context.TestCondition(EvaluationContext.Invoke(MethodInput("$0"), methodValue => ApplySubtemplate("SameDay", methodValue, Get("$1")))));
 
         return Line($"{content}");
     }
@@ -260,7 +260,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
             () => Get("group"),
             () => new object?[] { applyToDate() });
 
-        object? toUpper = Builtins.ToUpper(MethodInput("start"));
+        object? toUpper = EvaluationContext.Invoke(MethodInput("start"), methodValue => Builtins.ToUpper(methodValue));
         object? orderBy = InContext(applyOrderBy(), dataContext => dataContext.Each(itemContext => new Events(itemContext).renderFormatTimes()));
 
         return Line($$"""
@@ -276,18 +276,14 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/events.template":4:41
     private TemplateContent renderFormatTimes()
     {
-        object? formatTimes = ApplySubtemplate("formatTimes", MethodInput("start"), Get("end"));
+        object? formatTimes = EvaluationContext.Invoke(MethodInput("start"), methodValue => ApplySubtemplate("formatTimes", methodValue, Get("end")));
         object? summary = Get("summary");
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n      \u0001{.} ");
         object? description = Get("description");
-        object? content_2 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content_2 = Context.CreateBullet("\n      \u0001{.} ");
         object? location = Get("location");
 
-        return Line($$"""
-            {{formatTimes}}: {{summary}} 
-            {{content}} Notes: {{description}}
-            {{content_2}} Location {{location}}
-            """);
+        return Line($"{formatTimes}: {summary} {content}Notes: {description}{content_2}Location {location}");
     }
 
     // Template:

@@ -1,0 +1,496 @@
+[
+  {
+    "name": "bullet-default",
+    "script": "{.} first\n   {.} child\n      {.} grandchild\n   {.} second child\n{.} second\n   {.} next child",
+    "data": {},
+    "expected": "(0.0) first\n   (1.0) child\n      (2.0) grandchild\n   (1.1) second child\n(0.1) second\n   (1.0) next child"
+  },
+  {
+    "name": "bullet-styles-0",
+    "script": "{[{.} first\n   {.} child\n      {.} grandchild\n   {.} second child\n{.} second\n   {.} next child].@BulletStyle('1.')}",
+    "data": {},
+    "expected": "1. first\n   1. child\n      1. grandchild\n   2. second child\n2. second\n   1. next child"
+  },
+  {
+    "name": "bullet-styles-1",
+    "script": "{[{.} first\n   {.} child\n      {.} grandchild\n   {.} second child\n{.} second\n   {.} next child].@BulletStyle('I.','(a)','\u2022','i.')}",
+    "data": {},
+    "expected": "I. first\n   (a) child\n      \u2022 grandchild\n   (b) second child\nII. second\n   (a) next child"
+  },
+  {
+    "name": "bullet-styles-2",
+    "script": "{[{.} first\n   {.} child\n      {.} grandchild\n   {.} second child\n{.} second\n   {.} next child].@BulletStyle('1','1.1','1.1.1','1(a)')}",
+    "data": {},
+    "expected": "1 first\n   1.1 child\n      1.1.1 grandchild\n   1.2 second child\n2 second\n   2.1 next child"
+  },
+  {
+    "name": "bullet-styles-3",
+    "script": "{[{.} first\n   {.} child\n      {.} grandchild\n   {.} second child\n{.} second\n   {.} next child].@BulletStyle('-')}",
+    "data": {},
+    "expected": "- first\n   - child\n      - grandchild\n   - second child\n- second\n   - next child"
+  },
+  {
+    "name": "bullet-styles-4",
+    "script": "{[{.} first\n   {.} child\n      {.} grandchild\n   {.} second child\n{.} second\n   {.} next child].@BulletStyle('')}",
+    "data": {},
+    "expected": " first\n    child\n       grandchild\n    second child\n second\n    next child"
+  },
+  {
+    "name": "bullet-styles-5",
+    "script": "{[{.} first\n   {.} child\n      {.} grandchild\n   {.} second child\n{.} second\n   {.} next child].@BulletStyle(' I','\u2022','A.','(1)')}",
+    "data": {},
+    "expected": " I first\n   \u2022 child\n      A. grandchild\n   \u2022 second child\nII second\n   \u2022 next child"
+  },
+  {
+    "name": "bullet-styles-6",
+    "script": "{[{.} first\n   {.} child\n      {.} grandchild\n   {.} second child\n{.} second\n   {.} next child].@BulletStyle('1:10.','a:d)','i:iv.')}",
+    "data": {},
+    "expected": "10. first\n   d) child\n      iv. grandchild\n   e) second child\n11. second\n   a) next child"
+  },
+  {
+    "name": "bullet-styles-7",
+    "script": "{[{.} first\n   {.} child\n      {.} grandchild\n   {.} second child\n{.} second\n   {.} next child].@BulletStyle('A:AF','I:LV')}",
+    "data": {},
+    "expected": "AF first\n   LV child\n      LV grandchild\n   LVI second child\nAG second\n   I next child"
+  },
+  {
+    "name": "bullet-styles-8",
+    "script": "{[{.} first\n   {.} child\n      {.} grandchild\n   {.} second child\n{.} second\n   {.} next child].@BulletStyle('[x]')}",
+    "data": {},
+    "expected": "x first\n   x child\n      x grandchild\n   x second child\nx second\n   x next child"
+  },
+  {
+    "name": "bullet-styles-9",
+    "script": "{[{.} first\n   {.} child\n      {.} grandchild\n   {.} second child\n{.} second\n   {.} next child].@BulletStyle('  1.')}",
+    "data": {},
+    "expected": "  1. first\n     1. child\n        1. grandchild\n     2. second child\n  2. second\n     1. next child"
+  },
+  {
+    "name": "bullet-mode-implicit",
+    "script": "{[{.} first\n   {.} child\n      {.} grandchild\n   {.} second child\n{.} second\n   {.} next child\nplain\n   {.} after plain].@BulletStyle('1.','a.','i.').@BulletMode('implicit')}",
+    "data": {},
+    "expected": "1. first\n   a. child\n      i. grandchild\n   b. second child\n2. second\n   a. next child\nplain\n   a. after plain"
+  },
+  {
+    "name": "bullet-mode-explicit",
+    "script": "{[{.} first\n   {.} child\n      {.} grandchild\n   {.} second child\n{.} second\n   {.} next child\nplain\n   {.} after plain].@BulletStyle('1.','a.','i.').@BulletMode('explicit')}",
+    "data": {},
+    "expected": "1. first\n   a. child\n      i. grandchild\n   b. second child\n2. second\n   a. next child\nplain\n   b. after plain"
+  },
+  {
+    "name": "bullet-list",
+    "script": "{.} names: {items:[{name}]}",
+    "data": {
+      "name": "present",
+      "items": [
+        {
+          "name": "Ada",
+          "pets": [
+            {
+              "name": "A"
+            },
+            {
+              "name": "B"
+            }
+          ]
+        },
+        {
+          "name": "Grace",
+          "pets": [
+            {
+              "name": "C"
+            },
+            {
+              "name": "D"
+            }
+          ]
+        }
+      ]
+    },
+    "expected": "(0.0) names: \n   (1.0) Ada\n   (1.1) Grace"
+  },
+  {
+    "name": "bullet-incomplete",
+    "script": "{.} {items:[{name}]}",
+    "data": {
+      "name": "present",
+      "items": [
+        {
+          "name": "Ada",
+          "pets": [
+            {
+              "name": "A"
+            },
+            {
+              "name": "B"
+            }
+          ]
+        },
+        {
+          "name": "Grace",
+          "pets": [
+            {
+              "name": "C"
+            },
+            {
+              "name": "D"
+            }
+          ]
+        }
+      ]
+    },
+    "expected": "(0.0) Ada\n(0.1) Grace"
+  },
+  {
+    "name": "bullet-nested-list",
+    "script": "{.} people: {items:[{.} {name}\n   {.} pets: {pets:[{name}]}]}",
+    "data": {
+      "name": "present",
+      "items": [
+        {
+          "name": "Ada",
+          "pets": [
+            {
+              "name": "A"
+            },
+            {
+              "name": "B"
+            }
+          ]
+        },
+        {
+          "name": "Grace",
+          "pets": [
+            {
+              "name": "C"
+            },
+            {
+              "name": "D"
+            }
+          ]
+        }
+      ]
+    },
+    "expected": "(0.0) people: \n(0.1) Ada\n   (1.0) pets: \n      (2.0) A\n      (2.1) B\n(0.2) Grace\n   (1.0) pets: \n      (2.0) C\n      (2.1) D"
+  },
+  {
+    "name": "bullet-no-outer",
+    "script": "Names: {items:[\n   {.} {name}]}",
+    "data": {
+      "name": "present",
+      "items": [
+        {
+          "name": "Ada",
+          "pets": [
+            {
+              "name": "A"
+            },
+            {
+              "name": "B"
+            }
+          ]
+        },
+        {
+          "name": "Grace",
+          "pets": [
+            {
+              "name": "C"
+            },
+            {
+              "name": "D"
+            }
+          ]
+        }
+      ]
+    },
+    "expected": "Names: \n   (0.0) Ada\n   (0.1) Grace"
+  },
+  {
+    "name": "bullet-missing",
+    "script": "{.} {absent}\n{.} {name}",
+    "data": {
+      "name": "present",
+      "items": [
+        {
+          "name": "Ada",
+          "pets": [
+            {
+              "name": "A"
+            },
+            {
+              "name": "B"
+            }
+          ]
+        },
+        {
+          "name": "Grace",
+          "pets": [
+            {
+              "name": "C"
+            },
+            {
+              "name": "D"
+            }
+          ]
+        }
+      ]
+    },
+    "expected": "(0.0) present"
+  },
+  {
+    "name": "bullet-clear",
+    "script": "{[{.} first\n{[{.} inside].@BulletStyle()}\n{.} last].@BulletStyle('1.')}",
+    "data": {
+      "name": "present",
+      "items": [
+        {
+          "name": "Ada",
+          "pets": [
+            {
+              "name": "A"
+            },
+            {
+              "name": "B"
+            }
+          ]
+        },
+        {
+          "name": "Grace",
+          "pets": [
+            {
+              "name": "C"
+            },
+            {
+              "name": "D"
+            }
+          ]
+        }
+      ]
+    },
+    "expected": "2. first\n(0.0) inside\n3. last"
+  },
+  {
+    "name": "bullet-indent-1",
+    "script": "{[{.} names: {items:[{name}]}].@DefaultIndent(1).@BulletStyle('1.','a.')}",
+    "data": {
+      "items": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "1. names: \n a. A\n b. B"
+  },
+  {
+    "name": "bullet-indent-5",
+    "script": "{[{.} names: {items:[{name}]}].@DefaultIndent(5).@BulletStyle('1.','a.')}",
+    "data": {
+      "items": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "1. names: \n     a. A\n     b. B"
+  },
+  {
+    "name": "bullet-multiline",
+    "script": "{[{.} first\n   {.} comment: {value}\n{.} second].@BulletStyle('1.','a.').@MultilineStyle('IndentAllButFirst','Padded')}",
+    "data": {
+      "value": "one\ntwo"
+    },
+    "expected": "1. first\n   a. comment: one\n       two\n\n2. second"
+  },
+  {
+    "name": "bullet-style-scope",
+    "script": "{[{.} first\n{[{.} inner\n{.} inner2].@BulletStyle('a.')}\n{.} last].@BulletStyle('1.')}",
+    "data": {},
+    "expected": "3. first\na. inner\nb. inner2\n4. last"
+  },
+  {
+    "name": "bullet-repeat",
+    "script": "{items:[\n{.} {name}\n   {.} details]}",
+    "data": {
+      "items": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "\n(0.0) A\n   (1.0) details\n(0.1) B\n   (1.0) details"
+  },
+  {
+    "name": "bullet-skipped-level",
+    "script": "{.} {absent}\n   {.} kept",
+    "data": {
+      "items": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "   (1.0) kept"
+  },
+  {
+    "name": "bullet-tabs",
+    "script": "{.} first\n\t{.} child\n    {.} sibling-width\n{.} last",
+    "data": {
+      "items": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "(0.0) first\n    (1.0) child\n    (1.1) sibling-width\n(0.1) last"
+  },
+  {
+    "name": "bullet-blank-lines",
+    "script": "{.} first\n\n{.} second",
+    "data": {
+      "items": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "(0.0) first\n\n(0.1) second"
+  },
+  {
+    "name": "bullet-bracket-leading",
+    "script": "{[\n   {.} first\n   {.} second]}",
+    "data": {
+      "items": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "\n   (0.0) first\n   (0.1) second"
+  },
+  {
+    "name": "bullet-prefix",
+    "script": "Prefix {items:[{.} {name}]}",
+    "data": {
+      "items": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "Prefix \n(0.0) A\n(0.1) B"
+  },
+  {
+    "name": "bullet-indent-reset",
+    "script": "{[{.} list {items:[{name}]}].@DefaultIndent(5)}\n{[{.} list {items:[{name}]}].@DefaultIndent()}",
+    "data": {
+      "items": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "(0.0) list \n     (2.0) A\n     (2.1) B\n(0.1) list \n   (1.0) A\n   (1.1) B"
+  },
+  {
+    "name": "bullet-implicit-list",
+    "script": "{.} list: {items:[\n   {name}]}",
+    "data": {
+      "items": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "(0.0) list: \n   (1.0) A\n   (1.1) B"
+  },
+  {
+    "name": "bullet-sequence-31",
+    "script": "{[{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text].@BulletStyle('A.')}",
+    "data": {},
+    "expected": "A. text\nB. text\nC. text\nD. text\nE. text\nF. text\nG. text\nH. text\nI. text\nJ. text\nK. text\nL. text\nM. text\nN. text\nO. text\nP. text\nQ. text\nR. text\nS. text\nT. text\nU. text\nV. text\nW. text\nX. text\nY. text\nZ. text\nAA. text\nAB. text\nAC. text\nAD. text"
+  },
+  {
+    "name": "bullet-sequence-32",
+    "script": "{[{.} text\n{.} text\n{.} text\n{.} text].@BulletStyle('a:z)')}",
+    "data": {},
+    "expected": "z) text\naa) text\nab) text\nac) text"
+  },
+  {
+    "name": "bullet-sequence-33",
+    "script": "{[{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text\n{.} text].@BulletStyle('I.')}",
+    "data": {},
+    "expected": "I. text\nII. text\nIII. text\nIV. text\nV. text\nVI. text\nVII. text\nVIII. text\nIX. text\nX. text\nXI. text\nXII. text\nXIII. text\nXIV. text\nXV. text\nXVI. text\nXVII. text\nXVIII. text\nXIX. text\nXX. text\nXXI. text\nXXII. text\nXXIII. text\nXXIV. text\nXXV. text\nXXVI. text\nXXVII. text\nXXVIII. text\nXXIX. text\nXXX. text\nXXXI. text\nXXXII. text\nXXXIII. text\nXXXIV. text\nXXXV. text\nXXXVI. text\nXXXVII. text\nXXXVIII. text\nXXXIX. text\nXL. text\nXLI. text\nXLII. text\nXLIII. text\nXLIV. text\nXLV. text"
+  },
+  {
+    "name": "bullet-sequence-34",
+    "script": "{[{.} text\n{.} text\n{.} text\n{.} text].@BulletStyle('i:xcix.')}",
+    "data": {},
+    "expected": "xcix. text\nc. text\nci. text\ncii. text"
+  },
+  {
+    "name": "bullet-sequence-35",
+    "script": "{[{.} text\n{.} text\n{.} text].@BulletStyle('I:MMMCMXCIX.')}",
+    "data": {},
+    "expected": "MMMCMXCIX. text\nMundefined. text\nMundefinedI. text"
+  },
+  {
+    "name": "bullet-sequence-36",
+    "script": "{[{.} text\n{.} text\n{.} text].@BulletStyle('  1:99.')}",
+    "data": {},
+    "expected": " 99. text\n100. text\n101. text"
+  },
+  {
+    "name": "bullet-sequence-37",
+    "script": "{[{.} text\n{.} text\n{.} text].@BulletStyle('\u2022')}",
+    "data": {},
+    "expected": "\u2022 text\n\u2022 text\n\u2022 text"
+  },
+  {
+    "name": "bullet-sequence-38",
+    "script": "{[{.} text\n{.} text\n{.} text].@BulletStyle('')}",
+    "data": {},
+    "expected": " text\n text\n text"
+  },
+  {
+    "name": "bullet-sequence-39",
+    "script": "{[{.} text\n{.} text\n{.} text].@BulletStyle('1.1.1')}",
+    "data": {},
+    "expected": "1 text\n2 text\n3 text"
+  },
+  {
+    "name": "bullet-outline-unfiltered",
+    "script": "People:{#data:[\n   {.} {[{ \n      lastName}{ \n      firstName.#Prepend(', ')}{    \n      middleName.#Prepend(' ')\n   }].ToUpper().#Quoted()} \n      {.} Lastname: {lastName.IfMissing('No Last Name')}   \n      {.} FirstName: {firstName}  \n      {.} Pets {pets=>[({pets.Count()}):  \n         {.} Domesticated ({pets.#Domesticated().Count()}): \n            {.} {pets.#Domesticated():[{#formatPet}]}  \n         {.} Non-domesticated ({pets.#NonDomesticated().Count()}): \n            {.} {pets.#NonDomesticated():[{#formatPet}]}    \n   ],[no pets]\n   }\n      {.} Comment{comment.Contains(\"\\\\n\")->[s]}: {comment}  \n].@MultilineStyle('IndentAllButFirst', 'Padded')\n .@MissingValue('No Information Provided')}       \n \nSubtemplates:  \n\n{#formatPet:[  \n   a {type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')}  `   \n   {type} named {name} \n]}\n{#Domesticated: [{$0}]}\n{#NonDomesticated: [{$0}]} \n{#IsDomesticated:[{$0.Matches('dog','cat')}]}  \n{#Prepend:[{$0->[{$1}{$0}]}]}\n{#Surround:[{$0->[{$1}{$0}{$1}]}]}\n{#Quoted:[{$0->[{$0.#Surround('\"')}]}]}\n{#data:[/data/people]}",
+    "data": {},
+    "expected": "People:\n   (0.0) \"JOHNSON, DORIS\" \n      (1.0) Lastname: Johnson   \n      (1.1) FirstName: Doris  \n      (1.2) Pets (3):  \n         (2.0) Domesticated (3): \n            (3.0) a friskie dog named Buddy\n            (3.1) a nice lion named Ralph\n            (3.2) a nice tiger named Stripes  \n         (2.1) Non-domesticated (3): \n            (3.0) a friskie dog named Buddy\n            (3.1) a nice lion named Ralph\n            (3.2) a nice tiger named Stripes\n      (1.3) Comment: Doris seems to have a good relationship with her pets.\n          She is known to have multiple non-domesticated pets\n\n   (0.1) \"SMITH, JOHN\" \n      (1.0) Lastname: Smith   \n      (1.1) FirstName: John  \n      (1.2) Pets (3):  \n         (2.0) Domesticated (3): \n            (3.0) a friskie dog named Toto\n            (3.1) a fishy cat named Dolly\n            (3.2) a stripesy zebra named Stripes  \n         (2.1) Non-domesticated (3): \n            (3.0) a friskie dog named Toto\n            (3.1) a fishy cat named Dolly\n            (3.2) a stripesy zebra named Stripes\n      (1.3) Comment: John mostly likes domesticated pets"
+  }
+]

@@ -128,7 +128,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/web.template":44:6
     private TemplateContent renderStyle_3()
     {
-        object? style = ApplySubtemplate("Style", MethodInput("$0"), Get("$1"));
+        object? style = EvaluationContext.Invoke(MethodInput("$0"), methodValue => ApplySubtemplate("Style", methodValue, Get("$1")));
 
         return Line($"{style}");
     }
@@ -140,7 +140,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/web.template":42:23
     private TemplateContent renderStyle_2()
     {
-        object? style = ApplySubtemplate("Style", MethodInput("$0"), Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9"));
+        object? style = EvaluationContext.Invoke(MethodInput("$0"), methodValue => ApplySubtemplate("Style", methodValue, Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9")));
 
         return Line($"{style}");
     }
@@ -199,7 +199,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/web.template":40:9
     private TemplateContent renderStyleCases()
     {
-        object? styleCases = ApplySubtemplate("StyleCases", MethodInput("$1"), Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9"));
+        object? styleCases = EvaluationContext.Invoke(MethodInput("$1"), methodValue => ApplySubtemplate("StyleCases", methodValue, Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9")));
 
         return Line($"{styleCases}");
     }
@@ -212,7 +212,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/web.template":22:9
     private object? Click()
     {
-        return ApplySubtemplate("OptionalStyle", MethodInput(itemContext => new Web(itemContext).renderItem2Result()), "link", Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9"));
+        return EvaluationContext.Invoke(MethodInput(itemContext => new Web(itemContext).renderItem2Result()), methodValue => ApplySubtemplate("OptionalStyle", methodValue, "link", Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9")));
     }
 
     // Template:
@@ -268,7 +268,7 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/web.template":17:1
     private TemplateContent Style()
     {
-        object? styleCases = ApplySubtemplate("StyleCases", MethodInput("$1"), Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9"));
+        object? styleCases = EvaluationContext.Invoke(MethodInput("$1"), methodValue => ApplySubtemplate("StyleCases", methodValue, Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9")));
         object? item0 = Get("$0");
 
         return Line($"<span style=\"{styleCases}\">{item0}</span>");
@@ -280,8 +280,8 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/web.template":2:2
     private TemplateContent renderStyle()
     {
-        object? style = ApplySubtemplate("Style", MethodInput(itemContext => "test"), "outlined-red-dots");
-        object? style_2 = ApplySubtemplate("Style", MethodInput(itemContext => "World"), "italic", "bold", "red");
+        object? style = EvaluationContext.Invoke(MethodInput(itemContext => "test"), methodValue => ApplySubtemplate("Style", methodValue, "outlined-red-dots"));
+        object? style_2 = EvaluationContext.Invoke(MethodInput(itemContext => "World"), methodValue_2 => ApplySubtemplate("Style", methodValue_2, "italic", "bold", "red"));
 
         return Line($"Hello {style} {style_2}!!");
     }
@@ -430,8 +430,8 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/web.template":1:1
     private TemplateContent renderWeb()
     {
-        object? toHtml = ApplySubtemplate("ToHtml", ApplySubtemplate("Tag", ApplySubtemplate("Style", MethodInput(itemContext => new Web(itemContext).renderStyle()), "normal", "blue"), "h2"));
-        object? click = ApplySubtemplate("Click", MethodInput(itemContext => "Link"), "simple", "Click this to load a simple template", "link", "italic");
+        object? toHtml = EvaluationContext.Invoke(EvaluationContext.Invoke(EvaluationContext.Invoke(MethodInput(itemContext => new Web(itemContext).renderStyle()), methodValue => ApplySubtemplate("Style", methodValue, "normal", "blue")), methodValue_2 => ApplySubtemplate("Tag", methodValue_2, "h2")), methodValue_3 => ApplySubtemplate("ToHtml", methodValue_3));
+        object? click = EvaluationContext.Invoke(MethodInput(itemContext => "Link"), methodValue_4 => ApplySubtemplate("Click", methodValue_4, "simple", "Click this to load a simple template", "link", "italic"));
         object? external = Each(itemContext => itemContext.Named("external"));
 
         return Line($$"""

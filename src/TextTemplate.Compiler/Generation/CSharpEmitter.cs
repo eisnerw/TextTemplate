@@ -68,7 +68,7 @@ public sealed class CSharpEmitter
         var mainMap = new List<string>(); var sharedMap = new List<string>();
         var unitNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "GeneratedTemplates", "EvaluationContext", "TemplateContent", "TemplateUnit", "Builtins", "NodeCasing", "TemplateRegex", "SubtemplateDefinitions", "GeneratedTemplateProgram", "Common",
+            "GeneratedTemplates", "EvaluationContext", "TemplateContent", "TemplateUnit", "Builtins", "NodeCasing", "TemplateRegex", "BulletIndent", "SubtemplateDefinitions", "GeneratedTemplateProgram", "Common",
             "System", "StringComparer", "StringComparison", "JsonElement", "JsonDocument", "JsonValueKind",
             "Dictionary", "List", "Func", "Action", "Regex", "CultureInfo", "Math", "Console", "File",
             "Exception", "ArgumentException", "InvalidOperationException", "NotImplementedException"
@@ -103,13 +103,14 @@ public sealed class CSharpEmitter
             "    private static readonly Dictionary<string, Func<EvaluationContext, object?>> Shared = new(StringComparer.Ordinal)\n    {\n" + string.Join("\n", sharedMap) + "\n    };\n" +
             "    public static string Render(string name, JsonElement? data = null, string? dataRoot = null)\n    {\n" +
             "        if (!Templates.TryGetValue(name, out Func<EvaluationContext, object?>? template)) throw new ArgumentException(\"Unknown template: \" + name);\n" +
-            "        return (string)EvaluationContext.At(\"templates/\" + name + \".template:1:1\", () => EvaluationContext.Compose(template(new EvaluationContext(data, Shared, dataRoot))) ?? \"\")!;\n    }\n\n" + "}\n");
+            "        return (string)EvaluationContext.At(\"templates/\" + name + \".template:1:1\", () => new EvaluationContext(data, Shared, dataRoot).Render(template) ?? \"\")!;\n    }\n\n" + "}\n");
         int programStart = runtime.IndexOf("public static class GeneratedTemplateProgram", StringComparison.Ordinal);
         files.Add("Support/EvaluationContext.cs", Header + runtime[..programStart]);
         files.Add("Program.cs", Header + runtime[programStart..]);
         files.Add("Support/TemplateUnit.cs", Header + UnitSupport);
         files.Add("Support/Builtins.cs", Header + ReadSupport("StandaloneBuiltins.cs.txt"));
         files.Add("Support/TemplateContent.cs", Header + ContentSupport);
+        files.Add("Support/BulletIndent.cs", Header + ReadSupport("StandaloneBullets.cs.txt"));
         files.Add("Support/TemplateRegex.cs", Header + ReadSupport("StandaloneRegex.cs.txt"));
         files.Add("Support/NodeCasing.cs", Header + ReadSupport("StandaloneCasing.cs.txt") + ReadSupport("StandaloneCasingData.cs.txt"));
         string result = Header + string.Join("\n", files.Values.Select(file => file[Header.Length..]));
@@ -132,7 +133,7 @@ public sealed class CSharpEmitter
         {
             internal object?[] Fragments { get; }
             internal TemplateContent(object?[] fragments) => Fragments = fragments;
-            public string Render() => EvaluationContext.Compose(this) ?? "";
+            public string Render() => new EvaluationContext(null, new Dictionary<string, Func<EvaluationContext, object?>>()).Render(_ => this) ?? "";
             public override string ToString() => Render();
         }
         """;
@@ -200,6 +201,12 @@ public sealed class CSharpEmitter
         // TODO: Evaluate dynamic style arguments; literal styles are applied during composition.
         if (call.Value == "@MultilineStyle" && args.All(arg => arg.Kind == SyntaxKind.String))
             return (lambda ? context + " => " : "") + context + ".WithMultilineStyle(" + string.Join(", ", args.Select(arg => Quote(DecodeString(arg.Value!)))) + ")";
+        if (call.Value == "@BulletStyle" && args.All(arg => arg.Kind == SyntaxKind.String))
+            return (lambda ? context + " => " : "") + context + ".WithBulletStyle(" + string.Join(", ", args.Select(arg => Quote(DecodeString(arg.Value!)))) + ")";
+        if (call.Value == "@BulletMode" && args.Count == 1 && args[0].Kind == SyntaxKind.String)
+            return (lambda ? context + " => " : "") + context + ".WithBulletMode(" + Quote(DecodeString(args[0].Value!)) + ")";
+        if (call.Value == "@DefaultIndent" && args.Count <= 1 && args.All(arg => arg.Kind is SyntaxKind.String or SyntaxKind.Number))
+            return (lambda ? context + " => " : "") + context + ".WithDefaultIndent(" + (args.Count == 0 ? "null" : Quote(args[0].Kind == SyntaxKind.String ? DecodeString(args[0].Value!) : args[0].Value!)) + ")";
         if (call.Value == "@Falsy" && (args.Count == 0 || args.Count == 1 && args[0].Kind == SyntaxKind.Regex))
             return (lambda ? context + " => " : "") + context + ".WithFalsy(" + (args.Count == 0 ? "null" : "new TemplateRegex(" + Quote(args[0].Value!) + ", " + Quote(sourcePath + ":" + args[0].Span.Line + ":" + args[0].Span.Column) + ")") + ")";
         if (args.Count != 1 || args[0].Kind != SyntaxKind.String) return null;
@@ -513,6 +520,25 @@ public sealed class CSharpEmitter
             case SyntaxKind.SharedTemplate:
             case SyntaxKind.InlineTemplate:
                 var children = node.Children.Where(n => n.Kind != SyntaxKind.SubtemplateSection).ToList();
+                // Legacy bullet rules own the preceding newline and following spaces.
+                // Keep them on the bullet so repeated list items inherit the entire marker.
+                for (int i = 0; i < children.Count; i++)
+                {
+                    if (children[i].Kind != SyntaxKind.Bullet) continue;
+                    var bulletNode = children[i];
+                    string marker = bulletNode.Value!;
+                    if (i > 0 && children[i - 1].Kind == SyntaxKind.NewLine)
+                    {
+                        marker = children[i - 1].Value + marker;
+                        children.RemoveAt(i - 1); i--;
+                    }
+                    if (i + 1 < children.Count && children[i + 1].Kind == SyntaxKind.Whitespace)
+                    {
+                        marker += children[i + 1].Value;
+                        children.RemoveAt(i + 1);
+                    }
+                    children[i] = bulletNode with { Value = marker };
+                }
                 expression = InterpolatedText(children, child =>
                 {
                     string value = Call(child);
@@ -585,8 +611,8 @@ public sealed class CSharpEmitter
                         string input = node.Children[0].Kind == SyntaxKind.Call ? Call(node.Children[0])
                             : "MethodInput(" + RawChild(node.Children[0]) + ")";
                         var body = new StringBuilder(SourceComment(node, source, "        "));
-                        body.Append("        object? ").Append(function).Append("()\n        {\n")
-                            .Append("            object? value = EvaluationContext.Intermediate(").Append(input).Append(");\n")
+                        body.Append("        object? ").Append(function).Append("(object? value)\n        {\n")
+                            .Append("            value = EvaluationContext.Intermediate(value);\n")
                             .Append("            if (value is null or EvaluationContext.Missing) return value;\n")
                             .Append("            if (value is EvaluationContext.Data or EvaluationContext.Arguments) return null;\n")
                             .Append("            switch (value)\n            {\n");
@@ -596,7 +622,7 @@ public sealed class CSharpEmitter
                         body.Append("                default:\n                    return EvaluationContext.Intermediate(").Append(Call(caseArgs[^1])).Append(");\n")
                             .Append("            }\n        }\n\n");
                         current.Functions.Add(body.ToString());
-                        expression = function + "()";
+                        expression = "EvaluationContext.Invoke(" + input + ", " + function + ")";
                     }
                 }
                 // TODO: Implement Count(predicate) with per-item predicate evaluation.
@@ -604,21 +630,35 @@ public sealed class CSharpEmitter
                 {
                     // TODO: Where must evaluate its predicate in each item's context; skip it for this temporary pass-through.
                     string arguments = node.Value == "Where" ? "" : string.Join(", ", node.Children.Skip(1).SelectMany(child => child.Children).Select(Call));
-                    expression = (!node.Value.StartsWith('#') ? "Builtins." + node.Value + "(" : "ApplySubtemplate(" + Quote(node.Value[1..]) + ", ") +
-                        (node.Children[0].Kind == SyntaxKind.Call || receiver.Value?.StartsWith('^') == true ? Call(node.Children[0]) : node.Children[0].Kind == SyntaxKind.Identifier && !node.Children[0].Value!.StartsWith('@')
-                            ? "MethodInput(" + Quote(node.Children[0].Value!) + ")"
-                            : node.Children[0].Kind == SyntaxKind.NamedSubtemplate
-                            ? "SubtemplateInput(" + Quote(node.Children[0].Value!) + ")"
-                            : "MethodInput(" + RawChild(node.Children[0]) + ")") + (arguments.Length == 0 ? "" : ", " + arguments) + ")";
+                    string input = node.Children[0].Kind == SyntaxKind.Call || receiver.Value?.StartsWith('^') == true ? Call(node.Children[0]) : node.Children[0].Kind == SyntaxKind.Identifier && !node.Children[0].Value!.StartsWith('@')
+                        ? "MethodInput(" + Quote(node.Children[0].Value!) + ")"
+                        : node.Children[0].Kind == SyntaxKind.NamedSubtemplate
+                        ? "SubtemplateInput(" + Quote(node.Children[0].Value!) + ")"
+                        : "MethodInput(" + RawChild(node.Children[0]) + ")";
+                    string methodValue = Unique("methodValue", current.Names);
+                    expression = "EvaluationContext.Invoke(" + input + ", " + methodValue + " => " +
+                        (!node.Value.StartsWith('#') ? "Builtins." + node.Value + "(" : "ApplySubtemplate(" + Quote(node.Value[1..]) + ", ") +
+                        methodValue + (arguments.Length == 0 ? "" : ", " + arguments) + "))";
                 }
                 else expression = Stub();
                 break;
             case SyntaxKind.Regex:
                 expression = "new TemplateRegex(" + Quote(node.Value!) + ", " + Quote(location) + ")";
                 break;
-            // TODO: Implement hierarchical bullet formatting and numbering.
             case SyntaxKind.Bullet:
-                expression = "/* TODO: Render hierarchical bullets and numbering. */ " + Quote("{.}"); break;
+                string bullet = node.Value!;
+                if (!bullet.Contains('\n'))
+                {
+                    int start = node.Span.Offset;
+                    int bracket = source.Text.LastIndexOf('[', Math.Max(0, start - 1));
+                    if (bracket >= 0)
+                    {
+                        string before = source.Text[(bracket + 1)..start];
+                        if (before.Contains('\n') && !before.Contains('`') && before.All(char.IsWhiteSpace))
+                            bullet = before[before.IndexOf('\n')..] + bullet;
+                    }
+                }
+                expression = "Context.CreateBullet(" + Quote(bullet.Replace("{", "\u0001{")) + ")"; break;
             case SyntaxKind.InlineCall:
                 expression = Stub(); break;
             default: expression = Stub(); break;

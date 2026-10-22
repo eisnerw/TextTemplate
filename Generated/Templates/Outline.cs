@@ -72,7 +72,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/outline.template":31:16
     private TemplateContent renderSurround()
     {
-        object? surround = ApplySubtemplate("Surround", MethodInput("$0"), "\"");
+        object? surround = EvaluationContext.Invoke(MethodInput("$0"), methodValue => ApplySubtemplate("Surround", methodValue, "\""));
 
         return Line($"{surround}");
     }
@@ -125,7 +125,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/outline.template":28:18
     private TemplateContent IsDomesticated()
     {
-        object? matches = Builtins.Matches(MethodInput("$0"), "dog", "cat");
+        object? matches = EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Matches(methodValue, "dog", "cat"));
 
         return Line($"{matches}");
     }
@@ -135,7 +135,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/outline.template":27:20
     private TemplateContent NonDomesticated()
     {
-        object? where = Builtins.Where(MethodInput("$0"));
+        object? where = EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Where(methodValue));
 
         return Line($"{where}");
     }
@@ -145,7 +145,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/outline.template":26:17
     private TemplateContent Domesticated()
     {
-        object? where = Builtins.Where(MethodInput("$0"));
+        object? where = EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Where(methodValue));
 
         return Line($"{where}");
     }
@@ -161,9 +161,9 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
         // Template:
         // type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')
         // Source: "templates/outline.template":23:7
-        object? selectCase()
+        object? selectCase(object? value)
         {
-            object? value = EvaluationContext.Intermediate(MethodInput(itemContext => itemContext.Lookup("type")));
+            value = EvaluationContext.Intermediate(value);
             if (value is null or EvaluationContext.Missing) return value;
             if (value is EvaluationContext.Data or EvaluationContext.Arguments) return null;
             switch (value)
@@ -179,7 +179,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
             }
         }
 
-        object? @case = selectCase();
+        object? @case = EvaluationContext.Invoke(MethodInput(itemContext => itemContext.Lookup("type")), selectCase);
         object? type = Get("type");
         object? name = Get("name");
 
@@ -191,7 +191,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/outline.template":23:25
     private TemplateContent renderToLower()
     {
-        object? toLower = Builtins.ToLower(MethodInput(itemContext => new Outline(itemContext).renderName()));
+        object? toLower = EvaluationContext.Invoke(MethodInput(itemContext => new Outline(itemContext).renderName()), methodValue => Builtins.ToLower(methodValue));
 
         return Line($"{toLower}");
     }
@@ -258,25 +258,19 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/outline.template":1:15
     private TemplateContent renderQuoted()
     {
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
-        object? quoted = ApplySubtemplate("Quoted", Builtins.ToUpper(MethodInput(itemContext => new Outline(itemContext).renderLastName())));
-        object? content_2 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
-        object? ifMissing = Builtins.IfMissing(MethodInput("lastName"), "No Last Name");
-        object? content_3 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content = Context.CreateBullet("\n   \u0001{.} ");
+        object? quoted = EvaluationContext.Invoke(EvaluationContext.Invoke(MethodInput(itemContext => new Outline(itemContext).renderLastName()), methodValue => Builtins.ToUpper(methodValue)), methodValue_2 => ApplySubtemplate("Quoted", methodValue_2));
+        object? content_2 = Context.CreateBullet("\n      \u0001{.} ");
+        object? ifMissing = EvaluationContext.Invoke(MethodInput("lastName"), methodValue_3 => Builtins.IfMissing(methodValue_3, "No Last Name"));
+        object? content_3 = Context.CreateBullet("\n      \u0001{.} ");
         object? firstName = Get("firstName");
-        object? content_4 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
+        object? content_4 = Context.CreateBullet("\n      \u0001{.} ");
         object? petsResult = (IsTruthy("pets") ? Each(itemContext => new Outline(itemContext).renderCount()) : Each(itemContext => Line($"no pets")));
-        object? content_5 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
-        object? choice = (Context.TestCondition(Builtins.Contains(MethodInput("comment"), "\\n")) ? Each(itemContext => Line($"s")) : "");
+        object? content_5 = Context.CreateBullet("\n      \u0001{.} ");
+        object? choice = (Context.TestCondition(EvaluationContext.Invoke(MethodInput("comment"), methodValue_4 => Builtins.Contains(methodValue_4, "\\n"))) ? Each(itemContext => Line($"s")) : "");
         object? comment = Get("comment");
 
-        return Line($$"""
-            {{content}} {{quoted}} 
-            {{content_2}} Lastname: {{ifMissing}}   
-            {{content_3}} FirstName: {{firstName}}  
-            {{content_4}} Pets {{petsResult}}
-            {{content_5}} Comment{{choice}}: {{comment}}
-            """);
+        return Line($"{content}{quoted} {content_2}Lastname: {ifMissing}   {content_3}FirstName: {firstName}  {content_4}Pets {petsResult}{content_5}Comment{choice}: {comment}");
     }
 
     // Template:
@@ -289,23 +283,17 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/outline.template":9:23
     private TemplateContent renderCount()
     {
-        object? count = Builtins.Count(MethodInput("pets"));
-        object? content = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
-        object? count_2 = Builtins.Count(ApplySubtemplate("Domesticated", MethodInput("pets")));
-        object? content_2 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
-        object? domesticated = InContext(ApplySubtemplate("Domesticated", MethodInput("pets")), dataContext => dataContext.Each(itemContext => new Outline(itemContext).renderFormatPet()));
-        object? content_3 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
-        object? count_3 = Builtins.Count(ApplySubtemplate("NonDomesticated", MethodInput("pets")));
-        object? content_4 = /* TODO: Render hierarchical bullets and numbering. */ "{.}";
-        object? nonDomesticated = InContext(ApplySubtemplate("NonDomesticated", MethodInput("pets")), dataContext => dataContext.Each(itemContext => new Outline(itemContext).renderFormatPet_2()));
+        object? count = EvaluationContext.Invoke(MethodInput("pets"), methodValue => Builtins.Count(methodValue));
+        object? content = Context.CreateBullet("\n         \u0001{.} ");
+        object? count_2 = EvaluationContext.Invoke(EvaluationContext.Invoke(MethodInput("pets"), methodValue_2 => ApplySubtemplate("Domesticated", methodValue_2)), methodValue_3 => Builtins.Count(methodValue_3));
+        object? content_2 = Context.CreateBullet("\n            \u0001{.} ");
+        object? domesticated = InContext(EvaluationContext.Invoke(MethodInput("pets"), methodValue_4 => ApplySubtemplate("Domesticated", methodValue_4)), dataContext => dataContext.Each(itemContext => new Outline(itemContext).renderFormatPet()));
+        object? content_3 = Context.CreateBullet("\n         \u0001{.} ");
+        object? count_3 = EvaluationContext.Invoke(EvaluationContext.Invoke(MethodInput("pets"), methodValue_5 => ApplySubtemplate("NonDomesticated", methodValue_5)), methodValue_6 => Builtins.Count(methodValue_6));
+        object? content_4 = Context.CreateBullet("\n            \u0001{.} ");
+        object? nonDomesticated = InContext(EvaluationContext.Invoke(MethodInput("pets"), methodValue_7 => ApplySubtemplate("NonDomesticated", methodValue_7)), dataContext => dataContext.Each(itemContext => new Outline(itemContext).renderFormatPet_2()));
 
-        return Line($$"""
-            ({{count}}):  
-            {{content}} Domesticated ({{count_2}}): 
-            {{content_2}} {{domesticated}}  
-            {{content_3}} Non-domesticated ({{count_3}}): 
-            {{content_4}} {{nonDomesticated}}
-            """);
+        return Line($"({count}):  {content}Domesticated ({count_2}): {content_2}{domesticated}  {content_3}Non-domesticated ({count_3}): {content_4}{nonDomesticated}");
     }
 
     // Template:
@@ -338,8 +326,8 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderLastName()
     {
         object? lastName = Get("lastName");
-        object? prepend = ApplySubtemplate("Prepend", MethodInput("firstName"), ", ");
-        object? prepend_2 = ApplySubtemplate("Prepend", MethodInput("middleName"), " ");
+        object? prepend = EvaluationContext.Invoke(MethodInput("firstName"), methodValue => ApplySubtemplate("Prepend", methodValue, ", "));
+        object? prepend_2 = EvaluationContext.Invoke(MethodInput("middleName"), methodValue_2 => ApplySubtemplate("Prepend", methodValue_2, " "));
 
         return Line($"{lastName}{prepend}{prepend_2}");
     }

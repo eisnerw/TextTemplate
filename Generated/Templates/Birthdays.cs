@@ -52,7 +52,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
             "Call OrderBy",
             "templates/birthdays.template:21:15",
             () => "/data/famousBirthdays",
-            () => new object?[] { Builtins.ToUpper(MethodInput("lname")) });
+            () => new object?[] { EvaluationContext.Invoke(MethodInput("lname"), methodValue => Builtins.ToUpper(methodValue)) });
 
         object? orderBy = InContext(applyOrderBy(), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderName_2()));
 
@@ -253,7 +253,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
         object? applyGroupBy() => Unsupported(
             "Call GroupBy",
             "templates/birthdays.template:6:12",
-            () => Builtins.Where(MethodInput(itemContext => "/data/famousBirthdays")),
+            () => EvaluationContext.Invoke(MethodInput(itemContext => "/data/famousBirthdays"), methodValue => Builtins.Where(methodValue)),
             () => new object?[] { applyToDate(), "group", "month" });
 
         object? groupBy = InContext(applyGroupBy(), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderToDate()));
@@ -383,9 +383,9 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
         // Template:
         // $0.Case(3,[{#ungrouped}],2,[{#bySign}],[{#byDate}])
         // Source: "templates/birthdays.template":5:14
-        object? selectCase()
+        object? selectCase(object? value)
         {
-            object? value = EvaluationContext.Intermediate(MethodInput(itemContext => itemContext.Lookup("$0")));
+            value = EvaluationContext.Intermediate(value);
             if (value is null or EvaluationContext.Missing) return value;
             if (value is EvaluationContext.Data or EvaluationContext.Arguments) return null;
             switch (value)
@@ -399,7 +399,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
             }
         }
 
-        object? @case = selectCase();
+        object? @case = EvaluationContext.Invoke(MethodInput(itemContext => itemContext.Lookup("$0")), selectCase);
 
         return Line($"{@case}");
     }
@@ -492,7 +492,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/birthdays.template":1:1
     private TemplateContent renderBirthdays()
     {
-        object? grouping = ApplySubtemplate("grouping", MethodInput(itemContext => "1"));
+        object? grouping = EvaluationContext.Invoke(MethodInput(itemContext => "1"), methodValue => ApplySubtemplate("grouping", methodValue));
 
         return Line($$"""
             

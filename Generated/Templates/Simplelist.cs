@@ -31,7 +31,7 @@ internal sealed class Simplelist(EvaluationContext context) : TemplateUnit(conte
     // Source: "templates/simplelist.template":9:9
     private TemplateContent anded()
     {
-        object? join = Builtins.Join(MethodInput("$0"), ", ", " and ");
+        object? join = EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Join(methodValue, ", ", " and "));
 
         return Line($"{join}");
     }
@@ -62,7 +62,7 @@ internal sealed class Simplelist(EvaluationContext context) : TemplateUnit(conte
     // Source: "templates/simplelist.template":1:94
     private TemplateContent renderToUpper()
     {
-        object? toUpper = Builtins.ToUpper(MethodInput("firstName"));
+        object? toUpper = EvaluationContext.Invoke(MethodInput("firstName"), methodValue => Builtins.ToUpper(methodValue));
 
         return Line($"{toUpper}");
     }
@@ -95,8 +95,8 @@ internal sealed class Simplelist(EvaluationContext context) : TemplateUnit(conte
     private TemplateContent renderSimplelist()
     {
         object? lastName = Get("lastName");
-        object? choice = (Context.TestCondition(Builtins.Matches(MethodInput("firstName"), new TemplateRegex("/jo/i", "templates/simplelist.template:1:42"))) ? Each(itemContext => Line($"Mr. ")) : "");
-        object? replace = Builtins.Replace(Builtins.ToLower(MethodInput("firstName")), "john", Each(itemContext => new Simplelist(itemContext).renderToUpper()));
+        object? choice = (Context.TestCondition(EvaluationContext.Invoke(MethodInput("firstName"), methodValue => Builtins.Matches(methodValue, new TemplateRegex("/jo/i", "templates/simplelist.template:1:42")))) ? Each(itemContext => Line($"Mr. ")) : "");
+        object? replace = EvaluationContext.Invoke(EvaluationContext.Invoke(MethodInput("firstName"), methodValue_2 => Builtins.ToLower(methodValue_2)), methodValue_3 => Builtins.Replace(methodValue_3, "john", Each(itemContext => new Simplelist(itemContext).renderToUpper())));
         object? petsResult = (IsTruthy("pets") ? Annotate(
             new Func<EvaluationContext, EvaluationContext>[]
             {

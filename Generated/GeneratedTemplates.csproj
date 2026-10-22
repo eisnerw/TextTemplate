@@ -11,6 +11,7 @@
     <Compile Include="Includes/DoInclude.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Support/Builtins.cs" />
+    <Compile Include="Support/BulletIndent.cs" />
     <Compile Include="Support/EvaluationContext.cs" />
     <Compile Include="Support/NodeCasing.cs" />
     <Compile Include="Support/TemplateContent.cs" />

@@ -128,7 +128,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
         object? applyOrderBy() => Unsupported(
             "Call OrderBy",
             "templates/elastic.template:2:4",
-            () => ApplySubtemplate("elasticQuery", MethodInput(itemContext => "fname,lname,isAlive"), "lname:c* AND fname:c*", EvaluationContext.ParseInteger("1000")),
+            () => EvaluationContext.Invoke(MethodInput(itemContext => "fname,lname,isAlive"), methodValue => ApplySubtemplate("elasticQuery", methodValue, "lname:c* AND fname:c*", EvaluationContext.ParseInteger("1000"))),
             () => new object?[] { Get("lname") });
 
         object? orderBy = InContext(applyOrderBy(), dataContext => new Elastic(dataContext).renderFalsy());
@@ -166,7 +166,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/elastic.template":1:2
     private TemplateContent renderElasticSpec()
     {
-        object? elasticSpec = ApplySubtemplate("elasticSpec", MethodInput(itemContext => "fname,lname,isAlive"), "lname:c* AND fname:c*", EvaluationContext.ParseInteger("1000"));
+        object? elasticSpec = EvaluationContext.Invoke(MethodInput(itemContext => "fname,lname,isAlive"), methodValue => ApplySubtemplate("elasticSpec", methodValue, "lname:c* AND fname:c*", EvaluationContext.ParseInteger("1000")));
 
         return Line($"{elasticSpec}");
     }

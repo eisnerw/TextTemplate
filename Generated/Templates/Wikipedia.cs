@@ -66,7 +66,7 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
             "templates/wikipedia.template:5:35",
             () => Get("*"));
 
-        object? replace = Builtins.Replace(applyToJson(), new TemplateRegex("/\"\\d+\"/", "templates/wikipedia.template:5:54"), "\"key\"");
+        object? replace = EvaluationContext.Invoke(applyToJson(), methodValue => Builtins.Replace(methodValue, new TemplateRegex("/\"\\d+\"/", "templates/wikipedia.template:5:54"), "\"key\""));
 
         return Line($"{replace}");
     }
@@ -116,7 +116,7 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/wikipedia.template":1:1
     private TemplateContent renderWikipedia()
     {
-        object? getWiki = ApplySubtemplate("getWiki", MethodInput(itemContext => "Paul Simon"));
+        object? getWiki = EvaluationContext.Invoke(MethodInput(itemContext => "Paul Simon"), methodValue => ApplySubtemplate("getWiki", methodValue));
 
         return Line($" {getWiki}");
     }
