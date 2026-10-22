@@ -342,11 +342,15 @@ dotnet run --project Generated -- --template outline --data-root reference/data
 Data loading is supported independently of outline formatting: outline may still
 reach runtime stubs for other unfinished features.
 
-`@MultilineStyle` currently validates and stores literal style arguments in the
-inherited context; an empty argument list clears the setting. As an explicitly
-authorized intermediate step, composition does not apply these styles yet. This
-allows chains containing supported annotations such as `@MissingValue` to run,
-but does not establish multiline formatting parity.
+`@MultilineStyle` validates literal style arguments and inherits them into child
+contexts; an empty argument list clears the setting. Multiline field values retain
+those styles until composition knows their insertion point. Rendering supports
+`Indented`, `IndentAllButFirst`, `Padded`, `Tabbed`, `Trimmed`, and `Offset`, including
+combinations. It preserves the legacy four-space indentation, first-output-line
+exception, ECMAScript trimming, trailing blank-line removal, and padding newline.
+Literal template text and internal `$n` strings are not styled again. Dynamic style
+arguments remain a TODO; bullet numbering remains independently unfinished.
+Exact Node/C# comparisons are recorded in `multiline-cases.json`.
 
 Bullet nodes currently emit the literal `{.}` marker, as an explicitly authorized
 placeholder. Hierarchical bullet formatting and numbering remain unimplemented.
@@ -368,8 +372,8 @@ list counts and iteration, arguments, and parent access (`named-data-cases.json`
 
 TODO: `Where` is currently an authorized pass-through: it returns its receiver
 unchanged and does not evaluate its predicate. Implement per-item filtering before
-claiming legacy parity. TODOs in source also track literal bullets, stored-only
-multiline styles, and the unimplemented conditional `Count` form.
+claiming legacy parity. TODOs in source also track literal bullets, dynamic multiline style arguments,
+and the unimplemented conditional `Count` form.
 
 `Case(match, result, ..., default)` compiles to a C# switch with lazy guarded
 cases and result branches. Matching preserves legacy ordinal string equality and

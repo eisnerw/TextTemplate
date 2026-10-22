@@ -197,7 +197,7 @@ public sealed class CSharpEmitter
     private string? Annotation(SyntaxNode call, string context = "annotatedContext", bool lambda = true)
     {
         var args = call.Children.Skip(1).SelectMany(child => child.Children).ToList();
-        // TODO: Evaluate dynamic style arguments and apply multiline formatting during composition.
+        // TODO: Evaluate dynamic style arguments; literal styles are applied during composition.
         if (call.Value == "@MultilineStyle" && args.All(arg => arg.Kind == SyntaxKind.String))
             return (lambda ? context + " => " : "") + context + ".WithMultilineStyle(" + string.Join(", ", args.Select(arg => Quote(DecodeString(arg.Value!)))) + ")";
         if (call.Value == "@Falsy" && (args.Count == 0 || args.Count == 1 && args[0].Kind == SyntaxKind.Regex))

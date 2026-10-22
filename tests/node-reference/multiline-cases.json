@@ -1,0 +1,433 @@
+[
+  {
+    "name": "style-Indented-first",
+    "script": "{[prefix {value} suffix].@MultilineStyle('Indented')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "prefix     one\n    two\n    \n    \n    three\n    \n     suffix"
+  },
+  {
+    "name": "style-Indented-later",
+    "script": "{[heading\n  prefix {value} suffix].@MultilineStyle('Indented')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "heading\n  prefix       one\n      two\n      \n      \n      three\n      \n       suffix"
+  },
+  {
+    "name": "style-IndentAllButFirst-first",
+    "script": "{[prefix {value} suffix].@MultilineStyle('IndentAllButFirst')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "prefix one\n    two\n    \n    \n    three\n    \n     suffix"
+  },
+  {
+    "name": "style-IndentAllButFirst-later",
+    "script": "{[heading\n  prefix {value} suffix].@MultilineStyle('IndentAllButFirst')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "heading\n  prefix one\n      two\n      \n      \n      three\n      \n       suffix"
+  },
+  {
+    "name": "style-Padded-first",
+    "script": "{[prefix {value} suffix].@MultilineStyle('Padded')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "prefix   one  \n\t two \n\n\n  three  \n suffix"
+  },
+  {
+    "name": "style-Padded-later",
+    "script": "{[heading\n  prefix {value} suffix].@MultilineStyle('Padded')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "heading\n  prefix   one  \n\t two \n\n\n  three  \n suffix"
+  },
+  {
+    "name": "style-Tabbed-first",
+    "script": "{[prefix {value} suffix].@MultilineStyle('Tabbed')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "prefix       one  \n    \t two \n    \n    \n      three  \n      \n     suffix"
+  },
+  {
+    "name": "style-Tabbed-later",
+    "script": "{[heading\n  prefix {value} suffix].@MultilineStyle('Tabbed')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "heading\n  prefix       one  \n    \t two \n    \n    \n      three  \n      \n     suffix"
+  },
+  {
+    "name": "style-Trimmed-first",
+    "script": "{[prefix {value} suffix].@MultilineStyle('Trimmed')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "prefix   one\n\t two\n\n  three\n\n suffix"
+  },
+  {
+    "name": "style-Trimmed-later",
+    "script": "{[heading\n  prefix {value} suffix].@MultilineStyle('Trimmed')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "heading\n  prefix   one\n\t two\n\n  three\n\n suffix"
+  },
+  {
+    "name": "style-Offset-first",
+    "script": "{[prefix {value} suffix].@MultilineStyle('Offset')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "prefix \n  one  \n\t two \n\n\n  three  \n  \n suffix"
+  },
+  {
+    "name": "style-Offset-later",
+    "script": "{[heading\n  prefix {value} suffix].@MultilineStyle('Offset')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "heading\n  prefix \n  one  \n\t two \n\n\n  three  \n  \n suffix"
+  },
+  {
+    "name": "style-Indented-IndentAllButFirst-first",
+    "script": "{[prefix {value} suffix].@MultilineStyle('Indented','IndentAllButFirst')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "prefix one\n    two\n    \n    \n    three\n    \n     suffix"
+  },
+  {
+    "name": "style-Indented-IndentAllButFirst-later",
+    "script": "{[heading\n  prefix {value} suffix].@MultilineStyle('Indented','IndentAllButFirst')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "heading\n  prefix one\n      two\n      \n      \n      three\n      \n       suffix"
+  },
+  {
+    "name": "style-Indented-Padded-first",
+    "script": "{[prefix {value} suffix].@MultilineStyle('Indented','Padded')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "prefix     one\n    two\n    \n    \n    three\n suffix"
+  },
+  {
+    "name": "style-Indented-Padded-later",
+    "script": "{[heading\n  prefix {value} suffix].@MultilineStyle('Indented','Padded')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "heading\n  prefix       one\n      two\n      \n      \n      three\n suffix"
+  },
+  {
+    "name": "style-Indented-Trimmed-first",
+    "script": "{[prefix {value} suffix].@MultilineStyle('Indented','Trimmed')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "prefix     one\n    two\n\n    three\n\n     suffix"
+  },
+  {
+    "name": "style-Indented-Trimmed-later",
+    "script": "{[heading\n  prefix {value} suffix].@MultilineStyle('Indented','Trimmed')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "heading\n  prefix       one\n      two\n\n      three\n\n       suffix"
+  },
+  {
+    "name": "style-Indented-Offset-first",
+    "script": "{[prefix {value} suffix].@MultilineStyle('Indented','Offset')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "prefix \n    one\n    two\n    \n    \n    three\n    \n     suffix"
+  },
+  {
+    "name": "style-Indented-Offset-later",
+    "script": "{[heading\n  prefix {value} suffix].@MultilineStyle('Indented','Offset')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "heading\n  prefix \n      one\n      two\n      \n      \n      three\n      \n       suffix"
+  },
+  {
+    "name": "style-IndentAllButFirst-Padded-first",
+    "script": "{[prefix {value} suffix].@MultilineStyle('IndentAllButFirst','Padded')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "prefix one\n    two\n    \n    \n    three\n suffix"
+  },
+  {
+    "name": "style-IndentAllButFirst-Padded-later",
+    "script": "{[heading\n  prefix {value} suffix].@MultilineStyle('IndentAllButFirst','Padded')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "heading\n  prefix one\n      two\n      \n      \n      three\n suffix"
+  },
+  {
+    "name": "style-IndentAllButFirst-Trimmed-first",
+    "script": "{[prefix {value} suffix].@MultilineStyle('IndentAllButFirst','Trimmed')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "prefix one\n    two\n\n    three\n\n     suffix"
+  },
+  {
+    "name": "style-IndentAllButFirst-Trimmed-later",
+    "script": "{[heading\n  prefix {value} suffix].@MultilineStyle('IndentAllButFirst','Trimmed')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "heading\n  prefix one\n      two\n\n      three\n\n       suffix"
+  },
+  {
+    "name": "style-IndentAllButFirst-Offset-first",
+    "script": "{[prefix {value} suffix].@MultilineStyle('IndentAllButFirst','Offset')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "prefix one\n    two\n    \n    \n    three\n    \n     suffix"
+  },
+  {
+    "name": "style-IndentAllButFirst-Offset-later",
+    "script": "{[heading\n  prefix {value} suffix].@MultilineStyle('IndentAllButFirst','Offset')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "heading\n  prefix one\n      two\n      \n      \n      three\n      \n       suffix"
+  },
+  {
+    "name": "style-Padded-Tabbed-first",
+    "script": "{[prefix {value} suffix].@MultilineStyle('Padded','Tabbed')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "prefix       one  \n    \t two \n    \n    \n      three  \n suffix"
+  },
+  {
+    "name": "style-Padded-Tabbed-later",
+    "script": "{[heading\n  prefix {value} suffix].@MultilineStyle('Padded','Tabbed')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "heading\n  prefix       one  \n    \t two \n    \n    \n      three  \n suffix"
+  },
+  {
+    "name": "style-Padded-Trimmed-first",
+    "script": "{[prefix {value} suffix].@MultilineStyle('Padded','Trimmed')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "prefix   one\n\t two\n\n  three  \n suffix"
+  },
+  {
+    "name": "style-Padded-Trimmed-later",
+    "script": "{[heading\n  prefix {value} suffix].@MultilineStyle('Padded','Trimmed')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "heading\n  prefix   one\n\t two\n\n  three  \n suffix"
+  },
+  {
+    "name": "style-Padded-Offset-first",
+    "script": "{[prefix {value} suffix].@MultilineStyle('Padded','Offset')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "prefix \n  one  \n\t two \n\n\n  three  \n suffix"
+  },
+  {
+    "name": "style-Padded-Offset-later",
+    "script": "{[heading\n  prefix {value} suffix].@MultilineStyle('Padded','Offset')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "heading\n  prefix \n  one  \n\t two \n\n\n  three  \n suffix"
+  },
+  {
+    "name": "style-Tabbed-Trimmed-first",
+    "script": "{[prefix {value} suffix].@MultilineStyle('Tabbed','Trimmed')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "prefix       one\n    \t two\n\n      three\n\n     suffix"
+  },
+  {
+    "name": "style-Tabbed-Trimmed-later",
+    "script": "{[heading\n  prefix {value} suffix].@MultilineStyle('Tabbed','Trimmed')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "heading\n  prefix       one\n    \t two\n\n      three\n\n     suffix"
+  },
+  {
+    "name": "style-Tabbed-Offset-first",
+    "script": "{[prefix {value} suffix].@MultilineStyle('Tabbed','Offset')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "prefix \n      one  \n    \t two \n    \n    \n      three  \n      \n     suffix"
+  },
+  {
+    "name": "style-Tabbed-Offset-later",
+    "script": "{[heading\n  prefix {value} suffix].@MultilineStyle('Tabbed','Offset')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "heading\n  prefix \n      one  \n    \t two \n    \n    \n      three  \n      \n     suffix"
+  },
+  {
+    "name": "style-Trimmed-Offset-first",
+    "script": "{[prefix {value} suffix].@MultilineStyle('Trimmed','Offset')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "prefix \n  one\n\t two\n\n  three\n\n suffix"
+  },
+  {
+    "name": "style-Trimmed-Offset-later",
+    "script": "{[heading\n  prefix {value} suffix].@MultilineStyle('Trimmed','Offset')}",
+    "data": {
+      "value": "  one  \r\n\t two \n\n\n  three  \n  \n"
+    },
+    "expected": "heading\n  prefix \n  one\n\t two\n\n  three\n\n suffix"
+  },
+  {
+    "name": "style-outline-combination",
+    "script": "{[heading\n   Comment: {value}end].@MultilineStyle('IndentAllButFirst','Padded')}",
+    "data": {
+      "value": " a \n b \n\n"
+    },
+    "expected": "heading\n   Comment: a\n       b\nend"
+  },
+  {
+    "name": "style-scope",
+    "script": "{[A{value}B{[C{value}D].@MultilineStyle()}E{value}F].@MultilineStyle('Tabbed')}",
+    "data": {
+      "value": "one\ntwo"
+    },
+    "expected": "A    one\n    twoBCone\ntwoDE    one\n    twoF"
+  },
+  {
+    "name": "style-list",
+    "script": "{[items:{items:[  name: {name}\n]}].@MultilineStyle('IndentAllButFirst','Padded')}",
+    "data": {
+      "items": [
+        {
+          "name": "one\ntwo"
+        },
+        {
+          "name": "three\nfour"
+        }
+      ]
+    },
+    "expected": "items:\n  name: one\n      two\n\n  name: three\n      four\n"
+  },
+  {
+    "name": "style-missing",
+    "script": "{[start {absent} {value}\nend].@MultilineStyle('Indented')}",
+    "data": {
+      "value": "one\ntwo"
+    },
+    "expected": "    two\nend"
+  },
+  {
+    "name": "style-casing",
+    "script": "{[{value.ToUpper()}].@MultilineStyle('Indented')}",
+    "data": {
+      "value": "one\ntwo"
+    },
+    "expected": "    ONE\n    TWO"
+  },
+  {
+    "name": "style-parameter",
+    "script": "{[{value.#show()}].@MultilineStyle('Tabbed')}\nSubtemplates:\n{#show:[{$0}]}",
+    "data": {
+      "value": "one\ntwo"
+    },
+    "expected": "    one\n    two"
+  },
+  {
+    "name": "style-literal",
+    "script": "{[a\nb].@MultilineStyle('Indented')}",
+    "data": {},
+    "expected": "a\nb"
+  },
+  {
+    "name": "style-unicode-trim",
+    "script": "{[{value}].@MultilineStyle('Indented')}",
+    "data": {
+      "value": "\ufeffone\ufeff\n\u0085two\u0085"
+    },
+    "expected": "    one\n    \u0085two\u0085"
+  },
+  {
+    "name": "style-single",
+    "script": "{[x{value}y].@MultilineStyle('Indented','Padded','Offset')}",
+    "data": {
+      "value": " one "
+    },
+    "expected": "x one y"
+  },
+  {
+    "name": "style-all-blank",
+    "script": "{[x{value}y].@MultilineStyle('Padded')}",
+    "data": {
+      "value": "\n \n\n"
+    },
+    "expected": "x\ny"
+  },
+  {
+    "name": "style-nested",
+    "script": "{[  {child:[x{value}y]}].@MultilineStyle('IndentAllButFirst')}",
+    "data": {
+      "child": {
+        "value": "one\ntwo"
+      }
+    },
+    "expected": "  xone\n    twoy"
+  },
+  {
+    "name": "style-method-chain",
+    "script": "{[{value.Replace('one','ONE')}].@MultilineStyle('IndentAllButFirst','Padded')}",
+    "data": {
+      "value": "one\ntwo"
+    },
+    "expected": "ONE\n    two\n"
+  },
+  {
+    "name": "style-override",
+    "script": "{[A{[B{value}C].@MultilineStyle('IndentAllButFirst')}D{value}E].@MultilineStyle('Indented')}",
+    "data": {
+      "value": "one\ntwo"
+    },
+    "expected": "ABone\n    twoCD        one\n        twoE"
+  },
+  {
+    "name": "style-tabs",
+    "script": "{[head\n\t{value}end].@MultilineStyle('Indented','Offset','Padded','Trimmed')}",
+    "data": {
+      "value": " one \n  two  \n\n"
+    },
+    "expected": "head\n    \n        one\n        two\nend"
+  },
+  {
+    "name": "style-four-styles",
+    "script": "{[head\n  {value}end].@MultilineStyle('IndentAllButFirst','Padded','Offset','Trimmed')}",
+    "data": {
+      "value": " one \n  two  \n\n"
+    },
+    "expected": "head\n  one\n      two\nend"
+  }
+]

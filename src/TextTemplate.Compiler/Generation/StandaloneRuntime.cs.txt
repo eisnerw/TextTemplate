@@ -99,7 +99,7 @@ internal sealed class EvaluationContext
     private readonly string? dataRoot;
     private string? missingText;
     private TemplateRegex? falsy;
-    // TODO: Apply MultilineStyle during composition; currently only stored and inherited.
+    // Preserve styles on each multiline value until its insertion point is known.
     internal IReadOnlyList<string>? MultilineStyle { get; private set; }
     private Missing MissingValue(string key) => new(key, missingText?.Replace("{key}", key));
     internal readonly Data? Current;
@@ -183,7 +183,15 @@ internal sealed class EvaluationContext
             return dot < 0 ? value : value is Data nested ? Find(nested, key[(dot + 1)..]) : MissingValue(path);
         }
         object? value = Current is null ? MissingValue(path) : Find(Current, path);
-        if (value is string text) return text.Length == 0 ? MissingValue(path) : text.Replace("\r", "");
+        if (value is string text)
+        {
+            if (text.Length == 0) return MissingValue(path);
+            // Internal method arguments have already been prepared by the caller.
+            if (Regex.IsMatch(path, @"^\$[0-9]+$")) return text;
+            text = text.Replace("\r", "");
+            return text.Contains('\n') && MultilineStyle is not null
+                ? new Multiline(text, MultilineStyle) : text;
+        }
         return value;
     }
     private static Data ScalarData(List<object?> values)
@@ -215,6 +223,8 @@ internal sealed class EvaluationContext
     }
     // Template output keeps its fragments; method receivers keep composed item values.
     // Neither is an object-data context, and neither is flattened before composition.
+    [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+    internal sealed record Multiline(string Text, IReadOnlyList<string> Styles);
     [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
     internal sealed record RenderedList(List<object?> Items)
     {
@@ -384,7 +394,7 @@ internal sealed class EvaluationContext
     {
         if (value is TemplateContent content)
             return content.Fragments.Length == 1 ? Intermediate(content.Fragments[0]) : Compose(content);
-        if (value is RenderedList) return Compose(value);
+        if (value is RenderedList or Multiline) return Compose(value);
         return value is object?[] sequence ? sequence.Length == 1 ? Intermediate(sequence[0]) : Compose(value) : value;
     }
     internal static bool Condition(object? value)
@@ -483,6 +493,29 @@ internal sealed class EvaluationContext
                     first = false;
                 }
                 return;
+            }
+            if (item is Multiline multiline)
+            {
+                bool Has(string style)
+                {
+                    foreach (string candidate in multiline.Styles) if (candidate == style) return true;
+                    return false;
+                }
+                bool allButFirst = Has("IndentAllButFirst"), padded = Has("Padded"), tabbed = Has("Tabbed");
+                bool indented = Has("Indented"), trimmed = Has("Trimmed"), offset = Has("Offset");
+                int width = 0;
+                if (indented || allButFirst || tabbed)
+                    width = 4 + (!tabbed && lines.Count > 1 ? Regex.Match(lines[^1], "^ *").Length : 0);
+                var pieces = new List<string>(multiline.Text.Split('\n'));
+                if (indented || allButFirst)
+                    for (int i = 0; i < pieces.Count; i++) pieces[i] = pieces[i].Trim(Builtins.Whitespace.ToCharArray());
+                if (padded)
+                    while (pieces.Count > 1 && pieces[^1].Trim(Builtins.Whitespace.ToCharArray()).Length == 0)
+                        pieces.RemoveAt(pieces.Count - 1);
+                string padding = new string(' ', width);
+                string joined = string.Join("\n" + padding, pieces);
+                if (trimmed) joined = Regex.Replace(Regex.Replace(joined, " *\n", "\n"), "\n{3,}", "\n\n");
+                item = (allButFirst ? "" : (offset ? "\n" : "") + padding) + joined + (padded ? "\n" : "");
             }
             if (item is Missing missing) item = missing.Replacement;
             if (item is null) { lines[^1] = ""; skipping = true; return; }
