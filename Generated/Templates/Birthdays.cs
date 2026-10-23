@@ -121,16 +121,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/birthdays.template":13:10
     private TemplateContent bySign()
     {
-        // Template:
-        // '/data/famousBirthdays'.GroupBy(sign, 'group')
-        // Source: "templates/birthdays.template":13:12
-        object? applyGroupBy() => Unsupported(
-            "Call GroupBy",
-            "templates/birthdays.template:13:12",
-            () => "/data/famousBirthdays",
-            () => new object?[] { Get("sign"), "group" });
-
-        object? groupBy = InContext(applyGroupBy(), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderSign()));
+        object? groupBy = InContext(Context.GroupBy(MethodInput(itemContext => "/data/famousBirthdays"), itemContext => itemContext.Lookup("sign"), "sign", new object?[] { "group" }, true), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderSign()), null, dataContext => new Birthdays(dataContext).groupLoadedData_3());
 
         return Line($"{groupBy}");
     }
@@ -145,35 +136,17 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     private TemplateContent renderSign()
     {
         // Template:
-        // dob.ToDate('yyyy')
-        // Source: "templates/birthdays.template":14:28
-        object? applyToDate() => Unsupported(
-            "Call ToDate",
-            "templates/birthdays.template:14:28",
-            () => Get("dob"),
-            () => new object?[] { "yyyy" });
-
-        // Template:
-        // group.GroupBy(dob.ToDate('yyyy'),'yeargroup','year')
-        // Source: "templates/birthdays.template":14:14
-        object? applyGroupBy() => Unsupported(
-            "Call GroupBy",
-            "templates/birthdays.template:14:14",
-            () => Get("group"),
-            () => new object?[] { applyToDate(), "yeargroup", "year" });
-
-        // Template:
         // group.GroupBy(dob.ToDate('yyyy'),'yeargroup','year')
         //           .OrderBy(year,'D')
         // Source: "templates/birthdays.template":14:14
         object? applyOrderBy() => Unsupported(
             "Call OrderBy",
             "templates/birthdays.template:14:14",
-            () => applyGroupBy(),
+            () => Context.GroupBy(MethodInput(itemContext => itemContext.Lookup("group")), itemContext => new Birthdays(itemContext).renderToDate_4(), "dob.ToDate('yyyy')", new object?[] { "yeargroup", "year" }, true),
             () => new object?[] { Get("year"), "D" });
 
         object? sign = Get("sign");
-        object? orderBy = InContext(applyOrderBy(), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderYear()));
+        object? orderBy = InContext(applyOrderBy(), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderYear()), null, dataContext => new Birthdays(dataContext).groupLoadedData_4());
 
         return Line($"{sign}{orderBy}");
     }
@@ -228,6 +201,23 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     }
 
     // Template:
+    // dob.ToDate('yyyy')
+    // Source: "templates/birthdays.template":14:28
+    private object? renderToDate_4()
+    {
+        // Template:
+        // dob.ToDate('yyyy')
+        // Source: "templates/birthdays.template":14:28
+        object? applyToDate() => Unsupported(
+            "Call ToDate",
+            "templates/birthdays.template:14:28",
+            () => Get("dob"),
+            () => new object?[] { "yyyy" });
+
+        return applyToDate();
+    }
+
+    // Template:
     // [{'/data/famousBirthdays'.Where(!isAlive).GroupBy(dob.ToDate('MM'),'group','month'):
     //      [{[2020-{month}-01].ToDate('MMMM')}{ // using the date formatter for the month
     //         group.GroupBy(dob.ToDate('DD'),'daygroup','day')
@@ -238,25 +228,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/birthdays.template":6:10
     private TemplateContent byDate()
     {
-        // Template:
-        // dob.ToDate('MM')
-        // Source: "templates/birthdays.template":6:60
-        object? applyToDate() => Unsupported(
-            "Call ToDate",
-            "templates/birthdays.template:6:60",
-            () => Get("dob"),
-            () => new object?[] { "MM" });
-
-        // Template:
-        // '/data/famousBirthdays'.Where(!isAlive).GroupBy(dob.ToDate('MM'),'group','month')
-        // Source: "templates/birthdays.template":6:12
-        object? applyGroupBy() => Unsupported(
-            "Call GroupBy",
-            "templates/birthdays.template:6:12",
-            () => EvaluationContext.Invoke(MethodInput(itemContext => "/data/famousBirthdays"), methodValue => Builtins.Where(methodValue)),
-            () => new object?[] { applyToDate(), "group", "month" });
-
-        object? groupBy = InContext(applyGroupBy(), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderToDate()));
+        object? groupBy = InContext(Context.GroupBy(EvaluationContext.Invoke(MethodInput(itemContext => "/data/famousBirthdays"), methodValue => Builtins.Where(methodValue)), itemContext => new Birthdays(itemContext).renderToDate(), "dob.ToDate('MM')", new object?[] { "group", "month" }, true), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderToDate_2()), null, dataContext => new Birthdays(dataContext).groupLoadedData());
 
         return Line($"{groupBy}");
     }
@@ -269,7 +241,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     //           .OrderBy(dob, 'D'):
     //                [{#name} {#date}]}]}]
     // Source: "templates/birthdays.template":7:6
-    private TemplateContent renderToDate()
+    private TemplateContent renderToDate_2()
     {
         // Template:
         // [2020-{month}-01].ToDate('MMMM')
@@ -281,35 +253,17 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
             () => new object?[] { "MMMM" });
 
         // Template:
-        // dob.ToDate('DD')
-        // Source: "templates/birthdays.template":8:23
-        object? applyToDate_2() => Unsupported(
-            "Call ToDate",
-            "templates/birthdays.template:8:23",
-            () => Get("dob"),
-            () => new object?[] { "DD" });
-
-        // Template:
-        // group.GroupBy(dob.ToDate('DD'),'daygroup','day')
-        // Source: "templates/birthdays.template":8:9
-        object? applyGroupBy() => Unsupported(
-            "Call GroupBy",
-            "templates/birthdays.template:8:9",
-            () => Get("group"),
-            () => new object?[] { applyToDate_2(), "daygroup", "day" });
-
-        // Template:
         // group.GroupBy(dob.ToDate('DD'),'daygroup','day')
         //           .OrderBy(day)
         // Source: "templates/birthdays.template":8:9
         object? applyOrderBy() => Unsupported(
             "Call OrderBy",
             "templates/birthdays.template:8:9",
-            () => applyGroupBy(),
+            () => Context.GroupBy(MethodInput(itemContext => itemContext.Lookup("group")), itemContext => new Birthdays(itemContext).renderToDate_3(), "dob.ToDate('DD')", new object?[] { "daygroup", "day" }, true),
             () => new object?[] { Get("day") });
 
         object? toDate = applyToDate();
-        object? orderBy = InContext(applyOrderBy(), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderDay()));
+        object? orderBy = InContext(applyOrderBy(), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderDay()), null, dataContext => new Birthdays(dataContext).groupLoadedData_2());
 
         return Line($"{toDate}{orderBy}");
     }
@@ -353,6 +307,23 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     }
 
     // Template:
+    // dob.ToDate('DD')
+    // Source: "templates/birthdays.template":8:23
+    private object? renderToDate_3()
+    {
+        // Template:
+        // dob.ToDate('DD')
+        // Source: "templates/birthdays.template":8:23
+        object? applyToDate() => Unsupported(
+            "Call ToDate",
+            "templates/birthdays.template:8:23",
+            () => Get("dob"),
+            () => new object?[] { "DD" });
+
+        return applyToDate();
+    }
+
+    // Template:
     // [2020-{month}-01]
     // Source: "templates/birthdays.template":7:8
     private TemplateContent renderMonth()
@@ -360,6 +331,23 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
         object? month = Get("month");
 
         return Line($"2020-{month}-01");
+    }
+
+    // Template:
+    // dob.ToDate('MM')
+    // Source: "templates/birthdays.template":6:60
+    private object? renderToDate()
+    {
+        // Template:
+        // dob.ToDate('MM')
+        // Source: "templates/birthdays.template":6:60
+        object? applyToDate() => Unsupported(
+            "Call ToDate",
+            "templates/birthdays.template:6:60",
+            () => Get("dob"),
+            () => new object?[] { "MM" });
+
+        return applyToDate();
     }
 
     // Template:
@@ -442,11 +430,65 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
         return included;
     }
 
+    // Template:
+    // '/data/famousBirthdays'.Where(!isAlive).GroupBy(dob.ToDate('MM'),'group','month')
+    // Source: "templates/birthdays.template":6:12
+    private object? groupLoadedData()
+    {
+        return Context.GroupBy(EvaluationContext.Invoke(Context.Current, methodValue => Builtins.Where(methodValue)), itemContext => new Birthdays(itemContext).renderToDate(), "dob.ToDate('MM')", new object?[] { "group", "month" }, false);
+    }
+
+    // Template:
+    // group.GroupBy(dob.ToDate('DD'),'daygroup','day')
+    //           .OrderBy(day)
+    // Source: "templates/birthdays.template":8:9
+    private object? groupLoadedData_2()
+    {
+        // Template:
+        // group.GroupBy(dob.ToDate('DD'),'daygroup','day')
+        //           .OrderBy(day)
+        // Source: "templates/birthdays.template":8:9
+        object? applyOrderBy() => Unsupported(
+            "Call OrderBy",
+            "templates/birthdays.template:8:9",
+            () => Context.GroupBy(Context.Current, itemContext => new Birthdays(itemContext).renderToDate_3(), "dob.ToDate('DD')", new object?[] { "daygroup", "day" }, false),
+            () => new object?[] { Get("day") });
+
+        return applyOrderBy();
+    }
+
     internal EvaluationContext includeByDate()
     {
         EvaluationContext included = Context;
         _ = new Birthdays(included).byDate();
         return included;
+    }
+
+    // Template:
+    // '/data/famousBirthdays'.GroupBy(sign, 'group')
+    // Source: "templates/birthdays.template":13:12
+    private object? groupLoadedData_3()
+    {
+        return Context.GroupBy(Context.Current, itemContext => itemContext.Lookup("sign"), "sign", new object?[] { "group" }, false);
+    }
+
+    // Template:
+    // group.GroupBy(dob.ToDate('yyyy'),'yeargroup','year')
+    //           .OrderBy(year,'D')
+    // Source: "templates/birthdays.template":14:14
+    private object? groupLoadedData_4()
+    {
+        // Template:
+        // group.GroupBy(dob.ToDate('yyyy'),'yeargroup','year')
+        //           .OrderBy(year,'D')
+        // Source: "templates/birthdays.template":14:14
+        object? applyOrderBy() => Unsupported(
+            "Call OrderBy",
+            "templates/birthdays.template:14:14",
+            () => Context.GroupBy(Context.Current, itemContext => new Birthdays(itemContext).renderToDate_4(), "dob.ToDate('yyyy')", new object?[] { "yeargroup", "year" }, false),
+            () => new object?[] { Get("year"), "D" });
+
+        return applyOrderBy();
     }
 
     internal EvaluationContext includeBySign()

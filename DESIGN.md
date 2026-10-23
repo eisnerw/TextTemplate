@@ -497,5 +497,27 @@ text. Default alignment is left; empty padding becomes a space. Center alignment
 appends before prepending, retaining the suffix of partial left padding. Width
 counts UTF-16 code units; already-long receivers are never truncated. Invalid
 arguments fail execution (the generated CLI suppresses output on failure).
-The startup template now passes Align but still reaches the GroupBy stub at
-`templates/startup.template:64:11`; full startup parity is not yet established.
+The startup template now passes Align; full startup parity is not yet established.
+
+### GroupBy compatibility
+
+`GroupBy` emits a deferred key selector and builds structured data in the generated
+context helper. The translation follows `callMethod` and `TemplateData` in the
+unchanged interpreter at `ccedefd87b012ff1173ee2f43323b6eb7c8bd268`.
+`tests/node-reference/group-cases.json` records the Node outputs and inputs for
+standalone C# A/B regression tests. Keys use JavaScript string conversion and
+UTF-16 ordinal sorting; rows within a group retain input order. Missing keys
+become `[object Object]`, while null keys become `null`. Singleton results and
+member lists collapse to dictionaries. Cloned records acquire group/list parent
+links. `$` arguments are temporarily copied into each row and then deleted,
+including overwritten row properties, matching the legacy behavior.
+
+The second argument names the members; exactly three total arguments enable the
+key alias. With two arguments the key must be a simple identifier. Extra arguments
+retain the reference's unusual fallback to the key expression text. URL receivers
+pass through when used alone. For URL/JSON context expressions, compiled method
+chains are reapplied to the loaded data before rendering, matching visitContextToken. The reference's inherited-object-key
+quirks are retained for characterized prototype names. Unfinished key expressions
+stay deferred until a row needs them. Startup now advances past GroupBy and
+reaches `Call @DateTest` at `templates/startup.template:65:37`; full startup parity
+remains unfinished.

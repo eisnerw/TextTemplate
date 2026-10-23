@@ -286,6 +286,31 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
         return Line($"{formatTimes}: {summary} {content}Notes: {description}{content_2}Location {location}");
     }
 
+    // Template:
+    // start.ToDate('YYYY-MM-DDT00:00:00')
+    // Source: "templates/events.template":2:12
+    private object? renderToDate()
+    {
+        // Template:
+        // start.ToDate('YYYY-MM-DDT00:00:00')
+        // Source: "templates/events.template":2:12
+        object? applyToDate() => Unsupported(
+            "Call ToDate",
+            "templates/events.template:2:12",
+            () => Get("start"),
+            () => new object?[] { "YYYY-MM-DDT00:00:00" });
+
+        return applyToDate();
+    }
+
+    // Template:
+    // ^.GroupBy(start.ToDate('YYYY-MM-DDT00:00:00'), 'group', 'start')
+    // Source: "templates/events.template":2:2
+    private object? groupLoadedData()
+    {
+        return Context.GroupBy(Context.Current, itemContext => new Events(itemContext).renderToDate(), "start.ToDate('YYYY-MM-DDT00:00:00')", new object?[] { "group", "start" }, false);
+    }
+
     internal EvaluationContext includeSameDay()
     {
         EvaluationContext included = Context;
@@ -360,25 +385,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/events.template":1:1
     private TemplateContent renderEvents()
     {
-        // Template:
-        // start.ToDate('YYYY-MM-DDT00:00:00')
-        // Source: "templates/events.template":2:12
-        object? applyToDate() => Unsupported(
-            "Call ToDate",
-            "templates/events.template:2:12",
-            () => Get("start"),
-            () => new object?[] { "YYYY-MM-DDT00:00:00" });
-
-        // Template:
-        // ^.GroupBy(start.ToDate('YYYY-MM-DDT00:00:00'), 'group', 'start')
-        // Source: "templates/events.template":2:2
-        object? applyGroupBy() => Unsupported(
-            "Call GroupBy",
-            "templates/events.template:2:2",
-            () => Get("^"),
-            () => new object?[] { applyToDate(), "group", "start" });
-
-        object? groupBy = InContext(applyGroupBy(), dataContext => new Events(dataContext).renderDateFormat());
+        object? groupBy = InContext(Context.GroupBy(MethodInput(itemContext => itemContext.Lookup("^")), itemContext => new Events(itemContext).renderToDate(), "start.ToDate('YYYY-MM-DDT00:00:00')", new object?[] { "group", "start" }, true), dataContext => new Events(dataContext).renderDateFormat(), null, dataContext => new Events(dataContext).groupLoadedData());
 
         return Line($$"""
             

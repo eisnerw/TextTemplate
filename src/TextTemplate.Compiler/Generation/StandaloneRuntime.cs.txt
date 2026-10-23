@@ -265,7 +265,7 @@ internal sealed class EvaluationContext
         foreach (Data item in items) results.Add(Intermediate(body(new EvaluationContext(this, item))));
         return new Arguments(results);
     }
-    internal object? Context(object? value, Func<EvaluationContext, object?> body, Func<object?>? fallback = null)
+    internal object? Context(object? value, Func<EvaluationContext, object?> body, Func<object?>? fallback = null, Func<EvaluationContext, object?>? replay = null)
     {
         value = Intermediate(value);
         if (value is string text)
@@ -296,11 +296,17 @@ internal sealed class EvaluationContext
                     value = ReadData(nested.RootElement, Current);
                 }
                 else value = ReadData(loaded, Current);
-                return body(new EvaluationContext(this, (Data)value));
+                EvaluationContext loadedContext = new(this, (Data)value);
+                return replay is null ? body(loadedContext) : loadedContext.Context(replay(loadedContext), body, fallback);
             }
             if (!text.StartsWith('{') && !text.StartsWith('[')) return text;
             using JsonDocument parsed = JsonDocument.Parse(text);
             value = ReadData(parsed.RootElement, Current);
+            if (replay is not null)
+            {
+                EvaluationContext loadedContext = new(this, (Data)value);
+                return loadedContext.Context(replay(loadedContext), body, fallback);
+            }
         }
         if (value is Missing) return fallback is null ? value : fallback();
         if (value is not Data) throw new NotImplementedException("Expected an object data context.");
@@ -448,6 +454,88 @@ internal sealed class EvaluationContext
             if (argument is not Missing and not TemplateRegex) data.Values["$" + (i + 1)] = argument;
         }
         return new EvaluationContext(this, data).Named(name);
+    }
+    // callMethod GroupBy: defer the key, preserve group members, and sort JS property keys.
+    internal object? GroupBy(object? value, Func<EvaluationContext, object?> selector, string keyText, object?[] arguments, bool contextProbe = false)
+    {
+        value = Intermediate(value);
+        if (value is null or Missing) return value;
+        if (contextProbe && value is string) return value;
+        if (arguments.Length == 1 && !Regex.IsMatch(keyText, @"^[a-zA-Z_][a-zA-Z0-9_]*$"))
+            throw new InvalidOperationException("An alias (third parameter) must be provided for the GroupBy name.");
+        if (value is not Data data)
+        {
+            // Resource strings are resolved later by context evaluation, as in the reference.
+            if (value is string path && (path.StartsWith('/') || path.StartsWith("http", StringComparison.Ordinal))) return value;
+            throw new InvalidOperationException("Invalid data for GroupBy.");
+        }
+        if (arguments.Length < 1) throw new InvalidOperationException("Invalid arguments for GroupBy.");
+        Dictionary<string, object?> dollars = new(StringComparer.Ordinal);
+        if (Current is not null)
+            foreach (var entry in Current.Values)
+                if (entry.Key.StartsWith('$')) dollars[entry.Key] = Materialize(entry.Value, Current);
+        Dictionary<string, List<Data>> groups = new(StringComparer.Ordinal);
+        foreach (Data item in data.Items ?? new List<Data> { data })
+        {
+            foreach (var entry in dollars) item.Values[entry.Key] = entry.Value;
+            string key;
+            try
+            {
+                EvaluationContext child = new(this, item);
+                object? selected = selector(child);
+                key = Builtins.JsString(Intermediate(selected));
+            }
+            finally
+            {
+                // Legacy deletes these keys even when they replaced existing item properties.
+                foreach (string name in dollars.Keys) item.Values.Remove(name);
+            }
+            // The reference uses {}, not a prototype-free map. Inherited function names
+            // contribute an empty record; assigning __proto__ creates no enumerable key.
+            if (key == "__proto__") continue;
+            if (!groups.TryGetValue(key, out List<Data>? members))
+            {
+                groups[key] = members = new();
+                if (key is "constructor" or "toString" or "toLocaleString" or "valueOf" or
+                    "hasOwnProperty" or "isPrototypeOf" or "propertyIsEnumerable" or
+                    "__defineGetter__" or "__defineSetter__" or "__lookupGetter__" or "__lookupSetter__")
+                    members.Add(new Data(new(StringComparer.Ordinal), null));
+            }
+            members.Add(item);
+        }
+        string groupingName = arguments.Length == 2 ? Builtins.JsString(arguments[1]) : keyText;
+        string membersName = Builtins.JsString(arguments[0]);
+        List<string> keys = new(groups.Keys);
+        keys.Sort(StringComparer.Ordinal);
+        Data result = new(new(StringComparer.Ordinal), Current);
+        if (keys.Count != 1) result.Items = new();
+        foreach (string key in keys)
+        {
+            Data group = keys.Count == 1 ? result : new(new(StringComparer.Ordinal), result);
+            if (groupingName != "__proto__") group.Values[groupingName] = key;
+            List<Data> members = groups[key];
+            group.Values[membersName] = members.Count == 1 ? CloneGroupData(members[0], group)
+                : CloneGroupData(new Data(new(StringComparer.Ordinal), null) { Items = members }, group);
+            result.Items?.Add(group);
+        }
+        return result;
+    }
+    // TemplateData clones grouped records; rebuild parent links instead of retaining source parents.
+    private static Data CloneGroupData(Data source, Data parent)
+    {
+        Data copy = new(new(StringComparer.Ordinal), parent);
+        if (source.Items is not null)
+        {
+            copy.Items = new();
+            foreach (Data item in source.Items) copy.Items.Add(CloneGroupData(item, copy));
+        }
+        else
+            foreach (var entry in source.Values)
+            {
+                object? value = Materialize(entry.Value, source);
+                copy.Values[entry.Key] = value is Data child ? CloneGroupData(child, copy) : value;
+            }
+        return copy;
     }
     internal static object? JoinValues(object? value, params object?[] arguments)
     {

@@ -651,16 +651,6 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":6:12
     private TemplateContent renderIntro()
     {
-        // Template:
-        // #externalData.Where(dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D')
-        //             .GroupBy(sign, 'group')
-        // Source: "templates/startup.template":64:11
-        object? applyGroupBy() => Unsupported(
-            "Call GroupBy",
-            "templates/startup.template:64:11",
-            () => EvaluationContext.Invoke(SubtemplateInput("externalData"), methodValue_7 => Builtins.Where(methodValue_7)),
-            () => new object?[] { Get("sign"), "group" });
-
         object? content = Context.CreateBullet("\u0001{.} ");
         object? intro = Each(itemContext => itemContext.Named("intro"));
         object? content_2 = InContext("{\"first\":\"Hello\", \"second\":\"World\"}", dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderFirst()));
@@ -680,7 +670,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         object? content_9 = Context.CreateBullet("\n   \u0001{.} ");
         object? subexample = Each(itemContext => itemContext.Named("subexample"));
         object? content_10 = Context.CreateBullet("\n   \u0001{.} ");
-        object? groupBy = InContext(applyGroupBy(), dataContext => new Startup(dataContext).renderDateTest());
+        object? groupBy = InContext(Context.GroupBy(EvaluationContext.Invoke(SubtemplateInput("externalData"), methodValue_7 => Builtins.Where(methodValue_7)), itemContext => itemContext.Lookup("sign"), "sign", new object?[] { "group" }, true), dataContext => new Startup(dataContext).renderDateTest(), null, dataContext => new Startup(dataContext).groupLoadedData());
         object? content_11 = Context.CreateBullet("\n   \u0001{.} ");
         object? where = InContext(EvaluationContext.Invoke(SubtemplateInput("externalData"), methodValue_8 => Builtins.Where(methodValue_8)), dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderDob()));
         object? content_12 = Context.CreateBullet("\n   \u0001{.} ");
@@ -1060,6 +1050,15 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         object? second = Get("second");
 
         return Line($"Interpolation example: {first} {second}!!");
+    }
+
+    // Template:
+    // #externalData.Where(dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D')
+    //             .GroupBy(sign, 'group')
+    // Source: "templates/startup.template":64:11
+    private object? groupLoadedData()
+    {
+        return Context.GroupBy(EvaluationContext.Invoke(Context.Current, methodValue => Builtins.Where(methodValue)), itemContext => itemContext.Lookup("sign"), "sign", new object?[] { "group" }, false);
     }
 
     internal EvaluationContext includeOverview()

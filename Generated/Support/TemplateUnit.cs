@@ -24,8 +24,8 @@ internal abstract class TemplateUnit(EvaluationContext context)
     protected object? Get(string path) => context.Lookup(path);
     protected object? Named(string name) => context.Named(name);
     protected static TemplateContent Line(EvaluationContext.StructuredText text) => EvaluationContext.Text(text);
-    protected object? InContext(object? value, Func<EvaluationContext, object?> body, Func<object?>? fallback = null)
-        => context.Context(value, body, fallback);
+    protected object? InContext(object? value, Func<EvaluationContext, object?> body, Func<object?>? fallback = null, Func<EvaluationContext, object?>? replay = null)
+        => context.Context(value, body, fallback, replay);
     // Registration creates bindings only; bodies run later in the caller's context.
     protected sealed class SubtemplateDefinitions
     {

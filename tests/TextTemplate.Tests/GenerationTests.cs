@@ -31,6 +31,7 @@ public sealed class GenerationTests
     }
 
     [Theory]
+    [InlineData("group")]
     [InlineData("align")]
     [InlineData("list")]
     [InlineData("regex")]
@@ -63,6 +64,12 @@ public sealed class GenerationTests
             Assert.True(parsed.Success, string.Join("\n", parsed.Diagnostics));
             var generated = new CSharpEmitter().Generate(parsed.Document!);
             Assert.True(generated.Success, string.Join("\n", generated.Diagnostics));
+            if (suite == "group")
+            {
+                Assert.Contains("Context.GroupBy(", generated.Source);
+                Assert.Contains("itemContext => itemContext.Lookup(\"k\")", generated.Source);
+                Assert.DoesNotContain("\"Call GroupBy\"", generated.Source);
+            }
             foreach (var file in generated.Files)
             {
                 string path = Path.Combine(root, "generated", file.Key);

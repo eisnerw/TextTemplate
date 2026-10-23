@@ -168,8 +168,8 @@ public sealed class CSharpEmitter
             protected object? Get(string path) => context.Lookup(path);
             protected object? Named(string name) => context.Named(name);
             protected static TemplateContent Line(EvaluationContext.StructuredText text) => EvaluationContext.Text(text);
-            protected object? InContext(object? value, Func<EvaluationContext, object?> body, Func<object?>? fallback = null)
-                => context.Context(value, body, fallback);
+            protected object? InContext(object? value, Func<EvaluationContext, object?> body, Func<object?>? fallback = null, Func<EvaluationContext, object?>? replay = null)
+                => context.Context(value, body, fallback, replay);
             // Registration creates bindings only; bodies run later in the caller's context.
             protected sealed class SubtemplateDefinitions
             {
@@ -501,11 +501,11 @@ public sealed class CSharpEmitter
             content.ToString().Replace("\n", "\n            ") + "\n            " + quotes + ")";
     }
 
-    private string Expression(SyntaxNode node, ParsedSource source)
+    private string Expression(SyntaxNode node, ParsedSource source, SyntaxNode? replayReceiver = null, bool contextProbe = false)
     {
         string Call(SyntaxNode child) => child.Kind == SyntaxKind.InlineTemplate
             ? "Each(" + RawChild(child) + ")" : child.Kind is SyntaxKind.Template or SyntaxKind.SharedTemplate
-            ? "this." + Emit(child, source) + "()" : Expression(child, source);
+            ? "this." + Emit(child, source) + "()" : Expression(child, source, replayReceiver, contextProbe);
         string RawChild(SyntaxNode child, string context = "itemContext") => child.Kind switch
         {
             SyntaxKind.Identifier when !child.Value!.StartsWith('@') => context + " => " + context + ".Lookup(" + Quote(child.Value) + ")",
@@ -610,6 +610,21 @@ public sealed class CSharpEmitter
                     (node.Children.Count > 2 ? Call(node.Children[2]) : node.Kind == SyntaxKind.ThinArrow ? "\"\"" : "null") + ")"; break;
             case SyntaxKind.Context: case SyntaxKind.ContextWithFallback:
                 if (node.Value == "implicit") expression = Call(node.Children[0]);
+                else if (node.Children[0].Kind == SyntaxKind.Call && CallChain(node.Children[0], out _).Any(call => call.Value == "GroupBy"))
+                {
+                    var contextCall = node.Children[0];
+                    CallChain(contextCall, out var originalReceiver);
+                    string replayName = Unique("groupLoadedData", methodNames);
+                    var previousBody = current;
+                    current = new MethodBody();
+                    string replayExpression = Expression(contextCall, source, originalReceiver);
+                    bodies.Append(SourceComment(contextCall, source, "    ")).Append("    private object? ").Append(replayName)
+                        .Append("()\n    {\n").Append(Body(replayExpression)).Append("    }\n\n");
+                    current = previousBody;
+                    expression = "InContext(" + Expression(contextCall, source, contextProbe: true) + ", " + InChild(node.Children[1]) +
+                        (node.Kind == SyntaxKind.ContextWithFallback ? ", () => " + Call(node.Children[2]) : ", null") +
+                        ", dataContext => new " + unitName + "(dataContext)." + replayName + "())";
+                }
                 else expression = "InContext(" + Call(node.Children[0]) + ", " + InChild(node.Children[1]) +
                     (node.Kind == SyntaxKind.ContextWithFallback ? ", () => " + Call(node.Children[2]) : "") + ")";
                 break;
@@ -629,6 +644,16 @@ public sealed class CSharpEmitter
                             string.Join(",\n                ", annotations.Select(call => Annotation(call, source: source))) + "\n            },\n            " + InChild(body, "annotatedContext") + ")";
                     }
                 }
+                else if (node.Value == "GroupBy")
+                {
+                    var groupArgs = node.Children.Skip(1).SelectMany(child => child.Children).ToList();
+                    string keyText = groupArgs.Count == 0 ? "" : source.Text.Substring(groupArgs[0].Span.Offset, groupArgs[0].Span.Length);
+                    string selector = groupArgs.Count == 0 ? "itemContext => null" : RawChild(groupArgs[0]);
+                    string input = ReferenceEquals(node.Children[0], replayReceiver) ? "Context.Current" : node.Children[0].Kind == SyntaxKind.Call ? Call(node.Children[0])
+                        : "MethodInput(" + RawChild(node.Children[0]) + ")";
+                    expression = "Context.GroupBy(" + input + ", " + selector + ", " + Quote(keyText) + ", " +
+                        "new object?[] { " + string.Join(", ", groupArgs.Skip(1).Select(Call)) + " }, " + (contextProbe ? "true" : "false") + ")";
+                }
                 else if (node.Value == "Case")
                 {
                     var caseArgs = node.Children.Skip(1).SelectMany(child => child.Children).ToList();
@@ -637,7 +662,7 @@ public sealed class CSharpEmitter
                     else
                     {
                         string function = Unique("selectCase", current.Names);
-                        string input = node.Children[0].Kind == SyntaxKind.Call ? Call(node.Children[0])
+                        string input = ReferenceEquals(node.Children[0], replayReceiver) ? "Context.Current" : node.Children[0].Kind == SyntaxKind.Call ? Call(node.Children[0])
                             : "MethodInput(" + RawChild(node.Children[0]) + ")";
                         var body = new StringBuilder(SourceComment(node, source, "        "));
                         body.Append("        object? ").Append(function).Append("(object? value)\n        {\n")
@@ -659,7 +684,7 @@ public sealed class CSharpEmitter
                 {
                     // TODO: Where must evaluate its predicate in each item's context; skip it for this temporary pass-through.
                     string arguments = node.Value == "Where" ? "" : string.Join(", ", node.Children.Skip(1).SelectMany(child => child.Children).Select(Call));
-                    string input = node.Children[0].Kind == SyntaxKind.Call || receiver.Value?.StartsWith('^') == true ? Call(node.Children[0]) : node.Children[0].Kind == SyntaxKind.Identifier && !node.Children[0].Value!.StartsWith('@')
+                    string input = ReferenceEquals(node.Children[0], replayReceiver) ? "Context.Current" : node.Children[0].Kind == SyntaxKind.Call || receiver.Value?.StartsWith('^') == true ? Call(node.Children[0]) : node.Children[0].Kind == SyntaxKind.Identifier && !node.Children[0].Value!.StartsWith('@')
                         ? "MethodInput(" + Quote(node.Children[0].Value!) + ")"
                         : node.Children[0].Kind == SyntaxKind.NamedSubtemplate
                         ? "SubtemplateInput(" + Quote(node.Children[0].Value!) + ")"

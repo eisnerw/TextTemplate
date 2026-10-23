@@ -1,0 +1,560 @@
+[
+  {
+    "name": "group-basic",
+    "script": "{rows.GroupBy(k,'members'):[{k}:{members:[{name}]}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "a:A\nb:\n   B1\n   B2"
+  },
+  {
+    "name": "group-counts",
+    "script": "{rows.GroupBy(k,'members'):[{k}:{members.Count()}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "a:1\nb:2"
+  },
+  {
+    "name": "group-alias",
+    "script": "{rows.GroupBy(k.ToUpper(),'members','label'):[{label}:{members:[{name}]}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "A:A\nB:\n   B1\n   B2"
+  },
+  {
+    "name": "group-template-key",
+    "script": "{rows.GroupBy([{k}!],'members','label'):[{label}:{members:[{name}]}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "a!:A\nb!:\n   B1\n   B2"
+  },
+  {
+    "name": "group-sort",
+    "script": "{rows.GroupBy(k,'members'):[{k}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "2"
+        },
+        {
+          "k": "10"
+        },
+        {
+          "k": "a"
+        },
+        {
+          "k": "A"
+        },
+        {
+          "k": "😀"
+        },
+        {
+          "k": "é"
+        },
+        {
+          "k": "1"
+        }
+      ]
+    },
+    "expected": "1\n10\n2\nA\na\né\n😀"
+  },
+  {
+    "name": "group-missing-keys",
+    "script": "{rows.GroupBy(k,'members'):[{k}:{members:[{name}]}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "missing"
+        },
+        {
+          "k": null,
+          "name": "null"
+        },
+        {
+          "k": "",
+          "name": "empty"
+        },
+        {
+          "k": false,
+          "name": "false"
+        },
+        {
+          "k": 0,
+          "name": "zero"
+        }
+      ]
+    },
+    "expected": "0:zero\n[object Object]:\n   missing\n   empty\nfalse:false\nnull:null"
+  },
+  {
+    "name": "group-single",
+    "script": "{rows.GroupBy(k,'members'):[{k}:{members:[{name}]}]}",
+    "data": {
+      "rows": {
+        "k": "a",
+        "name": "one"
+      }
+    },
+    "expected": "a:one"
+  },
+  {
+    "name": "group-empty",
+    "script": "{rows.GroupBy(k,'members').Count()}",
+    "data": {
+      "rows": []
+    },
+    "expected": "0"
+  },
+  {
+    "name": "group-absent",
+    "script": "{missing.GroupBy(k,'members')}",
+    "data": {},
+    "expected": ""
+  },
+  {
+    "name": "group-url",
+    "script": "{'/data/famousBirthdays'.GroupBy(sign,'members')}",
+    "data": {},
+    "expected": "/data/famousBirthdays"
+  },
+  {
+    "name": "group-invalid-data",
+    "script": "{'abc'.GroupBy(k,'members')}",
+    "data": {},
+    "expected": "abc",
+    "exitCode": 1
+  },
+  {
+    "name": "group-no-alias",
+    "script": "{rows.GroupBy(k.ToUpper(),'members')}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "\n\n",
+    "exitCode": 1
+  },
+  {
+    "name": "group-short-args",
+    "script": "{rows.GroupBy(k)}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "\n\n",
+    "exitCode": 1
+  },
+  {
+    "name": "group-collision",
+    "script": "{rows.GroupBy(k,'k'):[{k:[{name}]}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "A\nB1\nB2"
+  },
+  {
+    "name": "group-extra-args",
+    "script": "{rows.GroupBy(k,'members','label','extra'):[{k}:{members:[{name}]}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "a:A\nb:\n   B1\n   B2"
+  },
+  {
+    "name": "group-parent",
+    "script": "{rows.GroupBy(k,'members'):[{members:[{name}:{^.k}:{^.^.k}]}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "A:a:a, b\nB1:b, b:b\nB2:b, b:b"
+  },
+  {
+    "name": "group-deferred",
+    "script": "{absent.GroupBy(k.ToDate(),'members')}",
+    "data": {},
+    "expected": ""
+  },
+  {
+    "name": "group-dollars",
+    "script": "{rows.#group('!')}\nSubtemplates:\n{#group:[{$0.GroupBy([{k}{$1}],'members','label'):[{label}:{members:[{name}]}]}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "a!:A\nb!:\n   B1\n   B2"
+  },
+  {
+    "name": "group-root-list",
+    "script": "{*.GroupBy(k,'members'):[{k}:{members:[{name}]}]}",
+    "data": [
+      {
+        "k": "b",
+        "name": "B"
+      },
+      {
+        "k": "a",
+        "name": "A"
+      }
+    ],
+    "expected": "",
+    "exitCode": 1
+  },
+  {
+    "name": "group-root-empty",
+    "script": "{*.GroupBy(k,'members').Count()}",
+    "data": [],
+    "expected": "0",
+    "exitCode": 1
+  },
+  {
+    "name": "group-same-group-parent",
+    "script": "{rows.GroupBy(k,'members'):[{members:[{name}:{^.k}:{^.^.k}]}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "a",
+          "name": "one"
+        },
+        {
+          "k": "a",
+          "name": "two"
+        }
+      ]
+    },
+    "expected": "one:a, a:a\ntwo:a, a:a"
+  },
+  {
+    "name": "group-object-key",
+    "script": "{rows.GroupBy(k,'members'):[{k}:{members:[{name}]}]}",
+    "data": {
+      "rows": [
+        {
+          "k": {},
+          "name": "one"
+        },
+        {
+          "k": {
+            "x": 1
+          },
+          "name": "two"
+        }
+      ]
+    },
+    "expected": "[object Object]:\n   one\n   two"
+  },
+  {
+    "name": "group-dollar-collision",
+    "script": "{rows.#group('outer')}\nSubtemplates:\n{#group:[{$0.GroupBy([$1],'members','label'):[{label}:{members:[{name}:{$1.IfMissing('gone')}]}]}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "a",
+          "name": "one",
+          "$1": "inner"
+        },
+        {
+          "k": "b",
+          "name": "two"
+        }
+      ]
+    },
+    "expected": "$1:\n   one:gone\n   two:gone"
+  },
+  {
+    "name": "group-unused-selector",
+    "script": "{rows.GroupBy(k.ToDate(),'members')}",
+    "data": {
+      "rows": []
+    },
+    "expected": ""
+  },
+  {
+    "name": "group-nested",
+    "script": "{rows.GroupBy(k,'members'):[{k}:{members.GroupBy(name,'nested'):[{name}:{nested.Count()}]}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "a:A:1\nb:B:2"
+  },
+  {
+    "name": "group-numeric-strings",
+    "script": "{rows.GroupBy(k,'members'):[{k}:{members.Count()}]}",
+    "data": {
+      "rows": [
+        {
+          "k": 2
+        },
+        {
+          "k": "2"
+        },
+        {
+          "k": true
+        },
+        {
+          "k": "true"
+        }
+      ]
+    },
+    "expected": "2:2\ntrue:2"
+  },
+  {
+    "name": "group-prototype-keys",
+    "script": "{rows.GroupBy(k,'members'):[{k}:{members.Count()}:{members:[{name.IfMissing('empty')}]}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "toString",
+          "name": "toString"
+        },
+        {
+          "k": "constructor",
+          "name": "constructor"
+        },
+        {
+          "k": "__proto__",
+          "name": "__proto__"
+        },
+        {
+          "k": "hasOwnProperty",
+          "name": "hasOwnProperty"
+        },
+        {
+          "k": "z",
+          "name": "z"
+        }
+      ]
+    },
+    "expected": "constructor:2:\n   empty\n   constructor\nhasOwnProperty:2:\n   empty\n   hasOwnProperty\ntoString:2:\n   empty\n   toString\nz:1:z"
+  },
+  {
+    "name": "group-missing-template-key",
+    "script": "{rows.GroupBy([{missing}],'members','key'):[{key}:{members.Count()}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "a"
+        },
+        {
+          "k": "b"
+        }
+      ]
+    },
+    "expected": "[object Object]:2"
+  },
+  {
+    "name": "group-empty-template-key",
+    "script": "{rows.GroupBy([],'members','key'):[{key.IfMissing('empty')}:{members.Count()}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "a"
+        },
+        {
+          "k": "b"
+        }
+      ]
+    },
+    "expected": "empty:2"
+  },
+  {
+    "name": "group-prototype-alias",
+    "script": "{rows.GroupBy(k,'members','__proto__'):[{members.Count()}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "a"
+        },
+        {
+          "k": "b"
+        }
+      ]
+    },
+    "expected": "1\n1"
+  },
+  {
+    "name": "group-loaded-url",
+    "script": "{'/data/people'.GroupBy(lastName,'members'):[{lastName}:{members:[{firstName}]}]}",
+    "data": {},
+    "expected": "Johnson:Doris\nSmith:John"
+  },
+  {
+    "name": "group-loaded-named",
+    "script": "{#data.GroupBy(lastName,'members'):[{lastName}:{members:[{firstName}]}]}\nSubtemplates:\n{#data:[/data/people]}",
+    "data": {},
+    "expected": "Johnson:Doris\nSmith:John"
+  },
+  {
+    "name": "group-loaded-json",
+    "script": "{'[{\"k\":\"b\",\"name\":\"B\"},{\"k\":\"a\",\"name\":\"A\"}]'.GroupBy(k,'members'):[{k}:{members:[{name}]}]}",
+    "data": {},
+    "expected": "a:A\nb:B"
+  },
+  {
+    "name": "group-loaded-formula",
+    "script": "{'/data/people'.GroupBy(firstName.ToUpper(),'members','label'):[{label}:{members.Count()}]}",
+    "data": {},
+    "expected": "DORIS:1\nJOHN:1"
+  },
+  {
+    "name": "group-loaded-where",
+    "script": "{'/data/people'.Where(firstName).GroupBy(lastName,'members'):[{lastName}:{members.Count()}]}",
+    "data": {},
+    "expected": "Johnson:1\nSmith:1"
+  },
+  {
+    "name": "group-loaded-missing-alias",
+    "script": "{'/data/people'.GroupBy(firstName.ToUpper(),'members'):[{members.Count()}]}",
+    "data": {},
+    "expected": "0\n0",
+    "exitCode": 1
+  },
+  {
+    "name": "group-non-json-context",
+    "script": "{'abc'.GroupBy(k,'members'):[anything]}",
+    "data": {},
+    "expected": "abc"
+  }
+]
