@@ -348,6 +348,14 @@ internal sealed class EvaluationContext
         child.defaultIndent = amount is null ? null : new string(' ', (int)width);
         return child;
     }
+    internal object? ComposeValue(object? value)
+    {
+        // callMethod propagates missing/null before reaching Compose.
+        if (value is null or Missing) return value;
+        string? result = RenderValue(value);
+        bulletState.Current = null;
+        return result;
+    }
     internal string? Render(Func<EvaluationContext, object?> template) => RenderValue(template(this));
     private string? RenderValue(object? value)
     {

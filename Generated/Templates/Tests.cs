@@ -789,15 +789,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":404:10
     private TemplateContent test16()
     {
-        // Template:
-        // ''.Compose()
-        // Source: "templates/tests.template":405:2
-        object? applyCompose() => Unsupported(
-            "Call Compose",
-            "templates/tests.template:405:2",
-            () => "");
-
-        object? compose = applyCompose();
+        object? compose = EvaluationContext.Invoke(MethodInput(itemContext => ""), methodValue => Builtins.Compose(Context, methodValue));
         object? aPeopleBPeopleCPeop = Each(itemContext => new Tests(itemContext).renderAPeopleBPeopleCPeop());
 
         return Line($"{compose}{aPeopleBPeopleCPeop}");
@@ -876,18 +868,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":427:24
     private object? renderCompose_8()
     {
-        // Template:
-        // [
-        // {.} {lastName}{pets:[
-        //  {.} {type}]}
-        // ].@MissingValue('No Information Provided').Compose()
-        // Source: "templates/tests.template":427:24
-        object? applyCompose() => Unsupported(
-            "Call Compose",
-            "templates/tests.template:427:24",
-            () => Each(itemContext => new Tests(itemContext).renderLastName_16()));
-
-        return applyCompose();
+        return EvaluationContext.Invoke(MethodInput(itemContext => new Tests(itemContext).renderLastName_16()), methodValue => Builtins.Compose(Context, methodValue));
     }
 
     // Template:
@@ -939,17 +920,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":423:24
     private object? renderCompose_6()
     {
-        // Template:
-        // [
-        //           {lastName}{pets:[{type}]}
-        // ].@MissingValue('No Information Provided').Compose()
-        // Source: "templates/tests.template":423:24
-        object? applyCompose() => Unsupported(
-            "Call Compose",
-            "templates/tests.template:423:24",
-            () => Each(itemContext => new Tests(itemContext).renderLastName_15()));
-
-        return applyCompose();
+        return EvaluationContext.Invoke(MethodInput(itemContext => new Tests(itemContext).renderLastName_15()), methodValue => Builtins.Compose(Context, methodValue));
     }
 
     // Template:
@@ -982,17 +953,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":419:24
     private object? renderCompose_4()
     {
-        // Template:
-        // [
-        //    {.} {lastName}{pets:[{type}]}
-        // ].Compose()
-        // Source: "templates/tests.template":419:24
-        object? applyCompose() => Unsupported(
-            "Call Compose",
-            "templates/tests.template:419:24",
-            () => Each(itemContext => new Tests(itemContext).renderLastName_14()));
-
-        return applyCompose();
+        return EvaluationContext.Invoke(MethodInput(itemContext => new Tests(itemContext).renderLastName_14()), methodValue => Builtins.Compose(Context, methodValue));
     }
 
     // Template:
@@ -1041,17 +1002,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":415:24
     private object? renderCompose_3()
     {
-        // Template:
-        // [
-        //    {.} {lastName}{pets:[{type}]}
-        // ].@MissingValue('No Information Provided').Compose()
-        // Source: "templates/tests.template":415:24
-        object? applyCompose() => Unsupported(
-            "Call Compose",
-            "templates/tests.template:415:24",
-            () => Each(itemContext => new Tests(itemContext).renderLastName_13()));
-
-        return applyCompose();
+        return EvaluationContext.Invoke(MethodInput(itemContext => new Tests(itemContext).renderLastName_13()), methodValue => Builtins.Compose(Context, methodValue));
     }
 
     // Template:
@@ -1088,20 +1039,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":408:24
     private object? renderCompose()
     {
-        // Template:
-        // [
-        // {.} Pets {[
-        //       {.} Domesticated{pets:[{type}]}
-        //    ]
-        //    } //
-        // ].Compose()
-        // Source: "templates/tests.template":408:24
-        object? applyCompose() => Unsupported(
-            "Call Compose",
-            "templates/tests.template:408:24",
-            () => Each(itemContext => new Tests(itemContext).renderDomesticated()));
-
-        return applyCompose();
+        return EvaluationContext.Invoke(MethodInput(itemContext => new Tests(itemContext).renderDomesticated()), methodValue => Builtins.Compose(Context, methodValue));
     }
 
     // Template:
@@ -2391,20 +2329,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":58:9
     private object? test6()
     {
-        // Template:
-        // [
-        // Hierarchy{#data:[ //
-        // {.} {lastName}{pets:[ //
-        //     {.} {name} who is owned by 
-        //          {.} {^.^:[{firstName} who owns
-        //               {.} {pets:[{type}]}]}]}]}].Compose()
-        // Source: "templates/tests.template":58:9
-        object? applyCompose() => Unsupported(
-            "Call Compose",
-            "templates/tests.template:58:9",
-            () => Each(itemContext => new Tests(itemContext).renderHierarchy()));
-
-        return applyCompose();
+        return EvaluationContext.Invoke(MethodInput(itemContext => new Tests(itemContext).renderHierarchy()), methodValue => Builtins.Compose(Context, methodValue));
     }
 
     // Template:
@@ -2512,18 +2437,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":44:9
     private object? test5()
     {
-        // Template:
-        // [
-        // Bulleted Explicit Bulleted Indent{#data:[ //
-        // {.} {lastName}{pets:[ //
-        //     {.} {name}]}]}].Compose()
-        // Source: "templates/tests.template":44:9
-        object? applyCompose() => Unsupported(
-            "Call Compose",
-            "templates/tests.template:44:9",
-            () => Each(itemContext => new Tests(itemContext).renderBulletedExplicitBulleted()));
-
-        return applyCompose();
+        return EvaluationContext.Invoke(MethodInput(itemContext => new Tests(itemContext).renderBulletedExplicitBulleted()), methodValue => Builtins.Compose(Context, methodValue));
     }
 
     // Template:
@@ -2579,22 +2493,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":34:15
     private object? test4Result()
     {
-        // Template:
-        // [
-        // Bulleted Implied Bulleted Indent
-        // (0.0) Johnson
-        //    (1.0) Buddy
-        //    (1.1) Ralph
-        //    (1.2) Stripes
-        // (0.1) Smith
-        //    (1.0) Toto
-        //    (1.1) Dolly
-        //    (1.2) Stripes].Compose()
-        // Source: "templates/tests.template":34:15
-        object? applyCompose() => Unsupported(
-            "Call Compose",
-            "templates/tests.template:34:15",
-            () => Each(itemContext => Line($$"""
+        return EvaluationContext.Invoke(MethodInput(itemContext => Line($$"""
             Bulleted Implied Bulleted Indent
             (0.0) Johnson
                (1.0) Buddy
@@ -2604,9 +2503,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
                (1.0) Toto
                (1.1) Dolly
                (1.2) Stripes
-            """)));
-
-        return applyCompose();
+            """)), methodValue => Builtins.Compose(Context, methodValue));
     }
 
     // Template:

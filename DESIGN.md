@@ -481,3 +481,7 @@ in selected-template builds; no runtime template parsing is used. Included units
 with unsupported non-annotation call chains still have explicit runtime stubs.
 `dynamic-include-cases.json` checks local/shared dispatch, exports, scope, and all five
 style choices from an unfiltered copy of the bullets template.
+
+`Compose()` renders structured content immediately, resolves bullet numbering, and
+then resets the bullet counter state, matching the interpreter. Missing and null
+receivers propagate unchanged. Node comparisons are in `compose-cases.json`.

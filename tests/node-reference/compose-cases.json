@@ -1,0 +1,79 @@
+[
+  {
+    "name": "compose-text",
+    "script": "{value.Compose()}",
+    "data": {
+      "value": "hello"
+    },
+    "expected": "hello"
+  },
+  {
+    "name": "compose-missing",
+    "script": "x{absent.Compose()}y",
+    "data": {},
+    "expected": ""
+  },
+  {
+    "name": "compose-null",
+    "script": "x{value.Compose()}y",
+    "data": {
+      "value": null
+    },
+    "expected": ""
+  },
+  {
+    "name": "compose-number",
+    "script": "{value.Compose()}",
+    "data": {
+      "value": 12
+    },
+    "expected": "12"
+  },
+  {
+    "name": "compose-bullet",
+    "script": "{[{.} one\n{.} two].Compose()}",
+    "data": {},
+    "expected": "(0.0) one\n(0.1) two"
+  },
+  {
+    "name": "compose-reset",
+    "script": "{[{.} one].Compose()}\n{[{.} two].Compose()}",
+    "data": {},
+    "expected": "(0.0) one\n(0.0) two"
+  },
+  {
+    "name": "compose-style",
+    "script": "{[{.} one\n{.} two].Compose().@BulletStyle('a.')}",
+    "data": {},
+    "expected": "a. one\nb. two"
+  },
+  {
+    "name": "compose-list",
+    "script": "{[items:{items:[{name}]}].Compose()}",
+    "data": {
+      "items": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "items:\n   A\n   B"
+  },
+  {
+    "name": "compose-method",
+    "script": "{[{.} one\n{.} two].Compose().ToUpper()}",
+    "data": {},
+    "expected": "(0.0) ONE\n(0.1) TWO"
+  },
+  {
+    "name": "compose-extra",
+    "script": "{value.Compose('ignored')}",
+    "data": {
+      "value": "hi"
+    },
+    "expected": "hi"
+  }
+]

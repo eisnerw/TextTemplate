@@ -39,6 +39,7 @@ public sealed class GenerationTests
     [InlineData("count")]
     [InlineData("named-data")]
     [InlineData("switch")]
+    [InlineData("compose")]
     [InlineData("multiline")]
     [InlineData("bullet")]
     [InlineData("dynamic-include")]

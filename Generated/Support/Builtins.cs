@@ -10,6 +10,9 @@ using System.Text.RegularExpressions;
 // Built-in template methods; distinct from user-defined template methods.
 internal static class Builtins
 {
+    internal static object? Compose(EvaluationContext context, object? value, params object?[] arguments)
+        => context.ComposeValue(value);
+
     internal static bool CaseMatches(object value, object? match)
     {
         match = EvaluationContext.Intermediate(match);
