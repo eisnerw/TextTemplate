@@ -31,6 +31,7 @@ public sealed class GenerationTests
     }
 
     [Theory]
+    [InlineData("align")]
     [InlineData("list")]
     [InlineData("regex")]
     [InlineData("resource")]

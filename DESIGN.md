@@ -485,3 +485,17 @@ style choices from an unfiltered copy of the bullets template.
 `Compose()` renders structured content immediately, resolves bullet numbering, and
 then resets the bullet counter state, matching the interpreter. Missing and null
 receivers propagate unchanged. Node comparisons are in `compose-cases.json`.
+
+### Align compatibility
+
+`Align` is emitted as a built-in helper, translated from `callMethod` in the
+unchanged interpreter at `ccedefd87b012ff1173ee2f43323b6eb7c8bd268`.
+`tests/node-reference/align-cases.json` freezes Node outputs and is exercised by
+both the Node characterization tests and standalone C# A/B tests. Width uses
+JavaScript `parseInt` semantics, including hexadecimal prefixes and trailing
+text. Default alignment is left; empty padding becomes a space. Center alignment
+appends before prepending, retaining the suffix of partial left padding. Width
+counts UTF-16 code units; already-long receivers are never truncated. Invalid
+arguments fail execution (the generated CLI suppresses output on failure).
+The startup template now passes Align but still reaches the GroupBy stub at
+`templates/startup.template:64:11`; full startup parity is not yet established.

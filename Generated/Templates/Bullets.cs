@@ -487,7 +487,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderContent()
     {
         object? item1 = Get("$1");
-        item1 = "2";
+
         return Line($"#style{item1}");
     }
 

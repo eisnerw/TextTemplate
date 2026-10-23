@@ -652,22 +652,13 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderIntro()
     {
         // Template:
-        // 'padding'.Align(9,'C','-')
-        // Source: "templates/startup.template":50:8
-        object? applyAlign() => Unsupported(
-            "Call Align",
-            "templates/startup.template:50:8",
-            () => "padding",
-            () => new object?[] { EvaluationContext.ParseInteger("9"), "C", "-" });
-
-        // Template:
         // #externalData.Where(dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D')
         //             .GroupBy(sign, 'group')
         // Source: "templates/startup.template":64:11
         object? applyGroupBy() => Unsupported(
             "Call GroupBy",
             "templates/startup.template:64:11",
-            () => EvaluationContext.Invoke(SubtemplateInput("externalData"), methodValue_6 => Builtins.Where(methodValue_6)),
+            () => EvaluationContext.Invoke(SubtemplateInput("externalData"), methodValue_7 => Builtins.Where(methodValue_7)),
             () => new object?[] { Get("sign"), "group" });
 
         object? content = Context.CreateBullet("\u0001{.} ");
@@ -682,35 +673,35 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         object? replace = EvaluationContext.Invoke(MethodInput(itemContext => "replacing"), methodValue => Builtins.Replace(methodValue, "ing", "ement"));
         object? trim = EvaluationContext.Invoke(MethodInput(itemContext => " trimming "), methodValue_2 => Builtins.Trim(methodValue_2));
         object? substr = EvaluationContext.Invoke(MethodInput(itemContext => " substringy"), methodValue_3 => Builtins.Substr(methodValue_3, EvaluationContext.ParseInteger("1"), EvaluationContext.ParseInteger("9")));
-        object? align = applyAlign();
-        object? toUpper = EvaluationContext.Invoke(MethodInput(itemContext => "case"), methodValue_4 => Builtins.ToUpper(methodValue_4));
-        object? choice = (Context.TestCondition(EvaluationContext.Invoke(MethodInput(itemContext => "true"), methodValue_5 => Builtins.Matches(methodValue_5, "yes", "1", new TemplateRegex("/True/i", "templates/startup.template:52:33")))) ? Each(itemContext => Line($"test")) : Each(itemContext => Line($"fail")));
+        object? align = EvaluationContext.Invoke(MethodInput(itemContext => "padding"), methodValue_4 => Builtins.Align(methodValue_4, EvaluationContext.ParseInteger("9"), "C", "-"));
+        object? toUpper = EvaluationContext.Invoke(MethodInput(itemContext => "case"), methodValue_5 => Builtins.ToUpper(methodValue_5));
+        object? choice = (Context.TestCondition(EvaluationContext.Invoke(MethodInput(itemContext => "true"), methodValue_6 => Builtins.Matches(methodValue_6, "yes", "1", new TemplateRegex("/True/i", "templates/startup.template:52:33")))) ? Each(itemContext => Line($"test")) : Each(itemContext => Line($"fail")));
         object? content_8 = InContext("{\"element1\":\"multiple\",\"element2\":\"values\"}", dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderChoice()));
         object? content_9 = Context.CreateBullet("\n   \u0001{.} ");
         object? subexample = Each(itemContext => itemContext.Named("subexample"));
         object? content_10 = Context.CreateBullet("\n   \u0001{.} ");
         object? groupBy = InContext(applyGroupBy(), dataContext => new Startup(dataContext).renderDateTest());
         object? content_11 = Context.CreateBullet("\n   \u0001{.} ");
-        object? where = InContext(EvaluationContext.Invoke(SubtemplateInput("externalData"), methodValue_7 => Builtins.Where(methodValue_7)), dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderDob()));
+        object? where = InContext(EvaluationContext.Invoke(SubtemplateInput("externalData"), methodValue_8 => Builtins.Where(methodValue_8)), dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderDob()));
         object? content_12 = Context.CreateBullet("\n   \u0001{.} ");
         object? content_13 = InContext("{\"data\":\"Joan's <data>\"}", dataContext => new Startup(dataContext).renderEncodeFor());
         object? content_14 = Context.CreateBullet("\n   \u0001{.} ");
-        object? where_2 = InContext(EvaluationContext.Invoke(SubtemplateInput("externalData"), methodValue_8 => Builtins.Where(methodValue_8)), dataContext => new Startup(dataContext).renderJoin_2());
+        object? where_2 = InContext(EvaluationContext.Invoke(SubtemplateInput("externalData"), methodValue_9 => Builtins.Where(methodValue_9)), dataContext => new Startup(dataContext).renderJoin_2());
         object? content_15 = Context.CreateBullet("\n   \u0001{.} ");
         object? content_16 = Context.CreateBullet("\n\u0001{.} ");
         object? content_17 = Context.CreateBullet("\n     \u0001{.} ");
-        object? click = EvaluationContext.Invoke(MethodInput(itemContext => "Microsoft's Monaco Editor"), methodValue_9 => ApplySubtemplate("Click", methodValue_9, "github.com/microsoft/monaco-editor"));
+        object? click = EvaluationContext.Invoke(MethodInput(itemContext => "Microsoft's Monaco Editor"), methodValue_10 => ApplySubtemplate("Click", methodValue_10, "github.com/microsoft/monaco-editor"));
         object? content_18 = Context.CreateBullet("\n     \u0001{.} ");
-        object? click_2 = EvaluationContext.Invoke(MethodInput(itemContext => "ANTLR (ANother Tool for Language Recognition)"), methodValue_10 => ApplySubtemplate("Click", methodValue_10, "www.antlr.org/", "click to go to the ANTLR website"));
+        object? click_2 = EvaluationContext.Invoke(MethodInput(itemContext => "ANTLR (ANother Tool for Language Recognition)"), methodValue_11 => ApplySubtemplate("Click", methodValue_11, "www.antlr.org/", "click to go to the ANTLR website"));
         object? content_19 = Context.CreateBullet("\n     \u0001{.} ");
-        object? click_3 = EvaluationContext.Invoke(MethodInput(itemContext => "The \"calc-monaco-editor\" project"), methodValue_11 => ApplySubtemplate("Click", methodValue_11, "github.com/Strumenta/calc-monaco-editor"));
-        object? click_4 = EvaluationContext.Invoke(MethodInput(itemContext => "article"), methodValue_12 => ApplySubtemplate("Click", methodValue_12, "tomassetti.me/writing-a-browser-based-editor-using-monaco-and-antlr/", "Click to go to the article"));
+        object? click_3 = EvaluationContext.Invoke(MethodInput(itemContext => "The \"calc-monaco-editor\" project"), methodValue_12 => ApplySubtemplate("Click", methodValue_12, "github.com/Strumenta/calc-monaco-editor"));
+        object? click_4 = EvaluationContext.Invoke(MethodInput(itemContext => "article"), methodValue_13 => ApplySubtemplate("Click", methodValue_13, "tomassetti.me/writing-a-browser-based-editor-using-monaco-and-antlr/", "Click to go to the article"));
         object? content_20 = Context.CreateBullet("\n     \u0001{.} ");
-        object? click_5 = EvaluationContext.Invoke(MethodInput(itemContext => "Moment.js"), methodValue_13 => ApplySubtemplate("Click", methodValue_13, "momentjs.com", "Click to go to the website"));
+        object? click_5 = EvaluationContext.Invoke(MethodInput(itemContext => "Moment.js"), methodValue_14 => ApplySubtemplate("Click", methodValue_14, "momentjs.com", "Click to go to the website"));
         object? content_21 = Context.CreateBullet("\n\u0001{.} ");
-        object? click_6 = EvaluationContext.Invoke(MethodInput(itemContext => "here"), methodValue_14 => ApplySubtemplate("Click", methodValue_14, "/load/docs", "Click to see the documentation using TextTemplate"));
-        object? click_7 = EvaluationContext.Invoke(MethodInput(itemContext => "here"), methodValue_15 => ApplySubtemplate("Click", methodValue_15, "/runonserver/docs", "Click to see the documentation rendered on the server"));
-        object? click_8 = EvaluationContext.Invoke(MethodInput(itemContext => "/runonserver/events"), methodValue_16 => ApplySubtemplate("Click", methodValue_16, "/runonserver/events", "Click to see the events template"));
+        object? click_6 = EvaluationContext.Invoke(MethodInput(itemContext => "here"), methodValue_15 => ApplySubtemplate("Click", methodValue_15, "/load/docs", "Click to see the documentation using TextTemplate"));
+        object? click_7 = EvaluationContext.Invoke(MethodInput(itemContext => "here"), methodValue_16 => ApplySubtemplate("Click", methodValue_16, "/runonserver/docs", "Click to see the documentation rendered on the server"));
+        object? click_8 = EvaluationContext.Invoke(MethodInput(itemContext => "/runonserver/events"), methodValue_17 => ApplySubtemplate("Click", methodValue_17, "/runonserver/events", "Click to see the events template"));
         object? examples = Each(itemContext => itemContext.Named("examples"));
         object? notes = Each(itemContext => itemContext.Named("notes"));
 

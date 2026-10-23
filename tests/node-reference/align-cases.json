@@ -1,0 +1,130 @@
+[
+  {
+    "name": "align-left",
+    "script": "{'x'.Align(4)}",
+    "data": {},
+    "expected": "x   "
+  },
+  {
+    "name": "align-right",
+    "script": "{'x'.Align(4,'R','ab')}",
+    "data": {},
+    "expected": "babx"
+  },
+  {
+    "name": "align-center",
+    "script": "{'x'.Align(4,'C','ab')}",
+    "data": {},
+    "expected": "bxab"
+  },
+  {
+    "name": "align-empty-pad",
+    "script": "{'x'.Align(3,'L','')}",
+    "data": {},
+    "expected": "x  "
+  },
+  {
+    "name": "align-widths",
+    "script": "{'abc'.Align(2)}|{'x'.Align(-1)}|{'x'.Align('0x4tail')}|{'x'.Align('3.9')}",
+    "data": {},
+    "expected": "abc|x|x   |x  "
+  },
+  {
+    "name": "align-unicode",
+    "script": "{'😀'.Align(4,'C','-')}",
+    "data": {},
+    "expected": "-😀-"
+  },
+  {
+    "name": "align-values",
+    "script": "{n.Align(4)}|{b.Align(7)}|{absent.Align(3)}|{nil.Align(3)}",
+    "data": {
+      "n": 12,
+      "b": true,
+      "nil": null
+    },
+    "expected": ""
+  },
+  {
+    "name": "align-list",
+    "script": "{xs.Align(4,'R','-')}",
+    "data": {
+      "xs": [
+        "a",
+        "bc"
+      ]
+    },
+    "expected": ""
+  },
+  {
+    "name": "align-bad-direction",
+    "script": "{'x'.Align(3,'c')}",
+    "data": {},
+    "expected": "x",
+    "exitCode": 1
+  },
+  {
+    "name": "align-bad-width",
+    "script": "{'x'.Align('bad')}",
+    "data": {},
+    "expected": "x",
+    "exitCode": 1
+  },
+  {
+    "name": "align-no-args",
+    "script": "{'x'.Align()}",
+    "data": {},
+    "expected": "",
+    "exitCode": 1
+  },
+  {
+    "name": "align-extra-args",
+    "script": "{'x'.Align(3,'L','-',4)}",
+    "data": {},
+    "expected": "x",
+    "exitCode": 1
+  },
+  {
+    "name": "align-number",
+    "script": "{n.Align(4)}",
+    "data": {
+      "n": 12
+    },
+    "expected": "12  "
+  },
+  {
+    "name": "align-boolean",
+    "script": "{b.Align(7)}",
+    "data": {
+      "b": true
+    },
+    "expected": "true   "
+  },
+  {
+    "name": "align-projected-list",
+    "script": "{xs.name.Align(4,'R','-')}",
+    "data": {
+      "xs": [
+        {
+          "name": "a"
+        },
+        {
+          "name": "bc"
+        }
+      ]
+    },
+    "expected": ""
+  },
+  {
+    "name": "align-center-odd",
+    "script": "{'x'.Align(4,'C','-')}",
+    "data": {},
+    "expected": "-x--"
+  },
+  {
+    "name": "align-template",
+    "script": "{[ab].Align(5,'R','.')}",
+    "data": {},
+    "expected": "...ab"
+  }
+]
