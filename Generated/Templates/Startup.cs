@@ -859,30 +859,13 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":65:37
     private object? renderDateTest()
     {
-        // Template:
-        // [{sign} 
-        //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
-        //                .@DateFormat('M/D/YYYY')
-        // Source: "templates/startup.template":65:37
-        object? applyDateFormat() => Unsupported(
-            "Call @DateFormat",
-            "templates/startup.template:65:37",
-            () => Each(itemContext => new Startup(itemContext).renderSign()),
-            () => new object?[] { "M/D/YYYY" });
-
-        // Template:
-        // [{sign} 
-        //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
-        //                .@DateFormat('M/D/YYYY')
-        //                .@DateTest(/^d/i)
-        // Source: "templates/startup.template":65:37
-        object? applyDateTest() => Unsupported(
-            "Call @DateTest",
-            "templates/startup.template:65:37",
-            () => applyDateFormat(),
-            () => new object?[] { new TemplateRegex("/^d/i", "templates/startup.template:68:27") });
-
-        return applyDateTest();
+        return Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithDateFormat("templates/startup.template:65:37", "M/D/YYYY"),
+                annotatedContext => annotatedContext.WithDateTest("templates/startup.template:65:37", new TemplateRegex("/^d/i", "templates/startup.template:68:27"))
+            },
+            annotatedContext => annotatedContext.Each(itemContext => new Startup(itemContext).renderSign()));
     }
 
     // Template:

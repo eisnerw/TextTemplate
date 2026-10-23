@@ -70,7 +70,7 @@ public sealed class CSharpEmitter
         var mainMap = new List<string>(); var sharedMap = new List<string>(); var importMap = new List<string>();
         var unitNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "GeneratedTemplates", "EvaluationContext", "TemplateContent", "TemplateUnit", "Builtins", "NodeCasing", "TemplateRegex", "BulletIndent", "SubtemplateDefinitions", "GeneratedTemplateProgram", "Common",
+            "GeneratedTemplates", "EvaluationContext", "TemplateContent", "TemplateUnit", "Builtins", "NodeCasing", "TemplateRegex", "TemplateDate", "BulletIndent", "SubtemplateDefinitions", "GeneratedTemplateProgram", "Common",
             "System", "StringComparer", "StringComparison", "JsonElement", "JsonDocument", "JsonValueKind",
             "Dictionary", "List", "Func", "Action", "Regex", "CultureInfo", "Math", "Console", "File",
             "Exception", "ArgumentException", "InvalidOperationException", "NotImplementedException"
@@ -114,6 +114,7 @@ public sealed class CSharpEmitter
         files.Add("Program.cs", Header + runtime[programStart..]);
         files.Add("Support/TemplateUnit.cs", Header + UnitSupport);
         files.Add("Support/Builtins.cs", Header + ReadSupport("StandaloneBuiltins.cs.txt"));
+        files.Add("Support/TemplateDate.cs", Header + ReadSupport("StandaloneDate.cs.txt"));
         files.Add("Support/TemplateContent.cs", Header + ContentSupport);
         files.Add("Support/BulletIndent.cs", Header + ReadSupport("StandaloneBullets.cs.txt"));
         files.Add("Support/TemplateRegex.cs", Header + ReadSupport("StandaloneRegex.cs.txt"));
@@ -222,6 +223,20 @@ public sealed class CSharpEmitter
             return (lambda ? context + " => " : "") + context + ".WithDefaultIndent(" + (args.Count == 0 ? "null" : Quote(args[0].Kind == SyntaxKind.String ? DecodeString(args[0].Value!) : args[0].Value!)) + ")";
         if (call.Value == "@Falsy" && (args.Count == 0 || args.Count == 1 && args[0].Kind == SyntaxKind.Regex))
             return (lambda ? context + " => " : "") + context + ".WithFalsy(" + (args.Count == 0 ? "null" : "new TemplateRegex(" + Quote(args[0].Value!) + ", " + Quote(sourcePath + ":" + args[0].Span.Line + ":" + args[0].Span.Column) + ")") + ")";
+        if (call.Value is "@DateTest" or "@DateFormat" && source is not null)
+        {
+            string DateArgument(SyntaxNode arg) => arg.Kind switch
+            {
+                SyntaxKind.String => Quote(DecodeString(arg.Value!)),
+                SyntaxKind.Number => "EvaluationContext.ParseInteger(" + Quote(arg.Value!) + ")",
+                SyntaxKind.Regex => "new TemplateRegex(" + Quote(arg.Value!) + ", " + Quote(sourcePath + ":" + arg.Span.Line + ":" + arg.Span.Column) + ")",
+                SyntaxKind.Identifier => context + ".Lookup(" + Quote(arg.Value!) + ")",
+                _ => context + ".Each(itemContext => new " + unitName + "(itemContext)." + Emit(arg, source) + "())"
+            };
+            return (lambda ? context + " => " : "") + context + (call.Value == "@DateTest" ? ".WithDateTest(" : ".WithDateFormat(") +
+                Quote(sourcePath + ":" + call.Span.Line + ":" + call.Span.Column) +
+                (args.Count == 0 ? "" : ", " + string.Join(", ", args.Select(DateArgument))) + ")";
+        }
         if (call.Value == "@Include" && args.Count == 1 && source is not null)
         {
             string argument = args[0].Kind == SyntaxKind.String ? Quote(DecodeString(args[0].Value!))

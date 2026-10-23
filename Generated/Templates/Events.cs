@@ -187,49 +187,14 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/events.template":2:67
     private object? renderDateFormat()
     {
-        // Template:
-        // [ `
-        // {start.ToUpper()} 
-        //    {group.OrderBy(start.ToDate('HHmm')):[{start.#formatTimes(end)}: {summary} 
-        //       {.} Notes: {description}
-        //       {.} Location {location}]}
-        // ].@DateTest(/(star|end)/i)
-        // Source: "templates/events.template":2:67
-        object? applyDateTest() => Unsupported(
-            "Call @DateTest",
-            "templates/events.template:2:67",
-            () => Each(itemContext => new Events(itemContext).renderToUpper()),
-            () => new object?[] { new TemplateRegex("/(star|end)/i", "templates/events.template:7:13") });
-
-        // Template:
-        // [ `
-        // {start.ToUpper()} 
-        //    {group.OrderBy(start.ToDate('HHmm')):[{start.#formatTimes(end)}: {summary} 
-        //       {.} Notes: {description}
-        //       {.} Location {location}]}
-        // ].@DateTest(/(star|end)/i).@BulletStyle('•')
-        // Source: "templates/events.template":2:67
-        object? applyBulletStyle() => Unsupported(
-            "Call @BulletStyle",
-            "templates/events.template:2:67",
-            () => applyDateTest(),
-            () => new object?[] { "•" });
-
-        // Template:
-        // [ `
-        // {start.ToUpper()} 
-        //    {group.OrderBy(start.ToDate('HHmm')):[{start.#formatTimes(end)}: {summary} 
-        //       {.} Notes: {description}
-        //       {.} Location {location}]}
-        // ].@DateTest(/(star|end)/i).@BulletStyle('•').@DateFormat('dddd MMM D')
-        // Source: "templates/events.template":2:67
-        object? applyDateFormat() => Unsupported(
-            "Call @DateFormat",
-            "templates/events.template:2:67",
-            () => applyBulletStyle(),
-            () => new object?[] { "dddd MMM D" });
-
-        return applyDateFormat();
+        return Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithDateTest("templates/events.template:2:67", new TemplateRegex("/(star|end)/i", "templates/events.template:7:13")),
+                annotatedContext => annotatedContext.WithBulletStyle("•"),
+                annotatedContext => annotatedContext.WithDateFormat("templates/events.template:2:67", "dddd MMM D")
+            },
+            annotatedContext => annotatedContext.Each(itemContext => new Events(itemContext).renderToUpper()));
     }
 
     // Template:

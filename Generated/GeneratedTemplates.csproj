@@ -15,6 +15,7 @@
     <Compile Include="Support/EvaluationContext.cs" />
     <Compile Include="Support/NodeCasing.cs" />
     <Compile Include="Support/TemplateContent.cs" />
+    <Compile Include="Support/TemplateDate.cs" />
     <Compile Include="Support/TemplateRegex.cs" />
     <Compile Include="Support/TemplateUnit.cs" />
     <Compile Include="Templates/Birthdays.cs" />

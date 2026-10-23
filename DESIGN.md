@@ -518,6 +518,29 @@ retain the reference's unusual fallback to the key expression text. URL receiver
 pass through when used alone. For URL/JSON context expressions, compiled method
 chains are reapplied to the loaded data before rendering, matching visitContextToken. The reference's inherited-object-key
 quirks are retained for characterized prototype names. Unfinished key expressions
-stay deferred until a row needs them. Startup now advances past GroupBy and
-reaches `Call @DateTest` at `templates/startup.template:65:37`; full startup parity
-remains unfinished.
+stay deferred until a row needs them. Startup advances past GroupBy; full startup parity remains unfinished.
+
+### Date annotations (initial compatibility subset)
+
+`@DateTest` matches the complete lookup key after missing/empty detection. A match
+creates a structured date value; rendering snapshots `@DateFormat` at lookup time.
+Regex objects retain state across lookups (including global/sticky patterns), and
+annotation settings inherit into child contexts without leaking back out. Calling
+`@DateTest()` clears recognition. `@DateFormat()` clears format and mode, while a
+single format argument retains an inherited mode. Only exact `GMT` selects UTC;
+default localized rendering still uses local time. Date objects coerce to
+`[object Object]` in ordinary methods/comparisons. Named-method receivers retain
+the date object, but named-method arguments receive its original input value.
+
+The emitted `TemplateDate` helper covers ISO calendar dates/timestamps, numeric
+Unix milliseconds, English Moment calendar/time tokens and localized format
+aliases. Node A/B cases in `tests/node-reference/date-cases.json` cover UTC and
+America/New_York with the reference's en-US locale. Other input forms, year zero,
+week/era format tokens, offsets beyond 14 hours, and ambiguous/nonexistent local
+times remain explicit source-located execution stubs. This is not a complete
+Moment replacement, and `ToDate` remains unfinished. The helper translates the
+interpreter's date wrapping/composition behavior; its adapted Moment 2.29.4 token
+regex carries Moment's MIT notice in emitted source.
+
+Startup now passes the date annotations and reaches `Call OrderBy` at
+`templates/startup.template:66:13`; full startup parity remains unfinished.

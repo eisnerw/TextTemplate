@@ -108,6 +108,10 @@ internal sealed class EvaluationContext
     private readonly string? dataRoot;
     private string? missingText;
     private TemplateRegex? falsy;
+    private TemplateRegex? dateTest;
+    private string? dateFormat;
+    private string? dateFormatMode;
+    private string dateLocation = "date annotation";
     private IReadOnlyList<string>? bulletStyles;
     private string bulletMode = "implicit";
     private string? defaultIndent;
@@ -133,6 +137,10 @@ internal sealed class EvaluationContext
         recursion = parent.recursion;
         missingText = parent.missingText;
         falsy = parent.falsy;
+        dateTest = parent.dateTest;
+        dateFormat = parent.dateFormat;
+        dateFormatMode = parent.dateFormatMode;
+        dateLocation = parent.dateLocation;
         bulletStyles = parent.bulletStyles;
         bulletMode = parent.bulletMode;
         defaultIndent = parent.defaultIndent;
@@ -204,6 +212,9 @@ internal sealed class EvaluationContext
             return dot < 0 ? value : value is Data nested ? Find(nested, key[(dot + 1)..]) : MissingValue(path);
         }
         object? value = Current is null ? MissingValue(path) : Find(Current, path);
+        if (value is string { Length: 0 }) return MissingValue(path);
+        if (value is not Missing && dateTest?.Test(path) == true)
+            return TemplateDate.Create(value, dateFormat, dateFormatMode == "GMT", dateLocation);
         if (value is string text)
         {
             if (text.Length == 0) return MissingValue(path);
@@ -328,6 +339,28 @@ internal sealed class EvaluationContext
         EvaluationContext child = new EvaluationContext(this, Current);
         foreach (KeyValuePair<string, Func<EvaluationContext, object?>> entry in definitions) child.Locals[entry.Key] = entry.Value;
         if (includes is not null) foreach (var entry in includes) child.imports[entry.Key] = entry.Value;
+        return child;
+    }
+    internal EvaluationContext WithDateTest(string location, params object?[] arguments)
+    {
+        if (arguments.Length > 1 || arguments.Length == 1 && Intermediate(arguments[0]) is not TemplateRegex)
+            throw new InvalidOperationException(location + ": @DateTest takes a single regular expression.");
+        EvaluationContext child = new(this, Current);
+        child.dateTest = arguments.Length == 0 ? null : (TemplateRegex)Intermediate(arguments[0])!;
+        child.dateLocation = location;
+        return child;
+    }
+    internal EvaluationContext WithDateFormat(string location, params object?[] arguments)
+    {
+        EvaluationContext child = new(this, Current);
+        object? format = arguments.Length == 0 ? null : Intermediate(arguments[0]);
+        if (format is not null and not string)
+            throw new InvalidOperationException(location + ": Date format must be a string.");
+        child.dateFormat = (string?)format;
+        // A single argument retains the inherited mode; no arguments clears both.
+        if (arguments.Length == 0) child.dateFormatMode = null;
+        else if (arguments.Length > 1) child.dateFormatMode = Compose(arguments[1]);
+        child.dateLocation = location;
         return child;
     }
     internal EvaluationContext WithFalsy(TemplateRegex? pattern)
@@ -460,7 +493,8 @@ internal sealed class EvaluationContext
         for (int i = 0; i < arguments.Length; i++)
         {
             object? argument = Intermediate(arguments[i]);
-            if (argument is not Missing and not TemplateRegex) data.Values["$" + (i + 1)] = argument;
+            if (argument is not Missing and not TemplateRegex)
+                data.Values["$" + (i + 1)] = argument is TemplateDate date ? date.Original : argument;
         }
         return new EvaluationContext(this, data).Named(name);
     }
@@ -611,7 +645,7 @@ internal sealed class EvaluationContext
         // Preserve the legacy missing-value comparison behavior, including its unusual cases.
         if (lm) return rm || operation == "!=";
         if (rm) return operation == "!=";
-        string a = Scalar(left!), b = Scalar(right!);
+        string a = left is TemplateDate ? Builtins.JsString(left) : Scalar(left!), b = right is TemplateDate ? Builtins.JsString(right) : Scalar(right!);
         int? comparison = Builtins.CompareStrings(a, b);
         if (comparison is null) return operation == "!=";
         int order = comparison.Value;
@@ -625,7 +659,7 @@ internal sealed class EvaluationContext
     }
     internal static string Scalar(object value) => value switch
     {
-        string text => text, bool flag => flag ? "true" : "false",
+        string text => text, TemplateDate date => date.Render(), bool flag => flag ? "true" : "false",
         double number => NumberText(number),
         _ => throw new NotImplementedException("Non-scalar composition requires list/data formatting, which is not implemented yet.")
     };

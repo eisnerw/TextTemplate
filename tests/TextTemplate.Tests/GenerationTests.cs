@@ -31,6 +31,7 @@ public sealed class GenerationTests
     }
 
     [Theory]
+    [InlineData("date")]
     [InlineData("group")]
     [InlineData("align")]
     [InlineData("list")]
@@ -81,6 +82,10 @@ public sealed class GenerationTests
             Assert.True(build.Exit == 0, build.Output + build.Error);
             foreach (var item in cases.RootElement.EnumerateArray())
             {
+                (int Exit, string Output, string Error) RunCase(string file, string directory, params string[] arguments)
+                    => item.TryGetProperty("timezone", out var timezone)
+                        ? Run("env", directory, new[] { "TZ=" + timezone.GetString(), file }.Concat(arguments).ToArray())
+                        : Run(file, directory, arguments);
                 string name = item.GetProperty("name").GetString()!;
                 string resourceRoot = Path.Combine(root, "resources");
                 Directory.CreateDirectory(resourceRoot);
@@ -89,11 +94,11 @@ public sealed class GenerationTests
                         File.WriteAllText(Path.Combine(resourceRoot, resource.Name + ".json"), resource.Value.GetRawText());
                 string dataFile = Path.Combine(root, "data.json");
                 File.WriteAllText(dataFile, item.GetProperty("data").GetRawText());
-                var reference = Run("node", Repository(), "tools/node-reference/cli.mjs", "--template", name, "--template-root", root, "--data-file", dataFile);
+                var reference = RunCase("node", Repository(), "tools/node-reference/cli.mjs", "--template", name, "--template-root", root, "--data-file", dataFile);
                 int expectedExit = item.TryGetProperty("exitCode", out var exitCode) ? exitCode.GetInt32() : 0;
                 Assert.True(reference.Exit == expectedExit, reference.Error);
                 Match(item.GetProperty("expected").GetString()!, reference.Output, name + " reference");
-                var actual = Run("dotnet", root, "output/GeneratedTemplates.dll", "--template", name, "--data-file", dataFile, "--data-root", resourceRoot);
+                var actual = RunCase("dotnet", root, "output/GeneratedTemplates.dll", "--template", name, "--data-file", dataFile, "--data-root", resourceRoot);
                 Assert.True(actual.Exit == expectedExit, name + ": " + actual.Error);
                 Match(expectedExit == 0 ? reference.Output : "", actual.Output, name + " " + item.GetProperty("data").GetRawText());
             }
@@ -119,6 +124,7 @@ public sealed class GenerationTests
                 ["class"] = "Keyword",
                 ["StringComparer"] = "Runtime name collision",
                 ["TemplateContent"] = "Content type name collision",
+                ["TemplateDate"] = "Date type name collision",
                 ["a_b"] = "Underscore",
                 ["1class"] = "Digit",
                 ["café"] = "Unicode",
