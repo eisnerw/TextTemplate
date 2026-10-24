@@ -6,7 +6,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 const repository = fileURLToPath(new URL('../../', import.meta.url));
-const cases = ['list', 'regex', 'align', 'group', 'date', 'order'].flatMap(suite => JSON.parse(readFileSync(new URL(suite + '-cases.json', import.meta.url))));
+const cases = ['list', 'regex', 'align', 'group', 'date', 'todate', 'order'].flatMap(suite => JSON.parse(readFileSync(new URL(suite + '-cases.json', import.meta.url))));
 for (const item of cases) test('list characterization: ' + item.name, () => {
   const root = mkdtempSync(path.join(tmpdir(), 'texttemplate-list-'));
   try {

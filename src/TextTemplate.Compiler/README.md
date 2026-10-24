@@ -42,8 +42,9 @@ The emitted `Support/TemplateRegex.cs` adapts .NET matching with JavaScript
 character classes, anchors, non-Unicode case folding, and global state. Repeated
 groups containing nested captures, forward/octal backreferences, Unicode capture
 names, duplicate capture names, and some legacy character-class/control escapes
-remain source-located runtime stubs. `@DateTest` remains unfinished along with date
-parsing/formatting. No grammar changes or runtime Node dependency are introduced. Exceptions from
+remain source-located runtime stubs. `@DateTest`, `@DateFormat`, and `ToDate` support the characterized ISO/numeric
+date parsing and English formatting subset, including explicit GMT conversion.
+Other date input forms and some format tokens remain runtime stubs; see DESIGN.md. No grammar changes or runtime Node dependency are introduced. Exceptions from
 emitted template logic identify the feature and original file, line, and column.
 Stubs do not run their operands; an unselected conditional branch does not throw.
 These are temporary implementation points, not language restrictions or successful

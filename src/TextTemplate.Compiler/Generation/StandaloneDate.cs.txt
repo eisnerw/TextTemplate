@@ -57,6 +57,35 @@ internal sealed class TemplateDate(DateTimeOffset value, object? original, strin
         catch (OverflowException error) { throw new InvalidOperationException(location + ": Date is outside the supported range.", error); }
         return new TemplateDate(utc ? parsed.ToUniversalTime() : parsed.ToLocalTime(), raw, format, utc, location);
     }
+    // ToDate reconstructs recognized dates from Moment.toObject(): wall-clock fields
+    // become local time before the optional GMT conversion, even for UTC wrappers.
+    internal static string Convert(object raw, object? requestedFormat, bool explicitFormat, bool utc, string location)
+    {
+        TemplateDate parsed;
+        try
+        {
+            if (raw is TemplateDate date)
+                raw = date.CalendarFields();
+            if (raw is string text && !Regex.IsMatch(text, @"\d"))
+                return explicitFormat || requestedFormat is not null ? "Invalid date" : "Invalid Date";
+            parsed = Create(raw, null, utc, location);
+        }
+        catch (InvalidOperationException)
+        {
+            // Legacy tests the isValid function itself, so invalid Moments still format.
+            return explicitFormat || requestedFormat is not null ? "Invalid date" : "Invalid Date";
+        }
+        string? pattern;
+        if (!explicitFormat && requestedFormat is null) pattern = null;
+        else if (!EvaluationContext.Condition(requestedFormat)) pattern = "";
+        else if (requestedFormat is string text) pattern = text;
+        else throw new InvalidOperationException(location + ": ToDate format must be a string.");
+        return parsed.WithFormat(pattern, utc, location).Render();
+    }
+    private string CalendarFields() => value.ToString("yyyy-MM-dd'T'HH:mm:ss.fff", CultureInfo.InvariantCulture);
+    private TemplateDate WithFormat(string? pattern, bool useUtc, string source)
+        => new(value, Original, pattern, useUtc, source);
+
     private static string Ordinal(int number) => number.ToString(CultureInfo.InvariantCulture) +
         (number % 100 is >= 11 and <= 13 ? "th" : (number % 10) switch { 1 => "st", 2 => "nd", 3 => "rd", _ => "th" });
     internal string Render()

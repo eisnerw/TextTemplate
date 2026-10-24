@@ -695,7 +695,7 @@ public sealed class CSharpEmitter
                     }
                 }
                 // TODO: Implement Count(predicate) with per-item predicate evaluation.
-                else if (node.Value!.StartsWith('#') || (node.Value == "Count" && !node.Children.Skip(1).SelectMany(child => child.Children).Any()) || node.Value is "Compose" or "Where" or "IfMissing" or "Join" or "Align" or "Trim" or "StartsWith" or "EndsWith" or "Contains" or "Replace" or "Substr" or "IndexOf" or "LastIndexOf" or "EndIndexOf" or "ToUpper" or "ToLower" or "GreaterThan" or "LessThan" or "Matches" or "Assert")
+                else if (node.Value!.StartsWith('#') || (node.Value == "Count" && !node.Children.Skip(1).SelectMany(child => child.Children).Any()) || node.Value is "ToDate" or "Compose" or "Where" or "IfMissing" or "Join" or "Align" or "Trim" or "StartsWith" or "EndsWith" or "Contains" or "Replace" or "Substr" or "IndexOf" or "LastIndexOf" or "EndIndexOf" or "ToUpper" or "ToLower" or "GreaterThan" or "LessThan" or "Matches" or "Assert")
                 {
                     // TODO: Where must evaluate its predicate in each item's context; skip it for this temporary pass-through.
                     string arguments = node.Value == "Where" ? "" : string.Join(", ", node.Children.Skip(1).SelectMany(child => child.Children).Select(Call));
@@ -706,7 +706,7 @@ public sealed class CSharpEmitter
                         : "MethodInput(" + RawChild(node.Children[0]) + ")";
                     string methodValue = Unique("methodValue", current.Names);
                     expression = "EvaluationContext.Invoke(" + input + ", " + methodValue + " => " +
-                        (!node.Value.StartsWith('#') ? "Builtins." + node.Value + "(" + (node.Value == "Compose" ? "Context, " : "") : "ApplySubtemplate(" + Quote(node.Value[1..]) + ", ") +
+                        (!node.Value.StartsWith('#') ? (node.Value == "ToDate" ? "Context.ToDate(" + Quote(location) + ", " : "Builtins." + node.Value + "(" + (node.Value == "Compose" ? "Context, " : "")) : "ApplySubtemplate(" + Quote(node.Value[1..]) + ", ") +
                         methodValue + (arguments.Length == 0 ? "" : ", " + arguments) + "))";
                 }
                 else expression = Stub();

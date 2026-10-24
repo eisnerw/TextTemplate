@@ -341,6 +341,15 @@ internal sealed class EvaluationContext
         if (includes is not null) foreach (var entry in includes) child.imports[entry.Key] = entry.Value;
         return child;
     }
+    internal object? ToDate(string location, object? value, params object?[] arguments)
+    {
+        value = Intermediate(value);
+        if (value is null or Missing) return value;
+        object? format = arguments.Length == 0 ? dateFormat : Intermediate(arguments[0]);
+        bool utc = arguments.Length > 1 && Intermediate(arguments[1]) is string mode && mode == "GMT";
+        return TemplateDate.Convert(value, format, arguments.Length != 0, utc, location);
+    }
+
     internal EvaluationContext WithDateTest(string location, params object?[] arguments)
     {
         if (arguments.Length > 1 || arguments.Length == 1 && Intermediate(arguments[0]) is not TemplateRegex)

@@ -1,0 +1,208 @@
+[
+  {
+    "name": "todate-iso",
+    "script": "{value.ToDate()}|{value.ToDate('YYYY-MM-DD HH:mm:ss.SSS Z')}",
+    "data": {
+      "value": "2001-02-03"
+    },
+    "expected": "2/3/2001|2001-02-03 00:00:00.000 +00:00"
+  },
+  {
+    "name": "todate-offset",
+    "script": "{value.ToDate()}|{value.ToDate('YYYY-MM-DD HH:mm:ss.SSS Z')}",
+    "data": {
+      "value": "2020-01-02T02:00:00Z"
+    },
+    "expected": "1/2/2020|2020-01-02 02:00:00.000 +00:00"
+  },
+  {
+    "name": "todate-epoch",
+    "script": "{value.ToDate()}|{value.ToDate('YYYY-MM-DD HH:mm:ss.SSS Z')}",
+    "data": {
+      "value": 0
+    },
+    "expected": "1/1/1970|1970-01-01 00:00:00.000 +00:00"
+  },
+  {
+    "name": "todate-negative",
+    "script": "{value.ToDate()}|{value.ToDate('YYYY-MM-DD HH:mm:ss.SSS Z')}",
+    "data": {
+      "value": -1
+    },
+    "expected": "12/31/1969|1969-12-31 23:59:59.999 +00:00"
+  },
+  {
+    "name": "todate-invalid",
+    "script": "{value.ToDate()}|{value.ToDate('YYYY-MM-DD HH:mm:ss.SSS Z')}",
+    "data": {
+      "value": "not a date"
+    },
+    "expected": "Invalid Date|Invalid date"
+  },
+  {
+    "name": "todate-overflow",
+    "script": "{value.ToDate()}|{value.ToDate('YYYY-MM-DD HH:mm:ss.SSS Z')}",
+    "data": {
+      "value": "2023-02-29"
+    },
+    "expected": "Invalid Date|Invalid date"
+  },
+  {
+    "name": "todate-bool",
+    "script": "{value.ToDate()}|{value.ToDate('YYYY-MM-DD HH:mm:ss.SSS Z')}",
+    "data": {
+      "value": true
+    },
+    "expected": "Invalid Date|Invalid date"
+  },
+  {
+    "name": "todate-null",
+    "script": "{value.ToDate()}|{value.ToDate('YYYY-MM-DD HH:mm:ss.SSS Z')}",
+    "data": {
+      "value": null
+    },
+    "expected": ""
+  },
+  {
+    "name": "todate-empty",
+    "script": "{value.ToDate()}|{value.ToDate('YYYY-MM-DD HH:mm:ss.SSS Z')}",
+    "data": {
+      "value": ""
+    },
+    "expected": ""
+  },
+  {
+    "name": "todate-default-local",
+    "script": "{value.ToDate()}",
+    "data": {
+      "value": "2020-01-02T02:00:00Z",
+      "fmt": "YYYY"
+    },
+    "expected": "1/1/2020",
+    "timezone": "America/New_York"
+  },
+  {
+    "name": "todate-format-local",
+    "script": "{value.ToDate('MMMM YYYY dddd do')}",
+    "data": {
+      "value": "2020-01-02T02:00:00Z",
+      "fmt": "YYYY"
+    },
+    "expected": "January 2020 Wednesday 3rd",
+    "timezone": "America/New_York"
+  },
+  {
+    "name": "todate-gmt-local",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm Z','GMT')}",
+    "data": {
+      "value": "2020-01-02T02:00:00Z",
+      "fmt": "YYYY"
+    },
+    "expected": "2020-01-02 02:00 +00:00",
+    "timezone": "America/New_York"
+  },
+  {
+    "name": "todate-lower-gmt-local",
+    "script": "{value.ToDate('HH:mm','gmt')}",
+    "data": {
+      "value": "2020-01-02T02:00:00Z",
+      "fmt": "YYYY"
+    },
+    "expected": "21:00",
+    "timezone": "America/New_York"
+  },
+  {
+    "name": "todate-extra-local",
+    "script": "{value.ToDate('YYYY','GMT','ignored')}",
+    "data": {
+      "value": "2020-01-02T02:00:00Z",
+      "fmt": "YYYY"
+    },
+    "expected": "2020",
+    "timezone": "America/New_York"
+  },
+  {
+    "name": "todate-empty-format-local",
+    "script": "{value.ToDate('')}",
+    "data": {
+      "value": "2020-01-02T02:00:00Z",
+      "fmt": "YYYY"
+    },
+    "expected": "2020-01-01T21:00:00-05:00",
+    "timezone": "America/New_York"
+  },
+  {
+    "name": "todate-dynamic-local",
+    "script": "{value.ToDate(fmt)}",
+    "data": {
+      "value": "2020-01-02T02:00:00Z",
+      "fmt": "YYYY"
+    },
+    "expected": "2020",
+    "timezone": "America/New_York"
+  },
+  {
+    "name": "todate-zero-format-local",
+    "script": "{value.ToDate(0)}",
+    "data": {
+      "value": "2020-01-02T02:00:00Z",
+      "fmt": "YYYY"
+    },
+    "expected": "2020-01-01T21:00:00-05:00",
+    "timezone": "America/New_York"
+  },
+  {
+    "name": "todate-annotation",
+    "script": "{[{value.ToDate()}].@DateFormat('YYYY-MM-DD HH:mm','GMT')}",
+    "data": {
+      "value": "2020-01-02T02:00:00Z"
+    },
+    "expected": "2020-01-01 21:00",
+    "timezone": "America/New_York"
+  },
+  {
+    "name": "todate-wrapped",
+    "script": "{[{value.ToDate('YYYY-MM-DD HH:mm Z','GMT')}].@DateTest(/^value$/).@DateFormat('YYYY','GMT')}",
+    "data": {
+      "value": "2020-01-02T02:00:00Z"
+    },
+    "expected": "2020-01-02 07:00 +00:00",
+    "timezone": "America/New_York"
+  },
+  {
+    "name": "todate-wrapped-local",
+    "script": "{[{value.ToDate('YYYY-MM-DD HH:mm Z')}].@DateTest(/^value$/).@DateFormat('YYYY','GMT')}",
+    "data": {
+      "value": "2020-01-02T02:00:00Z"
+    },
+    "expected": "2020-01-02 02:00 -05:00",
+    "timezone": "America/New_York"
+  },
+  {
+    "name": "todate-missing",
+    "script": "x{absent.ToDate()}y\nkeep",
+    "data": {
+      "value": "2020-01-02T02:00:00Z"
+    },
+    "expected": "keep",
+    "timezone": "America/New_York"
+  },
+  {
+    "name": "todate-chain",
+    "script": "{value.ToDate('MMMM').ToUpper()}",
+    "data": {
+      "value": "2020-01-02T02:00:00Z"
+    },
+    "expected": "JANUARY",
+    "timezone": "America/New_York"
+  },
+  {
+    "name": "todate-deferred",
+    "script": "{absent=>[{value.ToDate()}],[safe]}",
+    "data": {
+      "value": "2020-01-02T02:00:00Z"
+    },
+    "expected": "safe",
+    "timezone": "America/New_York"
+  }
+]

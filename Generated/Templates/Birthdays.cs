@@ -76,15 +76,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/birthdays.template":20:8
     private TemplateContent date()
     {
-        // Template:
-        // dob.ToDate()
-        // Source: "templates/birthdays.template":20:11
-        object? applyToDate() => Unsupported(
-            "Call ToDate",
-            "templates/birthdays.template:20:11",
-            () => Get("dob"));
-
-        object? toDate = applyToDate();
+        object? toDate = EvaluationContext.Invoke(MethodInput("dob"), methodValue => Context.ToDate("templates/birthdays.template:20:11", methodValue));
 
         return Line($"({toDate})");
     }
@@ -184,16 +176,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/birthdays.template":14:28
     private object? renderToDate_4()
     {
-        // Template:
-        // dob.ToDate('yyyy')
-        // Source: "templates/birthdays.template":14:28
-        object? applyToDate() => Unsupported(
-            "Call ToDate",
-            "templates/birthdays.template:14:28",
-            () => Get("dob"),
-            () => new object?[] { "yyyy" });
-
-        return applyToDate();
+        return EvaluationContext.Invoke(MethodInput("dob"), methodValue => Context.ToDate("templates/birthdays.template:14:28", methodValue, "yyyy"));
     }
 
     // Template:
@@ -222,16 +205,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/birthdays.template":7:6
     private TemplateContent renderToDate_2()
     {
-        // Template:
-        // [2020-{month}-01].ToDate('MMMM')
-        // Source: "templates/birthdays.template":7:8
-        object? applyToDate() => Unsupported(
-            "Call ToDate",
-            "templates/birthdays.template:7:8",
-            () => Each(itemContext => new Birthdays(itemContext).renderMonth()),
-            () => new object?[] { "MMMM" });
-
-        object? toDate = applyToDate();
+        object? toDate = EvaluationContext.Invoke(MethodInput(itemContext => new Birthdays(itemContext).renderMonth()), methodValue => Context.ToDate("templates/birthdays.template:7:8", methodValue, "MMMM"));
         object? orderBy = InContext(Context.OrderBy(Context.GroupBy(MethodInput(itemContext => itemContext.Lookup("group")), itemContext => new Birthdays(itemContext).renderToDate_3(), "dob.ToDate('DD')", new object?[] { "daygroup", "day" }, true), itemContext => itemContext.Lookup("day"), "day", new object?[] {  }, true), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderDay()), null, dataContext => new Birthdays(dataContext).orderLoadedData());
 
         return Line($"{toDate}{orderBy}");
@@ -270,16 +244,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/birthdays.template":8:23
     private object? renderToDate_3()
     {
-        // Template:
-        // dob.ToDate('DD')
-        // Source: "templates/birthdays.template":8:23
-        object? applyToDate() => Unsupported(
-            "Call ToDate",
-            "templates/birthdays.template:8:23",
-            () => Get("dob"),
-            () => new object?[] { "DD" });
-
-        return applyToDate();
+        return EvaluationContext.Invoke(MethodInput("dob"), methodValue => Context.ToDate("templates/birthdays.template:8:23", methodValue, "DD"));
     }
 
     // Template:
@@ -297,16 +262,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/birthdays.template":6:60
     private object? renderToDate()
     {
-        // Template:
-        // dob.ToDate('MM')
-        // Source: "templates/birthdays.template":6:60
-        object? applyToDate() => Unsupported(
-            "Call ToDate",
-            "templates/birthdays.template:6:60",
-            () => Get("dob"),
-            () => new object?[] { "MM" });
-
-        return applyToDate();
+        return EvaluationContext.Invoke(MethodInput("dob"), methodValue => Context.ToDate("templates/birthdays.template:6:60", methodValue, "MM"));
     }
 
     // Template:

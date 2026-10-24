@@ -33,6 +33,7 @@ public sealed class GenerationTests
     [Theory]
     [InlineData("order")]
     [InlineData("date")]
+    [InlineData("todate")]
     [InlineData("group")]
     [InlineData("align")]
     [InlineData("list")]
@@ -407,8 +408,8 @@ public sealed class GenerationTests
             string input = Path.Combine(root, "input");
             Directory.CreateDirectory(Path.Combine(input, "templates"));
             Directory.CreateDirectory(Path.Combine(input, "subtemplates"));
-            File.WriteAllText(Path.Combine(input, "templates", "safe.template"), "{absent=>[{value.ToDate()}],[safe]}");
-            File.WriteAllText(Path.Combine(input, "templates", "stub.template"), "{value.ToDate()}");
+            File.WriteAllText(Path.Combine(input, "templates", "safe.template"), "{absent=>[{value.ToJson()}],[safe]}");
+            File.WriteAllText(Path.Combine(input, "templates", "stub.template"), "{value.ToJson()}");
             generated = new CSharpEmitter().Generate(new TextTemplateCompiler().CompileDirectory(input).Document!);
             File.WriteAllText(Path.Combine(root, "Generated.cs"), generated.Source);
             File.WriteAllText(Path.Combine(root, "Probe.cs"), """
@@ -427,7 +428,7 @@ public sealed class GenerationTests
             Assert.Equal(0, result.Exit);
             Assert.StartsWith("safe\n", result.Output);
             Assert.Contains("templates/stub.template:1:", result.Output);
-            Assert.Contains("Call ToDate", result.Output);
+            Assert.Contains("Call ToJson", result.Output);
         }
         finally { Directory.Delete(root, true); }
     }
@@ -482,9 +483,9 @@ public sealed class GenerationTests
             Assert.Equal(0, Program.Main(["--root", root, "--format", "json", "--output", json]));
             Assert.True(JsonDocument.Parse(File.ReadAllText(json)).RootElement.GetProperty("sources").TryGetProperty("templates/hello.template", out _));
             byte[] original = File.ReadAllBytes(output);
-            File.WriteAllText(Path.Combine(root, "templates", "unsupported.template"), "{firstName.ToDate()}");
+            File.WriteAllText(Path.Combine(root, "templates", "unsupported.template"), "{firstName.ToJson()}");
             Assert.Equal(0, Program.Main(["--root", root, "--output", output]));
-            Assert.Contains("Call ToDate", File.ReadAllText(output));
+            Assert.Contains("Call ToJson", File.ReadAllText(output));
             Assert.Equal(0, Program.Main(["--root", root, "--template", "hello", "--output", output]));
             Assert.Equal(original, File.ReadAllBytes(output));
             File.WriteAllText(Path.Combine(root, "templates", "unsupported.template"), "{");

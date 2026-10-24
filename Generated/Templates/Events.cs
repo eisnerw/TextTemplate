@@ -48,27 +48,9 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/events.template":12:15
     private TemplateContent formatTimes()
     {
-        // Template:
-        // $0.ToDate([h{!$0.#onHour()->[:mm]}{!$0.#SameAMPM($1)->[a]}])
-        // Source: "templates/events.template":15:4
-        object? applyToDate() => Unsupported(
-            "Call ToDate",
-            "templates/events.template:15:4",
-            () => Get("$0"),
-            () => new object?[] { Each(itemContext => new Events(itemContext).renderChoice()) });
-
-        // Template:
-        // $1.ToDate('h:mma')
-        // Source: "templates/events.template":17:53
-        object? applyToDate_2() => Unsupported(
-            "Call ToDate",
-            "templates/events.template:17:53",
-            () => Get("$1"),
-            () => new object?[] { "h:mma" });
-
-        object? toDate = applyToDate();
-        object? choice = (!(Context.TestCondition(EvaluationContext.Invoke(MethodInput("$1"), methodValue => ApplySubtemplate("SameDay", methodValue, Get("$0"))))) ? Each(itemContext => new Events(itemContext).renderToUpper_2()) : "");
-        object? toDate_2 = applyToDate_2();
+        object? toDate = EvaluationContext.Invoke(MethodInput("$0"), methodValue => Context.ToDate("templates/events.template:15:4", methodValue, Each(itemContext => new Events(itemContext).renderChoice())));
+        object? choice = (!(Context.TestCondition(EvaluationContext.Invoke(MethodInput("$1"), methodValue_2 => ApplySubtemplate("SameDay", methodValue_2, Get("$0"))))) ? Each(itemContext => new Events(itemContext).renderToUpper_2()) : "");
+        object? toDate_2 = EvaluationContext.Invoke(MethodInput("$1"), methodValue_3 => Context.ToDate("templates/events.template:17:53", methodValue_3, "h:mma"));
 
         return Line($"{toDate}-{choice}{toDate_2}");
     }
@@ -78,15 +60,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/events.template":17:22
     private TemplateContent renderToUpper_2()
     {
-        // Template:
-        // $1.ToDate()
-        // Source: "templates/events.template":17:24
-        object? applyToDate() => Unsupported(
-            "Call ToDate",
-            "templates/events.template:17:24",
-            () => Get("$1"));
-
-        object? toUpper = EvaluationContext.Invoke(applyToDate(), methodValue => Builtins.ToUpper(methodValue));
+        object? toUpper = EvaluationContext.Invoke(EvaluationContext.Invoke(MethodInput("$1"), methodValue => Context.ToDate("templates/events.template:17:24", methodValue)), methodValue_2 => Builtins.ToUpper(methodValue_2));
 
         return Line($"{toUpper} at ");
     }
@@ -107,16 +81,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/events.template":11:10
     private TemplateContent onHour()
     {
-        // Template:
-        // $0.ToDate('mm')
-        // Source: "templates/events.template":11:12
-        object? applyToDate() => Unsupported(
-            "Call ToDate",
-            "templates/events.template:11:12",
-            () => Get("$0"),
-            () => new object?[] { "mm" });
-
-        bool content = EvaluationContext.Compare(applyToDate(), "=", "00");
+        bool content = EvaluationContext.Compare(EvaluationContext.Invoke(MethodInput("$0"), methodValue => Context.ToDate("templates/events.template:11:12", methodValue, "mm")), "=", "00");
 
         return Line($"{content}");
     }
@@ -126,25 +91,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/events.template":10:12
     private TemplateContent SameAMPM()
     {
-        // Template:
-        // $0.ToDate('a')
-        // Source: "templates/events.template":10:14
-        object? applyToDate() => Unsupported(
-            "Call ToDate",
-            "templates/events.template:10:14",
-            () => Get("$0"),
-            () => new object?[] { "a" });
-
-        // Template:
-        // $1.ToDate('a')
-        // Source: "templates/events.template":10:31
-        object? applyToDate_2() => Unsupported(
-            "Call ToDate",
-            "templates/events.template:10:31",
-            () => Get("$1"),
-            () => new object?[] { "a" });
-
-        bool content = (EvaluationContext.Compare(applyToDate(), "=", applyToDate_2()) && Context.TestCondition(EvaluationContext.Invoke(MethodInput("$0"), methodValue => ApplySubtemplate("SameDay", methodValue, Get("$1")))));
+        bool content = (EvaluationContext.Compare(EvaluationContext.Invoke(MethodInput("$0"), methodValue => Context.ToDate("templates/events.template:10:14", methodValue, "a")), "=", EvaluationContext.Invoke(MethodInput("$1"), methodValue_2 => Context.ToDate("templates/events.template:10:31", methodValue_2, "a"))) && Context.TestCondition(EvaluationContext.Invoke(MethodInput("$0"), methodValue_3 => ApplySubtemplate("SameDay", methodValue_3, Get("$1")))));
 
         return Line($"{content}");
     }
@@ -154,25 +101,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/events.template":9:11
     private TemplateContent SameDay()
     {
-        // Template:
-        // $0.ToDate('YYYYMMDD')
-        // Source: "templates/events.template":9:13
-        object? applyToDate() => Unsupported(
-            "Call ToDate",
-            "templates/events.template:9:13",
-            () => Get("$0"),
-            () => new object?[] { "YYYYMMDD" });
-
-        // Template:
-        // $1.ToDate('YYYYMMDD')
-        // Source: "templates/events.template":9:37
-        object? applyToDate_2() => Unsupported(
-            "Call ToDate",
-            "templates/events.template:9:37",
-            () => Get("$1"),
-            () => new object?[] { "YYYYMMDD" });
-
-        bool content = EvaluationContext.Compare(applyToDate(), "=", applyToDate_2());
+        bool content = EvaluationContext.Compare(EvaluationContext.Invoke(MethodInput("$0"), methodValue => Context.ToDate("templates/events.template:9:13", methodValue, "YYYYMMDD")), "=", EvaluationContext.Invoke(MethodInput("$1"), methodValue_2 => Context.ToDate("templates/events.template:9:37", methodValue_2, "YYYYMMDD")));
 
         return Line($"{content}");
     }
@@ -238,16 +167,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/events.template":4:19
     private object? renderToDate_2()
     {
-        // Template:
-        // start.ToDate('HHmm')
-        // Source: "templates/events.template":4:19
-        object? applyToDate() => Unsupported(
-            "Call ToDate",
-            "templates/events.template:4:19",
-            () => Get("start"),
-            () => new object?[] { "HHmm" });
-
-        return applyToDate();
+        return EvaluationContext.Invoke(MethodInput("start"), methodValue => Context.ToDate("templates/events.template:4:19", methodValue, "HHmm"));
     }
 
     // Template:
@@ -255,16 +175,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/events.template":2:12
     private object? renderToDate()
     {
-        // Template:
-        // start.ToDate('YYYY-MM-DDT00:00:00')
-        // Source: "templates/events.template":2:12
-        object? applyToDate() => Unsupported(
-            "Call ToDate",
-            "templates/events.template:2:12",
-            () => Get("start"),
-            () => new object?[] { "YYYY-MM-DDT00:00:00" });
-
-        return applyToDate();
+        return EvaluationContext.Invoke(MethodInput("start"), methodValue => Context.ToDate("templates/events.template:2:12", methodValue, "YYYY-MM-DDT00:00:00"));
     }
 
     // Template:

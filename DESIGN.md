@@ -538,7 +538,7 @@ aliases. Node A/B cases in `tests/node-reference/date-cases.json` cover UTC and
 America/New_York with the reference's en-US locale. Other input forms, year zero,
 week/era format tokens, offsets beyond 14 hours, and ambiguous/nonexistent local
 times remain explicit source-located execution stubs. This is not a complete
-Moment replacement, and `ToDate` remains unfinished. The helper translates the
+Moment replacement; `ToDate` uses the same bounded date parser. The helper translates the
 interpreter's date wrapping/composition behavior; its adapted Moment 2.29.4 token
 regex carries Moment's MIT notice in emitted source.
 
@@ -563,5 +563,30 @@ contexts. Date-object keys retain ordinary JavaScript object coercion rather
 than being implicitly sorted by timestamp. Invalid arguments stop generated
 output publication; unfinished selectors remain deferred until reached.
 
-Startup now advances to `Call ToDate` at `templates/startup.template:74:22`;
-full startup parity remains unfinished.
+Startup passes OrderBy; full startup parity remains unfinished.
+
+
+### ToDate compatibility (initial subset)
+
+`ToDate` returns text using the existing emitted date parser and Moment-compatible
+format tokens. The unchanged Node interpreter at
+`ccedefd87b012ff1173ee2f43323b6eb7c8bd268` supplies the 23 regression cases in
+`tests/node-reference/todate-cases.json`, including UTC and America/New_York.
+Without arguments it uses the inherited `@DateFormat`, or en-US local calendar
+formatting. With arguments, the first selects the format; only an exact second
+argument `GMT` selects UTC. The inherited annotation's GMT mode is ignored.
+Extra arguments are ignored, and falsy explicit formats use Moment's default.
+
+Recognized date wrappers are rebuilt from their calendar fields as local time
+before conversion, preserving the interpreter's `moment.toObject()` behavior.
+Missing/null values propagate. Invalid supported calendar inputs and booleans
+produce `Invalid Date` with locale formatting and `Invalid date` with Moment
+formatting: the interpreter checks the `isValid` function instead of calling it.
+Unknown non-ISO input forms, structured input, ambiguous local times, and the
+previously documented unsupported format tokens remain source-located stubs.
+Unselected branches do not execute date conversion. Generic stub regression tests
+now use the still-unimplemented `ToJson` method.
+
+After regeneration, startup advances to `Call EncodeFor` at
+`templates/startup.template:80:38`. Full startup parity remains unfinished;
+`Where` is still the documented temporary pass-through.

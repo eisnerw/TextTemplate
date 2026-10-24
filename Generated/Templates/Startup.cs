@@ -804,49 +804,13 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":72:58
     private TemplateContent renderDob()
     {
-        // Template:
-        // dob.ToDate('MMMM')
-        // Source: "templates/startup.template":74:22
-        object? applyToDate() => Unsupported(
-            "Call ToDate",
-            "templates/startup.template:74:22",
-            () => Get("dob"),
-            () => new object?[] { "MMMM" });
-
-        // Template:
-        // dob.ToDate('YYYY')
-        // Source: "templates/startup.template":75:10
-        object? applyToDate_2() => Unsupported(
-            "Call ToDate",
-            "templates/startup.template:75:10",
-            () => Get("dob"),
-            () => new object?[] { "YYYY" });
-
-        // Template:
-        // dob.ToDate('dddd')
-        // Source: "templates/startup.template":75:34
-        object? applyToDate_3() => Unsupported(
-            "Call ToDate",
-            "templates/startup.template:75:34",
-            () => Get("dob"),
-            () => new object?[] { "dddd" });
-
-        // Template:
-        // dob.ToDate('do')
-        // Source: "templates/startup.template":76:10
-        object? applyToDate_4() => Unsupported(
-            "Call ToDate",
-            "templates/startup.template:76:10",
-            () => Get("dob"),
-            () => new object?[] { "do" });
-
         object? dob = Get("dob");
         object? fname = Get("fname");
         object? lname = Get("lname");
-        object? toDate = applyToDate();
-        object? toDate_2 = applyToDate_2();
-        object? toDate_3 = applyToDate_3();
-        object? toDate_4 = applyToDate_4();
+        object? toDate = EvaluationContext.Invoke(MethodInput("dob"), methodValue => Context.ToDate("templates/startup.template:74:22", methodValue, "MMMM"));
+        object? toDate_2 = EvaluationContext.Invoke(MethodInput("dob"), methodValue_2 => Context.ToDate("templates/startup.template:75:10", methodValue_2, "YYYY"));
+        object? toDate_3 = EvaluationContext.Invoke(MethodInput("dob"), methodValue_3 => Context.ToDate("templates/startup.template:75:34", methodValue_3, "dddd"));
+        object? toDate_4 = EvaluationContext.Invoke(MethodInput("dob"), methodValue_4 => Context.ToDate("templates/startup.template:76:10", methodValue_4, "do"));
 
         return Line($"\"{dob}\", to show that {fname} {lname} was born in the month of {toDate} in {toDate_2} on {toDate_3} the {toDate_4}");
     }
