@@ -100,6 +100,7 @@ internal sealed class EvaluationContext
     private string? missingText;
     private TemplateRegex? falsy;
     private TemplateRegex? dateTest;
+    private string? encoding;
     private string? dateFormat;
     private string? dateFormatMode;
     private string dateLocation = "date annotation";
@@ -129,6 +130,7 @@ internal sealed class EvaluationContext
         missingText = parent.missingText;
         falsy = parent.falsy;
         dateTest = parent.dateTest;
+        encoding = parent.encoding;
         dateFormat = parent.dateFormat;
         dateFormatMode = parent.dateFormatMode;
         dateLocation = parent.dateLocation;
@@ -212,6 +214,7 @@ internal sealed class EvaluationContext
             // Internal method arguments have already been prepared by the caller.
             if (Regex.IsMatch(path, @"^\$[0-9]+$")) return text;
             text = text.Replace("\r", "");
+            if (encoding is not null) text = Builtins.EncodeText(text, encoding, component: false);
             return text.Contains('\n') && MultilineStyle is not null
                 ? new Multiline(text, MultilineStyle) : text;
         }
@@ -332,6 +335,17 @@ internal sealed class EvaluationContext
         if (includes is not null) foreach (var entry in includes) child.imports[entry.Key] = entry.Value;
         return child;
     }
+    internal EvaluationContext WithEncoding(string location, params object?[] arguments)
+    {
+        // The dispatch guard rejects no arguments before the legacy clearing branch.
+        if (arguments.Length != 1 || Intermediate(arguments[0]) is not string mode ||
+            mode is not ("html" or "xml" or "uri" or "json"))
+            throw new InvalidOperationException(location + ": @EncodeDataFor requires html, xml, uri or json.");
+        EvaluationContext child = new(this, Current);
+        child.encoding = mode;
+        return child;
+    }
+
     internal object? ToDate(string location, object? value, params object?[] arguments)
     {
         value = Intermediate(value);

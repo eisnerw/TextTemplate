@@ -34,6 +34,7 @@ public sealed class GenerationTests
     [InlineData("order")]
     [InlineData("date")]
     [InlineData("todate")]
+    [InlineData("encoding")]
     [InlineData("group")]
     [InlineData("align")]
     [InlineData("list")]

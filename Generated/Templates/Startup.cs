@@ -763,26 +763,21 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":80:38
     private object? renderEncodeFor()
     {
-        // Template:
-        // [{data}].@EncodeDataFor('html')
-        // Source: "templates/startup.template":80:38
-        object? applyEncodeDataFor() => Unsupported(
-            "Call @EncodeDataFor",
-            "templates/startup.template:80:38",
-            () => Each(itemContext => new Startup(itemContext).renderData()),
-            () => new object?[] { "html" });
+        return Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithEncoding("templates/startup.template:80:38", "html")
+            },
+            annotatedContext => new Startup(annotatedContext).renderEncodeFor_2());
+    }
 
-        // Template:
-        // [{data}].@EncodeDataFor('html')
-        //           .EncodeFor('html')
-        // Source: "templates/startup.template":80:38
-        object? applyEncodeFor() => Unsupported(
-            "Call EncodeFor",
-            "templates/startup.template:80:38",
-            () => applyEncodeDataFor(),
-            () => new object?[] { "html" });
-
-        return applyEncodeFor();
+    // Template:
+    // [{data}].@EncodeDataFor('html')
+    //           .EncodeFor('html')
+    // Source: "templates/startup.template":80:38
+    private object? renderEncodeFor_2()
+    {
+        return EvaluationContext.Invoke(MethodInput(itemContext => new Startup(itemContext).renderData()), methodValue => Builtins.EncodeFor("templates/startup.template:80:38", methodValue, "html"));
     }
 
     // Template:

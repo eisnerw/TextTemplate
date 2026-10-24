@@ -590,3 +590,30 @@ now use the still-unimplemented `ToJson` method.
 After regeneration, startup advances to `Call EncodeFor` at
 `templates/startup.template:80:38`. Full startup parity remains unfinished;
 `Where` is still the documented temporary pass-through.
+
+
+### EncodeFor and EncodeDataFor compatibility
+
+`EncodeFor` implements `html`, `xml`, `uri`, and `json` for string/structured-text
+receivers. `@EncodeDataFor` applies the same encoders to string lookups, inherits
+into child contexts, and restores the caller's setting after the scope ends.
+Literal template text is unchanged; `$0`, `$1`, etc. bypass lookup encoding because
+method arguments are already prepared. CR removal precedes lookup encoding.
+The URI method uses `encodeURIComponent` behavior; the annotation uses `encodeURI`
+behavior, retaining reserved punctuation. URI encoding rejects unpaired surrogates.
+JSON encoding preserves JavaScript string escaping, including Unicode and controls.
+
+The source is the unchanged interpreter at
+`ccedefd87b012ff1173ee2f43323b6eb7c8bd268`; Node characterization and standalone C#
+comparisons use `tests/node-reference/encoding-cases.json`. Tests cover Unicode
+boundaries, all modes, repeated encoding, nested scopes, dynamic mode arguments,
+named method arguments, missing values, invalid arguments, and startup's exact
+encoding example. Preserve these legacy quirks: HTML leaves ordinary spaces alone
+and numeric-encodes only U+00A0 through U+9999 plus its explicit punctuation set;
+XML replaces equals with `undefined` and leaves double quotes unchanged.
+The dispatch guard rejects `@EncodeDataFor()` before reaching its clearing branch.
+Recognized date receivers for `EncodeFor` remain explicit source-located stubs.
+
+The regenerated startup command now exits successfully. Full startup output parity
+is not claimed: `Where` still returns its receiver without filtering, so startup
+renders additional records. Implement and characterize filtering next.

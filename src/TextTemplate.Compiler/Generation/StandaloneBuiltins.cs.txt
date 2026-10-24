@@ -72,6 +72,66 @@ internal static class Builtins
         }
         return text;
     }
+    // Adapted from callMethod, encodeHTML and encodeXML in the frozen interpreter.
+    internal static object? EncodeFor(string location, object? value, params object?[] arguments)
+        => EvaluationContext.At(location, () => EncodeForValue(value, arguments));
+    private static object? EncodeForValue(object? value, object?[] arguments)
+    {
+        value = EvaluationContext.Intermediate(value);
+        if (value is null or EvaluationContext.Missing) return value;
+        Require(arguments, 1, 1);
+        if (value is TemplateDate)
+            throw new NotImplementedException("EncodeFor with a recognized date receiver is not implemented yet.");
+        if (value is not string text) throw new InvalidOperationException("EncodeFor requires a string receiver.");
+        if (EvaluationContext.Intermediate(arguments[0]) is not string mode || mode is not ("html" or "xml" or "uri" or "json"))
+            throw new InvalidOperationException("EncodeFor requires html, xml, uri or json.");
+        return EncodeText(text, mode, component: true);
+    }
+    internal static string EncodeText(string text, string mode, bool component)
+    {
+        if (mode == "uri")
+        {
+            // encodeURIComponent and encodeURI differ only in the reserved ASCII set.
+            const string unescaped = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.!~*'()";
+            const string reserved = ";/?:@&=+$,#";
+            var result = new System.Text.StringBuilder();
+            foreach (byte b in new System.Text.UTF8Encoding(false, true).GetBytes(text))
+                if (b < 128 && (unescaped.Contains((char)b) || !component && reserved.Contains((char)b))) result.Append((char)b);
+                else result.Append('%').Append(b.ToString("X2", CultureInfo.InvariantCulture));
+            return result.ToString();
+        }
+        var output = new System.Text.StringBuilder();
+        for (int i = 0; i < text.Length; i++)
+        {
+            char c = text[i];
+            if (mode == "html" && (c is >= '\u00a0' and <= '\u9999' || "<>&'\"".Contains(c)))
+                output.Append(c switch
+                {
+                    '¢' => "&cent;", '£' => "&pound;", '¥' => "&yen;", '€' => "&euro;", '©' => "&copy;", '®' => "&reg;",
+                    '<' => "&lt;", '>' => "&gt;", '&' => "&amp;", '\'' => "&apos;", '"' => "&quot;",
+                    _ => "&#" + ((int)c).ToString(CultureInfo.InvariantCulture) + ";"
+                });
+            else if (mode == "xml" && "<>=&'".Contains(c))
+                // Preserve the legacy regex/map mismatch: equals has no replacement;
+                // double quotes are in the map but absent from the matching regex.
+                output.Append(c switch { '<' => "&lt;", '>' => "&gt;", '&' => "&amp;", '\'' => "&apos;", _ => "undefined" });
+            else if (mode == "json")
+            {
+                string? escape = c switch
+                {
+                    '"' => "\\\"", '\\' => "\\\\", '\b' => "\\b", '\f' => "\\f", '\n' => "\\n", '\r' => "\\r", '\t' => "\\t", _ => null
+                };
+                if (escape is not null) output.Append(escape);
+                else if (c < 32 || char.IsSurrogate(c) && !(char.IsHighSurrogate(c) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1])) &&
+                    !(char.IsLowSurrogate(c) && i > 0 && char.IsHighSurrogate(text[i - 1])))
+                    output.Append("\\u").Append(((int)c).ToString("x4", CultureInfo.InvariantCulture));
+                else output.Append(c);
+            }
+            else output.Append(c);
+        }
+        return output.ToString();
+    }
+
     internal static object? Trim(object? value, params object?[] arguments)
     {
         value = EvaluationContext.Intermediate(value);

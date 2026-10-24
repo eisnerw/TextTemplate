@@ -223,9 +223,9 @@ public sealed class CSharpEmitter
             return (lambda ? context + " => " : "") + context + ".WithDefaultIndent(" + (args.Count == 0 ? "null" : Quote(args[0].Kind == SyntaxKind.String ? DecodeString(args[0].Value!) : args[0].Value!)) + ")";
         if (call.Value == "@Falsy" && (args.Count == 0 || args.Count == 1 && args[0].Kind == SyntaxKind.Regex))
             return (lambda ? context + " => " : "") + context + ".WithFalsy(" + (args.Count == 0 ? "null" : "new TemplateRegex(" + Quote(args[0].Value!) + ", " + Quote(sourcePath + ":" + args[0].Span.Line + ":" + args[0].Span.Column) + ")") + ")";
-        if (call.Value is "@DateTest" or "@DateFormat" && source is not null)
+        if (call.Value is "@DateTest" or "@DateFormat" or "@EncodeDataFor" && source is not null)
         {
-            string DateArgument(SyntaxNode arg) => arg.Kind switch
+            string AnnotationArgument(SyntaxNode arg) => arg.Kind switch
             {
                 SyntaxKind.String => Quote(DecodeString(arg.Value!)),
                 SyntaxKind.Number => "EvaluationContext.ParseInteger(" + Quote(arg.Value!) + ")",
@@ -233,9 +233,9 @@ public sealed class CSharpEmitter
                 SyntaxKind.Identifier => context + ".Lookup(" + Quote(arg.Value!) + ")",
                 _ => context + ".Each(itemContext => new " + unitName + "(itemContext)." + Emit(arg, source) + "())"
             };
-            return (lambda ? context + " => " : "") + context + (call.Value == "@DateTest" ? ".WithDateTest(" : ".WithDateFormat(") +
+            return (lambda ? context + " => " : "") + context + (call.Value == "@DateTest" ? ".WithDateTest(" : call.Value == "@EncodeDataFor" ? ".WithEncoding(" : ".WithDateFormat(") +
                 Quote(sourcePath + ":" + call.Span.Line + ":" + call.Span.Column) +
-                (args.Count == 0 ? "" : ", " + string.Join(", ", args.Select(DateArgument))) + ")";
+                (args.Count == 0 ? "" : ", " + string.Join(", ", args.Select(AnnotationArgument))) + ")";
         }
         if (call.Value == "@Include" && args.Count == 1 && source is not null)
         {
@@ -695,7 +695,7 @@ public sealed class CSharpEmitter
                     }
                 }
                 // TODO: Implement Count(predicate) with per-item predicate evaluation.
-                else if (node.Value!.StartsWith('#') || (node.Value == "Count" && !node.Children.Skip(1).SelectMany(child => child.Children).Any()) || node.Value is "ToDate" or "Compose" or "Where" or "IfMissing" or "Join" or "Align" or "Trim" or "StartsWith" or "EndsWith" or "Contains" or "Replace" or "Substr" or "IndexOf" or "LastIndexOf" or "EndIndexOf" or "ToUpper" or "ToLower" or "GreaterThan" or "LessThan" or "Matches" or "Assert")
+                else if (node.Value!.StartsWith('#') || (node.Value == "Count" && !node.Children.Skip(1).SelectMany(child => child.Children).Any()) || node.Value is "EncodeFor" or "ToDate" or "Compose" or "Where" or "IfMissing" or "Join" or "Align" or "Trim" or "StartsWith" or "EndsWith" or "Contains" or "Replace" or "Substr" or "IndexOf" or "LastIndexOf" or "EndIndexOf" or "ToUpper" or "ToLower" or "GreaterThan" or "LessThan" or "Matches" or "Assert")
                 {
                     // TODO: Where must evaluate its predicate in each item's context; skip it for this temporary pass-through.
                     string arguments = node.Value == "Where" ? "" : string.Join(", ", node.Children.Skip(1).SelectMany(child => child.Children).Select(Call));
@@ -706,7 +706,7 @@ public sealed class CSharpEmitter
                         : "MethodInput(" + RawChild(node.Children[0]) + ")";
                     string methodValue = Unique("methodValue", current.Names);
                     expression = "EvaluationContext.Invoke(" + input + ", " + methodValue + " => " +
-                        (!node.Value.StartsWith('#') ? (node.Value == "ToDate" ? "Context.ToDate(" + Quote(location) + ", " : "Builtins." + node.Value + "(" + (node.Value == "Compose" ? "Context, " : "")) : "ApplySubtemplate(" + Quote(node.Value[1..]) + ", ") +
+                        (!node.Value.StartsWith('#') ? (node.Value == "ToDate" ? "Context.ToDate(" + Quote(location) + ", " : "Builtins." + node.Value + "(" + (node.Value == "Compose" ? "Context, " : node.Value == "EncodeFor" ? Quote(location) + ", " : "")) : "ApplySubtemplate(" + Quote(node.Value[1..]) + ", ") +
                         methodValue + (arguments.Length == 0 ? "" : ", " + arguments) + "))";
                 }
                 else expression = Stub();

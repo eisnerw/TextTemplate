@@ -36,7 +36,9 @@ share the interpreter's integer-prefix numeric comparison and ordinal UTF-16
 string comparison with relational operators. Regex literals support the frozen grammar's `g`, `i`, `m`, and `s` flags in
 `Replace`, `Matches`, `Assert`, and scoped `@Falsy` (including clearing with
 `@Falsy()`). Regex replacement follows JavaScript capture/substitution rules;
-string replacement retains its existing split/join behavior. `Contains`,
+string replacement retains its existing split/join behavior. `EncodeFor` and scoped
+`@EncodeDataFor` implement the characterized HTML, XML, URI, and JSON escaping
+behavior, including legacy XML quirks. Recognized date receivers remain stubs. `Contains`,
 `StartsWith`, and `EndsWith` reject regex arguments, as Node does.
 The emitted `Support/TemplateRegex.cs` adapts .NET matching with JavaScript
 character classes, anchors, non-Unicode case folding, and global state. Repeated
