@@ -31,6 +31,7 @@ public sealed class GenerationTests
     }
 
     [Theory]
+    [InlineData("order")]
     [InlineData("date")]
     [InlineData("group")]
     [InlineData("align")]
@@ -65,11 +66,11 @@ public sealed class GenerationTests
             Assert.True(parsed.Success, string.Join("\n", parsed.Diagnostics));
             var generated = new CSharpEmitter().Generate(parsed.Document!);
             Assert.True(generated.Success, string.Join("\n", generated.Diagnostics));
-            if (suite == "group")
+            if (suite is "group" or "order")
             {
-                Assert.Contains("Context.GroupBy(", generated.Source);
+                Assert.Contains(suite == "group" ? "Context.GroupBy(" : "Context.OrderBy(", generated.Source);
                 Assert.Contains("itemContext => itemContext.Lookup(\"k\")", generated.Source);
-                Assert.DoesNotContain("\"Call GroupBy\"", generated.Source);
+                Assert.DoesNotContain(suite == "group" ? "\"Call GroupBy\"" : "\"Call OrderBy\"", generated.Source);
             }
             foreach (var file in generated.Files)
             {

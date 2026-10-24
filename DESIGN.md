@@ -542,5 +542,26 @@ Moment replacement, and `ToDate` remains unfinished. The helper translates the
 interpreter's date wrapping/composition behavior; its adapted Moment 2.29.4 token
 regex carries Moment's MIT notice in emitted source.
 
-Startup now passes the date annotations and reaches `Call OrderBy` at
-`templates/startup.template:66:13`; full startup parity remains unfinished.
+Startup passes the date annotations; full startup parity remains unfinished.
+
+### OrderBy compatibility
+
+`OrderBy` emits a deferred per-row key selector and shares the interpreter-derived
+key collection algorithm with `GroupBy`. The unchanged interpreter at
+`ccedefd87b012ff1173ee2f43323b6eb7c8bd268` supplies the expected outputs in
+`tests/node-reference/order-cases.json`. Keys sort as UTF-16 strings, including
+numeric keys (`1`, `10`, `2`); tied rows retain input order. Ascending is the
+default. Direction strings are uppercased and have the first `ASC`/`DESC`
+occurrence replaced by `A`/`D`; whitespace is not trimmed. `D` reverses the keys,
+not the rows within each key. `U` keeps the first row per key in ascending key
+order. Result records are cloned with new parent links and singleton collapse.
+
+Coverage includes missing/null/empty keys, formula and template selectors,
+subtemplate `$` arguments, scalar lists, parent receivers, chained ordering,
+grouped data, prototype-name quirks, and method replay after loading URL/JSON
+contexts. Date-object keys retain ordinary JavaScript object coercion rather
+than being implicitly sorted by timestamp. Invalid arguments stop generated
+output publication; unfinished selectors remain deferred until reached.
+
+Startup now advances to `Call ToDate` at `templates/startup.template:74:22`;
+full startup parity remains unfinished.

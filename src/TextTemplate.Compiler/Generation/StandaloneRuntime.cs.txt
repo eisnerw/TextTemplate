@@ -504,6 +504,66 @@ internal sealed class EvaluationContext
             throw new InvalidOperationException("Invalid data for GroupBy.");
         }
         if (arguments.Length < 1) throw new InvalidOperationException("Invalid arguments for GroupBy.");
+        Dictionary<string, List<Data>> groups = CollectGroups(data, selector);
+        string groupingName = arguments.Length == 2 ? Builtins.JsString(arguments[1]) : keyText;
+        string membersName = Builtins.JsString(arguments[0]);
+        List<string> keys = new(groups.Keys);
+        keys.Sort(StringComparer.Ordinal);
+        Data result = new(new(StringComparer.Ordinal), Current);
+        if (keys.Count != 1) result.Items = new();
+        foreach (string key in keys)
+        {
+            Data group = keys.Count == 1 ? result : new(new(StringComparer.Ordinal), result);
+            if (groupingName != "__proto__") group.Values[groupingName] = key;
+            List<Data> members = groups[key];
+            group.Values[membersName] = members.Count == 1 ? CloneGroupData(members[0], group)
+                : CloneGroupData(new Data(new(StringComparer.Ordinal), null) { Items = members }, group);
+            result.Items?.Add(group);
+        }
+        return result;
+    }
+    // OrderBy and GroupBy use the same deferred-key grouping algorithm in the reference.
+    internal object? OrderBy(object? value, Func<EvaluationContext, object?> selector, string keyText, object?[] arguments, bool contextProbe = false)
+    {
+        value = Intermediate(value);
+        if (value is null or Missing) return value;
+        string mode = "A";
+        if (arguments.Length == 1)
+        {
+            if (Intermediate(arguments[0]) is not string direction)
+                throw new InvalidOperationException("OrderBy direction must be a string.");
+            static string ReplaceFirst(string text, string find, string replacement)
+            {
+                int index = text.IndexOf(find, StringComparison.Ordinal);
+                return index < 0 ? text : text[..index] + replacement + text[(index + find.Length)..];
+            }
+            mode = ReplaceFirst(ReplaceFirst(NodeCasing.Convert(direction, true), "ASC", "A"), "DESC", "D");
+        }
+        if (contextProbe && value is string) return value;
+        if (value is not Data data)
+        {
+            if (value is string path && (path.StartsWith('/') || path.StartsWith("http", StringComparison.Ordinal))) return value;
+            throw new InvalidOperationException("Invalid data for OrderBy.");
+        }
+        if (keyText.Length == 0 || arguments.Length > 1 || mode is not ("A" or "D" or "U"))
+            throw new InvalidOperationException("Invalid arguments for OrderBy.");
+        Dictionary<string, List<Data>> groups = CollectGroups(data, selector);
+        List<string> keys = new(groups.Keys);
+        keys.Sort(StringComparer.Ordinal);
+        if (mode == "D") keys.Reverse();
+        List<Data> ordered = new();
+        foreach (string key in keys)
+        {
+            if (mode == "U") ordered.Add(groups[key][0]);
+            else ordered.AddRange(groups[key]);
+        }
+        if (ordered.Count == 1) return CloneGroupData(ordered[0], Current);
+        Data result = new(new(StringComparer.Ordinal), Current) { Items = new() };
+        foreach (Data row in ordered) result.Items.Add(CloneGroupData(row, result));
+        return result;
+    }
+    private Dictionary<string, List<Data>> CollectGroups(Data data, Func<EvaluationContext, object?> selector)
+    {
         Dictionary<string, object?> dollars = new(StringComparer.Ordinal);
         if (Current is not null)
             foreach (var entry in Current.Values)
@@ -537,25 +597,10 @@ internal sealed class EvaluationContext
             }
             members.Add(item);
         }
-        string groupingName = arguments.Length == 2 ? Builtins.JsString(arguments[1]) : keyText;
-        string membersName = Builtins.JsString(arguments[0]);
-        List<string> keys = new(groups.Keys);
-        keys.Sort(StringComparer.Ordinal);
-        Data result = new(new(StringComparer.Ordinal), Current);
-        if (keys.Count != 1) result.Items = new();
-        foreach (string key in keys)
-        {
-            Data group = keys.Count == 1 ? result : new(new(StringComparer.Ordinal), result);
-            if (groupingName != "__proto__") group.Values[groupingName] = key;
-            List<Data> members = groups[key];
-            group.Values[membersName] = members.Count == 1 ? CloneGroupData(members[0], group)
-                : CloneGroupData(new Data(new(StringComparer.Ordinal), null) { Items = members }, group);
-            result.Items?.Add(group);
-        }
-        return result;
+        return groups;
     }
     // TemplateData clones grouped records; rebuild parent links instead of retaining source parents.
-    private static Data CloneGroupData(Data source, Data parent)
+    private static Data CloneGroupData(Data source, Data? parent)
     {
         Data copy = new(new(StringComparer.Ordinal), parent);
         if (source.Items is not null)

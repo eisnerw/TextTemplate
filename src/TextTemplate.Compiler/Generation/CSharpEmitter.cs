@@ -625,11 +625,11 @@ public sealed class CSharpEmitter
                     (node.Children.Count > 2 ? Call(node.Children[2]) : node.Kind == SyntaxKind.ThinArrow ? "\"\"" : "null") + ")"; break;
             case SyntaxKind.Context: case SyntaxKind.ContextWithFallback:
                 if (node.Value == "implicit") expression = Call(node.Children[0]);
-                else if (node.Children[0].Kind == SyntaxKind.Call && CallChain(node.Children[0], out _).Any(call => call.Value == "GroupBy"))
+                else if (node.Children[0].Kind == SyntaxKind.Call && CallChain(node.Children[0], out _).Any(call => call.Value is "GroupBy" or "OrderBy"))
                 {
                     var contextCall = node.Children[0];
                     CallChain(contextCall, out var originalReceiver);
-                    string replayName = Unique("groupLoadedData", methodNames);
+                    string replayName = Unique(contextCall.Value == "OrderBy" ? "orderLoadedData" : "groupLoadedData", methodNames);
                     var previousBody = current;
                     current = new MethodBody();
                     string replayExpression = Expression(contextCall, source, originalReceiver);
@@ -659,14 +659,14 @@ public sealed class CSharpEmitter
                             string.Join(",\n                ", annotations.Select(call => Annotation(call, source: source))) + "\n            },\n            " + InChild(body, "annotatedContext") + ")";
                     }
                 }
-                else if (node.Value == "GroupBy")
+                else if (node.Value is "GroupBy" or "OrderBy")
                 {
                     var groupArgs = node.Children.Skip(1).SelectMany(child => child.Children).ToList();
                     string keyText = groupArgs.Count == 0 ? "" : source.Text.Substring(groupArgs[0].Span.Offset, groupArgs[0].Span.Length);
                     string selector = groupArgs.Count == 0 ? "itemContext => null" : RawChild(groupArgs[0]);
-                    string input = ReferenceEquals(node.Children[0], replayReceiver) ? "Context.Current" : node.Children[0].Kind == SyntaxKind.Call ? Call(node.Children[0])
+                    string input = ReferenceEquals(node.Children[0], replayReceiver) ? "Context.Current" : node.Children[0].Kind == SyntaxKind.Call || receiver.Value?.StartsWith('^') == true ? Call(node.Children[0])
                         : "MethodInput(" + RawChild(node.Children[0]) + ")";
-                    expression = "Context.GroupBy(" + input + ", " + selector + ", " + Quote(keyText) + ", " +
+                    expression = "Context." + node.Value + "(" + input + ", " + selector + ", " + Quote(keyText) + ", " +
                         "new object?[] { " + string.Join(", ", groupArgs.Skip(1).Select(Call)) + " }, " + (contextProbe ? "true" : "false") + ")";
                 }
                 else if (node.Value == "Case")

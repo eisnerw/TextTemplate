@@ -874,17 +874,8 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":65:37
     private TemplateContent renderSign()
     {
-        // Template:
-        // group.OrderBy(lname)
-        // Source: "templates/startup.template":66:13
-        object? applyOrderBy() => Unsupported(
-            "Call OrderBy",
-            "templates/startup.template:66:13",
-            () => Get("group"),
-            () => new object?[] { Get("lname") });
-
         object? sign = Get("sign");
-        object? orderBy = InContext(applyOrderBy(), dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderFname()));
+        object? orderBy = InContext(Context.OrderBy(MethodInput(itemContext => itemContext.Lookup("group")), itemContext => itemContext.Lookup("lname"), "lname", new object?[] {  }, true), dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderFname()), null, dataContext => new Startup(dataContext).orderLoadedData());
 
         return Line($$"""
             {{sign}} 
@@ -1042,6 +1033,14 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     private object? groupLoadedData()
     {
         return Context.GroupBy(EvaluationContext.Invoke(Context.Current, methodValue => Builtins.Where(methodValue)), itemContext => itemContext.Lookup("sign"), "sign", new object?[] { "group" }, false);
+    }
+
+    // Template:
+    // group.OrderBy(lname)
+    // Source: "templates/startup.template":66:13
+    private object? orderLoadedData()
+    {
+        return Context.OrderBy(Context.Current, itemContext => itemContext.Lookup("lname"), "lname", new object?[] {  }, false);
     }
 
     internal EvaluationContext includeOverview()

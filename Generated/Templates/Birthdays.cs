@@ -45,16 +45,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/birthdays.template":21:13
     private TemplateContent ungrouped()
     {
-        // Template:
-        // '/data/famousBirthdays'.OrderBy(lname.ToUpper())
-        // Source: "templates/birthdays.template":21:15
-        object? applyOrderBy() => Unsupported(
-            "Call OrderBy",
-            "templates/birthdays.template:21:15",
-            () => "/data/famousBirthdays",
-            () => new object?[] { EvaluationContext.Invoke(MethodInput("lname"), methodValue => Builtins.ToUpper(methodValue)) });
-
-        object? orderBy = InContext(applyOrderBy(), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderName_2()));
+        object? orderBy = InContext(Context.OrderBy(MethodInput(itemContext => "/data/famousBirthdays"), itemContext => new Birthdays(itemContext).renderToUpper(), "lname.ToUpper()", new object?[] {  }, true), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderName_2()), null, dataContext => new Birthdays(dataContext).orderLoadedData_5());
 
         return Line($"{orderBy}");
     }
@@ -70,6 +61,14 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
         object? choice = (!(IsTruthy("isAlive")) ? Each(itemContext => Line($" (dead)")) : "");
 
         return Line($"{name} {date} {sign}{choice}");
+    }
+
+    // Template:
+    // lname.ToUpper()
+    // Source: "templates/birthdays.template":21:47
+    private object? renderToUpper()
+    {
+        return EvaluationContext.Invoke(MethodInput("lname"), methodValue => Builtins.ToUpper(methodValue));
     }
 
     // Template:
@@ -121,7 +120,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/birthdays.template":13:10
     private TemplateContent bySign()
     {
-        object? groupBy = InContext(Context.GroupBy(MethodInput(itemContext => "/data/famousBirthdays"), itemContext => itemContext.Lookup("sign"), "sign", new object?[] { "group" }, true), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderSign()), null, dataContext => new Birthdays(dataContext).groupLoadedData_3());
+        object? groupBy = InContext(Context.GroupBy(MethodInput(itemContext => "/data/famousBirthdays"), itemContext => itemContext.Lookup("sign"), "sign", new object?[] { "group" }, true), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderSign()), null, dataContext => new Birthdays(dataContext).groupLoadedData_2());
 
         return Line($"{groupBy}");
     }
@@ -135,18 +134,8 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/birthdays.template":14:6
     private TemplateContent renderSign()
     {
-        // Template:
-        // group.GroupBy(dob.ToDate('yyyy'),'yeargroup','year')
-        //           .OrderBy(year,'D')
-        // Source: "templates/birthdays.template":14:14
-        object? applyOrderBy() => Unsupported(
-            "Call OrderBy",
-            "templates/birthdays.template:14:14",
-            () => Context.GroupBy(MethodInput(itemContext => itemContext.Lookup("group")), itemContext => new Birthdays(itemContext).renderToDate_4(), "dob.ToDate('yyyy')", new object?[] { "yeargroup", "year" }, true),
-            () => new object?[] { Get("year"), "D" });
-
         object? sign = Get("sign");
-        object? orderBy = InContext(applyOrderBy(), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderYear()), null, dataContext => new Birthdays(dataContext).groupLoadedData_4());
+        object? orderBy = InContext(Context.OrderBy(Context.GroupBy(MethodInput(itemContext => itemContext.Lookup("group")), itemContext => new Birthdays(itemContext).renderToDate_4(), "dob.ToDate('yyyy')", new object?[] { "yeargroup", "year" }, true), itemContext => itemContext.Lookup("year"), "year", new object?[] { "D" }, true), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderYear()), null, dataContext => new Birthdays(dataContext).orderLoadedData_3());
 
         return Line($"{sign}{orderBy}");
     }
@@ -159,18 +148,8 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/birthdays.template":15:30
     private TemplateContent renderYear()
     {
-        // Template:
-        // yeargroup
-        //           .OrderBy(dob, 'A')
-        // Source: "templates/birthdays.template":16:7
-        object? applyOrderBy() => Unsupported(
-            "Call OrderBy",
-            "templates/birthdays.template:16:7",
-            () => Get("yeargroup"),
-            () => new object?[] { Get("dob"), "A" });
-
         object? year = Get("year");
-        object? orderBy = InContext(applyOrderBy(), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderFnameResult()));
+        object? orderBy = InContext(Context.OrderBy(MethodInput(itemContext => itemContext.Lookup("yeargroup")), itemContext => itemContext.Lookup("dob"), "dob", new object?[] { "A" }, true), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderFnameResult()), null, dataContext => new Birthdays(dataContext).orderLoadedData_4());
 
         return Line($$"""
             {{year}}
@@ -252,18 +231,8 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
             () => Each(itemContext => new Birthdays(itemContext).renderMonth()),
             () => new object?[] { "MMMM" });
 
-        // Template:
-        // group.GroupBy(dob.ToDate('DD'),'daygroup','day')
-        //           .OrderBy(day)
-        // Source: "templates/birthdays.template":8:9
-        object? applyOrderBy() => Unsupported(
-            "Call OrderBy",
-            "templates/birthdays.template:8:9",
-            () => Context.GroupBy(MethodInput(itemContext => itemContext.Lookup("group")), itemContext => new Birthdays(itemContext).renderToDate_3(), "dob.ToDate('DD')", new object?[] { "daygroup", "day" }, true),
-            () => new object?[] { Get("day") });
-
         object? toDate = applyToDate();
-        object? orderBy = InContext(applyOrderBy(), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderDay()), null, dataContext => new Birthdays(dataContext).groupLoadedData_2());
+        object? orderBy = InContext(Context.OrderBy(Context.GroupBy(MethodInput(itemContext => itemContext.Lookup("group")), itemContext => new Birthdays(itemContext).renderToDate_3(), "dob.ToDate('DD')", new object?[] { "daygroup", "day" }, true), itemContext => itemContext.Lookup("day"), "day", new object?[] {  }, true), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderDay()), null, dataContext => new Birthdays(dataContext).orderLoadedData());
 
         return Line($"{toDate}{orderBy}");
     }
@@ -276,18 +245,8 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/birthdays.template":9:25
     private TemplateContent renderDay()
     {
-        // Template:
-        // daygroup
-        //           .OrderBy(dob, 'D')
-        // Source: "templates/birthdays.template":10:7
-        object? applyOrderBy() => Unsupported(
-            "Call OrderBy",
-            "templates/birthdays.template:10:7",
-            () => Get("daygroup"),
-            () => new object?[] { Get("dob"), "D" });
-
         object? day = Get("day");
-        object? orderBy = InContext(applyOrderBy(), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderName()));
+        object? orderBy = InContext(Context.OrderBy(MethodInput(itemContext => itemContext.Lookup("daygroup")), itemContext => itemContext.Lookup("dob"), "dob", new object?[] { "D" }, true), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderName()), null, dataContext => new Birthdays(dataContext).orderLoadedData_2());
 
         return Line($$"""
             {{day}}
@@ -442,19 +401,18 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // group.GroupBy(dob.ToDate('DD'),'daygroup','day')
     //           .OrderBy(day)
     // Source: "templates/birthdays.template":8:9
-    private object? groupLoadedData_2()
+    private object? orderLoadedData()
     {
-        // Template:
-        // group.GroupBy(dob.ToDate('DD'),'daygroup','day')
-        //           .OrderBy(day)
-        // Source: "templates/birthdays.template":8:9
-        object? applyOrderBy() => Unsupported(
-            "Call OrderBy",
-            "templates/birthdays.template:8:9",
-            () => Context.GroupBy(Context.Current, itemContext => new Birthdays(itemContext).renderToDate_3(), "dob.ToDate('DD')", new object?[] { "daygroup", "day" }, false),
-            () => new object?[] { Get("day") });
+        return Context.OrderBy(Context.GroupBy(Context.Current, itemContext => new Birthdays(itemContext).renderToDate_3(), "dob.ToDate('DD')", new object?[] { "daygroup", "day" }, false), itemContext => itemContext.Lookup("day"), "day", new object?[] {  }, false);
+    }
 
-        return applyOrderBy();
+    // Template:
+    // daygroup
+    //           .OrderBy(dob, 'D')
+    // Source: "templates/birthdays.template":10:7
+    private object? orderLoadedData_2()
+    {
+        return Context.OrderBy(Context.Current, itemContext => itemContext.Lookup("dob"), "dob", new object?[] { "D" }, false);
     }
 
     internal EvaluationContext includeByDate()
@@ -467,7 +425,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Template:
     // '/data/famousBirthdays'.GroupBy(sign, 'group')
     // Source: "templates/birthdays.template":13:12
-    private object? groupLoadedData_3()
+    private object? groupLoadedData_2()
     {
         return Context.GroupBy(Context.Current, itemContext => itemContext.Lookup("sign"), "sign", new object?[] { "group" }, false);
     }
@@ -476,19 +434,18 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // group.GroupBy(dob.ToDate('yyyy'),'yeargroup','year')
     //           .OrderBy(year,'D')
     // Source: "templates/birthdays.template":14:14
-    private object? groupLoadedData_4()
+    private object? orderLoadedData_3()
     {
-        // Template:
-        // group.GroupBy(dob.ToDate('yyyy'),'yeargroup','year')
-        //           .OrderBy(year,'D')
-        // Source: "templates/birthdays.template":14:14
-        object? applyOrderBy() => Unsupported(
-            "Call OrderBy",
-            "templates/birthdays.template:14:14",
-            () => Context.GroupBy(Context.Current, itemContext => new Birthdays(itemContext).renderToDate_4(), "dob.ToDate('yyyy')", new object?[] { "yeargroup", "year" }, false),
-            () => new object?[] { Get("year"), "D" });
+        return Context.OrderBy(Context.GroupBy(Context.Current, itemContext => new Birthdays(itemContext).renderToDate_4(), "dob.ToDate('yyyy')", new object?[] { "yeargroup", "year" }, false), itemContext => itemContext.Lookup("year"), "year", new object?[] { "D" }, false);
+    }
 
-        return applyOrderBy();
+    // Template:
+    // yeargroup
+    //           .OrderBy(dob, 'A')
+    // Source: "templates/birthdays.template":16:7
+    private object? orderLoadedData_4()
+    {
+        return Context.OrderBy(Context.Current, itemContext => itemContext.Lookup("dob"), "dob", new object?[] { "A" }, false);
     }
 
     internal EvaluationContext includeBySign()
@@ -510,6 +467,14 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
         EvaluationContext included = Context;
         _ = new Birthdays(included).date();
         return included;
+    }
+
+    // Template:
+    // '/data/famousBirthdays'.OrderBy(lname.ToUpper())
+    // Source: "templates/birthdays.template":21:15
+    private object? orderLoadedData_5()
+    {
+        return Context.OrderBy(Context.Current, itemContext => new Birthdays(itemContext).renderToUpper(), "lname.ToUpper()", new object?[] {  }, false);
     }
 
     internal EvaluationContext includeUngrouped()

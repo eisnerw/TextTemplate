@@ -207,26 +207,8 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/events.template":2:67
     private TemplateContent renderToUpper()
     {
-        // Template:
-        // start.ToDate('HHmm')
-        // Source: "templates/events.template":4:19
-        object? applyToDate() => Unsupported(
-            "Call ToDate",
-            "templates/events.template:4:19",
-            () => Get("start"),
-            () => new object?[] { "HHmm" });
-
-        // Template:
-        // group.OrderBy(start.ToDate('HHmm'))
-        // Source: "templates/events.template":4:5
-        object? applyOrderBy() => Unsupported(
-            "Call OrderBy",
-            "templates/events.template:4:5",
-            () => Get("group"),
-            () => new object?[] { applyToDate() });
-
         object? toUpper = EvaluationContext.Invoke(MethodInput("start"), methodValue => Builtins.ToUpper(methodValue));
-        object? orderBy = InContext(applyOrderBy(), dataContext => dataContext.Each(itemContext => new Events(itemContext).renderFormatTimes()));
+        object? orderBy = InContext(Context.OrderBy(MethodInput(itemContext => itemContext.Lookup("group")), itemContext => new Events(itemContext).renderToDate_2(), "start.ToDate('HHmm')", new object?[] {  }, true), dataContext => dataContext.Each(itemContext => new Events(itemContext).renderFormatTimes()), null, dataContext => new Events(dataContext).orderLoadedData());
 
         return Line($$"""
             {{toUpper}} 
@@ -252,6 +234,23 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     }
 
     // Template:
+    // start.ToDate('HHmm')
+    // Source: "templates/events.template":4:19
+    private object? renderToDate_2()
+    {
+        // Template:
+        // start.ToDate('HHmm')
+        // Source: "templates/events.template":4:19
+        object? applyToDate() => Unsupported(
+            "Call ToDate",
+            "templates/events.template:4:19",
+            () => Get("start"),
+            () => new object?[] { "HHmm" });
+
+        return applyToDate();
+    }
+
+    // Template:
     // start.ToDate('YYYY-MM-DDT00:00:00')
     // Source: "templates/events.template":2:12
     private object? renderToDate()
@@ -274,6 +273,14 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     private object? groupLoadedData()
     {
         return Context.GroupBy(Context.Current, itemContext => new Events(itemContext).renderToDate(), "start.ToDate('YYYY-MM-DDT00:00:00')", new object?[] { "group", "start" }, false);
+    }
+
+    // Template:
+    // group.OrderBy(start.ToDate('HHmm'))
+    // Source: "templates/events.template":4:5
+    private object? orderLoadedData()
+    {
+        return Context.OrderBy(Context.Current, itemContext => new Events(itemContext).renderToDate_2(), "start.ToDate('HHmm')", new object?[] {  }, false);
     }
 
     internal EvaluationContext includeSameDay()
@@ -350,7 +357,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/events.template":1:1
     private TemplateContent renderEvents()
     {
-        object? groupBy = InContext(Context.GroupBy(MethodInput(itemContext => itemContext.Lookup("^")), itemContext => new Events(itemContext).renderToDate(), "start.ToDate('YYYY-MM-DDT00:00:00')", new object?[] { "group", "start" }, true), dataContext => new Events(dataContext).renderDateFormat(), null, dataContext => new Events(dataContext).groupLoadedData());
+        object? groupBy = InContext(Context.GroupBy(Get("^"), itemContext => new Events(itemContext).renderToDate(), "start.ToDate('YYYY-MM-DDT00:00:00')", new object?[] { "group", "start" }, true), dataContext => new Events(dataContext).renderDateFormat(), null, dataContext => new Events(dataContext).groupLoadedData());
 
         return Line($$"""
             

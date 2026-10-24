@@ -1,0 +1,575 @@
+[
+  {
+    "name": "order-default",
+    "script": "{rows.OrderBy(k):[{name}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "A\nB1\nB2"
+  },
+  {
+    "name": "order-asc",
+    "script": "{rows.OrderBy(k,'asc'):[{name}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "A\nB1\nB2"
+  },
+  {
+    "name": "order-desc",
+    "script": "{rows.OrderBy(k,'desc'):[{name}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "B1\nB2\nA"
+  },
+  {
+    "name": "order-unique",
+    "script": "{rows.OrderBy(k,'u'):[{name}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "A\nB1"
+  },
+  {
+    "name": "order-invalid",
+    "script": "{rows.OrderBy(k,'ascending'):[{name}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "B1\nA\nB2",
+    "exitCode": 1
+  },
+  {
+    "name": "order-spaces",
+    "script": "{rows.OrderBy(k,' A '):[{name}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "B1\nA\nB2",
+    "exitCode": 1
+  },
+  {
+    "name": "order-extra",
+    "script": "{rows.OrderBy(k,'A','extra'):[{name}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "B1\nA\nB2",
+    "exitCode": 1
+  },
+  {
+    "name": "order-no-args",
+    "script": "{rows.OrderBy():[{name}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "B1\nA\nB2",
+    "exitCode": 1
+  },
+  {
+    "name": "order-formula",
+    "script": "{rows.OrderBy(k.ToUpper()):[{name}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "A\nB1\nB2"
+  },
+  {
+    "name": "order-template",
+    "script": "{rows.OrderBy([{k}]):[{name}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "A\nB1\nB2"
+  },
+  {
+    "name": "order-numeric",
+    "script": "{rows.OrderBy(k):[{k}]}",
+    "data": {
+      "rows": [
+        {
+          "k": 2
+        },
+        {
+          "k": 10
+        },
+        {
+          "k": 1
+        },
+        {
+          "k": "a"
+        },
+        {
+          "k": "A"
+        },
+        {
+          "k": "é"
+        },
+        {
+          "k": "😀"
+        }
+      ]
+    },
+    "expected": "1\n10\n2\nA\na\né\n😀"
+  },
+  {
+    "name": "order-missing",
+    "script": "{rows.OrderBy(k):[{name}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "absent"
+        },
+        {
+          "k": null,
+          "name": "null"
+        },
+        {
+          "k": "",
+          "name": "empty"
+        },
+        {
+          "k": false,
+          "name": "false"
+        },
+        {
+          "k": 0,
+          "name": "zero"
+        }
+      ]
+    },
+    "expected": "zero\nabsent\nempty\nfalse\nnull"
+  },
+  {
+    "name": "order-single",
+    "script": "{rows.OrderBy(k):[{name}:{^.label}]}",
+    "data": {
+      "label": "outer",
+      "rows": {
+        "k": "a",
+        "name": "one"
+      }
+    },
+    "expected": "one:outer"
+  },
+  {
+    "name": "order-parent",
+    "script": "{rows.OrderBy(k):[{name}:{^.k}:{^.^.label}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ],
+      "label": "outer"
+    },
+    "expected": "A:a, b, b:outer\nB1:a, b, b:outer\nB2:a, b, b:outer"
+  },
+  {
+    "name": "order-absent",
+    "script": "{absent.OrderBy(k.ToDate())}",
+    "data": {},
+    "expected": ""
+  },
+  {
+    "name": "order-empty",
+    "script": "{rows.OrderBy(k.ToDate()).Count()}",
+    "data": {
+      "rows": []
+    },
+    "expected": "0"
+  },
+  {
+    "name": "order-root",
+    "script": "{*.OrderBy(k):[{name}]}",
+    "data": [
+      {
+        "k": "b",
+        "name": "B1"
+      },
+      {
+        "k": "a",
+        "name": "A"
+      },
+      {
+        "k": "b",
+        "name": "B2"
+      }
+    ],
+    "expected": "",
+    "exitCode": 1
+  },
+  {
+    "name": "order-string",
+    "script": "{'abc'.OrderBy(k)}",
+    "data": {},
+    "expected": "abc",
+    "exitCode": 1
+  },
+  {
+    "name": "order-url",
+    "script": "{'/data/people'.OrderBy(firstName)}",
+    "data": {},
+    "expected": "/data/people"
+  },
+  {
+    "name": "order-loaded-url",
+    "script": "{'/data/people'.OrderBy(firstName,'D'):[{firstName}]}",
+    "data": {},
+    "expected": "John\nDoris"
+  },
+  {
+    "name": "order-loaded-json",
+    "script": "{'[{\"k\":\"b\"},{\"k\":\"a\"}]'.OrderBy(k):[{k}]}",
+    "data": {},
+    "expected": "a\nb"
+  },
+  {
+    "name": "order-groups",
+    "script": "{rows.GroupBy(k,'members'):[{k}:{members.OrderBy(name,'D'):[{name}]}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "a:A\nb:\n   B2\n   B1"
+  },
+  {
+    "name": "order-chain",
+    "script": "{rows.OrderBy(name,'D').OrderBy(k):[{name}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "A\nB2\nB1"
+  },
+  {
+    "name": "order-dollars",
+    "script": "{rows.#sort('!')}\nSubtemplates:\n{#sort:[{$0.OrderBy([{$1}{k}]):[{name}]}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B1"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B2"
+        }
+      ]
+    },
+    "expected": "A\nB1\nB2"
+  },
+  {
+    "name": "order-prototype",
+    "script": "{rows.OrderBy(k):[{name.IfMissing('empty')}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "toString",
+          "name": "toString"
+        },
+        {
+          "k": "constructor",
+          "name": "constructor"
+        },
+        {
+          "k": "__proto__",
+          "name": "__proto__"
+        },
+        {
+          "k": "z",
+          "name": "z"
+        }
+      ]
+    },
+    "expected": "empty\nconstructor\nempty\ntoString\nz"
+  },
+  {
+    "name": "order-prototype-unique",
+    "script": "{rows.OrderBy(k,'U'):[{name.IfMissing('empty')}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "toString",
+          "name": "toString"
+        },
+        {
+          "k": "constructor",
+          "name": "constructor"
+        },
+        {
+          "k": "__proto__",
+          "name": "__proto__"
+        },
+        {
+          "k": "z",
+          "name": "z"
+        }
+      ]
+    },
+    "expected": "empty\nempty\nz"
+  },
+  {
+    "name": "order-parent-receiver",
+    "script": "{^.OrderBy(k):[{name}]}",
+    "data": [
+      {
+        "k": "b",
+        "name": "B"
+      },
+      {
+        "k": "a",
+        "name": "A"
+      }
+    ],
+    "expected": "A\nB"
+  },
+  {
+    "name": "order-scalar-list",
+    "script": "{rows.OrderBy(_):[{_}]}",
+    "data": {
+      "rows": [
+        "z",
+        "a",
+        "a"
+      ]
+    },
+    "expected": "a\na\nz"
+  },
+  {
+    "name": "order-unique-singleton",
+    "script": "{rows.OrderBy(k,'U').Count()}",
+    "data": {
+      "rows": [
+        {
+          "k": "a"
+        },
+        {
+          "k": "a"
+        }
+      ]
+    },
+    "expected": "1"
+  },
+  {
+    "name": "order-dynamic-mode",
+    "script": "{rows.OrderBy(k,mode):[{name}]}",
+    "data": {
+      "mode": "dEsC",
+      "rows": [
+        {
+          "k": "a",
+          "name": "A"
+        },
+        {
+          "k": "b",
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "B\nA"
+  },
+  {
+    "name": "order-date-key",
+    "script": "{[ {rows.OrderBy(dob):[{name}]}].@DateTest(/^dob$/)}",
+    "data": {
+      "rows": [
+        {
+          "dob": "2020-01-01",
+          "name": "B"
+        },
+        {
+          "dob": "2000-01-01",
+          "name": "A"
+        }
+      ]
+    },
+    "expected": " B\n A"
+  },
+  {
+    "name": "order-dollar-removal",
+    "script": "{rows.#sort('outer')}\nSubtemplates:\n{#sort:[{$0.OrderBy([{$1}{k}]):[{name}:{$1.IfMissing('gone')}]}]}",
+    "data": {
+      "rows": [
+        {
+          "k": "b",
+          "name": "B",
+          "$1": "inner"
+        },
+        {
+          "k": "a",
+          "name": "A"
+        }
+      ]
+    },
+    "expected": "A:gone\nB:gone"
+  }
+]

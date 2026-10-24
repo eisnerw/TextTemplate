@@ -119,19 +119,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/elastic.template":2:2
     private TemplateContent renderContent()
     {
-        // Template:
-        // 'fname,lname,isAlive'
-        //   .#elasticQuery(
-        //      'lname:c* AND fname:c*',1000
-        // ).OrderBy(lname)
-        // Source: "templates/elastic.template":2:4
-        object? applyOrderBy() => Unsupported(
-            "Call OrderBy",
-            "templates/elastic.template:2:4",
-            () => EvaluationContext.Invoke(MethodInput(itemContext => "fname,lname,isAlive"), methodValue => ApplySubtemplate("elasticQuery", methodValue, "lname:c* AND fname:c*", EvaluationContext.ParseInteger("1000"))),
-            () => new object?[] { Get("lname") });
-
-        object? orderBy = InContext(applyOrderBy(), dataContext => new Elastic(dataContext).renderFalsy());
+        object? orderBy = InContext(Context.OrderBy(EvaluationContext.Invoke(MethodInput(itemContext => "fname,lname,isAlive"), methodValue => ApplySubtemplate("elasticQuery", methodValue, "lname:c* AND fname:c*", EvaluationContext.ParseInteger("1000"))), itemContext => itemContext.Lookup("lname"), "lname", new object?[] {  }, true), dataContext => new Elastic(dataContext).renderFalsy(), null, dataContext => new Elastic(dataContext).orderLoadedData());
 
         return Line($"{orderBy}");
     }
@@ -169,6 +157,17 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
         object? elasticSpec = EvaluationContext.Invoke(MethodInput(itemContext => "fname,lname,isAlive"), methodValue => ApplySubtemplate("elasticSpec", methodValue, "lname:c* AND fname:c*", EvaluationContext.ParseInteger("1000")));
 
         return Line($"{elasticSpec}");
+    }
+
+    // Template:
+    // 'fname,lname,isAlive'
+    //   .#elasticQuery(
+    //      'lname:c* AND fname:c*',1000
+    // ).OrderBy(lname)
+    // Source: "templates/elastic.template":2:4
+    private object? orderLoadedData()
+    {
+        return Context.OrderBy(EvaluationContext.Invoke(Context.Current, methodValue => ApplySubtemplate("elasticQuery", methodValue, "lname:c* AND fname:c*", EvaluationContext.ParseInteger("1000"))), itemContext => itemContext.Lookup("lname"), "lname", new object?[] {  }, false);
     }
 
     internal EvaluationContext includeElasticQuery()
