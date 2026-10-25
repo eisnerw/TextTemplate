@@ -519,7 +519,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
                 annotatedContext => annotatedContext.WithBulletStyle("I.", "(a)", "•", "1."),
                 annotatedContext => annotatedContext.WithBulletMode("explicit")
             },
-            annotatedContext => annotatedContext.Each(itemContext => new Startup(itemContext).renderIntro()));
+            annotatedContext => annotatedContext.Receiver(itemContext => new Startup(itemContext).renderIntro()));
     }
 
     // Template:
@@ -665,33 +665,33 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         object? substr = EvaluationContext.Invoke(MethodInput(itemContext => " substringy"), methodValue_3 => Builtins.Substr(methodValue_3, EvaluationContext.ParseInteger("1"), EvaluationContext.ParseInteger("9")));
         object? align = EvaluationContext.Invoke(MethodInput(itemContext => "padding"), methodValue_4 => Builtins.Align(methodValue_4, EvaluationContext.ParseInteger("9"), "C", "-"));
         object? toUpper = EvaluationContext.Invoke(MethodInput(itemContext => "case"), methodValue_5 => Builtins.ToUpper(methodValue_5));
-        object? choice = (Context.TestCondition(EvaluationContext.Invoke(MethodInput(itemContext => "true"), methodValue_6 => Builtins.Matches(methodValue_6, "yes", "1", new TemplateRegex("/True/i", "templates/startup.template:52:33")))) ? Each(itemContext => Line($"test")) : Each(itemContext => Line($"fail")));
+        object? choice = (Context.TestCondition(EvaluationContext.Invoke(MethodInput(itemContext => "true"), methodValue_6 => Builtins.Matches(Context, methodValue_6, "yes", "1", new TemplateRegex("/True/i", "templates/startup.template:52:33")))) ? Each(itemContext => Line($"test")) : Each(itemContext => Line($"fail")));
         object? content_8 = InContext("{\"element1\":\"multiple\",\"element2\":\"values\"}", dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderChoice()));
         object? content_9 = Context.CreateBullet("\n   \u0001{.} ");
         object? subexample = Each(itemContext => itemContext.Named("subexample"));
         object? content_10 = Context.CreateBullet("\n   \u0001{.} ");
-        object? groupBy = InContext(Context.GroupBy(EvaluationContext.Invoke(SubtemplateInput("externalData"), methodValue_7 => Builtins.Where(methodValue_7)), itemContext => itemContext.Lookup("sign"), "sign", new object?[] { "group" }, true), dataContext => new Startup(dataContext).renderDateTest(), null, dataContext => new Startup(dataContext).groupLoadedData());
+        object? groupBy = InContext(Context.GroupBy(Context.Where(MethodInput(itemContext => itemContext.Named("externalData")), itemContext => new Startup(itemContext).renderContent()), itemContext => itemContext.Lookup("sign"), "sign", new object?[] { "group" }, true), dataContext => new Startup(dataContext).renderDateTest(), null, dataContext => new Startup(dataContext).groupLoadedData());
         object? content_11 = Context.CreateBullet("\n   \u0001{.} ");
-        object? where = InContext(EvaluationContext.Invoke(SubtemplateInput("externalData"), methodValue_8 => Builtins.Where(methodValue_8)), dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderDob()));
+        object? where = InContext(Context.Where(MethodInput(itemContext => itemContext.Named("externalData")), itemContext => new Startup(itemContext).renderContent_2()), dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderDob()), null, dataContext => new Startup(dataContext).filterLoadedData());
         object? content_12 = Context.CreateBullet("\n   \u0001{.} ");
         object? content_13 = InContext("{\"data\":\"Joan's <data>\"}", dataContext => new Startup(dataContext).renderEncodeFor());
         object? content_14 = Context.CreateBullet("\n   \u0001{.} ");
-        object? where_2 = InContext(EvaluationContext.Invoke(SubtemplateInput("externalData"), methodValue_9 => Builtins.Where(methodValue_9)), dataContext => new Startup(dataContext).renderJoin_2());
+        object? where_2 = InContext(Context.Where(MethodInput(itemContext => itemContext.Named("externalData")), itemContext => new Startup(itemContext).renderContent_3()), dataContext => new Startup(dataContext).renderJoin_2(), null, dataContext => new Startup(dataContext).filterLoadedData_2());
         object? content_15 = Context.CreateBullet("\n   \u0001{.} ");
         object? content_16 = Context.CreateBullet("\n\u0001{.} ");
         object? content_17 = Context.CreateBullet("\n     \u0001{.} ");
-        object? click = EvaluationContext.Invoke(MethodInput(itemContext => "Microsoft's Monaco Editor"), methodValue_10 => ApplySubtemplate("Click", methodValue_10, "github.com/microsoft/monaco-editor"));
+        object? click = EvaluationContext.Invoke(MethodInput(itemContext => "Microsoft's Monaco Editor"), methodValue_7 => ApplySubtemplate("Click", methodValue_7, "github.com/microsoft/monaco-editor"));
         object? content_18 = Context.CreateBullet("\n     \u0001{.} ");
-        object? click_2 = EvaluationContext.Invoke(MethodInput(itemContext => "ANTLR (ANother Tool for Language Recognition)"), methodValue_11 => ApplySubtemplate("Click", methodValue_11, "www.antlr.org/", "click to go to the ANTLR website"));
+        object? click_2 = EvaluationContext.Invoke(MethodInput(itemContext => "ANTLR (ANother Tool for Language Recognition)"), methodValue_8 => ApplySubtemplate("Click", methodValue_8, "www.antlr.org/", "click to go to the ANTLR website"));
         object? content_19 = Context.CreateBullet("\n     \u0001{.} ");
-        object? click_3 = EvaluationContext.Invoke(MethodInput(itemContext => "The \"calc-monaco-editor\" project"), methodValue_12 => ApplySubtemplate("Click", methodValue_12, "github.com/Strumenta/calc-monaco-editor"));
-        object? click_4 = EvaluationContext.Invoke(MethodInput(itemContext => "article"), methodValue_13 => ApplySubtemplate("Click", methodValue_13, "tomassetti.me/writing-a-browser-based-editor-using-monaco-and-antlr/", "Click to go to the article"));
+        object? click_3 = EvaluationContext.Invoke(MethodInput(itemContext => "The \"calc-monaco-editor\" project"), methodValue_9 => ApplySubtemplate("Click", methodValue_9, "github.com/Strumenta/calc-monaco-editor"));
+        object? click_4 = EvaluationContext.Invoke(MethodInput(itemContext => "article"), methodValue_10 => ApplySubtemplate("Click", methodValue_10, "tomassetti.me/writing-a-browser-based-editor-using-monaco-and-antlr/", "Click to go to the article"));
         object? content_20 = Context.CreateBullet("\n     \u0001{.} ");
-        object? click_5 = EvaluationContext.Invoke(MethodInput(itemContext => "Moment.js"), methodValue_14 => ApplySubtemplate("Click", methodValue_14, "momentjs.com", "Click to go to the website"));
+        object? click_5 = EvaluationContext.Invoke(MethodInput(itemContext => "Moment.js"), methodValue_11 => ApplySubtemplate("Click", methodValue_11, "momentjs.com", "Click to go to the website"));
         object? content_21 = Context.CreateBullet("\n\u0001{.} ");
-        object? click_6 = EvaluationContext.Invoke(MethodInput(itemContext => "here"), methodValue_15 => ApplySubtemplate("Click", methodValue_15, "/load/docs", "Click to see the documentation using TextTemplate"));
-        object? click_7 = EvaluationContext.Invoke(MethodInput(itemContext => "here"), methodValue_16 => ApplySubtemplate("Click", methodValue_16, "/runonserver/docs", "Click to see the documentation rendered on the server"));
-        object? click_8 = EvaluationContext.Invoke(MethodInput(itemContext => "/runonserver/events"), methodValue_17 => ApplySubtemplate("Click", methodValue_17, "/runonserver/events", "Click to see the events template"));
+        object? click_6 = EvaluationContext.Invoke(MethodInput(itemContext => "here"), methodValue_12 => ApplySubtemplate("Click", methodValue_12, "/load/docs", "Click to see the documentation using TextTemplate"));
+        object? click_7 = EvaluationContext.Invoke(MethodInput(itemContext => "here"), methodValue_13 => ApplySubtemplate("Click", methodValue_13, "/runonserver/docs", "Click to see the documentation rendered on the server"));
+        object? click_8 = EvaluationContext.Invoke(MethodInput(itemContext => "/runonserver/events"), methodValue_14 => ApplySubtemplate("Click", methodValue_14, "/runonserver/events", "Click to see the events template"));
         object? examples = Each(itemContext => itemContext.Named("examples"));
         object? notes = Each(itemContext => itemContext.Named("notes"));
 
@@ -752,9 +752,17 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             {
                 annotatedContext => annotatedContext.WithFalsy(new TemplateRegex("/^0$/", "templates/startup.template:86:30"))
             },
-            annotatedContext => annotatedContext.Each(itemContext => itemContext.Named("deadoralive")));
+            annotatedContext => annotatedContext.Receiver(itemContext => itemContext.Named("deadoralive")));
 
         return Line($"{falsy}");
+    }
+
+    // Template:
+    // dob.Substr(5,5) = '01-25'
+    // Source: "templates/startup.template":85:29
+    private bool renderContent_3()
+    {
+        return EvaluationContext.Compare(EvaluationContext.Invoke(MethodInput("dob"), methodValue => Builtins.Substr(methodValue, EvaluationContext.ParseInteger("5"), EvaluationContext.ParseInteger("5"))), "=", "01-25");
     }
 
     // Template:
@@ -811,6 +819,14 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     }
 
     // Template:
+    // dob.Substr(0,7) = '1967-10'
+    // Source: "templates/startup.template":72:29
+    private bool renderContent_2()
+    {
+        return EvaluationContext.Compare(EvaluationContext.Invoke(MethodInput("dob"), methodValue => Builtins.Substr(methodValue, EvaluationContext.ParseInteger("0"), EvaluationContext.ParseInteger("7"))), "=", "1967-10");
+    }
+
+    // Template:
     // [{sign} 
     //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
     //                .@DateFormat('M/D/YYYY')
@@ -824,7 +840,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
                 annotatedContext => annotatedContext.WithDateFormat("templates/startup.template:65:37", "M/D/YYYY"),
                 annotatedContext => annotatedContext.WithDateTest("templates/startup.template:65:37", new TemplateRegex("/^d/i", "templates/startup.template:68:27"))
             },
-            annotatedContext => annotatedContext.Each(itemContext => new Startup(itemContext).renderSign()));
+            annotatedContext => annotatedContext.Receiver(itemContext => new Startup(itemContext).renderSign()));
     }
 
     // Template:
@@ -852,6 +868,14 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
         object? dob = Get("dob");
 
         return Line($"{fname} {lname} ({dob})");
+    }
+
+    // Template:
+    // dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D'
+    // Source: "templates/startup.template":64:31
+    private bool renderContent()
+    {
+        return (EvaluationContext.Compare(EvaluationContext.Invoke(MethodInput("dob"), methodValue => Context.ToDate("templates/startup.template:64:31", methodValue, "DD")), "=", "27") && EvaluationContext.Compare(EvaluationContext.Invoke(MethodInput("lname"), methodValue_2 => Builtins.Substr(methodValue_2, EvaluationContext.ParseInteger("0"), EvaluationContext.ParseInteger("1"))), "=", "D"));
     }
 
     // Template:
@@ -896,7 +920,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             {
                 annotatedContext => annotatedContext.WithMissingValue("missing")
             },
-            annotatedContext => annotatedContext.Each(itemContext => new Startup(itemContext).renderTestResult()));
+            annotatedContext => annotatedContext.Receiver(itemContext => new Startup(itemContext).renderTestResult()));
     }
 
     // Template:
@@ -924,7 +948,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
             {
                 annotatedContext => annotatedContext.WithBulletStyle("-")
             },
-            annotatedContext => annotatedContext.Each(itemContext => new Startup(itemContext).renderAndedPhrasesEGO()));
+            annotatedContext => annotatedContext.Receiver(itemContext => new Startup(itemContext).renderAndedPhrasesEGO()));
     }
 
     // Template:
@@ -991,7 +1015,7 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":64:11
     private object? groupLoadedData()
     {
-        return Context.GroupBy(EvaluationContext.Invoke(Context.Current, methodValue => Builtins.Where(methodValue)), itemContext => itemContext.Lookup("sign"), "sign", new object?[] { "group" }, false);
+        return Context.GroupBy(Context.Where(Context.Current, itemContext => new Startup(itemContext).renderContent()), itemContext => itemContext.Lookup("sign"), "sign", new object?[] { "group" }, false);
     }
 
     // Template:
@@ -1000,6 +1024,22 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     private object? orderLoadedData()
     {
         return Context.OrderBy(Context.Current, itemContext => itemContext.Lookup("lname"), "lname", new object?[] {  }, false);
+    }
+
+    // Template:
+    // #externalData.Where(dob.Substr(0,7) = '1967-10')
+    // Source: "templates/startup.template":72:9
+    private object? filterLoadedData()
+    {
+        return Context.Where(Context.Current, itemContext => new Startup(itemContext).renderContent_2());
+    }
+
+    // Template:
+    // #externalData.Where(dob.Substr(5,5) = '01-25')
+    // Source: "templates/startup.template":85:9
+    private object? filterLoadedData_2()
+    {
+        return Context.Where(Context.Current, itemContext => new Startup(itemContext).renderContent_3());
     }
 
     internal EvaluationContext includeOverview()

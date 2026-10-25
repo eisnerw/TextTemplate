@@ -113,7 +113,7 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
             {
                 annotatedContext => annotatedContext.Include(EvaluationContext.Compose("#doInclude"))
             },
-            annotatedContext => annotatedContext.Each(itemContext => new Simpledata(itemContext).renderContent())) : Each(itemContext => Line($"no pets")));
+            annotatedContext => annotatedContext.Receiver(itemContext => new Simpledata(itemContext).renderContent())) : Each(itemContext => Line($"no pets")));
 
         return Line($"Hello {lastName}, {firstName} with {petsResult}!!");
     }

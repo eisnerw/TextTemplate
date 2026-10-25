@@ -446,7 +446,7 @@ indentation. Changing bullet styles resolves that scope before restoring the cal
 styles, matching Node. A missing line can still establish a bullet level.
 Characterization cases are in `bullet-cases.json`; the unfiltered outline fixture
 isolates layout from the unfinished `Where` filter. Dynamic annotation arguments
-remain TODOs. No full-outline filtering parity is claimed.
+remain TODOs. The complete outline fixture now matches Node (see collection parity below).
 
 `IfMissing` returns its first argument for Missing, empty string, zero, or false;
 other values pass through. Explicit null receivers remain null, matching the
@@ -463,10 +463,10 @@ arguments as `$1`, `$2`, etc. These retain their existing data parent links; the
 method call context is a child of the caller. Node comparisons cover field lookup,
 list counts and iteration, arguments, and parent access (`named-data-cases.json`).
 
-TODO: `Where` is currently an authorized pass-through: it returns its receiver
-unchanged and does not evaluate its predicate. Implement per-item filtering before
-claiming legacy parity. TODOs in source also track dynamic style arguments,
-and the unimplemented conditional `Count` form.
+`Where` evaluates a deferred predicate in each data item context, propagates caller
+`$` bindings, preserves missing results and scalar pass-through, and replays the
+filter after loading a resource context. `where-cases.json` characterizes these
+behaviors. Dynamic style arguments and conditional `Count` remain unfinished.
 
 `Case(match, result, ..., default)` compiles to a C# switch with lazy guarded
 cases and result branches. Matching preserves legacy ordinal string equality and
@@ -587,9 +587,8 @@ previously documented unsupported format tokens remain source-located stubs.
 Unselected branches do not execute date conversion. Generic stub regression tests
 now use the still-unimplemented `ToJson` method.
 
-After regeneration, startup advances to `Call EncodeFor` at
-`templates/startup.template:80:38`. Full startup parity remains unfinished;
-`Where` is still the documented temporary pass-through.
+The subsequent collection parity work below establishes exact startup output,
+including filtering, encoding, dates, and nested list layout.
 
 
 ### EncodeFor and EncodeDataFor compatibility
@@ -617,3 +616,43 @@ Recognized date receivers for `EncodeFor` remain explicit source-located stubs.
 The regenerated startup command now exits successfully. Full startup output parity
 is not claimed: `Where` still returns its receiver without filtering, so startup
 renders additional records. Implement and characterize filtering next.
+
+### Complete reference collection parity (2026-10-25)
+
+`python3 tools/parity/compare.py --output /tmp/texttemplate-parity` generates a
+standalone executable and compares all 13 unchanged file templates using identical
+initial data and UTC. Ten local templates match byte for byte: birthdays, bullets,
+docs, events, outline, simple, simpledata, simplelist, startup, and tests. The three
+HTTP-dependent templates (elastic, web, wikipedia) fail resource resolution in both
+offline hosts and are explicitly reported as unavailable, not passing renders.
+See `tools/parity/README.md` and the frozen `collection-golden/manifest.json` for
+input hashes, interpreter provenance, output sizes, and the reproducible contract.
+
+Corrections established by these comparisons:
+
+- `Where` evaluates per item, carries caller `$` bindings, clones selected data,
+  respects list falsy annotations, and replays on loaded resource contexts.
+- Date wrappers support upper/lower casing through the formatted date string.
+- The legacy `parseTemplate` leading-comment workaround removes only a leading
+  text group consisting of exactly one newline; ordinary leading text is retained.
+  The grammar and syntax tree remain unchanged; generation reproduces this behavior.
+- Plain indentation supersedes inherited bullets at nested array boundaries,
+  rather than before every output fragment.
+- Annotation-only calls on ordinary template receivers compose each list item to
+  an argument value, as `invokeMethods` does. This boundary matters for nested lists
+  in startup; flattening elsewhere still loses required structure.
+- `Matches`/`Assert` resolve bullet markers for comparison. Receiver comparison
+  restores the previous bullet state; argument comparison follows the legacy state
+  behavior. Successful assertions without replacement return the original value.
+
+`where-cases.json` keeps focused Node outputs, and the collection regression builds
+without TextTemplate runtime references and compares live Node output and frozen
+goldens. Exact success on these fixtures does not establish all-language parity;
+previously documented stubs (including `Count(predicate)`) remain.
+
+The existing Node transport tests previously assumed `reference/templates` still
+equaled the original JSON scripts. Four comparisons failed that assumption (simple
+and simpledata variants). Those tests now materialize the frozen JSON templates and
+subtemplates into temporary files before comparing loading modes. Original JSON
+goldens and reference files are unchanged; the new collection goldens cover the
+actual current file scripts independently.

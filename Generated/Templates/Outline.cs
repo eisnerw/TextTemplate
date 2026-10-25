@@ -125,7 +125,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/outline.template":28:18
     private TemplateContent IsDomesticated()
     {
-        object? matches = EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Matches(methodValue, "dog", "cat"));
+        object? matches = EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Matches(Context, methodValue, "dog", "cat"));
 
         return Line($"{matches}");
     }
@@ -135,9 +135,17 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/outline.template":27:20
     private TemplateContent NonDomesticated()
     {
-        object? where = EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Where(methodValue));
+        object? where = Context.Where(MethodInput(itemContext => itemContext.Lookup("$0")), itemContext => new Outline(itemContext).renderContent());
 
         return Line($"{where}");
+    }
+
+    // Template:
+    // !type.#IsDomesticated()
+    // Source: "templates/outline.template":27:31
+    private bool renderContent()
+    {
+        return !(Context.TestCondition(EvaluationContext.Invoke(MethodInput("type"), methodValue => ApplySubtemplate("IsDomesticated", methodValue))));
     }
 
     // Template:
@@ -145,9 +153,17 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/outline.template":26:17
     private TemplateContent Domesticated()
     {
-        object? where = EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Where(methodValue));
+        object? where = Context.Where(MethodInput(itemContext => itemContext.Lookup("$0")), itemContext => new Outline(itemContext).renderIsDomesticated());
 
         return Line($"{where}");
+    }
+
+    // Template:
+    // type.#IsDomesticated()
+    // Source: "templates/outline.template":26:28
+    private object? renderIsDomesticated()
+    {
+        return EvaluationContext.Invoke(MethodInput("type"), methodValue => ApplySubtemplate("IsDomesticated", methodValue));
     }
 
     // Template:
@@ -234,7 +250,7 @@ internal sealed class Outline(EvaluationContext context) : TemplateUnit(context)
                 annotatedContext => annotatedContext.WithMultilineStyle("IndentAllButFirst", "Padded"),
                 annotatedContext => annotatedContext.WithMissingValue("No Information Provided")
             },
-            annotatedContext => annotatedContext.Each(itemContext => new Outline(itemContext).renderQuoted()));
+            annotatedContext => annotatedContext.Receiver(itemContext => new Outline(itemContext).renderQuoted()));
     }
 
     // Template:

@@ -30,7 +30,59 @@ public sealed class GenerationTests
         Assert.Fail($"{name}: first mismatch at {i}; expected {JsonSerializer.Serialize(expected[Math.Max(0, i - 25)..Math.Min(expected.Length, i + 65)])}; actual {JsonSerializer.Serialize(actual[Math.Max(0, i - 25)..Math.Min(actual.Length, i + 65)])}");
     }
 
+    [Fact]
+    public void LocalReferenceTemplatesMatchNode()
+    {
+        string repository = Repository();
+        string root = Path.Combine(Path.GetTempPath(), "texttemplate-collection-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            var parsed = new TextTemplateCompiler().CompileDirectory(Path.Combine(repository, "reference"));
+            Assert.True(parsed.Success, string.Join("\n", parsed.Diagnostics));
+            var generated = new CSharpEmitter().Generate(parsed.Document!);
+            Assert.True(generated.Success, string.Join("\n", generated.Diagnostics));
+            foreach (var file in generated.Files)
+            {
+                string path = Path.Combine(root, file.Key);
+                Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                File.WriteAllText(path, file.Value);
+            }
+            File.WriteAllText(Path.Combine(root, "GeneratedTemplates.csproj"), """<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable></PropertyGroup></Project>""");
+            var build = Run("dotnet", root, "build", "--nologo", "-o", "output");
+            Assert.True(build.Exit == 0, build.Output + build.Error);
+            string emptyData = Path.Combine(root, "empty.json");
+            File.WriteAllText(emptyData, "{}");
+            var failures = new List<string>();
+            foreach (string source in Directory.GetFiles(Path.Combine(repository, "reference/templates"), "*.template").Order())
+            {
+                string name = Path.GetFileNameWithoutExtension(source);
+                // Both offline hosts reject these external HTTP dependencies. The full
+                // collection report runs them too and records them as unavailable.
+                if (name is "elastic" or "web" or "wikipedia") continue;
+                string data = Path.Combine(repository, "reference/data", name + ".json");
+                if (!File.Exists(data)) data = emptyData;
+                var expected = Run("node", repository, "tools/node-reference/cli.mjs", "--template", name,
+                    "--template-root", "reference", "--data-file", data);
+                var actual = Run("dotnet", root, "output/GeneratedTemplates.dll", "--template", name,
+                    "--data-file", data, "--data-root", Path.Combine(repository, "reference/data"));
+                try
+                {
+                    Assert.True(expected.Exit == 0, name + " Node: " + expected.Error);
+                    Assert.True(actual.Exit == 0, name + " C#: " + actual.Error);
+                    string golden = File.ReadAllText(Path.Combine(repository, "tests/node-reference/collection-golden", name + ".txt"));
+                    Match(golden, expected.Output, name + " Node golden input=" + data);
+                    Match(expected.Output, actual.Output, name + " input=" + data);
+                }
+                catch (Exception error) { failures.Add(error.Message); }
+            }
+            Assert.True(failures.Count == 0, string.Join("\n", failures));
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
     [Theory]
+    [InlineData("where")]
     [InlineData("order")]
     [InlineData("date")]
     [InlineData("todate")]
@@ -278,7 +330,7 @@ public sealed class GenerationTests
             Assert.Contains("dataContext => new Simpledata(dataContext)", simpledata);
             Assert.Contains("definitionContext => definitionContext.Each(itemContext =>", simpledata);
             Assert.Contains("annotatedContext => annotatedContext.Include", simpledata);
-            Assert.Contains("annotatedContext => annotatedContext.Each(itemContext =>", simpledata);
+            Assert.Contains("annotatedContext => annotatedContext.Receiver(itemContext =>", simpledata);
             Assert.DoesNotContain("child =>", simpledata);
             Assert.Contains("WithDefinitions(defineSubtemplates,", simpledata);
             Assert.Contains("private void defineSubtemplates(SubtemplateDefinitions definitions)", simpledata);

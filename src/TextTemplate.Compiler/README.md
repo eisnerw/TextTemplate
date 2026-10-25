@@ -365,7 +365,7 @@ indentation. Changing bullet styles resolves that scope before restoring the cal
 styles, matching Node. A missing line can still establish a bullet level.
 Characterization cases are in `bullet-cases.json`; the unfiltered outline fixture
 isolates layout from the unfinished `Where` filter. Dynamic annotation arguments
-remain TODOs. No full-outline filtering parity is claimed.
+remain TODOs. The complete outline fixture now matches Node (see collection parity below).
 
 `IfMissing` returns its first argument for Missing, empty string, zero, or false;
 other values pass through. Explicit null receivers remain null, matching the
@@ -382,10 +382,10 @@ arguments as `$1`, `$2`, etc. These retain their existing data parent links; the
 method call context is a child of the caller. Node comparisons cover field lookup,
 list counts and iteration, arguments, and parent access (`named-data-cases.json`).
 
-TODO: `Where` is currently an authorized pass-through: it returns its receiver
-unchanged and does not evaluate its predicate. Implement per-item filtering before
-claiming legacy parity. TODOs in source also track dynamic style arguments,
-and the unimplemented conditional `Count` form.
+`Where` evaluates a deferred predicate in each data item context, propagates caller
+`$` bindings, preserves missing results and scalar pass-through, and replays the
+filter after loading a resource context. `where-cases.json` characterizes these
+behaviors. Dynamic style arguments and conditional `Count` remain unfinished.
 
 `Case(match, result, ..., default)` compiles to a C# switch with lazy guarded
 cases and result branches. Matching preserves legacy ordinal string equality and
@@ -404,3 +404,12 @@ style choices from an unfiltered copy of the bullets template.
 `Compose()` renders structured content immediately, resolves bullet numbering, and
 then resets the bullet counter state, matching the interpreter. Missing and null
 receivers propagate unchanged. Node comparisons are in `compose-cases.json`.
+
+## Collection parity
+
+All ten local `reference/templates` fixtures now match the Node interpreter exactly.
+Run `python3 tools/parity/compare.py --output /tmp/texttemplate-parity` to compare
+all 13 templates and retain exact outputs and first-mismatch reports. Three HTTP
+fixtures remain unavailable to the offline hosts; they are not counted as matches.
+See [the comparison guide](../../tools/parity/README.md) for inputs, provenance,
+goldens, and the independent standalone regression test.

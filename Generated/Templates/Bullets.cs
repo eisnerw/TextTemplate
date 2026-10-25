@@ -76,7 +76,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
             {
                 annotatedContext => annotatedContext.WithBulletStyle(" I", "•", "A.", "(1)")
             },
-            annotatedContext => annotatedContext.Each(itemContext => Line($"")));
+            annotatedContext => annotatedContext.Receiver(itemContext => Line($"")));
     }
 
     // Template:
@@ -89,7 +89,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
             {
                 annotatedContext => annotatedContext.WithBulletStyle("")
             },
-            annotatedContext => annotatedContext.Each(itemContext => Line($"")));
+            annotatedContext => annotatedContext.Receiver(itemContext => Line($"")));
     }
 
     // Template:
@@ -102,7 +102,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
             {
                 annotatedContext => annotatedContext.WithBulletStyle("-")
             },
-            annotatedContext => annotatedContext.Each(itemContext => Line($"")));
+            annotatedContext => annotatedContext.Receiver(itemContext => Line($"")));
     }
 
     // Template:
@@ -115,7 +115,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
             {
                 annotatedContext => annotatedContext.WithBulletStyle("1", "1.1", "1.1.1", "1(a)")
             },
-            annotatedContext => annotatedContext.Each(itemContext => Line($"")));
+            annotatedContext => annotatedContext.Receiver(itemContext => Line($"")));
     }
 
     // Template:
@@ -128,7 +128,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
             {
                 annotatedContext => annotatedContext.WithBulletStyle("I.", "(a)", "•", "i.")
             },
-            annotatedContext => annotatedContext.Each(itemContext => Line($"")));
+            annotatedContext => annotatedContext.Receiver(itemContext => Line($"")));
     }
 
     // Template:
@@ -219,7 +219,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":30:18
     private TemplateContent IsDomesticated()
     {
-        object? matches = EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Matches(methodValue, "dog", "cat"));
+        object? matches = EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Matches(Context, methodValue, "dog", "cat"));
 
         return Line($"{matches}");
     }
@@ -229,9 +229,17 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":29:20
     private TemplateContent NonDomesticated()
     {
-        object? where = EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Where(methodValue));
+        object? where = Context.Where(MethodInput(itemContext => itemContext.Lookup("$0")), itemContext => new Bullets(itemContext).renderContent_2());
 
         return Line($"{where}");
+    }
+
+    // Template:
+    // !type.#IsDomesticated()
+    // Source: "templates/bullets.template":29:31
+    private bool renderContent_2()
+    {
+        return !(Context.TestCondition(EvaluationContext.Invoke(MethodInput("type"), methodValue => ApplySubtemplate("IsDomesticated", methodValue))));
     }
 
     // Template:
@@ -239,9 +247,17 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":28:17
     private TemplateContent Domesticated()
     {
-        object? where = EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Where(methodValue));
+        object? where = Context.Where(MethodInput(itemContext => itemContext.Lookup("$0")), itemContext => new Bullets(itemContext).renderIsDomesticated());
 
         return Line($"{where}");
+    }
+
+    // Template:
+    // type.#IsDomesticated()
+    // Source: "templates/bullets.template":28:28
+    private object? renderIsDomesticated()
+    {
+        return EvaluationContext.Invoke(MethodInput("type"), methodValue => ApplySubtemplate("IsDomesticated", methodValue));
     }
 
     // Template:
@@ -323,7 +339,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
             {
                 annotatedContext => annotatedContext.Include(EvaluationContext.Compose(annotatedContext.Each(includeArgumentContext => new Bullets(includeArgumentContext).renderContent())))
             },
-            annotatedContext => annotatedContext.Each(itemContext => new Bullets(itemContext).renderPeople()));
+            annotatedContext => annotatedContext.Receiver(itemContext => new Bullets(itemContext).renderPeople()));
     }
 
     // Template:
@@ -372,7 +388,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
             {
                 annotatedContext => annotatedContext.WithMissingValue("No Information Provided")
             },
-            annotatedContext => annotatedContext.Each(itemContext => new Bullets(itemContext).renderChoice()));
+            annotatedContext => annotatedContext.Receiver(itemContext => new Bullets(itemContext).renderChoice()));
     }
 
     // Template:

@@ -1,0 +1,19 @@
+Shows use of bullet styles as well as modular subtemplates, automatic bulleting, and indenting only for multiple values.  You can see different bullet styles by changing the parameter to #showStyles from 1 through 5
+
+People:
+   I. "JOHNSON, DORIS" 
+      (a) Lastname: Johnson   
+      (b) FirstName: Doris  
+      (c) Pets (3):  
+         • Domesticated: a friskie dog named Buddy  
+         • Non-domesticated(2): 
+            i. a nice lion named Ralph
+            ii. a nice tiger named Stripes
+   II. "SMITH, JOHN" 
+      (a) Lastname: Smith   
+      (b) FirstName: John  
+      (c) Pets (3):  
+         • Domesticated (2): 
+            i. a friskie dog named Toto
+            ii. a fishy cat named Dolly  
+         • Non-domesticated: a stripesy zebra named Stripes

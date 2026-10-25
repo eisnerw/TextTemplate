@@ -134,7 +134,7 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
             {
                 annotatedContext => annotatedContext.WithFalsy(new TemplateRegex("/0/", "templates/elastic.template:6:50"))
             },
-            annotatedContext => annotatedContext.Each(itemContext => new Elastic(itemContext).renderFname()));
+            annotatedContext => annotatedContext.Receiver(itemContext => new Elastic(itemContext).renderFname()));
     }
 
     // Template:

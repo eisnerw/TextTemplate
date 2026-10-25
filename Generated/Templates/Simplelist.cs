@@ -109,14 +109,14 @@ internal sealed class Simplelist(EvaluationContext context) : TemplateUnit(conte
     private TemplateContent renderSimplelist()
     {
         object? lastName = Get("lastName");
-        object? choice = (Context.TestCondition(EvaluationContext.Invoke(MethodInput("firstName"), methodValue => Builtins.Matches(methodValue, new TemplateRegex("/jo/i", "templates/simplelist.template:1:42")))) ? Each(itemContext => Line($"Mr. ")) : "");
+        object? choice = (Context.TestCondition(EvaluationContext.Invoke(MethodInput("firstName"), methodValue => Builtins.Matches(Context, methodValue, new TemplateRegex("/jo/i", "templates/simplelist.template:1:42")))) ? Each(itemContext => Line($"Mr. ")) : "");
         object? replace = EvaluationContext.Invoke(EvaluationContext.Invoke(MethodInput("firstName"), methodValue_2 => Builtins.ToLower(methodValue_2)), methodValue_3 => Builtins.Replace(methodValue_3, "john", Each(itemContext => new Simplelist(itemContext).renderToUpper())));
         object? petsResult = (IsTruthy("pets") ? Annotate(
             new Func<EvaluationContext, EvaluationContext>[]
             {
                 annotatedContext => annotatedContext.Include(EvaluationContext.Compose("#doInclude"))
             },
-            annotatedContext => annotatedContext.Each(itemContext => new Simplelist(itemContext).renderContent())) : Each(itemContext => Line($"no pets")));
+            annotatedContext => annotatedContext.Receiver(itemContext => new Simplelist(itemContext).renderContent())) : Each(itemContext => Line($"no pets")));
 
         return Line($"Hello {lastName}, {choice}{replace} with {petsResult}!!");
     }

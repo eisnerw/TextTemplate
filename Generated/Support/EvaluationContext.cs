@@ -419,6 +419,12 @@ internal sealed class EvaluationContext
         child.defaultIndent = amount is null ? null : new string(' ', (int)width);
         return child;
     }
+    internal string? RenderForMatch(string value, bool restoreState)
+    {
+        var previous = bulletState.Current;
+        try { return RenderValue(value); }
+        finally { if (restoreState) bulletState.Current = previous; }
+    }
     internal object? ComposeValue(object? value)
     {
         // callMethod propagates missing/null before reaching Compose.
@@ -520,6 +526,42 @@ internal sealed class EvaluationContext
                 data.Values["$" + (i + 1)] = argument is TemplateDate date ? date.Original : argument;
         }
         return new EvaluationContext(this, data).Named(name);
+    }
+    // callMethod Where: predicates run against each item with the caller's $ bindings.
+    internal object? Where(object? value, Func<EvaluationContext, object?>? predicate)
+    {
+        value = Intermediate(value);
+        if (value is null) return null;
+        if (predicate is null) throw new InvalidOperationException("ERROR: no condition specified for .Where()");
+        if (value is not Data data) return value;
+        Dictionary<string, object?> dollars = new(StringComparer.Ordinal);
+        if (Current is not null)
+            foreach (var entry in Current.Values)
+                if (entry.Key.StartsWith('$')) dollars[entry.Key] = Materialize(entry.Value, Current);
+        List<Data> matches = new();
+        foreach (Data item in data.Items ?? new List<Data> { data })
+        {
+            foreach (var entry in dollars) item.Values[entry.Key] = entry.Value;
+            object? selected = predicate(new EvaluationContext(this, item));
+            if (selected is object?[] sequence) selected = sequence.Length == 0 ? null : sequence[0];
+            selected = Intermediate(selected);
+            bool keep = Condition(selected) && !(data.Items is not null && selected is string text && (falsy?.Test(text) ?? false));
+            // The reference removes injected bindings only from accepted list items.
+            if (keep || data.Items is null)
+                foreach (string name in dollars.Keys) item.Values.Remove(name);
+            if (keep)
+            {
+                if (data.Items is not null)
+                    foreach (string name in new List<string>(item.Values.Keys))
+                        if (name.StartsWith('$')) item.Values.Remove(name);
+                matches.Add(item);
+            }
+        }
+        if (matches.Count == 0) return MissingValue("list");
+        if (matches.Count == 1) return CloneGroupData(matches[0], Current);
+        Data result = new(new(StringComparer.Ordinal), Current) { Items = new() };
+        foreach (Data item in matches) result.Items.Add(CloneGroupData(item, result));
+        return result;
     }
     // callMethod GroupBy: defer the key, preserve group members, and sort JS property keys.
     internal object? GroupBy(object? value, Func<EvaluationContext, object?> selector, string keyText, object?[] arguments, bool contextProbe = false)
@@ -758,15 +800,20 @@ internal sealed class EvaluationContext
                     VisitSequence(rest, bullet.Marker);
                     return;
                 }
-                string prefix = Regex.Match(lines[^1], @"^[ \t]*(?:\x01\{\.\})?").Value;
-                if (indent?.Contains("\x01{.}") == true && !prefix.Contains("\x01{.}") && prefix.Length > 0)
-                    indent = prefix;
                 Visit(fragments[i], indent);
             }
         }
         void Visit(object? item, string? indent = null)
         {
             // Traverse fragments directly: ToString would lose missing-line and indentation behavior.
+            // Legacy changes a bullet indent to plain indentation only when entering
+            // an array, not between every scalar and list fragment in that array.
+            if (item is TemplateContent or object?[])
+            {
+                string prefix = Regex.Match(lines[^1], @"^[ \t]*(?:\x01\{\.\})?").Value;
+                if (indent?.Contains("\x01{.}") == true && !prefix.Contains("\x01{.}") && prefix.Length > 0)
+                    indent = prefix;
+            }
             if (item is TemplateContent templateContent) { VisitSequence(templateContent.Fragments, indent); return; }
             if (item is object?[] sequence) { VisitSequence(sequence, indent); return; }
             if (item is Bullet bullet) { Visit(bullet.Marker); return; }

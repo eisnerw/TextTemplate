@@ -18,10 +18,6 @@ internal static class Builtins
     // eisnerw/texttemplate-editor, ccedefd87b012ff1173ee2f43323b6eb7c8bd268.
     // ECMAScript WhiteSpace and LineTerminator, deliberately excluding U+0085.
     internal const string Whitespace = "\u0009\u000a\u000b\u000c\u000d\u0020\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff";
-    // TODO: Filter the receiver using a predicate evaluated in each item's context.
-    // Temporary pass-through: the emitter deliberately does not evaluate the predicate.
-    internal static object? Where(object? value) => value;
-
     // TODO: Support Count(predicate); only the no-argument form is implemented.
     internal static object? Count(object? value)
     {
@@ -146,6 +142,7 @@ internal static class Builtins
     {
         value = EvaluationContext.Intermediate(value);
         if (value is null or EvaluationContext.Missing) return value;
+        if (value is TemplateDate date) value = date.Render();
         if (value is not string text) throw new InvalidOperationException("Casing requires a string receiver.");
         Require(arguments, 0, 0);
         return NodeCasing.Convert(text, upper);
@@ -180,12 +177,14 @@ internal static class Builtins
     internal static object? LastIndexOf(object? value, params object?[] arguments) => StringMethod("LastIndexOf", value, arguments);
     internal static object? EndIndexOf(object? value, params object?[] arguments) => StringMethod("EndIndexOf", value, arguments);
 
-    internal static object? Matches(object? value, params object?[] arguments) => MatchOrAssert(value, arguments, false);
-    internal static object? Assert(object? value, params object?[] arguments) => MatchOrAssert(value, arguments, true);
-    private static object? MatchOrAssert(object? value, object?[] arguments, bool assertion)
+    internal static object? Matches(EvaluationContext context, object? value, params object?[] arguments) => MatchOrAssert(context, value, arguments, false);
+    internal static object? Assert(EvaluationContext context, object? value, params object?[] arguments) => MatchOrAssert(context, value, arguments, true);
+    private static object? MatchOrAssert(EvaluationContext context, object? value, object?[] arguments, bool assertion)
     {
         value = EvaluationContext.Intermediate(value);
         if (assertion && value is null or EvaluationContext.Missing) return value;
+        object? originalValue = value;
+        if (value is string bulletText && bulletText.Contains("\x01{.}")) value = context.RenderForMatch(bulletText, true);
         bool missing = value is null or EvaluationContext.Missing;
         bool matches = missing && arguments.Length == 0;
         if (!missing && arguments.Length > 0)
@@ -201,6 +200,8 @@ internal static class Builtins
                     {
                         string a = JsString(argument), b = JsString(value);
                         matches = a == b;
+                        if (!matches && argument is string text && text.Contains("\x01{.}"))
+                            matches = b == context.RenderForMatch(text, false);
                         const string numeric = @"^[-+]?([0-9]+|[0-9]+\.[0-9]*|[0-9]*\.[0-9]+)$";
                         if (!matches && Regex.IsMatch(a.Trim(Whitespace.ToCharArray()), numeric) && Regex.IsMatch(b.Trim(Whitespace.ToCharArray()), numeric) && (argument is double || value is double) &&
                             double.TryParse(a.Trim(Whitespace.ToCharArray()), NumberStyles.Float, CultureInfo.InvariantCulture, out double x) &&
@@ -211,7 +212,7 @@ internal static class Builtins
             }
         }
         if (!assertion) return matches;
-        if (matches) return arguments.Length > 1 ? arguments[1] : value;
+        if (matches) return arguments.Length > 1 ? arguments[1] : originalValue;
         if (arguments.Length > 2) return arguments[2];
         if (arguments.Length == 0) throw new InvalidOperationException("Assert requires an expected value.");
         if (value is not string actual) throw new InvalidOperationException("Assert failure requires a string receiver.");

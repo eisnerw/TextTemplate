@@ -1,0 +1,158 @@
+[
+  {
+    "name": "selected",
+    "script": "{items.Where(yes):[{name}]}",
+    "data": {
+      "items": [
+        {
+          "name": "dog",
+          "yes": true
+        },
+        {
+          "name": "cat",
+          "yes": false
+        },
+        {
+          "name": "zebra",
+          "yes": true
+        }
+      ]
+    },
+    "expected": "dog\nzebra"
+  },
+  {
+    "name": "none",
+    "script": "{items.Where(no):[{name}]}",
+    "data": {
+      "items": [
+        {
+          "name": "dog",
+          "yes": true
+        },
+        {
+          "name": "cat",
+          "yes": false
+        },
+        {
+          "name": "zebra",
+          "yes": true
+        }
+      ]
+    },
+    "expected": ""
+  },
+  {
+    "name": "single",
+    "script": "{items.Where(name = 'cat'):[{name}]}",
+    "data": {
+      "items": [
+        {
+          "name": "dog",
+          "yes": true
+        },
+        {
+          "name": "cat",
+          "yes": false
+        },
+        {
+          "name": "zebra",
+          "yes": true
+        }
+      ]
+    },
+    "expected": "cat"
+  },
+  {
+    "name": "scalar",
+    "script": "{'hello'.Where(no)}",
+    "data": {},
+    "expected": "hello"
+  },
+  {
+    "name": "dictionary",
+    "script": "{item.Where(yes):[{name}]}",
+    "data": {
+      "item": {
+        "name": "dog",
+        "yes": true
+      }
+    },
+    "expected": "dog"
+  },
+  {
+    "name": "dollars",
+    "script": "{items.#filter('cat'):[{name}]}\nSubtemplates:\n{#filter:[{$0.Where(name = $1)}]}",
+    "data": {
+      "items": [
+        {
+          "name": "dog",
+          "yes": true
+        },
+        {
+          "name": "cat",
+          "yes": false
+        },
+        {
+          "name": "zebra",
+          "yes": true
+        }
+      ]
+    },
+    "expected": "cat"
+  },
+  {
+    "name": "falsy",
+    "script": "{[ {items.Where(yes):[{name}]}].@Falsy(/^0$/)}",
+    "data": {
+      "items": [
+        {
+          "name": "a",
+          "yes": "0"
+        },
+        {
+          "name": "b",
+          "yes": "1"
+        }
+      ]
+    },
+    "expected": " b"
+  },
+  {
+    "name": "date-casing",
+    "script": "{[ {start.ToUpper()} {start.ToLower()}].@DateTest(/start/).@DateFormat('dddd MMM D')}",
+    "data": {
+      "start": "2020-01-02"
+    },
+    "expected": " THURSDAY JAN 2 thursday jan 2"
+  },
+  {
+    "name": "comment-leading",
+    "script": "// comment\n{'hello'}",
+    "data": {},
+    "expected": "hello"
+  },
+  {
+    "name": "comment-text",
+    "script": "// comment\nhello",
+    "data": {},
+    "expected": "\nhello"
+  },
+  {
+    "name": "comment-blank",
+    "script": "// comment\n\n{'hello'}",
+    "data": {},
+    "expected": "\n\nhello"
+  },
+  {
+    "name": "resource-filter",
+    "script": "{'/data/people'.Where(lastName = 'Smith'):[{lastName}]}",
+    "data": {},
+    "expected": "Smith"
+  },
+  {
+    "name": "named-resource-filter",
+    "script": "{#data.Where(lastName = 'Smith'):[{lastName}]}\nSubtemplates:\n{#data:[/data/people]}",
+    "data": {},
+    "expected": "Smith"
+  }
+]

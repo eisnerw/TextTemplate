@@ -1,0 +1,182 @@
+{
+  "timezone": "UTC",
+  "templates": [
+    {
+      "template": "birthdays",
+      "status": "match",
+      "data": {},
+      "sourceSha256": "21078624f4d20197131b4ba748d5d6c543c910ff5dd3ac4dd18fc6068516ae63",
+      "nodeExit": 0,
+      "csharpExit": 0,
+      "nodeBytes": 21851,
+      "csharpBytes": 21851
+    },
+    {
+      "template": "bullets",
+      "status": "match",
+      "data": {},
+      "sourceSha256": "0ca9ba15766047005e12e5e843335f2a8fa94f974b1fa0506427dd651e46c220",
+      "nodeExit": 0,
+      "csharpExit": 0,
+      "nodeBytes": 779,
+      "csharpBytes": 779
+    },
+    {
+      "template": "docs",
+      "status": "match",
+      "data": "reference/data/docs.json",
+      "sourceSha256": "50b7d019a2e5912ee84451e3ed51c0546013f3a8994b10ef190cdafc44ea5b7b",
+      "nodeExit": 0,
+      "csharpExit": 0,
+      "nodeBytes": 38164,
+      "csharpBytes": 38164
+    },
+    {
+      "template": "elastic",
+      "status": "external-resource",
+      "data": {},
+      "sourceSha256": "ca4b4b972e92bab378c59546b70452e099ee274ab1d35fb46e2c82f66811701f",
+      "nodeExit": 2,
+      "csharpExit": 1,
+      "nodeBytes": 0,
+      "csharpBytes": 0
+    },
+    {
+      "template": "events",
+      "status": "match",
+      "data": "reference/data/events.json",
+      "sourceSha256": "da77c379cbd7a5c206d12200a81f3c26211da106490fd839d0ff807d3ad31b52",
+      "nodeExit": 0,
+      "csharpExit": 0,
+      "nodeBytes": 690,
+      "csharpBytes": 690
+    },
+    {
+      "template": "outline",
+      "status": "match",
+      "data": {},
+      "sourceSha256": "39ed97ebdd548df96e1a496e0d23d4759530a2104cba65dc9eb933c90fecd863",
+      "nodeExit": 0,
+      "csharpExit": 0,
+      "nodeBytes": 840,
+      "csharpBytes": 840
+    },
+    {
+      "template": "simple",
+      "status": "match",
+      "data": {},
+      "sourceSha256": "7c1d90f7895c2bfbdc8a7fbf356800bb9acb574a8062539267c44b045535d88c",
+      "nodeExit": 0,
+      "csharpExit": 0,
+      "nodeBytes": 34,
+      "csharpBytes": 34
+    },
+    {
+      "template": "simpledata",
+      "status": "match",
+      "data": "reference/data/simpledata.json",
+      "sourceSha256": "06cdf9f2550ad70be42bb9743f9bafc840cf2475eef30a9dac5e2aa9c9c9e45b",
+      "nodeExit": 0,
+      "csharpExit": 0,
+      "nodeBytes": 86,
+      "csharpBytes": 86
+    },
+    {
+      "template": "simplelist",
+      "status": "match",
+      "data": {},
+      "sourceSha256": "ac53a0b568e8facec42fce4a3b7558db50d0de28ab0a879c8d603bc1e6e66d7b",
+      "nodeExit": 0,
+      "csharpExit": 0,
+      "nodeBytes": 0,
+      "csharpBytes": 0
+    },
+    {
+      "template": "startup",
+      "status": "match",
+      "data": {},
+      "sourceSha256": "95a98f6f117ed09466a168b68bfdaff8188f6ab00ff049690b80eed37757f264",
+      "nodeExit": 0,
+      "csharpExit": 0,
+      "nodeBytes": 8861,
+      "csharpBytes": 8861
+    },
+    {
+      "template": "tests",
+      "status": "match",
+      "data": {},
+      "sourceSha256": "123754d2e9a693dc06dfeb9577147b4d676368858bd9aa0cbed89723264b010f",
+      "nodeExit": 0,
+      "csharpExit": 0,
+      "nodeBytes": 16,
+      "csharpBytes": 16
+    },
+    {
+      "template": "web",
+      "status": "external-resource",
+      "data": {},
+      "sourceSha256": "321d50b5e234aa673f57b3b1ff23812ab7253c9f200a10927f92e785e359dd34",
+      "nodeExit": 2,
+      "csharpExit": 1,
+      "nodeBytes": 0,
+      "csharpBytes": 0
+    },
+    {
+      "template": "wikipedia",
+      "status": "external-resource",
+      "data": {},
+      "sourceSha256": "7924840c660489166de865859c1e0275756c23c65471e5db080759f0bc167aa5",
+      "nodeExit": 2,
+      "csharpExit": 1,
+      "nodeBytes": 0,
+      "csharpBytes": 0
+    }
+  ],
+  "inputs": {
+    "reference/templates/birthdays.template": "21078624f4d20197131b4ba748d5d6c543c910ff5dd3ac4dd18fc6068516ae63",
+    "reference/templates/bullets.template": "0ca9ba15766047005e12e5e843335f2a8fa94f974b1fa0506427dd651e46c220",
+    "reference/templates/docs.template": "50b7d019a2e5912ee84451e3ed51c0546013f3a8994b10ef190cdafc44ea5b7b",
+    "reference/templates/elastic.template": "ca4b4b972e92bab378c59546b70452e099ee274ab1d35fb46e2c82f66811701f",
+    "reference/templates/events.template": "da77c379cbd7a5c206d12200a81f3c26211da106490fd839d0ff807d3ad31b52",
+    "reference/templates/outline.template": "39ed97ebdd548df96e1a496e0d23d4759530a2104cba65dc9eb933c90fecd863",
+    "reference/templates/simple.template": "7c1d90f7895c2bfbdc8a7fbf356800bb9acb574a8062539267c44b045535d88c",
+    "reference/templates/simpledata.template": "06cdf9f2550ad70be42bb9743f9bafc840cf2475eef30a9dac5e2aa9c9c9e45b",
+    "reference/templates/simplelist.template": "ac53a0b568e8facec42fce4a3b7558db50d0de28ab0a879c8d603bc1e6e66d7b",
+    "reference/templates/startup.template": "95a98f6f117ed09466a168b68bfdaff8188f6ab00ff049690b80eed37757f264",
+    "reference/templates/tests.template": "123754d2e9a693dc06dfeb9577147b4d676368858bd9aa0cbed89723264b010f",
+    "reference/templates/web.template": "321d50b5e234aa673f57b3b1ff23812ab7253c9f200a10927f92e785e359dd34",
+    "reference/templates/wikipedia.template": "7924840c660489166de865859c1e0275756c23c65471e5db080759f0bc167aa5",
+    "reference/subtemplates/doInclude.template": "64457abe27be49e734ff6735706e4fc453cc20a3ba72fa9a9c44aa9e9ca8b703",
+    "reference/subtemplates/doit.template": "ce6be7dc79ac162b36cc8f44ba89d8c262fa06e060527c2fb27bccf613c5e949",
+    "reference/subtemplates/formatGitRepos.template": "a6686feea54909c24a400ff3e3b821bb5439d0ca4dab6a1878e6a75b67c5aa1c",
+    "reference/subtemplates/formatGitReposAnded.template": "a43de067cd461bbd1655bda0e26dae5c6a0183687059bea39127324361cc1a21",
+    "reference/subtemplates/xformatPet.template": "82a1368920821e349c71dd8704f640bd3c7559fa2496770aeed1098a3bef16ac",
+    "reference/subtemplates/xformatPets.template": "6d72db09f9a781d72a2d2068dc504feb103eb3fad71354ff8548118c9955b2da",
+    "reference/data/docs.json": "f020e4f70b3031c2566985be3486b40daca6f3d83830368312de76c8e9df4ea1",
+    "reference/data/escapeTest.json": "cbba7bcc8517c7d8427a1ed97bf678f74b4714853f5fb87d0adf6e4a7d7fdc7b",
+    "reference/data/events.json": "522540c380796e42344cca086d1d005aee3106aea183a9edfd074f960a7fd661",
+    "reference/data/famousBirthdays.json": "79af50f2af31d23574c397a2e2467cf982215c4d7dd56d8eec320159ac4e2f1b",
+    "reference/data/nested.json": "67256b6d92bc12eceebc3d5567822593542e8db45fa953d659a252d209bf4673",
+    "reference/data/people.json": "293a7cec80ff8b11837ef741aed4974f7f22db97d9402d6707abc0620c90ec10",
+    "reference/data/simpledata.json": "67ccb4595f50cadf5108646fc81be58afad446df8eb2d83302f052fc7490702c",
+    "reference/fixtures/data.json": "2fa69d14e4bc5459aba9cad8dd3cbe5ed4b5ab8937777e84c321f83aad0f8ff4",
+    "reference/fixtures/subtemplates.json": "c0d80b35a704619335f9f212de4dfc4e6be958936bd73ef42346fcace624ed1d",
+    "reference/fixtures/templates.json": "90fc3829a08c0fae9fb68d86c8af5a6792ec7468113e93a0489f499014e0379f"
+  },
+  "oracle": {
+    "sourceCommit": "ccedefd87b012ff1173ee2f43323b6eb7c8bd268",
+    "sources": {
+      "reference/grammar/TextTemplateLexer.g4": "aa8614f927f341ab70f1f14e3bf12015885b32c3a0466bdcc33cde40877c7fa0",
+      "reference/grammar/TextTemplateParser.g4": "2fb5ed2b2969da011308184fa0980b1abce9da352975bf3da71ac84c985a04aa",
+      "TextTemplateInterpreter": "876e98aec8adf32983d046087ac85a3b7ca742d6da6c911c52ea18c03955a94e",
+      "Externals": "3cc6091f4a9e124dfa8c38c6a5557ca1324bc0468fe91c41f5d5540f1411ad66",
+      "reference/fixtures/data.json": "2fa69d14e4bc5459aba9cad8dd3cbe5ed4b5ab8937777e84c321f83aad0f8ff4",
+      "reference/fixtures/templates.json": "90fc3829a08c0fae9fb68d86c8af5a6792ec7468113e93a0489f499014e0379f",
+      "reference/fixtures/subtemplates.json": "c0d80b35a704619335f9f212de4dfc4e6be958936bd73ef42346fcace624ed1d"
+    },
+    "antlrGenerator": "4.9.3",
+    "antlrRuntime": "4.11.0",
+    "moment": "2.29.4",
+    "typescript": "5.6.3"
+  }
+}

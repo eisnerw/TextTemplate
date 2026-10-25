@@ -190,7 +190,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/birthdays.template":6:10
     private TemplateContent byDate()
     {
-        object? groupBy = InContext(Context.GroupBy(EvaluationContext.Invoke(MethodInput(itemContext => "/data/famousBirthdays"), methodValue => Builtins.Where(methodValue)), itemContext => new Birthdays(itemContext).renderToDate(), "dob.ToDate('MM')", new object?[] { "group", "month" }, true), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderToDate_2()), null, dataContext => new Birthdays(dataContext).groupLoadedData());
+        object? groupBy = InContext(Context.GroupBy(Context.Where(MethodInput(itemContext => "/data/famousBirthdays"), itemContext => new Birthdays(itemContext).renderContent()), itemContext => new Birthdays(itemContext).renderToDate(), "dob.ToDate('MM')", new object?[] { "group", "month" }, true), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderToDate_2()), null, dataContext => new Birthdays(dataContext).groupLoadedData());
 
         return Line($"{groupBy}");
     }
@@ -258,6 +258,14 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     }
 
     // Template:
+    // !isAlive
+    // Source: "templates/birthdays.template":6:42
+    private bool renderContent()
+    {
+        return !(IsTruthy("isAlive"));
+    }
+
+    // Template:
     // dob.ToDate('MM')
     // Source: "templates/birthdays.template":6:60
     private object? renderToDate()
@@ -275,7 +283,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
             {
                 annotatedContext => annotatedContext.WithFalsy(new TemplateRegex("/^0$/", "templates/birthdays.template:5:75"))
             },
-            annotatedContext => annotatedContext.Each(itemContext => new Birthdays(itemContext).renderCase()));
+            annotatedContext => annotatedContext.Receiver(itemContext => new Birthdays(itemContext).renderCase()));
     }
 
     // Template:
@@ -350,7 +358,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/birthdays.template":6:12
     private object? groupLoadedData()
     {
-        return Context.GroupBy(EvaluationContext.Invoke(Context.Current, methodValue => Builtins.Where(methodValue)), itemContext => new Birthdays(itemContext).renderToDate(), "dob.ToDate('MM')", new object?[] { "group", "month" }, false);
+        return Context.GroupBy(Context.Where(Context.Current, itemContext => new Birthdays(itemContext).renderContent()), itemContext => new Birthdays(itemContext).renderToDate(), "dob.ToDate('MM')", new object?[] { "group", "month" }, false);
     }
 
     // Template:
@@ -500,10 +508,7 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     {
         object? grouping = EvaluationContext.Invoke(MethodInput(itemContext => "1"), methodValue => ApplySubtemplate("grouping", methodValue));
 
-        return Line($$"""
-            
-            {{grouping}}
-            """);
+        return Line($"{grouping}");
     }
 
 }

@@ -193,10 +193,20 @@ test('debug levels control stderr without changing evaluation', () => {
 
 
 for (const item of cases) test('file collections match golden: ' + item.id, () => {
-  const expected = JSON.parse(readFileSync(new URL('golden/' + item.id + '.json', import.meta.url)));
-  const child = run([...item.args, '--template-root', path.join(root, 'reference'), '--report-json']);
-  assert.equal(child.status, expected.exitCode, child.stderr);
-  exact(child.stdout, JSON.stringify(expected.report), item);
+  // Test loading modes with identical scripts. The maintained reference/*.template
+  // files have diverged from the frozen JSON collection and have separate goldens.
+  const directory = mkdtempSync(path.join(tmpdir(), 'texttemplate-json-files-'));
+  try {
+    for (const category of ['templates', 'subtemplates']) {
+      mkdirSync(path.join(directory, category));
+      for (const [name, value] of Object.entries(fixtures[category]))
+        writeFileSync(path.join(directory, category, name + '.template'), Array.isArray(value) ? value.join('\n') : value);
+    }
+    const expected = JSON.parse(readFileSync(new URL('golden/' + item.id + '.json', import.meta.url)));
+    const child = run([...item.args, '--template-root', directory, '--report-json']);
+    assert.equal(child.status, expected.exitCode, child.stderr);
+    exact(child.stdout, JSON.stringify(expected.report), item);
+  } finally { rmSync(directory, { recursive: true, force: true }); }
 });
 
 test('startup is available by name or individual file in file mode', () => {

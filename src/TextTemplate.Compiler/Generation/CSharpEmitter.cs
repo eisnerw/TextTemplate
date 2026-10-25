@@ -564,6 +564,12 @@ public sealed class CSharpEmitter
             case SyntaxKind.SharedTemplate:
             case SyntaxKind.InlineTemplate:
                 var children = node.Children.Where(n => n.Kind != SyntaxKind.SubtemplateSection).ToList();
+                // parseTemplate removes a single leading text group containing only NL
+                // when the source begins with a line comment (the legacy BOF workaround).
+                if (node.Kind == SyntaxKind.Template && System.Text.RegularExpressions.Regex.IsMatch(source.Text, @"^[ \t]*//") &&
+                    children.Count > 0 && children[0].Kind == SyntaxKind.NewLine &&
+                    (children.Count == 1 || children[1].Kind is not (SyntaxKind.Text or SyntaxKind.Whitespace or SyntaxKind.NewLine or SyntaxKind.Continuation)))
+                    children.RemoveAt(0);
                 // Legacy bullet rules own the preceding newline and following spaces.
                 // Keep them on the bullet so repeated list items inherit the entire marker.
                 for (int i = 0; i < children.Count; i++)
@@ -625,11 +631,11 @@ public sealed class CSharpEmitter
                     (node.Children.Count > 2 ? Call(node.Children[2]) : node.Kind == SyntaxKind.ThinArrow ? "\"\"" : "null") + ")"; break;
             case SyntaxKind.Context: case SyntaxKind.ContextWithFallback:
                 if (node.Value == "implicit") expression = Call(node.Children[0]);
-                else if (node.Children[0].Kind == SyntaxKind.Call && CallChain(node.Children[0], out _).Any(call => call.Value is "GroupBy" or "OrderBy"))
+                else if (node.Children[0].Kind == SyntaxKind.Call && CallChain(node.Children[0], out _).Any(call => call.Value is "GroupBy" or "OrderBy" or "Where"))
                 {
                     var contextCall = node.Children[0];
                     CallChain(contextCall, out var originalReceiver);
-                    string replayName = Unique(contextCall.Value == "OrderBy" ? "orderLoadedData" : "groupLoadedData", methodNames);
+                    string replayName = Unique(contextCall.Value == "OrderBy" ? "orderLoadedData" : contextCall.Value == "Where" ? "filterLoadedData" : "groupLoadedData", methodNames);
                     var previousBody = current;
                     current = new MethodBody();
                     string replayExpression = Expression(contextCall, source, originalReceiver);
@@ -655,8 +661,13 @@ public sealed class CSharpEmitter
                     else
                     {
                         var body = WithoutAnnotations(node);
+                        // invokeMethods composes each item before annotation-only calls
+                        // on ordinary template receivers (an argument list, not a rendered list).
+                        string annotatedBody = body.Kind is SyntaxKind.InlineTemplate or SyntaxKind.NamedSubtemplate
+                            ? "annotatedContext => annotatedContext.Receiver(" + RawChild(body) + ")"
+                            : InChild(body, "annotatedContext");
                         expression = "Annotate(\n            new Func<EvaluationContext, EvaluationContext>[]\n            {\n                " +
-                            string.Join(",\n                ", annotations.Select(call => Annotation(call, source: source))) + "\n            },\n            " + InChild(body, "annotatedContext") + ")";
+                            string.Join(",\n                ", annotations.Select(call => Annotation(call, source: source))) + "\n            },\n            " + annotatedBody + ")";
                     }
                 }
                 else if (node.Value is "GroupBy" or "OrderBy")
@@ -668,6 +679,13 @@ public sealed class CSharpEmitter
                         : "MethodInput(" + RawChild(node.Children[0]) + ")";
                     expression = "Context." + node.Value + "(" + input + ", " + selector + ", " + Quote(keyText) + ", " +
                         "new object?[] { " + string.Join(", ", groupArgs.Skip(1).Select(Call)) + " }, " + (contextProbe ? "true" : "false") + ")";
+                }
+                else if (node.Value == "Where")
+                {
+                    var filterArgs = node.Children.Skip(1).SelectMany(child => child.Children).ToList();
+                    string input = ReferenceEquals(node.Children[0], replayReceiver) ? "Context.Current" : node.Children[0].Kind == SyntaxKind.Call || receiver.Value?.StartsWith('^') == true ? Call(node.Children[0])
+                        : "MethodInput(" + RawChild(node.Children[0]) + ")";
+                    expression = "Context.Where(" + input + ", " + (filterArgs.Count == 0 ? "null" : RawChild(filterArgs[0])) + ")";
                 }
                 else if (node.Value == "Case")
                 {
@@ -695,10 +713,9 @@ public sealed class CSharpEmitter
                     }
                 }
                 // TODO: Implement Count(predicate) with per-item predicate evaluation.
-                else if (node.Value!.StartsWith('#') || (node.Value == "Count" && !node.Children.Skip(1).SelectMany(child => child.Children).Any()) || node.Value is "EncodeFor" or "ToDate" or "Compose" or "Where" or "IfMissing" or "Join" or "Align" or "Trim" or "StartsWith" or "EndsWith" or "Contains" or "Replace" or "Substr" or "IndexOf" or "LastIndexOf" or "EndIndexOf" or "ToUpper" or "ToLower" or "GreaterThan" or "LessThan" or "Matches" or "Assert")
+                else if (node.Value!.StartsWith('#') || (node.Value == "Count" && !node.Children.Skip(1).SelectMany(child => child.Children).Any()) || node.Value is "EncodeFor" or "ToDate" or "Compose" or "IfMissing" or "Join" or "Align" or "Trim" or "StartsWith" or "EndsWith" or "Contains" or "Replace" or "Substr" or "IndexOf" or "LastIndexOf" or "EndIndexOf" or "ToUpper" or "ToLower" or "GreaterThan" or "LessThan" or "Matches" or "Assert")
                 {
-                    // TODO: Where must evaluate its predicate in each item's context; skip it for this temporary pass-through.
-                    string arguments = node.Value == "Where" ? "" : string.Join(", ", node.Children.Skip(1).SelectMany(child => child.Children).Select(Call));
+                    string arguments = string.Join(", ", node.Children.Skip(1).SelectMany(child => child.Children).Select(Call));
                     string input = ReferenceEquals(node.Children[0], replayReceiver) ? "Context.Current" : node.Children[0].Kind == SyntaxKind.Call || receiver.Value?.StartsWith('^') == true ? Call(node.Children[0]) : node.Children[0].Kind == SyntaxKind.Identifier && !node.Children[0].Value!.StartsWith('@')
                         ? "MethodInput(" + Quote(node.Children[0].Value!) + ")"
                         : node.Children[0].Kind == SyntaxKind.NamedSubtemplate
@@ -706,7 +723,7 @@ public sealed class CSharpEmitter
                         : "MethodInput(" + RawChild(node.Children[0]) + ")";
                     string methodValue = Unique("methodValue", current.Names);
                     expression = "EvaluationContext.Invoke(" + input + ", " + methodValue + " => " +
-                        (!node.Value.StartsWith('#') ? (node.Value == "ToDate" ? "Context.ToDate(" + Quote(location) + ", " : "Builtins." + node.Value + "(" + (node.Value == "Compose" ? "Context, " : node.Value == "EncodeFor" ? Quote(location) + ", " : "")) : "ApplySubtemplate(" + Quote(node.Value[1..]) + ", ") +
+                        (!node.Value.StartsWith('#') ? (node.Value == "ToDate" ? "Context.ToDate(" + Quote(location) + ", " : "Builtins." + node.Value + "(" + (node.Value is "Compose" or "Matches" or "Assert" ? "Context, " : node.Value == "EncodeFor" ? Quote(location) + ", " : "")) : "ApplySubtemplate(" + Quote(node.Value[1..]) + ", ") +
                         methodValue + (arguments.Length == 0 ? "" : ", " + arguments) + "))";
                 }
                 else expression = Stub();

@@ -22,7 +22,7 @@ internal sealed class DoInclude(EvaluationContext context) : TemplateUnit(contex
             {
                 annotatedContext => annotatedContext.WithMissingValue("missing --{key}--")
             },
-            annotatedContext => annotatedContext.Each(itemContext => new DoInclude(itemContext).renderSubtemplates()));
+            annotatedContext => annotatedContext.Receiver(itemContext => new DoInclude(itemContext).renderSubtemplates()));
 
         return Line($"{missingValue}");
     }

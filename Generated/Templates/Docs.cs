@@ -83,7 +83,7 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
             }
         }
 
-        object? choice = (Context.TestCondition(EvaluationContext.Invoke(MethodInput("type"), methodValue => Builtins.Matches(methodValue, "a", "The"))) ? Each(itemContext => new Docs(itemContext).renderType()) : "");
+        object? choice = (Context.TestCondition(EvaluationContext.Invoke(MethodInput("type"), methodValue => Builtins.Matches(Context, methodValue, "a", "The"))) ? Each(itemContext => new Docs(itemContext).renderType()) : "");
         object? title = EvaluationContext.Invoke(MethodInput("name"), methodValue_2 => ApplySubtemplate("title", methodValue_2));
         object? @case = EvaluationContext.Invoke(MethodInput(itemContext => itemContext.Lookup("type")), selectCase);
 
@@ -146,7 +146,7 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
                 annotatedContext => annotatedContext.WithBulletStyle("I.", "(a)", "•", "i."),
                 annotatedContext => annotatedContext.WithMissingValue("")
             },
-            annotatedContext => annotatedContext.Each(itemContext => new Docs(itemContext).renderName_2()));
+            annotatedContext => annotatedContext.Receiver(itemContext => new Docs(itemContext).renderName_2()));
     }
 
     // Template:

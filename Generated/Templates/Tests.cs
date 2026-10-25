@@ -2680,7 +2680,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":4:8
     private TemplateContent test()
     {
-        object? choice = (Context.TestCondition(EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Matches(methodValue, EvaluationContext.ParseInteger("1"), EvaluationContext.ParseInteger("2"), EvaluationContext.ParseInteger("3"), EvaluationContext.ParseInteger("4"), EvaluationContext.ParseInteger("5"), EvaluationContext.ParseInteger("6"), EvaluationContext.ParseInteger("7"), EvaluationContext.ParseInteger("8"), EvaluationContext.ParseInteger("9"), EvaluationContext.ParseInteger("10"), EvaluationContext.ParseInteger("11"), EvaluationContext.ParseInteger("12"), EvaluationContext.ParseInteger("13"), EvaluationContext.ParseInteger("14"), EvaluationContext.ParseInteger("15"), EvaluationContext.ParseInteger("16")))) ? Each(itemContext => new Tests(itemContext).renderItem0()) : "");
+        object? choice = (Context.TestCondition(EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Matches(Context, methodValue, EvaluationContext.ParseInteger("1"), EvaluationContext.ParseInteger("2"), EvaluationContext.ParseInteger("3"), EvaluationContext.ParseInteger("4"), EvaluationContext.ParseInteger("5"), EvaluationContext.ParseInteger("6"), EvaluationContext.ParseInteger("7"), EvaluationContext.ParseInteger("8"), EvaluationContext.ParseInteger("9"), EvaluationContext.ParseInteger("10"), EvaluationContext.ParseInteger("11"), EvaluationContext.ParseInteger("12"), EvaluationContext.ParseInteger("13"), EvaluationContext.ParseInteger("14"), EvaluationContext.ParseInteger("15"), EvaluationContext.ParseInteger("16")))) ? Each(itemContext => new Tests(itemContext).renderItem0()) : "");
 
         return Line($"{choice}");
     }
@@ -2691,7 +2691,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     private TemplateContent renderItem0()
     {
         object? item0 = Get("$0");
-        object? assert = EvaluationContext.Invoke(MethodInput("$1"), methodValue => Builtins.Assert(methodValue, Get("$2"), "passed"));
+        object? assert = EvaluationContext.Invoke(MethodInput("$1"), methodValue => Builtins.Assert(Context, methodValue, Get("$2"), "passed"));
 
         return Line($"Test {item0} {assert}");
     }
@@ -4009,7 +4009,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/tests.template":1:1
     private TemplateContent renderTests()
     {
-        object? assert = EvaluationContext.Invoke(SubtemplateInput("tests"), methodValue => Builtins.Assert(methodValue, Each(itemContext => itemContext.Named("expected")), "ALL TESTS PASSED"));
+        object? assert = EvaluationContext.Invoke(SubtemplateInput("tests"), methodValue => Builtins.Assert(Context, methodValue, Each(itemContext => itemContext.Named("expected")), "ALL TESTS PASSED"));
 
         return Line($"{assert}");
     }

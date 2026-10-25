@@ -137,10 +137,7 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
     {
         object? content = InContext("{\"firstName\": \"Robert\", \"lastName\": \"Smith\", \"petsx\":[\n{\"type\":\"dog\", \"name\": \"Toto\"}\n,{\"type\":\"cat\", \"name\": \"Dolly\"}\n,{\"type\":\"zebra\", \"name\": \"Stripes\"}\n]}", dataContext => dataContext.Each(itemContext => new Simple(itemContext).renderContent()));
 
-        return Line($$"""
-            
-            {{content}}
-            """);
+        return Line($"{content}");
     }
 
 }

@@ -123,7 +123,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
                 annotatedContext => annotatedContext.WithBulletStyle("•"),
                 annotatedContext => annotatedContext.WithDateFormat("templates/events.template:2:67", "dddd MMM D")
             },
-            annotatedContext => annotatedContext.Each(itemContext => new Events(itemContext).renderToUpper()));
+            annotatedContext => annotatedContext.Receiver(itemContext => new Events(itemContext).renderToUpper()));
     }
 
     // Template:
@@ -270,10 +270,7 @@ internal sealed class Events(EvaluationContext context) : TemplateUnit(context)
     {
         object? groupBy = InContext(Context.GroupBy(Get("^"), itemContext => new Events(itemContext).renderToDate(), "start.ToDate('YYYY-MM-DDT00:00:00')", new object?[] { "group", "start" }, true), dataContext => new Events(dataContext).renderDateFormat(), null, dataContext => new Events(dataContext).groupLoadedData());
 
-        return Line($$"""
-            
-            {{groupBy}}
-            """);
+        return Line($"{groupBy}");
     }
 
 }
