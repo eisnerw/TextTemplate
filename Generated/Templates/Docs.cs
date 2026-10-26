@@ -7,8 +7,14 @@ using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
+internal sealed partial class Docs(EvaluationContext context) : TemplateUnit<Docs>(context, child => new Docs(child))
 {
+    // Entry point; scoped definitions are registered before rendering.
+    internal TemplateContent Evaluate()
+    {
+        return WithScope(defineSubtemplates, item => item.renderDocs());
+    }
+
     // Template:
     //                          {'/data/docs':[{#name}{contents:[ //
     //
@@ -18,23 +24,184 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     //          {#name}{text}
     //       ]}
     //    ]}]}]}].@BulletStyle('I.','(a)','•','i.').@MissingValue('')}]}
-    //
-    // Subtemplates:
-    // {#title:[<b>{$0}</b>]}
-    // {#name:[` // This subtemplate bolds the name and optionally adds text before/after
-    // {type.Matches('a','The')->[{type} ]}{name.#title()}{type.Case(
-    //       'dash'," &#8212; "  // "em-dash"
-    //       ,'comma', ', '
-    //       ,'a', ''
-    //       ,'The', ''
-    //       ,'blank', ' '
-    //       ,'none', '')}
-    // ]}
     // Source: "templates/docs.template":1:1
-    internal TemplateContent Evaluate()
+    private TemplateContent renderDocs()
     {
-        return WithDefinitions(defineSubtemplates,
-            definitionContext => new Docs(definitionContext).renderDocs());
+        TemplateValue content = Value("/data/docs")
+            .Render(InScope(item => item.renderName()));
+
+        return Line($"                         {content}");
+    }
+
+    // Template:
+    // [{#name}{contents:[ //
+    //
+    // {.} {#name}{text}{contents->[ //
+    //    {contents:[{#name}{text}{contents->[ 
+    //       {contents:[ 
+    //          {#name}{text}
+    //       ]}
+    //    ]}]}]}].@BulletStyle('I.','(a)','•','i.').@MissingValue('')}]
+    // Source: "templates/docs.template":1:40
+    private TemplateContent renderName()
+    {
+        TemplateValue name = Value(EvaluateSubtemplate("name"));
+        TemplateValue contents = Read("contents")
+            .Render(ForItem(item => item.renderMissingValue()));
+
+        return Line($"{name}{contents}");
+    }
+
+    // Template:
+    // [ //
+    //
+    // {.} {#name}{text}{contents->[ //
+    //    {contents:[{#name}{text}{contents->[ 
+    //       {contents:[ 
+    //          {#name}{text}
+    //       ]}
+    //    ]}]}]}]
+    // Source: "templates/docs.template":1:58
+    private TemplateContent renderName_2()
+    {
+        // Template:
+        // contents->[ //
+        //    {contents:[{#name}{text}{contents->[ 
+        //       {contents:[ 
+        //          {#name}{text}
+        //       ]}
+        //    ]}]}]
+        // Source: "templates/docs.template":3:19
+        TemplateValue chooseContentsResult()
+        {
+            if (IsTruthy("contents"))
+            {
+                return Value(Each(ForItem(item => item.renderContent())));
+            }
+
+            return Value("");
+        }
+
+        TemplateValue content = Value(Context.CreateBullet("\n\u0001{.} "));
+        TemplateValue name = Value(EvaluateSubtemplate("name"));
+        TemplateValue text = Read("text");
+        TemplateValue contentsResult = chooseContentsResult();
+
+        return Line($$"""
+            
+            {{content}}{{name}}{{text}}{{contentsResult}}
+            """);
+    }
+
+    // Template:
+    // [ //
+    //
+    // {.} {#name}{text}{contents->[ //
+    //    {contents:[{#name}{text}{contents->[ 
+    //       {contents:[ 
+    //          {#name}{text}
+    //       ]}
+    //    ]}]}]}].@BulletStyle('I.','(a)','•','i.').@MissingValue('')
+    // Source: "templates/docs.template":1:58
+    private TemplateValue renderMissingValue()
+    {
+        return Value(Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithBulletStyle("I.", "(a)", "•", "i."),
+                annotatedContext => annotatedContext.WithMissingValue("")
+            },
+            annotatedContext => annotatedContext.Receiver(ForItem(item => item.renderName_2()))));
+    }
+
+    // Template:
+    // [ //
+    //    {contents:[{#name}{text}{contents->[ 
+    //       {contents:[ 
+    //          {#name}{text}
+    //       ]}
+    //    ]}]}]
+    // Source: "templates/docs.template":3:29
+    private TemplateContent renderContent()
+    {
+        TemplateValue contents = Read("contents")
+            .Render(InScope(item => item.renderName_3()));
+
+        return Line($$"""
+            
+               {{contents}}
+            """);
+    }
+
+    // Template:
+    // [{#name}{text}{contents->[ 
+    //       {contents:[ 
+    //          {#name}{text}
+    //       ]}
+    //    ]}]
+    // Source: "templates/docs.template":4:14
+    private TemplateContent renderName_3()
+    {
+        // Template:
+        // contents->[ 
+        //       {contents:[ 
+        //          {#name}{text}
+        //       ]}
+        //    ]
+        // Source: "templates/docs.template":4:29
+        TemplateValue chooseContentsResult()
+        {
+            if (IsTruthy("contents"))
+            {
+                return Value(Each(ForItem(item => item.renderContent_2())));
+            }
+
+            return Value("");
+        }
+
+        TemplateValue name = Value(EvaluateSubtemplate("name"));
+        TemplateValue text = Read("text");
+        TemplateValue contentsResult = chooseContentsResult();
+
+        return Line($"{name}{text}{contentsResult}");
+    }
+
+    // Template:
+    // [ 
+    //       {contents:[ 
+    //          {#name}{text}
+    //       ]}
+    //    ]
+    // Source: "templates/docs.template":4:39
+    private TemplateContent renderContent_2()
+    {
+        TemplateValue contents = Read("contents")
+            .Render(InScope(item => item.renderName_4()));
+
+        return Line($"{contents}");
+    }
+
+    // Template:
+    // [ 
+    //          {#name}{text}
+    //       ]
+    // Source: "templates/docs.template":5:17
+    private TemplateContent renderName_4()
+    {
+        TemplateValue name = Value(EvaluateSubtemplate("name"));
+        TemplateValue text = Read("text");
+
+        return Line($"{name}{text}");
+    }
+
+    // Template:
+    // [<b>{$0}</b>]
+    // Source: "templates/docs.template":11:9
+    private TemplateContent title()
+    {
+        TemplateValue item0 = Read("$0");
+
+        return Line($"<b>{item0}</b>");
     }
 
     // Template:
@@ -50,6 +217,20 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/docs.template":12:8
     private TemplateContent name()
     {
+        // Template:
+        // type.Matches('a','The')->[{type} ]
+        // Source: "templates/docs.template":13:2
+        TemplateValue chooseChoice()
+        {
+            if (Context.TestCondition(Field("type")
+            .Matches(() => ["a", "The"]).Raw))
+            {
+                return Value(Each(ForItem(item => item.renderType())));
+            }
+
+            return Value("");
+        }
+
         // Template:
         // type.Case(
         //       'dash'," &#8212; "  // "em-dash"
@@ -83,9 +264,11 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
             }
         }
 
-        object? choice = (Context.TestCondition(EvaluationContext.Invoke(MethodInput("type"), methodValue => Builtins.Matches(Context, methodValue, "a", "The"))) ? Each(itemContext => new Docs(itemContext).renderType()) : "");
-        object? title = EvaluationContext.Invoke(MethodInput("name"), methodValue_2 => ApplySubtemplate("title", methodValue_2));
-        object? @case = EvaluationContext.Invoke(MethodInput(itemContext => itemContext.Lookup("type")), selectCase);
+        TemplateValue choice = chooseChoice();
+        TemplateValue title = Field("name")
+            .Call("title");
+        TemplateValue @case = Field("type")
+            .Apply(selectCase);
 
         return Line($"{choice}{title}{@case}");
     }
@@ -95,206 +278,9 @@ internal sealed class Docs(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/docs.template":13:27
     private TemplateContent renderType()
     {
-        object? type = Get("type");
+        TemplateValue type = Read("type");
 
         return Line($"{type} ");
-    }
-
-    // Template:
-    // [<b>{$0}</b>]
-    // Source: "templates/docs.template":11:9
-    private TemplateContent title()
-    {
-        object? item0 = Get("$0");
-
-        return Line($"<b>{item0}</b>");
-    }
-
-    // Template:
-    // [{#name}{contents:[ //
-    //
-    // {.} {#name}{text}{contents->[ //
-    //    {contents:[{#name}{text}{contents->[ 
-    //       {contents:[ 
-    //          {#name}{text}
-    //       ]}
-    //    ]}]}]}].@BulletStyle('I.','(a)','•','i.').@MissingValue('')}]
-    // Source: "templates/docs.template":1:40
-    private TemplateContent renderName()
-    {
-        object? name = Each(itemContext => itemContext.Named("name"));
-        object? contents = InContext(Get("contents"), dataContext => new Docs(dataContext).renderMissingValue());
-
-        return Line($"{name}{contents}");
-    }
-
-    // Template:
-    // [ //
-    //
-    // {.} {#name}{text}{contents->[ //
-    //    {contents:[{#name}{text}{contents->[ 
-    //       {contents:[ 
-    //          {#name}{text}
-    //       ]}
-    //    ]}]}]}].@BulletStyle('I.','(a)','•','i.').@MissingValue('')
-    // Source: "templates/docs.template":1:58
-    private object? renderMissingValue()
-    {
-        return Annotate(
-            new Func<EvaluationContext, EvaluationContext>[]
-            {
-                annotatedContext => annotatedContext.WithBulletStyle("I.", "(a)", "•", "i."),
-                annotatedContext => annotatedContext.WithMissingValue("")
-            },
-            annotatedContext => annotatedContext.Receiver(itemContext => new Docs(itemContext).renderName_2()));
-    }
-
-    // Template:
-    // [ //
-    //
-    // {.} {#name}{text}{contents->[ //
-    //    {contents:[{#name}{text}{contents->[ 
-    //       {contents:[ 
-    //          {#name}{text}
-    //       ]}
-    //    ]}]}]}]
-    // Source: "templates/docs.template":1:58
-    private TemplateContent renderName_2()
-    {
-        object? content = Context.CreateBullet("\n\u0001{.} ");
-        object? name = Each(itemContext => itemContext.Named("name"));
-        object? text = Get("text");
-        object? contentsResult = (IsTruthy("contents") ? Each(itemContext => new Docs(itemContext).renderContent()) : "");
-
-        return Line($$"""
-            
-            {{content}}{{name}}{{text}}{{contentsResult}}
-            """);
-    }
-
-    // Template:
-    // [ //
-    //    {contents:[{#name}{text}{contents->[ 
-    //       {contents:[ 
-    //          {#name}{text}
-    //       ]}
-    //    ]}]}]
-    // Source: "templates/docs.template":3:29
-    private TemplateContent renderContent()
-    {
-        object? contents = InContext(Get("contents"), dataContext => dataContext.Each(itemContext => new Docs(itemContext).renderName_3()));
-
-        return Line($$"""
-            
-               {{contents}}
-            """);
-    }
-
-    // Template:
-    // [{#name}{text}{contents->[ 
-    //       {contents:[ 
-    //          {#name}{text}
-    //       ]}
-    //    ]}]
-    // Source: "templates/docs.template":4:14
-    private TemplateContent renderName_3()
-    {
-        object? name = Each(itemContext => itemContext.Named("name"));
-        object? text = Get("text");
-        object? contentsResult = (IsTruthy("contents") ? Each(itemContext => new Docs(itemContext).renderContent_2()) : "");
-
-        return Line($"{name}{text}{contentsResult}");
-    }
-
-    // Template:
-    // [ 
-    //       {contents:[ 
-    //          {#name}{text}
-    //       ]}
-    //    ]
-    // Source: "templates/docs.template":4:39
-    private TemplateContent renderContent_2()
-    {
-        object? contents = InContext(Get("contents"), dataContext => dataContext.Each(itemContext => new Docs(itemContext).renderName_4()));
-
-        return Line($"{contents}");
-    }
-
-    // Template:
-    // [ 
-    //          {#name}{text}
-    //       ]
-    // Source: "templates/docs.template":5:17
-    private TemplateContent renderName_4()
-    {
-        object? name = Each(itemContext => itemContext.Named("name"));
-        object? text = Get("text");
-
-        return Line($"{name}{text}");
-    }
-
-    internal EvaluationContext includeTitle()
-    {
-        EvaluationContext included = Context;
-        _ = new Docs(included).title();
-        return included;
-    }
-
-    internal EvaluationContext includeName()
-    {
-        EvaluationContext included = Context;
-        _ = new Docs(included).name();
-        return included;
-    }
-
-    // Template:
-    //
-    //
-    // Subtemplates:
-    // {#title:[<b>{$0}</b>]}
-    // {#name:[` // This subtemplate bolds the name and optionally adds text before/after
-    // {type.Matches('a','The')->[{type} ]}{name.#title()}{type.Case(
-    //       'dash'," &#8212; "  // "em-dash"
-    //       ,'comma', ', '
-    //       ,'a', ''
-    //       ,'The', ''
-    //       ,'blank', ' '
-    //       ,'none', '')}
-    // ]}
-    // Source: "templates/docs.template":8:66
-    private void defineSubtemplates(SubtemplateDefinitions definitions)
-    {
-        definitions.Add("title", definitionContext => definitionContext.Each(itemContext => new Docs(itemContext).title()), includedContext => new Docs(includedContext).includeTitle());
-        definitions.Add("name", definitionContext => definitionContext.Each(itemContext => new Docs(itemContext).name()), includedContext => new Docs(includedContext).includeName());
-    }
-
-    // Template:
-    //                          {'/data/docs':[{#name}{contents:[ //
-    //
-    // {.} {#name}{text}{contents->[ //
-    //    {contents:[{#name}{text}{contents->[ 
-    //       {contents:[ 
-    //          {#name}{text}
-    //       ]}
-    //    ]}]}]}].@BulletStyle('I.','(a)','•','i.').@MissingValue('')}]}
-    //
-    // Subtemplates:
-    // {#title:[<b>{$0}</b>]}
-    // {#name:[` // This subtemplate bolds the name and optionally adds text before/after
-    // {type.Matches('a','The')->[{type} ]}{name.#title()}{type.Case(
-    //       'dash'," &#8212; "  // "em-dash"
-    //       ,'comma', ', '
-    //       ,'a', ''
-    //       ,'The', ''
-    //       ,'blank', ' '
-    //       ,'none', '')}
-    // ]}
-    // Source: "templates/docs.template":1:1
-    private TemplateContent renderDocs()
-    {
-        object? content = InContext("/data/docs", dataContext => dataContext.Each(itemContext => new Docs(itemContext).renderName()));
-
-        return Line($"                         {content}");
     }
 
 }

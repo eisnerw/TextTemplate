@@ -7,19 +7,43 @@ using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
+internal sealed partial class Bullets(EvaluationContext context) : TemplateUnit<Bullets>(context, child => new Bullets(child))
 {
+    // Entry point; scoped definitions are registered before rendering.
+    internal TemplateContent Evaluate()
+    {
+        return WithScope(defineSubtemplates, item => item.renderBullets());
+    }
+
     // Template:
     // Shows use of bullet styles as well as modular subtemplates, automatic bulleting,`
     // and indenting only for multiple values.  You can see different bullet styles `
     // by changing the parameter to #showStyles from 1 through 5
     //
     // {''.#showStyles(1)}
-    //
-    //  
-    // Subtemplates:
-    // {#styleNumber:[1]}
-    // {#showStyles:[People:{#data:[
+    // Source: "templates/bullets.template":1:1
+    private TemplateContent renderBullets()
+    {
+        TemplateValue showStyles = Collect("")
+            .Call("showStyles", () => [EvaluationContext.ParseInteger("1")]);
+
+        return Line($$"""
+            Shows use of bullet styles as well as modular subtemplates, automatic bulleting, and indenting only for multiple values.  You can see different bullet styles by changing the parameter to #showStyles from 1 through 5
+            
+            {{showStyles}}
+            """);
+    }
+
+    // Template:
+    // [1]
+    // Source: "templates/bullets.template":9:15
+    private TemplateContent styleNumber()
+    {
+        return Line($"1");
+    }
+
+    // Template:
+    // [People:{#data:[
     //    {.}{^.^.$1 = 2->[.0]} {[{ 
     //       lastName}{ 
     //       firstName.#Prepend(', ')}{    
@@ -32,232 +56,247 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
     //    ],[no pets]
     //    } //
-    // ].@MissingValue('No Information Provided')}].@Include([{'#style'}{$1}])}
-    // {#formatPet:[  
-    //    a {type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')}  `   
-    //    {type} named {name} 
-    // ]}
-    // {#Domesticated: [{$0.Where(type.#IsDomesticated())}]}
-    // {#NonDomesticated: [{$0.Where(!type.#IsDomesticated())}]} 
-    // {#IsDomesticated:[{$0.Matches('dog','cat')}]}  
-    // {#Prepend:[{$0->[{$1}{$0}]}]}
-    // {#Surround:[{$0->[{$1}{$0}{$1}]}]}
-    // {#Quoted:[{$0->[{$0.#Surround('"')}]}]}
-    // {#dpetcnt:[{pets.#Domesticated().Count()}]}
-    // {#ndpetcnt:[{pets.#NonDomesticated().Count()}]}
-    // {#style1:[].@BulletStyle('I.','(a)','•','i.')}
-    // {#style2:[].@BulletStyle('1','1.1','1.1.1','1(a)')}
-    // {#style3:[].@BulletStyle('-')}
-    // {#style4:[].@BulletStyle('')}
-    // {#style5:[].@BulletStyle(' I', '•', 'A.', '(1)')}
-    // {#data:[/data/people]}
-    // Source: "templates/bullets.template":1:1
-    internal TemplateContent Evaluate()
+    // ].@MissingValue('No Information Provided')}]
+    // Source: "templates/bullets.template":10:14
+    private TemplateContent renderPeople()
     {
-        return WithDefinitions(defineSubtemplates,
-            definitionContext => new Bullets(definitionContext).renderBullets());
+        TemplateValue data = Value(EvaluateSubtemplate("data"))
+            .Render(ForItem(item => item.renderMissingValue()));
+
+        return Line($"People:{data}");
     }
 
     // Template:
-    // [/data/people]
-    // Source: "templates/bullets.template":41:8
-    private TemplateContent data()
+    // [People:{#data:[
+    //    {.}{^.^.$1 = 2->[.0]} {[{ 
+    //       lastName}{ 
+    //       firstName.#Prepend(', ')}{    
+    //       middleName.#Prepend(' ')
+    //    }].ToUpper().#Quoted()} 
+    //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
+    //       {.} FirstName: {firstName}  
+    //       {.} Pets {pets=>[({pets.Count()}):  
+    //          {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
+    //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
+    //    ],[no pets]
+    //    } //
+    // ].@MissingValue('No Information Provided')}].@Include([{'#style'}{$1}])
+    // Source: "templates/bullets.template":10:14
+    private TemplateValue showStyles()
     {
-        return Line($"/data/people");
-    }
-
-    // Template:
-    // [].@BulletStyle(' I', '•', 'A.', '(1)')
-    // Source: "templates/bullets.template":40:10
-    private object? style5()
-    {
-        return Annotate(
+        return Value(Annotate(
             new Func<EvaluationContext, EvaluationContext>[]
             {
-                annotatedContext => annotatedContext.WithBulletStyle(" I", "•", "A.", "(1)")
+                annotatedContext => annotatedContext.Include(EvaluationContext.Compose(annotatedContext.Each(ForItem(item => item.renderContent()))))
             },
-            annotatedContext => annotatedContext.Receiver(itemContext => Line($"")));
+            annotatedContext => annotatedContext.Receiver(ForItem(item => item.renderPeople()))));
     }
 
     // Template:
-    // [].@BulletStyle('')
-    // Source: "templates/bullets.template":39:10
-    private object? style4()
+    // [
+    //    {.}{^.^.$1 = 2->[.0]} {[{ 
+    //       lastName}{ 
+    //       firstName.#Prepend(', ')}{    
+    //       middleName.#Prepend(' ')
+    //    }].ToUpper().#Quoted()} 
+    //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
+    //       {.} FirstName: {firstName}  
+    //       {.} Pets {pets=>[({pets.Count()}):  
+    //          {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
+    //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
+    //    ],[no pets]
+    //    } //
+    // ]
+    // Source: "templates/bullets.template":10:29
+    private TemplateContent renderChoice()
     {
-        return Annotate(
+        // Template:
+        // ^.^.$1 = 2->[.0]
+        // Source: "templates/bullets.template":11:8
+        TemplateValue chooseChoice()
+        {
+            if (EvaluationContext.Compare(Get("^.^.$1"), "=", EvaluationContext.ParseInteger("2")))
+            {
+                return Value(Each(itemContext => Line($".0")));
+            }
+
+            return Value("");
+        }
+
+        // Template:
+        // pets=>[({pets.Count()}):  
+        //          {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
+        //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
+        //    ],[no pets]
+        // Source: "templates/bullets.template":18:17
+        TemplateValue choosePetsResult()
+        {
+            if (IsTruthy("pets"))
+            {
+                return Value(Each(ForItem(item => item.renderCount())));
+            }
+
+            return Value(Each(itemContext => Line($"no pets")));
+        }
+
+        TemplateValue content = Value(Context.CreateBullet("\n   \u0001{.}"));
+        TemplateValue choice = chooseChoice();
+        TemplateValue quoted = Collect(ForItem(item => item.renderLastName()))
+            .ToUpper()
+            .Call("Quoted");
+        TemplateValue content_2 = Value(Context.CreateBullet("\n      \u0001{.} "));
+        TemplateValue ifMissing = Field("lastName")
+            .IfMissing(() => ["No Last Name"]);
+        TemplateValue content_3 = Value(Context.CreateBullet("\n      \u0001{.} "));
+        TemplateValue firstName = Read("firstName");
+        TemplateValue content_4 = Value(Context.CreateBullet("\n      \u0001{.} "));
+        TemplateValue petsResult = choosePetsResult();
+
+        return Line($"{content}{choice} {quoted} {content_2}Lastname: {ifMissing}   {content_3}FirstName: {firstName}  {content_4}Pets {petsResult}");
+    }
+
+    // Template:
+    // [
+    //    {.}{^.^.$1 = 2->[.0]} {[{ 
+    //       lastName}{ 
+    //       firstName.#Prepend(', ')}{    
+    //       middleName.#Prepend(' ')
+    //    }].ToUpper().#Quoted()} 
+    //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
+    //       {.} FirstName: {firstName}  
+    //       {.} Pets {pets=>[({pets.Count()}):  
+    //          {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
+    //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
+    //    ],[no pets]
+    //    } //
+    // ].@MissingValue('No Information Provided')
+    // Source: "templates/bullets.template":10:29
+    private TemplateValue renderMissingValue()
+    {
+        return Value(Annotate(
             new Func<EvaluationContext, EvaluationContext>[]
             {
-                annotatedContext => annotatedContext.WithBulletStyle("")
+                annotatedContext => annotatedContext.WithMissingValue("No Information Provided")
             },
-            annotatedContext => annotatedContext.Receiver(itemContext => Line($"")));
+            annotatedContext => annotatedContext.Receiver(ForItem(item => item.renderChoice()))));
     }
 
     // Template:
-    // [].@BulletStyle('-')
-    // Source: "templates/bullets.template":38:10
-    private object? style3()
+    // [{ 
+    //       lastName}{ 
+    //       firstName.#Prepend(', ')}{    
+    //       middleName.#Prepend(' ')
+    //    }]
+    // Source: "templates/bullets.template":11:27
+    private TemplateContent renderLastName()
     {
-        return Annotate(
-            new Func<EvaluationContext, EvaluationContext>[]
+        TemplateValue lastName = Read("lastName");
+        TemplateValue prepend = Field("firstName")
+            .Call("Prepend", () => [", "]);
+        TemplateValue prepend_2 = Field("middleName")
+            .Call("Prepend", () => [" "]);
+
+        return Line($"{lastName}{prepend}{prepend_2}");
+    }
+
+    // Template:
+    // [({pets.Count()}):  
+    //          {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
+    //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
+    //    ]
+    // Source: "templates/bullets.template":18:23
+    private TemplateContent renderCount()
+    {
+        // Template:
+        // #dpetcnt > 1->[ ({#dpetcnt})]
+        // Source: "templates/bullets.template":19:27
+        TemplateValue chooseChoice()
+        {
+            if (EvaluationContext.Compare(EvaluateSubtemplate("dpetcnt"), ">", EvaluationContext.ParseInteger("1")))
             {
-                annotatedContext => annotatedContext.WithBulletStyle("-")
-            },
-            annotatedContext => annotatedContext.Receiver(itemContext => Line($"")));
-    }
+                return Value(Each(ForItem(item => item.renderDpetcnt())));
+            }
 
-    // Template:
-    // [].@BulletStyle('1','1.1','1.1.1','1(a)')
-    // Source: "templates/bullets.template":37:10
-    private object? style2()
-    {
-        return Annotate(
-            new Func<EvaluationContext, EvaluationContext>[]
+            return Value("");
+        }
+
+        // Template:
+        // #ndpetcnt > 1->[({#ndpetcnt})]
+        // Source: "templates/bullets.template":20:31
+        TemplateValue chooseChoice_2()
+        {
+            if (EvaluationContext.Compare(EvaluateSubtemplate("ndpetcnt"), ">", EvaluationContext.ParseInteger("1")))
             {
-                annotatedContext => annotatedContext.WithBulletStyle("1", "1.1", "1.1.1", "1(a)")
-            },
-            annotatedContext => annotatedContext.Receiver(itemContext => Line($"")));
+                return Value(Each(ForItem(item => item.renderNdpetcnt())));
+            }
+
+            return Value("");
+        }
+
+        TemplateValue count = Field("pets")
+            .Count();
+        TemplateValue content = Value(Context.CreateBullet("\n         \u0001{.} "));
+        TemplateValue choice = chooseChoice();
+        TemplateValue domesticated = Field("pets")
+            .Call("Domesticated")
+            .Render(InScope(item => item.renderFormatPet()));
+        TemplateValue content_2 = Value(Context.CreateBullet("\n         \u0001{.} "));
+        TemplateValue choice_2 = chooseChoice_2();
+        TemplateValue nonDomesticated = Field("pets")
+            .Call("NonDomesticated")
+            .Render(InScope(item => item.renderFormatPet_2()));
+
+        return Line($"({count}):  {content}Domesticated{choice}: {domesticated}  {content_2}Non-domesticated{choice_2}: {nonDomesticated}");
     }
 
     // Template:
-    // [].@BulletStyle('I.','(a)','•','i.')
-    // Source: "templates/bullets.template":36:10
-    private object? style1()
+    // [ ({#dpetcnt})]
+    // Source: "templates/bullets.template":19:41
+    private TemplateContent renderDpetcnt()
     {
-        return Annotate(
-            new Func<EvaluationContext, EvaluationContext>[]
-            {
-                annotatedContext => annotatedContext.WithBulletStyle("I.", "(a)", "•", "i.")
-            },
-            annotatedContext => annotatedContext.Receiver(itemContext => Line($"")));
+        TemplateValue dpetcnt = Value(EvaluateSubtemplate("dpetcnt"));
+
+        return Line($" ({dpetcnt})");
     }
 
     // Template:
-    // [{pets.#NonDomesticated().Count()}]
-    // Source: "templates/bullets.template":35:12
-    private TemplateContent ndpetcnt()
+    // [{#formatPet}]
+    // Source: "templates/bullets.template":19:81
+    private TemplateContent renderFormatPet()
     {
-        object? count = EvaluationContext.Invoke(EvaluationContext.Invoke(MethodInput("pets"), methodValue => ApplySubtemplate("NonDomesticated", methodValue)), methodValue_2 => Builtins.Count(methodValue_2));
+        TemplateValue formatPet = Value(EvaluateSubtemplate("formatPet"));
 
-        return Line($"{count}");
+        return Line($"{formatPet}");
     }
 
     // Template:
-    // [{pets.#Domesticated().Count()}]
-    // Source: "templates/bullets.template":34:11
-    private TemplateContent dpetcnt()
+    // [({#ndpetcnt})]
+    // Source: "templates/bullets.template":20:46
+    private TemplateContent renderNdpetcnt()
     {
-        object? count = EvaluationContext.Invoke(EvaluationContext.Invoke(MethodInput("pets"), methodValue => ApplySubtemplate("Domesticated", methodValue)), methodValue_2 => Builtins.Count(methodValue_2));
+        TemplateValue ndpetcnt = Value(EvaluateSubtemplate("ndpetcnt"));
 
-        return Line($"{count}");
+        return Line($"({ndpetcnt})");
     }
 
     // Template:
-    // [{$0->[{$0.#Surround('"')}]}]
-    // Source: "templates/bullets.template":33:10
-    private TemplateContent Quoted()
+    // [{#formatPet}]
+    // Source: "templates/bullets.template":20:89
+    private TemplateContent renderFormatPet_2()
     {
-        object? item0Result = (IsTruthy("$0") ? Each(itemContext => new Bullets(itemContext).renderSurround()) : "");
+        TemplateValue formatPet = Value(EvaluateSubtemplate("formatPet"));
 
-        return Line($"{item0Result}");
+        return Line($"{formatPet}");
     }
 
     // Template:
-    // [{$0.#Surround('"')}]
-    // Source: "templates/bullets.template":33:16
-    private TemplateContent renderSurround()
+    // [{'#style'}{$1}]
+    // Source: "templates/bullets.template":23:55
+    private TemplateContent renderContent()
     {
-        object? surround = EvaluationContext.Invoke(MethodInput("$0"), methodValue => ApplySubtemplate("Surround", methodValue, "\""));
+        TemplateValue item1 = Read("$1");
 
-        return Line($"{surround}");
-    }
-
-    // Template:
-    // [{$0->[{$1}{$0}{$1}]}]
-    // Source: "templates/bullets.template":32:12
-    private TemplateContent Surround()
-    {
-        object? item0Result = (IsTruthy("$0") ? Each(itemContext => new Bullets(itemContext).renderItem1_2()) : "");
-
-        return Line($"{item0Result}");
-    }
-
-    // Template:
-    // [{$1}{$0}{$1}]
-    // Source: "templates/bullets.template":32:18
-    private TemplateContent renderItem1_2()
-    {
-        object? item1 = Get("$1");
-        object? item0 = Get("$0");
-        object? item1_2 = Get("$1");
-
-        return Line($"{item1}{item0}{item1_2}");
-    }
-
-    // Template:
-    // [{$0->[{$1}{$0}]}]
-    // Source: "templates/bullets.template":31:11
-    private TemplateContent Prepend()
-    {
-        object? item0Result = (IsTruthy("$0") ? Each(itemContext => new Bullets(itemContext).renderItem1()) : "");
-
-        return Line($"{item0Result}");
-    }
-
-    // Template:
-    // [{$1}{$0}]
-    // Source: "templates/bullets.template":31:17
-    private TemplateContent renderItem1()
-    {
-        object? item1 = Get("$1");
-        object? item0 = Get("$0");
-
-        return Line($"{item1}{item0}");
-    }
-
-    // Template:
-    // [{$0.Matches('dog','cat')}]
-    // Source: "templates/bullets.template":30:18
-    private TemplateContent IsDomesticated()
-    {
-        object? matches = EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Matches(Context, methodValue, "dog", "cat"));
-
-        return Line($"{matches}");
-    }
-
-    // Template:
-    // [{$0.Where(!type.#IsDomesticated())}]
-    // Source: "templates/bullets.template":29:20
-    private TemplateContent NonDomesticated()
-    {
-        object? where = Context.Where(MethodInput(itemContext => itemContext.Lookup("$0")), itemContext => new Bullets(itemContext).renderContent_2());
-
-        return Line($"{where}");
-    }
-
-    // Template:
-    // !type.#IsDomesticated()
-    // Source: "templates/bullets.template":29:31
-    private bool renderContent_2()
-    {
-        return !(Context.TestCondition(EvaluationContext.Invoke(MethodInput("type"), methodValue => ApplySubtemplate("IsDomesticated", methodValue))));
-    }
-
-    // Template:
-    // [{$0.Where(type.#IsDomesticated())}]
-    // Source: "templates/bullets.template":28:17
-    private TemplateContent Domesticated()
-    {
-        object? where = Context.Where(MethodInput(itemContext => itemContext.Lookup("$0")), itemContext => new Bullets(itemContext).renderIsDomesticated());
-
-        return Line($"{where}");
-    }
-
-    // Template:
-    // type.#IsDomesticated()
-    // Source: "templates/bullets.template":28:28
-    private object? renderIsDomesticated()
-    {
-        return EvaluationContext.Invoke(MethodInput("type"), methodValue => ApplySubtemplate("IsDomesticated", methodValue));
+        return Line($"#style{item1}");
     }
 
     // Template:
@@ -279,7 +318,7 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
             switch (value)
             {
                 case var candidate when Builtins.CaseMatches(candidate, "zebra"):
-                    return EvaluationContext.Intermediate(Each(itemContext => new Bullets(itemContext).renderToLower()));
+                    return EvaluationContext.Intermediate(Each(ForItem(item => item.renderToLower())));
                 case var candidate when Builtins.CaseMatches(candidate, "dog"):
                     return EvaluationContext.Intermediate("friskie");
                 case var candidate when Builtins.CaseMatches(candidate, "cat"):
@@ -289,9 +328,10 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
             }
         }
 
-        object? @case = EvaluationContext.Invoke(MethodInput(itemContext => itemContext.Lookup("type")), selectCase);
-        object? type = Get("type");
-        object? name = Get("name");
+        TemplateValue @case = Field("type")
+            .Apply(selectCase);
+        TemplateValue type = Read("type");
+        TemplateValue name = Read("name");
 
         return Line($"a {@case} {type} named {name}");
     }
@@ -301,7 +341,8 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":25:25
     private TemplateContent renderToLower()
     {
-        object? toLower = EvaluationContext.Invoke(MethodInput(itemContext => new Bullets(itemContext).renderName()), methodValue => Builtins.ToLower(methodValue));
+        TemplateValue toLower = Collect(ForItem(item => item.renderName()))
+            .ToLower();
 
         return Line($"{toLower}");
     }
@@ -311,440 +352,260 @@ internal sealed class Bullets(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/bullets.template":25:27
     private TemplateContent renderName()
     {
-        object? name = Get("name");
+        TemplateValue name = Read("name");
 
         return Line($"{name}y");
     }
 
     // Template:
-    // [People:{#data:[
-    //    {.}{^.^.$1 = 2->[.0]} {[{ 
-    //       lastName}{ 
-    //       firstName.#Prepend(', ')}{    
-    //       middleName.#Prepend(' ')
-    //    }].ToUpper().#Quoted()} 
-    //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
-    //       {.} FirstName: {firstName}  
-    //       {.} Pets {pets=>[({pets.Count()}):  
-    //          {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
-    //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
-    //    ],[no pets]
-    //    } //
-    // ].@MissingValue('No Information Provided')}].@Include([{'#style'}{$1}])
-    // Source: "templates/bullets.template":10:14
-    private object? showStyles()
+    // [{$0.Where(type.#IsDomesticated())}]
+    // Source: "templates/bullets.template":28:17
+    private TemplateContent Domesticated()
     {
-        return Annotate(
+        TemplateValue where = Field("$0")
+            .Where(ForItem(item => item.renderIsDomesticated()));
+
+        return Line($"{where}");
+    }
+
+    // Template:
+    // type.#IsDomesticated()
+    // Source: "templates/bullets.template":28:28
+    private TemplateValue renderIsDomesticated()
+    {
+        return Field("type")
+            .Call("IsDomesticated");
+    }
+
+    // Template:
+    // [{$0.Where(!type.#IsDomesticated())}]
+    // Source: "templates/bullets.template":29:20
+    private TemplateContent NonDomesticated()
+    {
+        TemplateValue where = Field("$0")
+            .Where(ForItem(item => item.renderContent_2()));
+
+        return Line($"{where}");
+    }
+
+    // Template:
+    // !type.#IsDomesticated()
+    // Source: "templates/bullets.template":29:31
+    private bool renderContent_2()
+    {
+        return !(Context.TestCondition(Field("type")
+            .Call("IsDomesticated").Raw));
+    }
+
+    // Template:
+    // [{$0.Matches('dog','cat')}]
+    // Source: "templates/bullets.template":30:18
+    private TemplateContent IsDomesticated()
+    {
+        TemplateValue matches = Field("$0")
+            .Matches(() => ["dog", "cat"]);
+
+        return Line($"{matches}");
+    }
+
+    // Template:
+    // [{$0->[{$1}{$0}]}]
+    // Source: "templates/bullets.template":31:11
+    private TemplateContent Prepend()
+    {
+        // Template:
+        // $0->[{$1}{$0}]
+        // Source: "templates/bullets.template":31:13
+        TemplateValue chooseItem0Result()
+        {
+            if (IsTruthy("$0"))
+            {
+                return Value(Each(ForItem(item => item.renderItem1())));
+            }
+
+            return Value("");
+        }
+
+        TemplateValue item0Result = chooseItem0Result();
+
+        return Line($"{item0Result}");
+    }
+
+    // Template:
+    // [{$1}{$0}]
+    // Source: "templates/bullets.template":31:17
+    private TemplateContent renderItem1()
+    {
+        TemplateValue item1 = Read("$1");
+        TemplateValue item0 = Read("$0");
+
+        return Line($"{item1}{item0}");
+    }
+
+    // Template:
+    // [{$0->[{$1}{$0}{$1}]}]
+    // Source: "templates/bullets.template":32:12
+    private TemplateContent Surround()
+    {
+        // Template:
+        // $0->[{$1}{$0}{$1}]
+        // Source: "templates/bullets.template":32:14
+        TemplateValue chooseItem0Result()
+        {
+            if (IsTruthy("$0"))
+            {
+                return Value(Each(ForItem(item => item.renderItem1_2())));
+            }
+
+            return Value("");
+        }
+
+        TemplateValue item0Result = chooseItem0Result();
+
+        return Line($"{item0Result}");
+    }
+
+    // Template:
+    // [{$1}{$0}{$1}]
+    // Source: "templates/bullets.template":32:18
+    private TemplateContent renderItem1_2()
+    {
+        TemplateValue item1 = Read("$1");
+        TemplateValue item0 = Read("$0");
+        TemplateValue item1_2 = Read("$1");
+
+        return Line($"{item1}{item0}{item1_2}");
+    }
+
+    // Template:
+    // [{$0->[{$0.#Surround('"')}]}]
+    // Source: "templates/bullets.template":33:10
+    private TemplateContent Quoted()
+    {
+        // Template:
+        // $0->[{$0.#Surround('"')}]
+        // Source: "templates/bullets.template":33:12
+        TemplateValue chooseItem0Result()
+        {
+            if (IsTruthy("$0"))
+            {
+                return Value(Each(ForItem(item => item.renderSurround())));
+            }
+
+            return Value("");
+        }
+
+        TemplateValue item0Result = chooseItem0Result();
+
+        return Line($"{item0Result}");
+    }
+
+    // Template:
+    // [{$0.#Surround('"')}]
+    // Source: "templates/bullets.template":33:16
+    private TemplateContent renderSurround()
+    {
+        TemplateValue surround = Field("$0")
+            .Call("Surround", () => ["\""]);
+
+        return Line($"{surround}");
+    }
+
+    // Template:
+    // [{pets.#Domesticated().Count()}]
+    // Source: "templates/bullets.template":34:11
+    private TemplateContent dpetcnt()
+    {
+        TemplateValue count = Field("pets")
+            .Call("Domesticated")
+            .Count();
+
+        return Line($"{count}");
+    }
+
+    // Template:
+    // [{pets.#NonDomesticated().Count()}]
+    // Source: "templates/bullets.template":35:12
+    private TemplateContent ndpetcnt()
+    {
+        TemplateValue count = Field("pets")
+            .Call("NonDomesticated")
+            .Count();
+
+        return Line($"{count}");
+    }
+
+    // Template:
+    // [].@BulletStyle('I.','(a)','•','i.')
+    // Source: "templates/bullets.template":36:10
+    private TemplateValue style1()
+    {
+        return Value(Annotate(
             new Func<EvaluationContext, EvaluationContext>[]
             {
-                annotatedContext => annotatedContext.Include(EvaluationContext.Compose(annotatedContext.Each(includeArgumentContext => new Bullets(includeArgumentContext).renderContent())))
+                annotatedContext => annotatedContext.WithBulletStyle("I.", "(a)", "•", "i.")
             },
-            annotatedContext => annotatedContext.Receiver(itemContext => new Bullets(itemContext).renderPeople()));
+            annotatedContext => annotatedContext.Receiver(itemContext => Line($""))));
     }
 
     // Template:
-    // [People:{#data:[
-    //    {.}{^.^.$1 = 2->[.0]} {[{ 
-    //       lastName}{ 
-    //       firstName.#Prepend(', ')}{    
-    //       middleName.#Prepend(' ')
-    //    }].ToUpper().#Quoted()} 
-    //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
-    //       {.} FirstName: {firstName}  
-    //       {.} Pets {pets=>[({pets.Count()}):  
-    //          {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
-    //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
-    //    ],[no pets]
-    //    } //
-    // ].@MissingValue('No Information Provided')}]
-    // Source: "templates/bullets.template":10:14
-    private TemplateContent renderPeople()
+    // [].@BulletStyle('1','1.1','1.1.1','1(a)')
+    // Source: "templates/bullets.template":37:10
+    private TemplateValue style2()
     {
-        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => new Bullets(dataContext).renderMissingValue());
-
-        return Line($"People:{data}");
-    }
-
-    // Template:
-    // [
-    //    {.}{^.^.$1 = 2->[.0]} {[{ 
-    //       lastName}{ 
-    //       firstName.#Prepend(', ')}{    
-    //       middleName.#Prepend(' ')
-    //    }].ToUpper().#Quoted()} 
-    //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
-    //       {.} FirstName: {firstName}  
-    //       {.} Pets {pets=>[({pets.Count()}):  
-    //          {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
-    //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
-    //    ],[no pets]
-    //    } //
-    // ].@MissingValue('No Information Provided')
-    // Source: "templates/bullets.template":10:29
-    private object? renderMissingValue()
-    {
-        return Annotate(
+        return Value(Annotate(
             new Func<EvaluationContext, EvaluationContext>[]
             {
-                annotatedContext => annotatedContext.WithMissingValue("No Information Provided")
+                annotatedContext => annotatedContext.WithBulletStyle("1", "1.1", "1.1.1", "1(a)")
             },
-            annotatedContext => annotatedContext.Receiver(itemContext => new Bullets(itemContext).renderChoice()));
+            annotatedContext => annotatedContext.Receiver(itemContext => Line($""))));
     }
 
     // Template:
-    // [
-    //    {.}{^.^.$1 = 2->[.0]} {[{ 
-    //       lastName}{ 
-    //       firstName.#Prepend(', ')}{    
-    //       middleName.#Prepend(' ')
-    //    }].ToUpper().#Quoted()} 
-    //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
-    //       {.} FirstName: {firstName}  
-    //       {.} Pets {pets=>[({pets.Count()}):  
-    //          {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
-    //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
-    //    ],[no pets]
-    //    } //
-    // ]
-    // Source: "templates/bullets.template":10:29
-    private TemplateContent renderChoice()
+    // [].@BulletStyle('-')
+    // Source: "templates/bullets.template":38:10
+    private TemplateValue style3()
     {
-        object? content = Context.CreateBullet("\n   \u0001{.}");
-        object? choice = (EvaluationContext.Compare(Get("^.^.$1"), "=", EvaluationContext.ParseInteger("2")) ? Each(itemContext => Line($".0")) : "");
-        object? quoted = EvaluationContext.Invoke(EvaluationContext.Invoke(MethodInput(itemContext => new Bullets(itemContext).renderLastName()), methodValue => Builtins.ToUpper(methodValue)), methodValue_2 => ApplySubtemplate("Quoted", methodValue_2));
-        object? content_2 = Context.CreateBullet("\n      \u0001{.} ");
-        object? ifMissing = EvaluationContext.Invoke(MethodInput("lastName"), methodValue_3 => Builtins.IfMissing(methodValue_3, "No Last Name"));
-        object? content_3 = Context.CreateBullet("\n      \u0001{.} ");
-        object? firstName = Get("firstName");
-        object? content_4 = Context.CreateBullet("\n      \u0001{.} ");
-        object? petsResult = (IsTruthy("pets") ? Each(itemContext => new Bullets(itemContext).renderCount()) : Each(itemContext => Line($"no pets")));
-
-        return Line($"{content}{choice} {quoted} {content_2}Lastname: {ifMissing}   {content_3}FirstName: {firstName}  {content_4}Pets {petsResult}");
+        return Value(Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithBulletStyle("-")
+            },
+            annotatedContext => annotatedContext.Receiver(itemContext => Line($""))));
     }
 
     // Template:
-    // [({pets.Count()}):  
-    //          {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
-    //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
-    //    ]
-    // Source: "templates/bullets.template":18:23
-    private TemplateContent renderCount()
+    // [].@BulletStyle('')
+    // Source: "templates/bullets.template":39:10
+    private TemplateValue style4()
     {
-        object? count = EvaluationContext.Invoke(MethodInput("pets"), methodValue => Builtins.Count(methodValue));
-        object? content = Context.CreateBullet("\n         \u0001{.} ");
-        object? choice = (EvaluationContext.Compare(Each(itemContext => itemContext.Named("dpetcnt")), ">", EvaluationContext.ParseInteger("1")) ? Each(itemContext => new Bullets(itemContext).renderDpetcnt()) : "");
-        object? domesticated = InContext(EvaluationContext.Invoke(MethodInput("pets"), methodValue_2 => ApplySubtemplate("Domesticated", methodValue_2)), dataContext => dataContext.Each(itemContext => new Bullets(itemContext).renderFormatPet()));
-        object? content_2 = Context.CreateBullet("\n         \u0001{.} ");
-        object? choice_2 = (EvaluationContext.Compare(Each(itemContext => itemContext.Named("ndpetcnt")), ">", EvaluationContext.ParseInteger("1")) ? Each(itemContext => new Bullets(itemContext).renderNdpetcnt()) : "");
-        object? nonDomesticated = InContext(EvaluationContext.Invoke(MethodInput("pets"), methodValue_3 => ApplySubtemplate("NonDomesticated", methodValue_3)), dataContext => dataContext.Each(itemContext => new Bullets(itemContext).renderFormatPet_2()));
-
-        return Line($"({count}):  {content}Domesticated{choice}: {domesticated}  {content_2}Non-domesticated{choice_2}: {nonDomesticated}");
+        return Value(Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithBulletStyle("")
+            },
+            annotatedContext => annotatedContext.Receiver(itemContext => Line($""))));
     }
 
     // Template:
-    // [{#formatPet}]
-    // Source: "templates/bullets.template":20:89
-    private TemplateContent renderFormatPet_2()
+    // [].@BulletStyle(' I', '•', 'A.', '(1)')
+    // Source: "templates/bullets.template":40:10
+    private TemplateValue style5()
     {
-        object? formatPet = Each(itemContext => itemContext.Named("formatPet"));
-
-        return Line($"{formatPet}");
+        return Value(Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithBulletStyle(" I", "•", "A.", "(1)")
+            },
+            annotatedContext => annotatedContext.Receiver(itemContext => Line($""))));
     }
 
     // Template:
-    // [({#ndpetcnt})]
-    // Source: "templates/bullets.template":20:46
-    private TemplateContent renderNdpetcnt()
+    // [/data/people]
+    // Source: "templates/bullets.template":41:8
+    private TemplateContent data()
     {
-        object? ndpetcnt = Each(itemContext => itemContext.Named("ndpetcnt"));
-
-        return Line($"({ndpetcnt})");
-    }
-
-    // Template:
-    // [{#formatPet}]
-    // Source: "templates/bullets.template":19:81
-    private TemplateContent renderFormatPet()
-    {
-        object? formatPet = Each(itemContext => itemContext.Named("formatPet"));
-
-        return Line($"{formatPet}");
-    }
-
-    // Template:
-    // [ ({#dpetcnt})]
-    // Source: "templates/bullets.template":19:41
-    private TemplateContent renderDpetcnt()
-    {
-        object? dpetcnt = Each(itemContext => itemContext.Named("dpetcnt"));
-
-        return Line($" ({dpetcnt})");
-    }
-
-    // Template:
-    // [{ 
-    //       lastName}{ 
-    //       firstName.#Prepend(', ')}{    
-    //       middleName.#Prepend(' ')
-    //    }]
-    // Source: "templates/bullets.template":11:27
-    private TemplateContent renderLastName()
-    {
-        object? lastName = Get("lastName");
-        object? prepend = EvaluationContext.Invoke(MethodInput("firstName"), methodValue => ApplySubtemplate("Prepend", methodValue, ", "));
-        object? prepend_2 = EvaluationContext.Invoke(MethodInput("middleName"), methodValue_2 => ApplySubtemplate("Prepend", methodValue_2, " "));
-
-        return Line($"{lastName}{prepend}{prepend_2}");
-    }
-
-    // Template:
-    // [{'#style'}{$1}]
-    // Source: "templates/bullets.template":23:55
-    private TemplateContent renderContent()
-    {
-        object? item1 = Get("$1");
-
-        return Line($"#style{item1}");
-    }
-
-    // Template:
-    // [1]
-    // Source: "templates/bullets.template":9:15
-    private TemplateContent styleNumber()
-    {
-        return Line($"1");
-    }
-
-    internal EvaluationContext includeStyleNumber()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    internal EvaluationContext includeShowStyles()
-    {
-        EvaluationContext included = Context;
-        included = included.Include(EvaluationContext.Compose(included.Each(includeArgumentContext => new Bullets(includeArgumentContext).renderContent())));
-        _ = new Bullets(included).renderPeople();
-        return included;
-    }
-
-    internal EvaluationContext includeFormatPet()
-    {
-        EvaluationContext included = Context;
-        _ = new Bullets(included).formatPet();
-        return included;
-    }
-
-    internal EvaluationContext includeDomesticated()
-    {
-        EvaluationContext included = Context;
-        _ = new Bullets(included).Domesticated();
-        return included;
-    }
-
-    internal EvaluationContext includeNonDomesticated()
-    {
-        EvaluationContext included = Context;
-        _ = new Bullets(included).NonDomesticated();
-        return included;
-    }
-
-    internal EvaluationContext includeIsDomesticated()
-    {
-        EvaluationContext included = Context;
-        _ = new Bullets(included).IsDomesticated();
-        return included;
-    }
-
-    internal EvaluationContext includePrepend()
-    {
-        EvaluationContext included = Context;
-        _ = new Bullets(included).Prepend();
-        return included;
-    }
-
-    internal EvaluationContext includeSurround()
-    {
-        EvaluationContext included = Context;
-        _ = new Bullets(included).Surround();
-        return included;
-    }
-
-    internal EvaluationContext includeQuoted()
-    {
-        EvaluationContext included = Context;
-        _ = new Bullets(included).Quoted();
-        return included;
-    }
-
-    internal EvaluationContext includeDpetcnt()
-    {
-        EvaluationContext included = Context;
-        _ = new Bullets(included).dpetcnt();
-        return included;
-    }
-
-    internal EvaluationContext includeNdpetcnt()
-    {
-        EvaluationContext included = Context;
-        _ = new Bullets(included).ndpetcnt();
-        return included;
-    }
-
-    internal EvaluationContext includeStyle1()
-    {
-        EvaluationContext included = Context;
-        included = included.WithBulletStyle("I.", "(a)", "•", "i.");
-        return included;
-    }
-
-    internal EvaluationContext includeStyle2()
-    {
-        EvaluationContext included = Context;
-        included = included.WithBulletStyle("1", "1.1", "1.1.1", "1(a)");
-        return included;
-    }
-
-    internal EvaluationContext includeStyle3()
-    {
-        EvaluationContext included = Context;
-        included = included.WithBulletStyle("-");
-        return included;
-    }
-
-    internal EvaluationContext includeStyle4()
-    {
-        EvaluationContext included = Context;
-        included = included.WithBulletStyle("");
-        return included;
-    }
-
-    internal EvaluationContext includeStyle5()
-    {
-        EvaluationContext included = Context;
-        included = included.WithBulletStyle(" I", "•", "A.", "(1)");
-        return included;
-    }
-
-    internal EvaluationContext includeData()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    // Template:
-    //
-    //
-    //  
-    // Subtemplates:
-    // {#styleNumber:[1]}
-    // {#showStyles:[People:{#data:[
-    //    {.}{^.^.$1 = 2->[.0]} {[{ 
-    //       lastName}{ 
-    //       firstName.#Prepend(', ')}{    
-    //       middleName.#Prepend(' ')
-    //    }].ToUpper().#Quoted()} 
-    //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
-    //       {.} FirstName: {firstName}  
-    //       {.} Pets {pets=>[({pets.Count()}):  
-    //          {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
-    //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
-    //    ],[no pets]
-    //    } //
-    // ].@MissingValue('No Information Provided')}].@Include([{'#style'}{$1}])}
-    // {#formatPet:[  
-    //    a {type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')}  `   
-    //    {type} named {name} 
-    // ]}
-    // {#Domesticated: [{$0.Where(type.#IsDomesticated())}]}
-    // {#NonDomesticated: [{$0.Where(!type.#IsDomesticated())}]} 
-    // {#IsDomesticated:[{$0.Matches('dog','cat')}]}  
-    // {#Prepend:[{$0->[{$1}{$0}]}]}
-    // {#Surround:[{$0->[{$1}{$0}{$1}]}]}
-    // {#Quoted:[{$0->[{$0.#Surround('"')}]}]}
-    // {#dpetcnt:[{pets.#Domesticated().Count()}]}
-    // {#ndpetcnt:[{pets.#NonDomesticated().Count()}]}
-    // {#style1:[].@BulletStyle('I.','(a)','•','i.')}
-    // {#style2:[].@BulletStyle('1','1.1','1.1.1','1(a)')}
-    // {#style3:[].@BulletStyle('-')}
-    // {#style4:[].@BulletStyle('')}
-    // {#style5:[].@BulletStyle(' I', '•', 'A.', '(1)')}
-    // {#data:[/data/people]}
-    // Source: "templates/bullets.template":5:20
-    private void defineSubtemplates(SubtemplateDefinitions definitions)
-    {
-        definitions.Add("styleNumber", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).styleNumber()), includedContext => new Bullets(includedContext).includeStyleNumber());
-        definitions.Add("showStyles", definitionContext => new Bullets(definitionContext).showStyles(), includedContext => new Bullets(includedContext).includeShowStyles());
-        definitions.Add("formatPet", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).formatPet()), includedContext => new Bullets(includedContext).includeFormatPet());
-        definitions.Add("Domesticated", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).Domesticated()), includedContext => new Bullets(includedContext).includeDomesticated());
-        definitions.Add("NonDomesticated", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).NonDomesticated()), includedContext => new Bullets(includedContext).includeNonDomesticated());
-        definitions.Add("IsDomesticated", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).IsDomesticated()), includedContext => new Bullets(includedContext).includeIsDomesticated());
-        definitions.Add("Prepend", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).Prepend()), includedContext => new Bullets(includedContext).includePrepend());
-        definitions.Add("Surround", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).Surround()), includedContext => new Bullets(includedContext).includeSurround());
-        definitions.Add("Quoted", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).Quoted()), includedContext => new Bullets(includedContext).includeQuoted());
-        definitions.Add("dpetcnt", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).dpetcnt()), includedContext => new Bullets(includedContext).includeDpetcnt());
-        definitions.Add("ndpetcnt", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).ndpetcnt()), includedContext => new Bullets(includedContext).includeNdpetcnt());
-        definitions.Add("style1", definitionContext => new Bullets(definitionContext).style1(), includedContext => new Bullets(includedContext).includeStyle1());
-        definitions.Add("style2", definitionContext => new Bullets(definitionContext).style2(), includedContext => new Bullets(includedContext).includeStyle2());
-        definitions.Add("style3", definitionContext => new Bullets(definitionContext).style3(), includedContext => new Bullets(includedContext).includeStyle3());
-        definitions.Add("style4", definitionContext => new Bullets(definitionContext).style4(), includedContext => new Bullets(includedContext).includeStyle4());
-        definitions.Add("style5", definitionContext => new Bullets(definitionContext).style5(), includedContext => new Bullets(includedContext).includeStyle5());
-        definitions.Add("data", definitionContext => definitionContext.Each(itemContext => new Bullets(itemContext).data()), includedContext => new Bullets(includedContext).includeData());
-    }
-
-    // Template:
-    // Shows use of bullet styles as well as modular subtemplates, automatic bulleting,`
-    // and indenting only for multiple values.  You can see different bullet styles `
-    // by changing the parameter to #showStyles from 1 through 5
-    //
-    // {''.#showStyles(1)}
-    //
-    //  
-    // Subtemplates:
-    // {#styleNumber:[1]}
-    // {#showStyles:[People:{#data:[
-    //    {.}{^.^.$1 = 2->[.0]} {[{ 
-    //       lastName}{ 
-    //       firstName.#Prepend(', ')}{    
-    //       middleName.#Prepend(' ')
-    //    }].ToUpper().#Quoted()} 
-    //       {.} Lastname: {lastName.IfMissing('No Last Name')}   
-    //       {.} FirstName: {firstName}  
-    //       {.} Pets {pets=>[({pets.Count()}):  
-    //          {.} Domesticated{#dpetcnt > 1->[ ({#dpetcnt})]}: {pets.#Domesticated():[{#formatPet}]}  
-    //          {.} Non-domesticated{#ndpetcnt > 1->[({#ndpetcnt})]}: {pets.#NonDomesticated():[{#formatPet}]}
-    //    ],[no pets]
-    //    } //
-    // ].@MissingValue('No Information Provided')}].@Include([{'#style'}{$1}])}
-    // {#formatPet:[  
-    //    a {type.Case('zebra',[{[{name}y].ToLower()}],'dog','friskie','cat','fishy','nice')}  `   
-    //    {type} named {name} 
-    // ]}
-    // {#Domesticated: [{$0.Where(type.#IsDomesticated())}]}
-    // {#NonDomesticated: [{$0.Where(!type.#IsDomesticated())}]} 
-    // {#IsDomesticated:[{$0.Matches('dog','cat')}]}  
-    // {#Prepend:[{$0->[{$1}{$0}]}]}
-    // {#Surround:[{$0->[{$1}{$0}{$1}]}]}
-    // {#Quoted:[{$0->[{$0.#Surround('"')}]}]}
-    // {#dpetcnt:[{pets.#Domesticated().Count()}]}
-    // {#ndpetcnt:[{pets.#NonDomesticated().Count()}]}
-    // {#style1:[].@BulletStyle('I.','(a)','•','i.')}
-    // {#style2:[].@BulletStyle('1','1.1','1.1.1','1(a)')}
-    // {#style3:[].@BulletStyle('-')}
-    // {#style4:[].@BulletStyle('')}
-    // {#style5:[].@BulletStyle(' I', '•', 'A.', '(1)')}
-    // {#data:[/data/people]}
-    // Source: "templates/bullets.template":1:1
-    private TemplateContent renderBullets()
-    {
-        object? showStyles = EvaluationContext.Invoke(MethodInput(itemContext => ""), methodValue => ApplySubtemplate("showStyles", methodValue, EvaluationContext.ParseInteger("1")));
-
-        return Line($$"""
-            Shows use of bullet styles as well as modular subtemplates, automatic bulleting, and indenting only for multiple values.  You can see different bullet styles by changing the parameter to #showStyles from 1 through 5
-            
-            {{showStyles}}
-            """);
+        return Line($"/data/people");
     }
 
 }

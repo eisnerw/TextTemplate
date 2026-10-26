@@ -7,519 +7,28 @@ using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
+internal sealed partial class Startup(EvaluationContext context) : TemplateUnit<Startup>(context, child => new Startup(child))
 {
+    // Entry point; scoped definitions are registered before rendering.
+    internal TemplateContent Evaluate()
+    {
+        return WithScope(defineSubtemplates, item => item.renderStartup());
+    }
+
     // Template:
     //                              The TextTemplate Language
     //
     // {#overview}
-    //
-    // Subtemplates:
-    // {#overview:[`
-    // {.} Introduction
-    //
-    // {#intro}
-    //
-    //    {
-    //       '{"first":"Hello", "second":"World"}':
-    //       [Interpolation example: {first} {second}!!]
-    //    }
-    //
-    // {#goals}
-    //
-    // Notice that if you expand the folded lines in the TextTemplate Editor in the left pane, `
-    // you'll see text that is similar to this output.  That is because `
-    // this documentation is actually a "live" rendering of the texttemplate language input `
-    // in the editor.  If you change the text in the editor, `
-    // the documentation will change.  The editor can be a playground for `
-    // trying out examples of the language and developing templates.  Look through the
-    // TextTemplate source for the following paragraphs in the editor to see the language `
-    // in action
-    //
-    // While the TextTemplate language is similar to other string interpolation notations, it `
-    // has a number of unique features including:
-    //
-    //    {.} Automatic composition of multi-valued data into {
-    //    // this is the data
-    //    '{"pets":[ 
-    //       {"type":"cat"}
-    //       ,{"type":"dog"}
-    //       ,{"type":"tiger"}
-    //    ]}':
-    //    // this is the template
-    //    ["anded" phrases (e.g., "{pets:[{type}s].Join(', ',' and ')}") or bulleted `
-    //     lists
-    //     {pets:[
-    //        {.} {type}s]}].@BulletStyle('-')} 
-    //
-    //    {.} Control over the detection of {'{"test":"value"}':
-    //     [{test->[available]} values and replacement of `
-    //     {unavailable}].@MissingValue('missing')} values
-    //
-    //    {.} A rich set of methods that can perform string`
-    //       {'replacing'.Replace('ing','ement')}, `
-    //       {' trimming '.Trim()}, extract {' substringy'.Substr(1,9)}s, do `
-    //       {'padding'.Align(9,'C','-')}, `
-    //        change the {'case'.ToUpper()} of data, `
-    //       {'true'.Matches('yes','1',/True/i)=>[test],[fail]} data for  `
-    //       multiple criteria including matching regular expressions, `
-    //       count and compare {'{"element1":"multiple","element2":"values"}':
-    //          [{element1.LessThan([{element2}])->[{element1} {element2}]}]} and `
-    //          "@" (annotation) methods that can control template behavior
-    //
-    //    {.} Modularity through the use of {#subexample}
-    //       
-    //    {.} Data manipulation methods that allow data to be selected, ordered and `
-    //       grouped like the following example that selects and `
-    //       groups the birthdays of a few individuals `
-    //       from 1500 records of external data based on birth day and astrological sign:
-    //          {#externalData.Where(dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D')
-    //             .GroupBy(sign, 'group'):[{sign} 
-    //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
-    //                .@DateFormat('M/D/YYYY')
-    //                .@DateTest(/^d/i)}
-    //
-    //    {.} Date recognition and formatting methods that can use a single `
-    //      date, e.g., `
-    //        {#externalData.Where(dob.Substr(0,7) = '1967-10'):["{dob}", to `
-    //        show that {fname} {lname} was born in `
-    //        the month of {dob.ToDate('MMMM')} in `
-    //         {dob.ToDate('YYYY')} on {dob.ToDate('dddd')} the `
-    //         {dob.ToDate('do')}]}
-    //
-    //    {.} Data encoding that can be used to insure that data being templated `
-    //        for output as html, xml or uri's can be properly escaped, e.g., `
-    //        "{'{"data":"Joan\'s <data>"}':[{data}].@EncodeDataFor('html')
-    //           .EncodeFor('html')}"
-    //
-    //    {.} The ability to check for "falsiness", where, for example, the string "0" `
-    //        can be interpreted as false to show that`
-    //        {#externalData.Where(dob.Substr(5,5) = '01-25'): 
-    //        [{#deadoralive.@Falsy(/^0$/)}].Join(', ',' and ')}
-    //
-    //    {.} and, finally, as can be seen from this document, automatically `
-    //       bulleted and numbered outlining
-    //
-    // {.} Acknowledgements
-    //
-    // This project is based on a number of powerful opens-source technologies, without `
-    // which it would not have been possible.  These include:
-    //
-    //      {.} {'Microsoft\'s Monaco Editor'
-    //           .#Click('github.com/microsoft/monaco-editor')} the powerful `
-    //           open source Visual Studio that supports syntax colorizing, error `
-    //           reporting, folding, and so many more features
-    //      {.} {'ANTLR (ANother Tool for Language Recognition)'
-    //          .#Click('www.antlr.org/','click to go to the ANTLR website')} `
-    //           the open source lexer and parser technology that provides `
-    //           the foundation for processing the TextTemplate language
-    //      {.} {'The "calc-monaco-editor" project'
-    //          .#Click('github.com/Strumenta/calc-monaco-editor')} `
-    //           Federico Tomassetti's merging of ANTLR4 with Monaco that `
-    //           is described in this {'article'.#Click(
-    //                'tomassetti.me/writing-a-browser-based-editor-using-monaco-and-antlr/'
-    //                ,'Click to go to the article')}
-    //      {.} {'Moment.js'
-    //           .#Click('momentjs.com','Click to go to the website')} an open-source `
-    //           library for date formatting
-    //      
-    // {.} Documentation
-    //
-    // The TextTemplate language is documented using `
-    //      a "live" template-based web page  `
-    //      {'here'.#Click('/load/docs','Click to see the documentation using TextTemplate')}`
-    //      or if you prefer, you can view an HTML version rendered on the server `
-    //      {'here'.#Click('/runonserver/docs','Click to see the documentation rendered on the server')}.  Note  `
-    //      that any of the demo templates can be rendered on the server using the path `
-    //      '/runonserver/{'['}template name{']'}' as in `
-    //      {'/runonserver/events'.#Click('/runonserver/events','Click to see the events template')}.
-    //
-    // {#examples}
-    //
-    // {#notes}
-    //
-    //
-    // ].@BulletStyle('I.','(a)','•','1.').@BulletMode('explicit')}
-    // {#intro:[Welcome to the TextTemplate documentation and editor.  TextTemplate is a `
-    // declarative domain-specific language `
-    // for specifying string-interpolated templates.  It supports concise expressions `
-    // that can specify formatting, data manipulation, logic and layout in order to `
-    // facilitate the design and maintenance of code that transforms data into text.
-    //
-    // TextTemplate templates merge strings (templates) with data, typically JSON, to compose `
-    // interpolated and formatted output strings.  For `
-    // example, with data such as {'{"first":"Hello", "second":"World!!}'} and a `
-    // template like {'[Interpolation example: {first} {second}!!]'}, the language will `
-    // produce:]}
-    // {#goals:[The goals of the project (not necessarily achieved with version 1) are to create a language  `
-    // that is:
-    //
-    // 	{.} Concise, through the use of language constructs and default processing that `
-    // 		eliminate unnecessary verbiage
-    // 	{.} Readable, through the use of familiar syntax, properly-named methods, and `
-    // 		flexible comments and whitespace
-    // 	{.} Intuitive, through a highly generalized implementation such that once the `
-    // 		basic concepts of the language ` 
-    // 		are grasped for simple operations, performing more advanced operations `
-    // 		should not require unique or specialized knowledge
-    // 	{.} Consistent, through an implementation that avoids, wherever possible, special `
-    // 		cases and restrictions
-    // 	{.} Rich, through the anticipation and implementation of a wide range of methods and `
-    // 		operators that perform typical as well as `
-    // 	    extraordinary manipulations
-    // 	{.} Documented, through content that includes adequate examples to demonstrate the concepts
-    // 	{.} Universal, through multiple implementations in a variety of computer languages, `
-    // 	    starting with JavaScript/Typescript, followed by Java, C# and others]}
-    // {#subexample:[subtemplates that can replace repeated expressions, `
-    //       be shared, be used as functions, replace conditional expressions as `
-    //       well as method arguments]}
-    // {#deadoralive:[{fname} {lname} is {isAlive=>[alive],[dead]}]}
-    // {#Click:[<a title='{$2=>[{$2}],[Click to see the Github project]}' `
-    //    style="font-style:italic;text-decoration: underline;cursor: pointer" `
-    //    href="{!$1.StartsWith('/')->[https:{'//'}]}{$1}">{$0}</a>]}
-    // {#examples:[`
-    // {.} Examples
-    //
-    // The following examples illustrate various aspects of the TextTemplate language:
-    //
-    //    {.} {'A simple template'.#Click('/load/simple','Simple template')}
-    //    {.} {'A demonstration of outlining'.#Click('/load/outline','Outline template')}
-    //    {.} {'A demonstration of bullets'.#Click('/load/bullets','Bullets template')}
-    //    {.} {'Use of Assert() for validating template output'.#Click('/load/tests','Tests template')}
-    //    {.} {'Some interesting ways of using TextTemplate with the web'.#Click('/load/web','Web template')}
-    //    {.} {'Date manipulation for a "To Do" list'.#Click('/load/events','Events template')}
-    //    {.} {'A demonstration of grouping and order'.#Click('/load/birthdays','Birthdays template')}
-    //    {.} {'Experimental application of a computed url to call ElasticSearch'.#Click('/load/elastic','Calling elastic')}
-    // ]}
-    // {#notes:[Note: This software is copyrighted and `
-    // {'licensed'.#Click(
-    // 'https://github.com/eisnerw/texttemplate-editor/blob/texttemplate-editor/LICENSE.txt', 
-    // 'Click to see the license')} under the MIT license.  The `
-    // software is beta and therefore subject to change.  In `
-    // its current state, it is primarily useful for refining the language, `
-    // building a reference implementation, and receiving feedback.  As `
-    // noted above, implementations in other languages are anticipated.  The `
-    // author welcomes comments, criticisms and suggestions.  ]}
-    // {#externalData:[{'/data/famousBirthdays'}]}
     // Source: "templates/startup.template":1:1
-    internal TemplateContent Evaluate()
+    private TemplateContent renderStartup()
     {
-        return WithDefinitions(defineSubtemplates,
-            definitionContext => new Startup(definitionContext).renderStartup());
-    }
-
-    // Template:
-    // [{'/data/famousBirthdays'}]
-    // Source: "templates/startup.template":191:16
-    private TemplateContent externalData()
-    {
-        return Line($"/data/famousBirthdays");
-    }
-
-    // Template:
-    // [Note: This software is copyrighted and `
-    // {'licensed'.#Click(
-    // 'https://github.com/eisnerw/texttemplate-editor/blob/texttemplate-editor/LICENSE.txt', 
-    // 'Click to see the license')} under the MIT license.  The `
-    // software is beta and therefore subject to change.  In `
-    // its current state, it is primarily useful for refining the language, `
-    // building a reference implementation, and receiving feedback.  As `
-    // noted above, implementations in other languages are anticipated.  The `
-    // author welcomes comments, criticisms and suggestions.  ]
-    // Source: "templates/startup.template":182:9
-    private TemplateContent notes()
-    {
-        object? click = EvaluationContext.Invoke(MethodInput(itemContext => "licensed"), methodValue => ApplySubtemplate("Click", methodValue, "https://github.com/eisnerw/texttemplate-editor/blob/texttemplate-editor/LICENSE.txt", "Click to see the license"));
-
-        return Line($"Note: This software is copyrighted and {click} under the MIT license.  The software is beta and therefore subject to change.  In its current state, it is primarily useful for refining the language, building a reference implementation, and receiving feedback.  As noted above, implementations in other languages are anticipated.  The author welcomes comments, criticisms and suggestions.  ");
-    }
-
-    // Template:
-    // [`
-    // {.} Examples
-    //
-    // The following examples illustrate various aspects of the TextTemplate language:
-    //
-    //    {.} {'A simple template'.#Click('/load/simple','Simple template')}
-    //    {.} {'A demonstration of outlining'.#Click('/load/outline','Outline template')}
-    //    {.} {'A demonstration of bullets'.#Click('/load/bullets','Bullets template')}
-    //    {.} {'Use of Assert() for validating template output'.#Click('/load/tests','Tests template')}
-    //    {.} {'Some interesting ways of using TextTemplate with the web'.#Click('/load/web','Web template')}
-    //    {.} {'Date manipulation for a "To Do" list'.#Click('/load/events','Events template')}
-    //    {.} {'A demonstration of grouping and order'.#Click('/load/birthdays','Birthdays template')}
-    //    {.} {'Experimental application of a computed url to call ElasticSearch'.#Click('/load/elastic','Calling elastic')}
-    // ]
-    // Source: "templates/startup.template":168:12
-    private TemplateContent examples()
-    {
-        object? content = Context.CreateBullet("\u0001{.} ");
-        object? content_2 = Context.CreateBullet("\n   \u0001{.} ");
-        object? click = EvaluationContext.Invoke(MethodInput(itemContext => "A simple template"), methodValue => ApplySubtemplate("Click", methodValue, "/load/simple", "Simple template"));
-        object? content_3 = Context.CreateBullet("\n   \u0001{.} ");
-        object? click_2 = EvaluationContext.Invoke(MethodInput(itemContext => "A demonstration of outlining"), methodValue_2 => ApplySubtemplate("Click", methodValue_2, "/load/outline", "Outline template"));
-        object? content_4 = Context.CreateBullet("\n   \u0001{.} ");
-        object? click_3 = EvaluationContext.Invoke(MethodInput(itemContext => "A demonstration of bullets"), methodValue_3 => ApplySubtemplate("Click", methodValue_3, "/load/bullets", "Bullets template"));
-        object? content_5 = Context.CreateBullet("\n   \u0001{.} ");
-        object? click_4 = EvaluationContext.Invoke(MethodInput(itemContext => "Use of Assert() for validating template output"), methodValue_4 => ApplySubtemplate("Click", methodValue_4, "/load/tests", "Tests template"));
-        object? content_6 = Context.CreateBullet("\n   \u0001{.} ");
-        object? click_5 = EvaluationContext.Invoke(MethodInput(itemContext => "Some interesting ways of using TextTemplate with the web"), methodValue_5 => ApplySubtemplate("Click", methodValue_5, "/load/web", "Web template"));
-        object? content_7 = Context.CreateBullet("\n   \u0001{.} ");
-        object? click_6 = EvaluationContext.Invoke(MethodInput(itemContext => "Date manipulation for a \"To Do\" list"), methodValue_6 => ApplySubtemplate("Click", methodValue_6, "/load/events", "Events template"));
-        object? content_8 = Context.CreateBullet("\n   \u0001{.} ");
-        object? click_7 = EvaluationContext.Invoke(MethodInput(itemContext => "A demonstration of grouping and order"), methodValue_7 => ApplySubtemplate("Click", methodValue_7, "/load/birthdays", "Birthdays template"));
-        object? content_9 = Context.CreateBullet("\n   \u0001{.} ");
-        object? click_8 = EvaluationContext.Invoke(MethodInput(itemContext => "Experimental application of a computed url to call ElasticSearch"), methodValue_8 => ApplySubtemplate("Click", methodValue_8, "/load/elastic", "Calling elastic"));
+        TemplateValue overview = Value(EvaluateSubtemplate("overview"));
 
         return Line($$"""
-            {{content}}Examples
+                                         The TextTemplate Language
             
-            The following examples illustrate various aspects of the TextTemplate language:
-            {{content_2}}{{click}}{{content_3}}{{click_2}}{{content_4}}{{click_3}}{{content_5}}{{click_4}}{{content_6}}{{click_5}}{{content_7}}{{click_6}}{{content_8}}{{click_7}}{{content_9}}{{click_8}}
+            {{overview}}
             """);
-    }
-
-    // Template:
-    // [<a title='{$2=>[{$2}],[Click to see the Github project]}' `
-    //    style="font-style:italic;text-decoration: underline;cursor: pointer" `
-    //    href="{!$1.StartsWith('/')->[https:{'//'}]}{$1}">{$0}</a>]
-    // Source: "templates/startup.template":165:9
-    private TemplateContent Click()
-    {
-        object? item2Result = (IsTruthy("$2") ? Each(itemContext => new Startup(itemContext).renderItem2()) : Each(itemContext => Line($"Click to see the Github project")));
-        object? choice = (!(Context.TestCondition(EvaluationContext.Invoke(MethodInput("$1"), methodValue => Builtins.StartsWith(methodValue, "/")))) ? Each(itemContext => Line($"https://")) : "");
-        object? item1 = Get("$1");
-        object? item0 = Get("$0");
-
-        return Line($"<a title='{item2Result}' style=\"font-style:italic;text-decoration: underline;cursor: pointer\" href=\"{choice}{item1}\">{item0}</a>");
-    }
-
-    // Template:
-    // [{$2}]
-    // Source: "templates/startup.template":165:25
-    private TemplateContent renderItem2()
-    {
-        object? item2 = Get("$2");
-
-        return Line($"{item2}");
-    }
-
-    // Template:
-    // [{fname} {lname} is {isAlive=>[alive],[dead]}]
-    // Source: "templates/startup.template":164:15
-    private TemplateContent deadoralive()
-    {
-        object? fname = Get("fname");
-        object? lname = Get("lname");
-        object? isAliveResult = (IsTruthy("isAlive") ? Each(itemContext => Line($"alive")) : Each(itemContext => Line($"dead")));
-
-        return Line($"{fname} {lname} is {isAliveResult}");
-    }
-
-    // Template:
-    // [subtemplates that can replace repeated expressions, `
-    //       be shared, be used as functions, replace conditional expressions as `
-    //       well as method arguments]
-    // Source: "templates/startup.template":161:14
-    private TemplateContent subexample()
-    {
-        return Line($"subtemplates that can replace repeated expressions, be shared, be used as functions, replace conditional expressions as well as method arguments");
-    }
-
-    // Template:
-    // [The goals of the project (not necessarily achieved with version 1) are to create a language  `
-    // that is:
-    //
-    // 	{.} Concise, through the use of language constructs and default processing that `
-    // 		eliminate unnecessary verbiage
-    // 	{.} Readable, through the use of familiar syntax, properly-named methods, and `
-    // 		flexible comments and whitespace
-    // 	{.} Intuitive, through a highly generalized implementation such that once the `
-    // 		basic concepts of the language ` 
-    // 		are grasped for simple operations, performing more advanced operations `
-    // 		should not require unique or specialized knowledge
-    // 	{.} Consistent, through an implementation that avoids, wherever possible, special `
-    // 		cases and restrictions
-    // 	{.} Rich, through the anticipation and implementation of a wide range of methods and `
-    // 		operators that perform typical as well as `
-    // 	    extraordinary manipulations
-    // 	{.} Documented, through content that includes adequate examples to demonstrate the concepts
-    // 	{.} Universal, through multiple implementations in a variety of computer languages, `
-    // 	    starting with JavaScript/Typescript, followed by Java, C# and others]
-    // Source: "templates/startup.template":142:9
-    private TemplateContent goals()
-    {
-        object? content = Context.CreateBullet("\n    \u0001{.} ");
-        object? content_2 = Context.CreateBullet("\n    \u0001{.} ");
-        object? content_3 = Context.CreateBullet("\n    \u0001{.} ");
-        object? content_4 = Context.CreateBullet("\n    \u0001{.} ");
-        object? content_5 = Context.CreateBullet("\n    \u0001{.} ");
-        object? content_6 = Context.CreateBullet("\n    \u0001{.} ");
-        object? content_7 = Context.CreateBullet("\n    \u0001{.} ");
-
-        return Line($$"""
-            The goals of the project (not necessarily achieved with version 1) are to create a language that is:
-            {{content}}Concise, through the use of language constructs and default processing that eliminate unnecessary verbiage{{content_2}}Readable, through the use of familiar syntax, properly-named methods, and flexible comments and whitespace{{content_3}}Intuitive, through a highly generalized implementation such that once the basic concepts of the language are grasped for simple operations, performing more advanced operations should not require unique or specialized knowledge{{content_4}}Consistent, through an implementation that avoids, wherever possible, special cases and restrictions{{content_5}}Rich, through the anticipation and implementation of a wide range of methods and operators that perform typical as well as extraordinary manipulations{{content_6}}Documented, through content that includes adequate examples to demonstrate the concepts{{content_7}}Universal, through multiple implementations in a variety of computer languages, starting with JavaScript/Typescript, followed by Java, C# and others
-            """);
-    }
-
-    // Template:
-    // [Welcome to the TextTemplate documentation and editor.  TextTemplate is a `
-    // declarative domain-specific language `
-    // for specifying string-interpolated templates.  It supports concise expressions `
-    // that can specify formatting, data manipulation, logic and layout in order to `
-    // facilitate the design and maintenance of code that transforms data into text.
-    //
-    // TextTemplate templates merge strings (templates) with data, typically JSON, to compose `
-    // interpolated and formatted output strings.  For `
-    // example, with data such as {'{"first":"Hello", "second":"World!!}'} and a `
-    // template like {'[Interpolation example: {first} {second}!!]'}, the language will `
-    // produce:]
-    // Source: "templates/startup.template":131:9
-    private TemplateContent intro()
-    {
-        return Line($$"""
-            Welcome to the TextTemplate documentation and editor.  TextTemplate is a declarative domain-specific language for specifying string-interpolated templates.  It supports concise expressions that can specify formatting, data manipulation, logic and layout in order to facilitate the design and maintenance of code that transforms data into text.
-            
-            TextTemplate templates merge strings (templates) with data, typically JSON, to compose interpolated and formatted output strings.  For example, with data such as {"first":"Hello", "second":"World!!} and a template like [Interpolation example: {first} {second}!!], the language will produce:
-            """);
-    }
-
-    // Template:
-    // [`
-    // {.} Introduction
-    //
-    // {#intro}
-    //
-    //    {
-    //       '{"first":"Hello", "second":"World"}':
-    //       [Interpolation example: {first} {second}!!]
-    //    }
-    //
-    // {#goals}
-    //
-    // Notice that if you expand the folded lines in the TextTemplate Editor in the left pane, `
-    // you'll see text that is similar to this output.  That is because `
-    // this documentation is actually a "live" rendering of the texttemplate language input `
-    // in the editor.  If you change the text in the editor, `
-    // the documentation will change.  The editor can be a playground for `
-    // trying out examples of the language and developing templates.  Look through the
-    // TextTemplate source for the following paragraphs in the editor to see the language `
-    // in action
-    //
-    // While the TextTemplate language is similar to other string interpolation notations, it `
-    // has a number of unique features including:
-    //
-    //    {.} Automatic composition of multi-valued data into {
-    //    // this is the data
-    //    '{"pets":[ 
-    //       {"type":"cat"}
-    //       ,{"type":"dog"}
-    //       ,{"type":"tiger"}
-    //    ]}':
-    //    // this is the template
-    //    ["anded" phrases (e.g., "{pets:[{type}s].Join(', ',' and ')}") or bulleted `
-    //     lists
-    //     {pets:[
-    //        {.} {type}s]}].@BulletStyle('-')} 
-    //
-    //    {.} Control over the detection of {'{"test":"value"}':
-    //     [{test->[available]} values and replacement of `
-    //     {unavailable}].@MissingValue('missing')} values
-    //
-    //    {.} A rich set of methods that can perform string`
-    //       {'replacing'.Replace('ing','ement')}, `
-    //       {' trimming '.Trim()}, extract {' substringy'.Substr(1,9)}s, do `
-    //       {'padding'.Align(9,'C','-')}, `
-    //        change the {'case'.ToUpper()} of data, `
-    //       {'true'.Matches('yes','1',/True/i)=>[test],[fail]} data for  `
-    //       multiple criteria including matching regular expressions, `
-    //       count and compare {'{"element1":"multiple","element2":"values"}':
-    //          [{element1.LessThan([{element2}])->[{element1} {element2}]}]} and `
-    //          "@" (annotation) methods that can control template behavior
-    //
-    //    {.} Modularity through the use of {#subexample}
-    //       
-    //    {.} Data manipulation methods that allow data to be selected, ordered and `
-    //       grouped like the following example that selects and `
-    //       groups the birthdays of a few individuals `
-    //       from 1500 records of external data based on birth day and astrological sign:
-    //          {#externalData.Where(dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D')
-    //             .GroupBy(sign, 'group'):[{sign} 
-    //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
-    //                .@DateFormat('M/D/YYYY')
-    //                .@DateTest(/^d/i)}
-    //
-    //    {.} Date recognition and formatting methods that can use a single `
-    //      date, e.g., `
-    //        {#externalData.Where(dob.Substr(0,7) = '1967-10'):["{dob}", to `
-    //        show that {fname} {lname} was born in `
-    //        the month of {dob.ToDate('MMMM')} in `
-    //         {dob.ToDate('YYYY')} on {dob.ToDate('dddd')} the `
-    //         {dob.ToDate('do')}]}
-    //
-    //    {.} Data encoding that can be used to insure that data being templated `
-    //        for output as html, xml or uri's can be properly escaped, e.g., `
-    //        "{'{"data":"Joan\'s <data>"}':[{data}].@EncodeDataFor('html')
-    //           .EncodeFor('html')}"
-    //
-    //    {.} The ability to check for "falsiness", where, for example, the string "0" `
-    //        can be interpreted as false to show that`
-    //        {#externalData.Where(dob.Substr(5,5) = '01-25'): 
-    //        [{#deadoralive.@Falsy(/^0$/)}].Join(', ',' and ')}
-    //
-    //    {.} and, finally, as can be seen from this document, automatically `
-    //       bulleted and numbered outlining
-    //
-    // {.} Acknowledgements
-    //
-    // This project is based on a number of powerful opens-source technologies, without `
-    // which it would not have been possible.  These include:
-    //
-    //      {.} {'Microsoft\'s Monaco Editor'
-    //           .#Click('github.com/microsoft/monaco-editor')} the powerful `
-    //           open source Visual Studio that supports syntax colorizing, error `
-    //           reporting, folding, and so many more features
-    //      {.} {'ANTLR (ANother Tool for Language Recognition)'
-    //          .#Click('www.antlr.org/','click to go to the ANTLR website')} `
-    //           the open source lexer and parser technology that provides `
-    //           the foundation for processing the TextTemplate language
-    //      {.} {'The "calc-monaco-editor" project'
-    //          .#Click('github.com/Strumenta/calc-monaco-editor')} `
-    //           Federico Tomassetti's merging of ANTLR4 with Monaco that `
-    //           is described in this {'article'.#Click(
-    //                'tomassetti.me/writing-a-browser-based-editor-using-monaco-and-antlr/'
-    //                ,'Click to go to the article')}
-    //      {.} {'Moment.js'
-    //           .#Click('momentjs.com','Click to go to the website')} an open-source `
-    //           library for date formatting
-    //      
-    // {.} Documentation
-    //
-    // The TextTemplate language is documented using `
-    //      a "live" template-based web page  `
-    //      {'here'.#Click('/load/docs','Click to see the documentation using TextTemplate')}`
-    //      or if you prefer, you can view an HTML version rendered on the server `
-    //      {'here'.#Click('/runonserver/docs','Click to see the documentation rendered on the server')}.  Note  `
-    //      that any of the demo templates can be rendered on the server using the path `
-    //      '/runonserver/{'['}template name{']'}' as in `
-    //      {'/runonserver/events'.#Click('/runonserver/events','Click to see the events template')}.
-    //
-    // {#examples}
-    //
-    // {#notes}
-    //
-    //
-    // ].@BulletStyle('I.','(a)','•','1.').@BulletMode('explicit')
-    // Source: "templates/startup.template":6:12
-    private object? overview()
-    {
-        return Annotate(
-            new Func<EvaluationContext, EvaluationContext>[]
-            {
-                annotatedContext => annotatedContext.WithBulletStyle("I.", "(a)", "•", "1."),
-                annotatedContext => annotatedContext.WithBulletMode("explicit")
-            },
-            annotatedContext => annotatedContext.Receiver(itemContext => new Startup(itemContext).renderIntro()));
     }
 
     // Template:
@@ -651,49 +160,88 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":6:12
     private TemplateContent renderIntro()
     {
-        object? content = Context.CreateBullet("\u0001{.} ");
-        object? intro = Each(itemContext => itemContext.Named("intro"));
-        object? content_2 = InContext("{\"first\":\"Hello\", \"second\":\"World\"}", dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderFirst()));
-        object? goals = Each(itemContext => itemContext.Named("goals"));
-        object? content_3 = Context.CreateBullet("\n   \u0001{.} ");
-        object? content_4 = InContext("{\"pets\":[ \n      {\"type\":\"cat\"}\n      ,{\"type\":\"dog\"}\n      ,{\"type\":\"tiger\"}\n   ]}", dataContext => new Startup(dataContext).renderBulletStyle());
-        object? content_5 = Context.CreateBullet("\n   \u0001{.} ");
-        object? content_6 = InContext("{\"test\":\"value\"}", dataContext => new Startup(dataContext).renderMissingValue());
-        object? content_7 = Context.CreateBullet("\n   \u0001{.} ");
-        object? replace = EvaluationContext.Invoke(MethodInput(itemContext => "replacing"), methodValue => Builtins.Replace(methodValue, "ing", "ement"));
-        object? trim = EvaluationContext.Invoke(MethodInput(itemContext => " trimming "), methodValue_2 => Builtins.Trim(methodValue_2));
-        object? substr = EvaluationContext.Invoke(MethodInput(itemContext => " substringy"), methodValue_3 => Builtins.Substr(methodValue_3, EvaluationContext.ParseInteger("1"), EvaluationContext.ParseInteger("9")));
-        object? align = EvaluationContext.Invoke(MethodInput(itemContext => "padding"), methodValue_4 => Builtins.Align(methodValue_4, EvaluationContext.ParseInteger("9"), "C", "-"));
-        object? toUpper = EvaluationContext.Invoke(MethodInput(itemContext => "case"), methodValue_5 => Builtins.ToUpper(methodValue_5));
-        object? choice = (Context.TestCondition(EvaluationContext.Invoke(MethodInput(itemContext => "true"), methodValue_6 => Builtins.Matches(Context, methodValue_6, "yes", "1", new TemplateRegex("/True/i", "templates/startup.template:52:33")))) ? Each(itemContext => Line($"test")) : Each(itemContext => Line($"fail")));
-        object? content_8 = InContext("{\"element1\":\"multiple\",\"element2\":\"values\"}", dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderChoice()));
-        object? content_9 = Context.CreateBullet("\n   \u0001{.} ");
-        object? subexample = Each(itemContext => itemContext.Named("subexample"));
-        object? content_10 = Context.CreateBullet("\n   \u0001{.} ");
-        object? groupBy = InContext(Context.GroupBy(Context.Where(MethodInput(itemContext => itemContext.Named("externalData")), itemContext => new Startup(itemContext).renderContent()), itemContext => itemContext.Lookup("sign"), "sign", new object?[] { "group" }, true), dataContext => new Startup(dataContext).renderDateTest(), null, dataContext => new Startup(dataContext).groupLoadedData());
-        object? content_11 = Context.CreateBullet("\n   \u0001{.} ");
-        object? where = InContext(Context.Where(MethodInput(itemContext => itemContext.Named("externalData")), itemContext => new Startup(itemContext).renderContent_2()), dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderDob()), null, dataContext => new Startup(dataContext).filterLoadedData());
-        object? content_12 = Context.CreateBullet("\n   \u0001{.} ");
-        object? content_13 = InContext("{\"data\":\"Joan's <data>\"}", dataContext => new Startup(dataContext).renderEncodeFor());
-        object? content_14 = Context.CreateBullet("\n   \u0001{.} ");
-        object? where_2 = InContext(Context.Where(MethodInput(itemContext => itemContext.Named("externalData")), itemContext => new Startup(itemContext).renderContent_3()), dataContext => new Startup(dataContext).renderJoin_2(), null, dataContext => new Startup(dataContext).filterLoadedData_2());
-        object? content_15 = Context.CreateBullet("\n   \u0001{.} ");
-        object? content_16 = Context.CreateBullet("\n\u0001{.} ");
-        object? content_17 = Context.CreateBullet("\n     \u0001{.} ");
-        object? click = EvaluationContext.Invoke(MethodInput(itemContext => "Microsoft's Monaco Editor"), methodValue_7 => ApplySubtemplate("Click", methodValue_7, "github.com/microsoft/monaco-editor"));
-        object? content_18 = Context.CreateBullet("\n     \u0001{.} ");
-        object? click_2 = EvaluationContext.Invoke(MethodInput(itemContext => "ANTLR (ANother Tool for Language Recognition)"), methodValue_8 => ApplySubtemplate("Click", methodValue_8, "www.antlr.org/", "click to go to the ANTLR website"));
-        object? content_19 = Context.CreateBullet("\n     \u0001{.} ");
-        object? click_3 = EvaluationContext.Invoke(MethodInput(itemContext => "The \"calc-monaco-editor\" project"), methodValue_9 => ApplySubtemplate("Click", methodValue_9, "github.com/Strumenta/calc-monaco-editor"));
-        object? click_4 = EvaluationContext.Invoke(MethodInput(itemContext => "article"), methodValue_10 => ApplySubtemplate("Click", methodValue_10, "tomassetti.me/writing-a-browser-based-editor-using-monaco-and-antlr/", "Click to go to the article"));
-        object? content_20 = Context.CreateBullet("\n     \u0001{.} ");
-        object? click_5 = EvaluationContext.Invoke(MethodInput(itemContext => "Moment.js"), methodValue_11 => ApplySubtemplate("Click", methodValue_11, "momentjs.com", "Click to go to the website"));
-        object? content_21 = Context.CreateBullet("\n\u0001{.} ");
-        object? click_6 = EvaluationContext.Invoke(MethodInput(itemContext => "here"), methodValue_12 => ApplySubtemplate("Click", methodValue_12, "/load/docs", "Click to see the documentation using TextTemplate"));
-        object? click_7 = EvaluationContext.Invoke(MethodInput(itemContext => "here"), methodValue_13 => ApplySubtemplate("Click", methodValue_13, "/runonserver/docs", "Click to see the documentation rendered on the server"));
-        object? click_8 = EvaluationContext.Invoke(MethodInput(itemContext => "/runonserver/events"), methodValue_14 => ApplySubtemplate("Click", methodValue_14, "/runonserver/events", "Click to see the events template"));
-        object? examples = Each(itemContext => itemContext.Named("examples"));
-        object? notes = Each(itemContext => itemContext.Named("notes"));
+        // Template:
+        // 'true'.Matches('yes','1',/True/i)=>[test],[fail]
+        // Source: "templates/startup.template":52:8
+        TemplateValue chooseChoice()
+        {
+            if (Context.TestCondition(Collect("true")
+            .Matches(() => ["yes", "1", new TemplateRegex("/True/i", SourceLocation())]).Raw))
+            {
+                return Value(Each(itemContext => Line($"test")));
+            }
+
+            return Value(Each(itemContext => Line($"fail")));
+        }
+
+        TemplateValue content = Value(Context.CreateBullet("\u0001{.} "));
+        TemplateValue intro = Value(EvaluateSubtemplate("intro"));
+        TemplateValue content_2 = Value("{\"first\":\"Hello\", \"second\":\"World\"}")
+            .Render(InScope(item => item.renderFirst()));
+        TemplateValue goals = Value(EvaluateSubtemplate("goals"));
+        TemplateValue content_3 = Value(Context.CreateBullet("\n   \u0001{.} "));
+        TemplateValue content_4 = Value("{\"pets\":[ \n      {\"type\":\"cat\"}\n      ,{\"type\":\"dog\"}\n      ,{\"type\":\"tiger\"}\n   ]}")
+            .Render(ForItem(item => item.renderBulletStyle()));
+        TemplateValue content_5 = Value(Context.CreateBullet("\n   \u0001{.} "));
+        TemplateValue content_6 = Value("{\"test\":\"value\"}")
+            .Render(ForItem(item => item.renderMissingValue()));
+        TemplateValue content_7 = Value(Context.CreateBullet("\n   \u0001{.} "));
+        TemplateValue replace = Collect("replacing")
+            .Replace(() => ["ing", "ement"]);
+        TemplateValue trim = Collect(" trimming ")
+            .Trim();
+        TemplateValue substr = Collect(" substringy")
+            .Substr(() => [EvaluationContext.ParseInteger("1"), EvaluationContext.ParseInteger("9")]);
+        TemplateValue align = Collect("padding")
+            .Align(() => [EvaluationContext.ParseInteger("9"), "C", "-"]);
+        TemplateValue toUpper = Collect("case")
+            .ToUpper();
+        TemplateValue choice = chooseChoice();
+        TemplateValue content_8 = Value("{\"element1\":\"multiple\",\"element2\":\"values\"}")
+            .Render(InScope(item => item.renderChoice()));
+        TemplateValue content_9 = Value(Context.CreateBullet("\n   \u0001{.} "));
+        TemplateValue subexample = Value(EvaluateSubtemplate("subexample"));
+        TemplateValue content_10 = Value(Context.CreateBullet("\n   \u0001{.} "));
+        TemplateValue groupBy = Subtemplate("externalData")
+            .Where(ForItem(item => item.renderContent()))
+            .GroupBy(itemContext => itemContext.Lookup("sign"), "sign", ["group"], contextProbe: true)
+            .Render(ForItem(item => item.renderDateTest()), null, replay: ForItem(item => item.groupLoadedData()));
+        TemplateValue content_11 = Value(Context.CreateBullet("\n   \u0001{.} "));
+        TemplateValue where = Subtemplate("externalData")
+            .Where(ForItem(item => item.renderContent_2()))
+            .Render(InScope(item => item.renderDob()), null, replay: ForItem(item => item.filterLoadedData()));
+        TemplateValue content_12 = Value(Context.CreateBullet("\n   \u0001{.} "));
+        TemplateValue content_13 = Value("{\"data\":\"Joan's <data>\"}")
+            .Render(ForItem(item => item.renderEncodeFor()));
+        TemplateValue content_14 = Value(Context.CreateBullet("\n   \u0001{.} "));
+        TemplateValue where_2 = Subtemplate("externalData")
+            .Where(ForItem(item => item.renderContent_3()))
+            .Render(ForItem(item => item.renderJoin_2()), null, replay: ForItem(item => item.filterLoadedData_2()));
+        TemplateValue content_15 = Value(Context.CreateBullet("\n   \u0001{.} "));
+        TemplateValue content_16 = Value(Context.CreateBullet("\n\u0001{.} "));
+        TemplateValue content_17 = Value(Context.CreateBullet("\n     \u0001{.} "));
+        TemplateValue click = Collect("Microsoft's Monaco Editor")
+            .Call("Click", () => ["github.com/microsoft/monaco-editor"]);
+        TemplateValue content_18 = Value(Context.CreateBullet("\n     \u0001{.} "));
+        TemplateValue click_2 = Collect("ANTLR (ANother Tool for Language Recognition)")
+            .Call("Click", () => ["www.antlr.org/", "click to go to the ANTLR website"]);
+        TemplateValue content_19 = Value(Context.CreateBullet("\n     \u0001{.} "));
+        TemplateValue click_3 = Collect("The \"calc-monaco-editor\" project")
+            .Call("Click", () => ["github.com/Strumenta/calc-monaco-editor"]);
+        TemplateValue click_4 = Collect("article")
+            .Call("Click", () => ["tomassetti.me/writing-a-browser-based-editor-using-monaco-and-antlr/", "Click to go to the article"]);
+        TemplateValue content_20 = Value(Context.CreateBullet("\n     \u0001{.} "));
+        TemplateValue click_5 = Collect("Moment.js")
+            .Call("Click", () => ["momentjs.com", "Click to go to the website"]);
+        TemplateValue content_21 = Value(Context.CreateBullet("\n\u0001{.} "));
+        TemplateValue click_6 = Collect("here")
+            .Call("Click", () => ["/load/docs", "Click to see the documentation using TextTemplate"]);
+        TemplateValue click_7 = Collect("here")
+            .Call("Click", () => ["/runonserver/docs", "Click to see the documentation rendered on the server"]);
+        TemplateValue click_8 = Collect("/runonserver/events")
+            .Call("Click", () => ["/runonserver/events", "Click to see the events template"]);
+        TemplateValue examples = Value(EvaluateSubtemplate("examples"));
+        TemplateValue notes = Value(EvaluateSubtemplate("notes"));
 
         return Line($$"""
             {{content}}Introduction
@@ -735,67 +283,396 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     }
 
     // Template:
-    // [{#deadoralive.@Falsy(/^0$/)}].Join(', ',' and ')
-    // Source: "templates/startup.template":86:8
-    private object? renderJoin_2()
+    // [`
+    // {.} Introduction
+    //
+    // {#intro}
+    //
+    //    {
+    //       '{"first":"Hello", "second":"World"}':
+    //       [Interpolation example: {first} {second}!!]
+    //    }
+    //
+    // {#goals}
+    //
+    // Notice that if you expand the folded lines in the TextTemplate Editor in the left pane, `
+    // you'll see text that is similar to this output.  That is because `
+    // this documentation is actually a "live" rendering of the texttemplate language input `
+    // in the editor.  If you change the text in the editor, `
+    // the documentation will change.  The editor can be a playground for `
+    // trying out examples of the language and developing templates.  Look through the
+    // TextTemplate source for the following paragraphs in the editor to see the language `
+    // in action
+    //
+    // While the TextTemplate language is similar to other string interpolation notations, it `
+    // has a number of unique features including:
+    //
+    //    {.} Automatic composition of multi-valued data into {
+    //    // this is the data
+    //    '{"pets":[ 
+    //       {"type":"cat"}
+    //       ,{"type":"dog"}
+    //       ,{"type":"tiger"}
+    //    ]}':
+    //    // this is the template
+    //    ["anded" phrases (e.g., "{pets:[{type}s].Join(', ',' and ')}") or bulleted `
+    //     lists
+    //     {pets:[
+    //        {.} {type}s]}].@BulletStyle('-')} 
+    //
+    //    {.} Control over the detection of {'{"test":"value"}':
+    //     [{test->[available]} values and replacement of `
+    //     {unavailable}].@MissingValue('missing')} values
+    //
+    //    {.} A rich set of methods that can perform string`
+    //       {'replacing'.Replace('ing','ement')}, `
+    //       {' trimming '.Trim()}, extract {' substringy'.Substr(1,9)}s, do `
+    //       {'padding'.Align(9,'C','-')}, `
+    //        change the {'case'.ToUpper()} of data, `
+    //       {'true'.Matches('yes','1',/True/i)=>[test],[fail]} data for  `
+    //       multiple criteria including matching regular expressions, `
+    //       count and compare {'{"element1":"multiple","element2":"values"}':
+    //          [{element1.LessThan([{element2}])->[{element1} {element2}]}]} and `
+    //          "@" (annotation) methods that can control template behavior
+    //
+    //    {.} Modularity through the use of {#subexample}
+    //       
+    //    {.} Data manipulation methods that allow data to be selected, ordered and `
+    //       grouped like the following example that selects and `
+    //       groups the birthdays of a few individuals `
+    //       from 1500 records of external data based on birth day and astrological sign:
+    //          {#externalData.Where(dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D')
+    //             .GroupBy(sign, 'group'):[{sign} 
+    //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
+    //                .@DateFormat('M/D/YYYY')
+    //                .@DateTest(/^d/i)}
+    //
+    //    {.} Date recognition and formatting methods that can use a single `
+    //      date, e.g., `
+    //        {#externalData.Where(dob.Substr(0,7) = '1967-10'):["{dob}", to `
+    //        show that {fname} {lname} was born in `
+    //        the month of {dob.ToDate('MMMM')} in `
+    //         {dob.ToDate('YYYY')} on {dob.ToDate('dddd')} the `
+    //         {dob.ToDate('do')}]}
+    //
+    //    {.} Data encoding that can be used to insure that data being templated `
+    //        for output as html, xml or uri's can be properly escaped, e.g., `
+    //        "{'{"data":"Joan\'s <data>"}':[{data}].@EncodeDataFor('html')
+    //           .EncodeFor('html')}"
+    //
+    //    {.} The ability to check for "falsiness", where, for example, the string "0" `
+    //        can be interpreted as false to show that`
+    //        {#externalData.Where(dob.Substr(5,5) = '01-25'): 
+    //        [{#deadoralive.@Falsy(/^0$/)}].Join(', ',' and ')}
+    //
+    //    {.} and, finally, as can be seen from this document, automatically `
+    //       bulleted and numbered outlining
+    //
+    // {.} Acknowledgements
+    //
+    // This project is based on a number of powerful opens-source technologies, without `
+    // which it would not have been possible.  These include:
+    //
+    //      {.} {'Microsoft\'s Monaco Editor'
+    //           .#Click('github.com/microsoft/monaco-editor')} the powerful `
+    //           open source Visual Studio that supports syntax colorizing, error `
+    //           reporting, folding, and so many more features
+    //      {.} {'ANTLR (ANother Tool for Language Recognition)'
+    //          .#Click('www.antlr.org/','click to go to the ANTLR website')} `
+    //           the open source lexer and parser technology that provides `
+    //           the foundation for processing the TextTemplate language
+    //      {.} {'The "calc-monaco-editor" project'
+    //          .#Click('github.com/Strumenta/calc-monaco-editor')} `
+    //           Federico Tomassetti's merging of ANTLR4 with Monaco that `
+    //           is described in this {'article'.#Click(
+    //                'tomassetti.me/writing-a-browser-based-editor-using-monaco-and-antlr/'
+    //                ,'Click to go to the article')}
+    //      {.} {'Moment.js'
+    //           .#Click('momentjs.com','Click to go to the website')} an open-source `
+    //           library for date formatting
+    //      
+    // {.} Documentation
+    //
+    // The TextTemplate language is documented using `
+    //      a "live" template-based web page  `
+    //      {'here'.#Click('/load/docs','Click to see the documentation using TextTemplate')}`
+    //      or if you prefer, you can view an HTML version rendered on the server `
+    //      {'here'.#Click('/runonserver/docs','Click to see the documentation rendered on the server')}.  Note  `
+    //      that any of the demo templates can be rendered on the server using the path `
+    //      '/runonserver/{'['}template name{']'}' as in `
+    //      {'/runonserver/events'.#Click('/runonserver/events','Click to see the events template')}.
+    //
+    // {#examples}
+    //
+    // {#notes}
+    //
+    //
+    // ].@BulletStyle('I.','(a)','•','1.').@BulletMode('explicit')
+    // Source: "templates/startup.template":6:12
+    private TemplateValue overview()
     {
-        return EvaluationContext.Invoke(MethodInput(itemContext => new Startup(itemContext).renderFalsy()), methodValue => Builtins.Join(methodValue, ", ", " and "));
-    }
-
-    // Template:
-    // [{#deadoralive.@Falsy(/^0$/)}]
-    // Source: "templates/startup.template":86:8
-    private TemplateContent renderFalsy()
-    {
-        object? falsy = Annotate(
+        return Value(Annotate(
             new Func<EvaluationContext, EvaluationContext>[]
             {
-                annotatedContext => annotatedContext.WithFalsy(new TemplateRegex("/^0$/", "templates/startup.template:86:30"))
+                annotatedContext => annotatedContext.WithBulletStyle("I.", "(a)", "•", "1."),
+                annotatedContext => annotatedContext.WithBulletMode("explicit")
             },
-            annotatedContext => annotatedContext.Receiver(itemContext => itemContext.Named("deadoralive")));
-
-        return Line($"{falsy}");
+            annotatedContext => annotatedContext.Receiver(ForItem(item => item.renderIntro()))));
     }
 
     // Template:
-    // dob.Substr(5,5) = '01-25'
-    // Source: "templates/startup.template":85:29
-    private bool renderContent_3()
+    // [Interpolation example: {first} {second}!!]
+    // Source: "templates/startup.template":13:7
+    private TemplateContent renderFirst()
     {
-        return EvaluationContext.Compare(EvaluationContext.Invoke(MethodInput("dob"), methodValue => Builtins.Substr(methodValue, EvaluationContext.ParseInteger("5"), EvaluationContext.ParseInteger("5"))), "=", "01-25");
+        TemplateValue first = Read("first");
+        TemplateValue second = Read("second");
+
+        return Line($"Interpolation example: {first} {second}!!");
     }
 
     // Template:
-    // [{data}].@EncodeDataFor('html')
-    //           .EncodeFor('html')
-    // Source: "templates/startup.template":80:38
-    private object? renderEncodeFor()
+    // ["anded" phrases (e.g., "{pets:[{type}s].Join(', ',' and ')}") or bulleted `
+    //     lists
+    //     {pets:[
+    //        {.} {type}s]}]
+    // Source: "templates/startup.template":38:4
+    private TemplateContent renderAndedPhrasesEGO()
     {
-        return Annotate(
+        TemplateValue pets = Read("pets")
+            .Render(ForItem(item => item.renderJoin()));
+        TemplateValue pets_2 = Read("pets")
+            .Render(InScope(item => item.renderType_2()));
+
+        return Line($$"""
+            "anded" phrases (e.g., "{{pets}}") or bulleted lists
+                {{pets_2}}
+            """);
+    }
+
+    // Template:
+    // ["anded" phrases (e.g., "{pets:[{type}s].Join(', ',' and ')}") or bulleted `
+    //     lists
+    //     {pets:[
+    //        {.} {type}s]}].@BulletStyle('-')
+    // Source: "templates/startup.template":38:4
+    private TemplateValue renderBulletStyle()
+    {
+        return Value(Annotate(
             new Func<EvaluationContext, EvaluationContext>[]
             {
-                annotatedContext => annotatedContext.WithEncoding("templates/startup.template:80:38", "html")
+                annotatedContext => annotatedContext.WithBulletStyle("-")
             },
-            annotatedContext => new Startup(annotatedContext).renderEncodeFor_2());
+            annotatedContext => annotatedContext.Receiver(ForItem(item => item.renderAndedPhrasesEGO()))));
     }
 
     // Template:
-    // [{data}].@EncodeDataFor('html')
-    //           .EncodeFor('html')
-    // Source: "templates/startup.template":80:38
-    private object? renderEncodeFor_2()
+    // [{type}s]
+    // Source: "templates/startup.template":38:35
+    private TemplateContent renderType()
     {
-        return EvaluationContext.Invoke(MethodInput(itemContext => new Startup(itemContext).renderData()), methodValue => Builtins.EncodeFor("templates/startup.template:80:38", methodValue, "html"));
+        TemplateValue type = Read("type");
+
+        return Line($"{type}s");
     }
 
     // Template:
-    // [{data}]
-    // Source: "templates/startup.template":80:38
-    private TemplateContent renderData()
+    // [{type}s].Join(', ',' and ')
+    // Source: "templates/startup.template":38:35
+    private TemplateValue renderJoin()
     {
-        object? data = Get("data");
+        return Collect(ForItem(item => item.renderType()))
+            .Join(() => [", ", " and "]);
+    }
 
-        return Line($"{data}");
+    // Template:
+    // [
+    //        {.} {type}s]
+    // Source: "templates/startup.template":40:11
+    private TemplateContent renderType_2()
+    {
+        TemplateValue content = Value(Context.CreateBullet("\n       \u0001{.} "));
+        TemplateValue type = Read("type");
+
+        return Line($"{content}{type}s");
+    }
+
+    // Template:
+    // [{test->[available]} values and replacement of `
+    //     {unavailable}]
+    // Source: "templates/startup.template":44:5
+    private TemplateContent renderTestResult()
+    {
+        // Template:
+        // test->[available]
+        // Source: "templates/startup.template":44:7
+        TemplateValue chooseTestResult()
+        {
+            if (IsTruthy("test"))
+            {
+                return Value(Each(itemContext => Line($"available")));
+            }
+
+            return Value("");
+        }
+
+        TemplateValue testResult = chooseTestResult();
+        TemplateValue unavailable = Read("unavailable");
+
+        return Line($"{testResult} values and replacement of {unavailable}");
+    }
+
+    // Template:
+    // [{test->[available]} values and replacement of `
+    //     {unavailable}].@MissingValue('missing')
+    // Source: "templates/startup.template":44:5
+    private TemplateValue renderMissingValue()
+    {
+        return Value(Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithMissingValue("missing")
+            },
+            annotatedContext => annotatedContext.Receiver(ForItem(item => item.renderTestResult()))));
+    }
+
+    // Template:
+    // [{element1.LessThan([{element2}])->[{element1} {element2}]}]
+    // Source: "templates/startup.template":55:10
+    private TemplateContent renderChoice()
+    {
+        // Template:
+        // element1.LessThan([{element2}])->[{element1} {element2}]
+        // Source: "templates/startup.template":55:12
+        TemplateValue chooseChoice()
+        {
+            if (Context.TestCondition(Field("element1")
+            .LessThan(() => [Each(ForItem(item => item.renderElement2()))]).Raw))
+            {
+                return Value(Each(ForItem(item => item.renderElement1())));
+            }
+
+            return Value("");
+        }
+
+        TemplateValue choice = chooseChoice();
+
+        return Line($"{choice}");
+    }
+
+    // Template:
+    // [{element2}]
+    // Source: "templates/startup.template":55:30
+    private TemplateContent renderElement2()
+    {
+        TemplateValue element2 = Read("element2");
+
+        return Line($"{element2}");
+    }
+
+    // Template:
+    // [{element1} {element2}]
+    // Source: "templates/startup.template":55:45
+    private TemplateContent renderElement1()
+    {
+        TemplateValue element1 = Read("element1");
+        TemplateValue element2 = Read("element2");
+
+        return Line($"{element1} {element2}");
+    }
+
+    // Template:
+    // #externalData.Where(dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D')
+    //             .GroupBy(sign, 'group')
+    // Source: "templates/startup.template":64:11
+    private TemplateValue groupLoadedData()
+    {
+        return Value(Context.Current)
+            .Where(ForItem(item => item.renderContent()))
+            .GroupBy(itemContext => itemContext.Lookup("sign"), "sign", ["group"], contextProbe: false);
+    }
+
+    // Template:
+    // dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D'
+    // Source: "templates/startup.template":64:31
+    private bool renderContent()
+    {
+        return (EvaluationContext.Compare(Field("dob")
+            .ToDate(() => ["DD"]).Raw, "=", "27") && EvaluationContext.Compare(Field("lname")
+            .Substr(() => [EvaluationContext.ParseInteger("0"), EvaluationContext.ParseInteger("1")]).Raw, "=", "D"));
+    }
+
+    // Template:
+    // [{sign} 
+    //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
+    // Source: "templates/startup.template":65:37
+    private TemplateContent renderSign()
+    {
+        TemplateValue sign = Read("sign");
+        TemplateValue orderBy = Field("group")
+            .OrderBy(itemContext => itemContext.Lookup("lname"), "key", [], contextProbe: true)
+            .Render(InScope(item => item.renderFname()), null, replay: ForItem(item => item.orderLoadedData()));
+
+        return Line($$"""
+            {{sign}} 
+                       {{orderBy}}
+            """);
+    }
+
+    // Template:
+    // [{sign} 
+    //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
+    //                .@DateFormat('M/D/YYYY')
+    //                .@DateTest(/^d/i)
+    // Source: "templates/startup.template":65:37
+    private TemplateValue renderDateTest()
+    {
+        return Value(Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithDateFormat(SourceLocation(), "M/D/YYYY"),
+                annotatedContext => annotatedContext.WithDateTest(SourceLocation(), new TemplateRegex("/^d/i", SourceLocation()))
+            },
+            annotatedContext => annotatedContext.Receiver(ForItem(item => item.renderSign()))));
+    }
+
+    // Template:
+    // group.OrderBy(lname)
+    // Source: "templates/startup.template":66:13
+    private TemplateValue orderLoadedData()
+    {
+        return Value(Context.Current)
+            .OrderBy(itemContext => itemContext.Lookup("lname"), "key", [], contextProbe: false);
+    }
+
+    // Template:
+    // [{fname} {lname} ({dob})]
+    // Source: "templates/startup.template":66:34
+    private TemplateContent renderFname()
+    {
+        TemplateValue fname = Read("fname");
+        TemplateValue lname = Read("lname");
+        TemplateValue dob = Read("dob");
+
+        return Line($"{fname} {lname} ({dob})");
+    }
+
+    // Template:
+    // #externalData.Where(dob.Substr(0,7) = '1967-10')
+    // Source: "templates/startup.template":72:9
+    private TemplateValue filterLoadedData()
+    {
+        return Value(Context.Current)
+            .Where(ForItem(item => item.renderContent_2()));
+    }
+
+    // Template:
+    // dob.Substr(0,7) = '1967-10'
+    // Source: "templates/startup.template":72:29
+    private bool renderContent_2()
+    {
+        return EvaluationContext.Compare(Field("dob")
+            .Substr(() => [EvaluationContext.ParseInteger("0"), EvaluationContext.ParseInteger("7")]).Raw, "=", "1967-10");
     }
 
     // Template:
@@ -807,433 +684,99 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/startup.template":72:58
     private TemplateContent renderDob()
     {
-        object? dob = Get("dob");
-        object? fname = Get("fname");
-        object? lname = Get("lname");
-        object? toDate = EvaluationContext.Invoke(MethodInput("dob"), methodValue => Context.ToDate("templates/startup.template:74:22", methodValue, "MMMM"));
-        object? toDate_2 = EvaluationContext.Invoke(MethodInput("dob"), methodValue_2 => Context.ToDate("templates/startup.template:75:10", methodValue_2, "YYYY"));
-        object? toDate_3 = EvaluationContext.Invoke(MethodInput("dob"), methodValue_3 => Context.ToDate("templates/startup.template:75:34", methodValue_3, "dddd"));
-        object? toDate_4 = EvaluationContext.Invoke(MethodInput("dob"), methodValue_4 => Context.ToDate("templates/startup.template:76:10", methodValue_4, "do"));
+        TemplateValue dob = Read("dob");
+        TemplateValue fname = Read("fname");
+        TemplateValue lname = Read("lname");
+        TemplateValue toDate = Field("dob")
+            .ToDate(() => ["MMMM"]);
+        TemplateValue toDate_2 = Field("dob")
+            .ToDate(() => ["YYYY"]);
+        TemplateValue toDate_3 = Field("dob")
+            .ToDate(() => ["dddd"]);
+        TemplateValue toDate_4 = Field("dob")
+            .ToDate(() => ["do"]);
 
         return Line($"\"{dob}\", to show that {fname} {lname} was born in the month of {toDate} in {toDate_2} on {toDate_3} the {toDate_4}");
     }
 
     // Template:
-    // dob.Substr(0,7) = '1967-10'
-    // Source: "templates/startup.template":72:29
-    private bool renderContent_2()
+    // [{data}]
+    // Source: "templates/startup.template":80:38
+    private TemplateContent renderData()
     {
-        return EvaluationContext.Compare(EvaluationContext.Invoke(MethodInput("dob"), methodValue => Builtins.Substr(methodValue, EvaluationContext.ParseInteger("0"), EvaluationContext.ParseInteger("7"))), "=", "1967-10");
+        TemplateValue data = Read("data");
+
+        return Line($"{data}");
     }
 
     // Template:
-    // [{sign} 
-    //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
-    //                .@DateFormat('M/D/YYYY')
-    //                .@DateTest(/^d/i)
-    // Source: "templates/startup.template":65:37
-    private object? renderDateTest()
+    // [{data}].@EncodeDataFor('html')
+    //           .EncodeFor('html')
+    // Source: "templates/startup.template":80:38
+    private TemplateValue renderEncodeFor_2()
     {
-        return Annotate(
+        return Collect(ForItem(item => item.renderData()))
+            .EncodeFor(() => ["html"]);
+    }
+
+    // Template:
+    // [{data}].@EncodeDataFor('html')
+    //           .EncodeFor('html')
+    // Source: "templates/startup.template":80:38
+    private TemplateValue renderEncodeFor()
+    {
+        return Value(Annotate(
             new Func<EvaluationContext, EvaluationContext>[]
             {
-                annotatedContext => annotatedContext.WithDateFormat("templates/startup.template:65:37", "M/D/YYYY"),
-                annotatedContext => annotatedContext.WithDateTest("templates/startup.template:65:37", new TemplateRegex("/^d/i", "templates/startup.template:68:27"))
+                annotatedContext => annotatedContext.WithEncoding(SourceLocation(), "html")
             },
-            annotatedContext => annotatedContext.Receiver(itemContext => new Startup(itemContext).renderSign()));
-    }
-
-    // Template:
-    // [{sign} 
-    //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
-    // Source: "templates/startup.template":65:37
-    private TemplateContent renderSign()
-    {
-        object? sign = Get("sign");
-        object? orderBy = InContext(Context.OrderBy(MethodInput(itemContext => itemContext.Lookup("group")), itemContext => itemContext.Lookup("lname"), "lname", new object?[] {  }, true), dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderFname()), null, dataContext => new Startup(dataContext).orderLoadedData());
-
-        return Line($$"""
-            {{sign}} 
-                       {{orderBy}}
-            """);
-    }
-
-    // Template:
-    // [{fname} {lname} ({dob})]
-    // Source: "templates/startup.template":66:34
-    private TemplateContent renderFname()
-    {
-        object? fname = Get("fname");
-        object? lname = Get("lname");
-        object? dob = Get("dob");
-
-        return Line($"{fname} {lname} ({dob})");
-    }
-
-    // Template:
-    // dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D'
-    // Source: "templates/startup.template":64:31
-    private bool renderContent()
-    {
-        return (EvaluationContext.Compare(EvaluationContext.Invoke(MethodInput("dob"), methodValue => Context.ToDate("templates/startup.template:64:31", methodValue, "DD")), "=", "27") && EvaluationContext.Compare(EvaluationContext.Invoke(MethodInput("lname"), methodValue_2 => Builtins.Substr(methodValue_2, EvaluationContext.ParseInteger("0"), EvaluationContext.ParseInteger("1"))), "=", "D"));
-    }
-
-    // Template:
-    // [{element1.LessThan([{element2}])->[{element1} {element2}]}]
-    // Source: "templates/startup.template":55:10
-    private TemplateContent renderChoice()
-    {
-        object? choice = (Context.TestCondition(EvaluationContext.Invoke(MethodInput("element1"), methodValue => Builtins.LessThan(methodValue, Each(itemContext => new Startup(itemContext).renderElement2())))) ? Each(itemContext => new Startup(itemContext).renderElement1()) : "");
-
-        return Line($"{choice}");
-    }
-
-    // Template:
-    // [{element1} {element2}]
-    // Source: "templates/startup.template":55:45
-    private TemplateContent renderElement1()
-    {
-        object? element1 = Get("element1");
-        object? element2 = Get("element2");
-
-        return Line($"{element1} {element2}");
-    }
-
-    // Template:
-    // [{element2}]
-    // Source: "templates/startup.template":55:30
-    private TemplateContent renderElement2()
-    {
-        object? element2 = Get("element2");
-
-        return Line($"{element2}");
-    }
-
-    // Template:
-    // [{test->[available]} values and replacement of `
-    //     {unavailable}].@MissingValue('missing')
-    // Source: "templates/startup.template":44:5
-    private object? renderMissingValue()
-    {
-        return Annotate(
-            new Func<EvaluationContext, EvaluationContext>[]
-            {
-                annotatedContext => annotatedContext.WithMissingValue("missing")
-            },
-            annotatedContext => annotatedContext.Receiver(itemContext => new Startup(itemContext).renderTestResult()));
-    }
-
-    // Template:
-    // [{test->[available]} values and replacement of `
-    //     {unavailable}]
-    // Source: "templates/startup.template":44:5
-    private TemplateContent renderTestResult()
-    {
-        object? testResult = (IsTruthy("test") ? Each(itemContext => Line($"available")) : "");
-        object? unavailable = Get("unavailable");
-
-        return Line($"{testResult} values and replacement of {unavailable}");
-    }
-
-    // Template:
-    // ["anded" phrases (e.g., "{pets:[{type}s].Join(', ',' and ')}") or bulleted `
-    //     lists
-    //     {pets:[
-    //        {.} {type}s]}].@BulletStyle('-')
-    // Source: "templates/startup.template":38:4
-    private object? renderBulletStyle()
-    {
-        return Annotate(
-            new Func<EvaluationContext, EvaluationContext>[]
-            {
-                annotatedContext => annotatedContext.WithBulletStyle("-")
-            },
-            annotatedContext => annotatedContext.Receiver(itemContext => new Startup(itemContext).renderAndedPhrasesEGO()));
-    }
-
-    // Template:
-    // ["anded" phrases (e.g., "{pets:[{type}s].Join(', ',' and ')}") or bulleted `
-    //     lists
-    //     {pets:[
-    //        {.} {type}s]}]
-    // Source: "templates/startup.template":38:4
-    private TemplateContent renderAndedPhrasesEGO()
-    {
-        object? pets = InContext(Get("pets"), dataContext => new Startup(dataContext).renderJoin());
-        object? pets_2 = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Startup(itemContext).renderType_2()));
-
-        return Line($$"""
-            "anded" phrases (e.g., "{{pets}}") or bulleted lists
-                {{pets_2}}
-            """);
-    }
-
-    // Template:
-    // [
-    //        {.} {type}s]
-    // Source: "templates/startup.template":40:11
-    private TemplateContent renderType_2()
-    {
-        object? content = Context.CreateBullet("\n       \u0001{.} ");
-        object? type = Get("type");
-
-        return Line($"{content}{type}s");
-    }
-
-    // Template:
-    // [{type}s].Join(', ',' and ')
-    // Source: "templates/startup.template":38:35
-    private object? renderJoin()
-    {
-        return EvaluationContext.Invoke(MethodInput(itemContext => new Startup(itemContext).renderType()), methodValue => Builtins.Join(methodValue, ", ", " and "));
-    }
-
-    // Template:
-    // [{type}s]
-    // Source: "templates/startup.template":38:35
-    private TemplateContent renderType()
-    {
-        object? type = Get("type");
-
-        return Line($"{type}s");
-    }
-
-    // Template:
-    // [Interpolation example: {first} {second}!!]
-    // Source: "templates/startup.template":13:7
-    private TemplateContent renderFirst()
-    {
-        object? first = Get("first");
-        object? second = Get("second");
-
-        return Line($"Interpolation example: {first} {second}!!");
-    }
-
-    // Template:
-    // #externalData.Where(dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D')
-    //             .GroupBy(sign, 'group')
-    // Source: "templates/startup.template":64:11
-    private object? groupLoadedData()
-    {
-        return Context.GroupBy(Context.Where(Context.Current, itemContext => new Startup(itemContext).renderContent()), itemContext => itemContext.Lookup("sign"), "sign", new object?[] { "group" }, false);
-    }
-
-    // Template:
-    // group.OrderBy(lname)
-    // Source: "templates/startup.template":66:13
-    private object? orderLoadedData()
-    {
-        return Context.OrderBy(Context.Current, itemContext => itemContext.Lookup("lname"), "lname", new object?[] {  }, false);
-    }
-
-    // Template:
-    // #externalData.Where(dob.Substr(0,7) = '1967-10')
-    // Source: "templates/startup.template":72:9
-    private object? filterLoadedData()
-    {
-        return Context.Where(Context.Current, itemContext => new Startup(itemContext).renderContent_2());
+            ForItem(item => item.renderEncodeFor_2())));
     }
 
     // Template:
     // #externalData.Where(dob.Substr(5,5) = '01-25')
     // Source: "templates/startup.template":85:9
-    private object? filterLoadedData_2()
+    private TemplateValue filterLoadedData_2()
     {
-        return Context.Where(Context.Current, itemContext => new Startup(itemContext).renderContent_3());
-    }
-
-    internal EvaluationContext includeOverview()
-    {
-        EvaluationContext included = Context;
-        included = included.WithBulletStyle("I.", "(a)", "•", "1.");
-        included = included.WithBulletMode("explicit");
-        _ = new Startup(included).renderIntro();
-        return included;
-    }
-
-    internal EvaluationContext includeIntro()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    internal EvaluationContext includeGoals()
-    {
-        EvaluationContext included = Context;
-        _ = new Startup(included).goals();
-        return included;
-    }
-
-    internal EvaluationContext includeSubexample()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    internal EvaluationContext includeDeadoralive()
-    {
-        EvaluationContext included = Context;
-        _ = new Startup(included).deadoralive();
-        return included;
-    }
-
-    internal EvaluationContext includeClick()
-    {
-        EvaluationContext included = Context;
-        _ = new Startup(included).Click();
-        return included;
-    }
-
-    internal EvaluationContext includeExamples()
-    {
-        EvaluationContext included = Context;
-        _ = new Startup(included).examples();
-        return included;
-    }
-
-    internal EvaluationContext includeNotes()
-    {
-        EvaluationContext included = Context;
-        _ = new Startup(included).notes();
-        return included;
-    }
-
-    internal EvaluationContext includeExternalData()
-    {
-        EvaluationContext included = Context;
-        return included;
+        return Value(Context.Current)
+            .Where(ForItem(item => item.renderContent_3()));
     }
 
     // Template:
-    //
-    //
-    // Subtemplates:
-    // {#overview:[`
-    // {.} Introduction
-    //
-    // {#intro}
-    //
-    //    {
-    //       '{"first":"Hello", "second":"World"}':
-    //       [Interpolation example: {first} {second}!!]
-    //    }
-    //
-    // {#goals}
-    //
-    // Notice that if you expand the folded lines in the TextTemplate Editor in the left pane, `
-    // you'll see text that is similar to this output.  That is because `
-    // this documentation is actually a "live" rendering of the texttemplate language input `
-    // in the editor.  If you change the text in the editor, `
-    // the documentation will change.  The editor can be a playground for `
-    // trying out examples of the language and developing templates.  Look through the
-    // TextTemplate source for the following paragraphs in the editor to see the language `
-    // in action
-    //
-    // While the TextTemplate language is similar to other string interpolation notations, it `
-    // has a number of unique features including:
-    //
-    //    {.} Automatic composition of multi-valued data into {
-    //    // this is the data
-    //    '{"pets":[ 
-    //       {"type":"cat"}
-    //       ,{"type":"dog"}
-    //       ,{"type":"tiger"}
-    //    ]}':
-    //    // this is the template
-    //    ["anded" phrases (e.g., "{pets:[{type}s].Join(', ',' and ')}") or bulleted `
-    //     lists
-    //     {pets:[
-    //        {.} {type}s]}].@BulletStyle('-')} 
-    //
-    //    {.} Control over the detection of {'{"test":"value"}':
-    //     [{test->[available]} values and replacement of `
-    //     {unavailable}].@MissingValue('missing')} values
-    //
-    //    {.} A rich set of methods that can perform string`
-    //       {'replacing'.Replace('ing','ement')}, `
-    //       {' trimming '.Trim()}, extract {' substringy'.Substr(1,9)}s, do `
-    //       {'padding'.Align(9,'C','-')}, `
-    //        change the {'case'.ToUpper()} of data, `
-    //       {'true'.Matches('yes','1',/True/i)=>[test],[fail]} data for  `
-    //       multiple criteria including matching regular expressions, `
-    //       count and compare {'{"element1":"multiple","element2":"values"}':
-    //          [{element1.LessThan([{element2}])->[{element1} {element2}]}]} and `
-    //          "@" (annotation) methods that can control template behavior
-    //
-    //    {.} Modularity through the use of {#subexample}
-    //       
-    //    {.} Data manipulation methods that allow data to be selected, ordered and `
-    //       grouped like the following example that selects and `
-    //       groups the birthdays of a few individuals `
-    //       from 1500 records of external data based on birth day and astrological sign:
-    //          {#externalData.Where(dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D')
-    //             .GroupBy(sign, 'group'):[{sign} 
-    //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
-    //                .@DateFormat('M/D/YYYY')
-    //                .@DateTest(/^d/i)}
-    //
-    //    {.} Date recognition and formatting methods that can use a single `
-    //      date, e.g., `
-    //        {#externalData.Where(dob.Substr(0,7) = '1967-10'):["{dob}", to `
-    //        show that {fname} {lname} was born in `
-    //        the month of {dob.ToDate('MMMM')} in `
-    //         {dob.ToDate('YYYY')} on {dob.ToDate('dddd')} the `
-    //         {dob.ToDate('do')}]}
-    //
-    //    {.} Data encoding that can be used to insure that data being templated `
-    //        for output as html, xml or uri's can be properly escaped, e.g., `
-    //        "{'{"data":"Joan\'s <data>"}':[{data}].@EncodeDataFor('html')
-    //           .EncodeFor('html')}"
-    //
-    //    {.} The ability to check for "falsiness", where, for example, the string "0" `
-    //        can be interpreted as false to show that`
-    //        {#externalData.Where(dob.Substr(5,5) = '01-25'): 
-    //        [{#deadoralive.@Falsy(/^0$/)}].Join(', ',' and ')}
-    //
-    //    {.} and, finally, as can be seen from this document, automatically `
-    //       bulleted and numbered outlining
-    //
-    // {.} Acknowledgements
-    //
-    // This project is based on a number of powerful opens-source technologies, without `
-    // which it would not have been possible.  These include:
-    //
-    //      {.} {'Microsoft\'s Monaco Editor'
-    //           .#Click('github.com/microsoft/monaco-editor')} the powerful `
-    //           open source Visual Studio that supports syntax colorizing, error `
-    //           reporting, folding, and so many more features
-    //      {.} {'ANTLR (ANother Tool for Language Recognition)'
-    //          .#Click('www.antlr.org/','click to go to the ANTLR website')} `
-    //           the open source lexer and parser technology that provides `
-    //           the foundation for processing the TextTemplate language
-    //      {.} {'The "calc-monaco-editor" project'
-    //          .#Click('github.com/Strumenta/calc-monaco-editor')} `
-    //           Federico Tomassetti's merging of ANTLR4 with Monaco that `
-    //           is described in this {'article'.#Click(
-    //                'tomassetti.me/writing-a-browser-based-editor-using-monaco-and-antlr/'
-    //                ,'Click to go to the article')}
-    //      {.} {'Moment.js'
-    //           .#Click('momentjs.com','Click to go to the website')} an open-source `
-    //           library for date formatting
-    //      
-    // {.} Documentation
-    //
-    // The TextTemplate language is documented using `
-    //      a "live" template-based web page  `
-    //      {'here'.#Click('/load/docs','Click to see the documentation using TextTemplate')}`
-    //      or if you prefer, you can view an HTML version rendered on the server `
-    //      {'here'.#Click('/runonserver/docs','Click to see the documentation rendered on the server')}.  Note  `
-    //      that any of the demo templates can be rendered on the server using the path `
-    //      '/runonserver/{'['}template name{']'}' as in `
-    //      {'/runonserver/events'.#Click('/runonserver/events','Click to see the events template')}.
-    //
-    // {#examples}
-    //
-    // {#notes}
-    //
-    //
-    // ].@BulletStyle('I.','(a)','•','1.').@BulletMode('explicit')}
-    // {#intro:[Welcome to the TextTemplate documentation and editor.  TextTemplate is a `
+    // dob.Substr(5,5) = '01-25'
+    // Source: "templates/startup.template":85:29
+    private bool renderContent_3()
+    {
+        return EvaluationContext.Compare(Field("dob")
+            .Substr(() => [EvaluationContext.ParseInteger("5"), EvaluationContext.ParseInteger("5")]).Raw, "=", "01-25");
+    }
+
+    // Template:
+    // [{#deadoralive.@Falsy(/^0$/)}]
+    // Source: "templates/startup.template":86:8
+    private TemplateContent renderFalsy()
+    {
+        TemplateValue falsy = Value(Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithFalsy(new TemplateRegex("/^0$/", SourceLocation()))
+            },
+            annotatedContext => annotatedContext.Receiver(itemContext => itemContext.Named("deadoralive"))));
+
+        return Line($"{falsy}");
+    }
+
+    // Template:
+    // [{#deadoralive.@Falsy(/^0$/)}].Join(', ',' and ')
+    // Source: "templates/startup.template":86:8
+    private TemplateValue renderJoin_2()
+    {
+        return Collect(ForItem(item => item.renderFalsy()))
+            .Join(() => [", ", " and "]);
+    }
+
+    // Template:
+    // [Welcome to the TextTemplate documentation and editor.  TextTemplate is a `
     // declarative domain-specific language `
     // for specifying string-interpolated templates.  It supports concise expressions `
     // that can specify formatting, data manipulation, logic and layout in order to `
@@ -1243,8 +786,19 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // interpolated and formatted output strings.  For `
     // example, with data such as {'{"first":"Hello", "second":"World!!}'} and a `
     // template like {'[Interpolation example: {first} {second}!!]'}, the language will `
-    // produce:]}
-    // {#goals:[The goals of the project (not necessarily achieved with version 1) are to create a language  `
+    // produce:]
+    // Source: "templates/startup.template":131:9
+    private TemplateContent intro()
+    {
+        return Line($$"""
+            Welcome to the TextTemplate documentation and editor.  TextTemplate is a declarative domain-specific language for specifying string-interpolated templates.  It supports concise expressions that can specify formatting, data manipulation, logic and layout in order to facilitate the design and maintenance of code that transforms data into text.
+            
+            TextTemplate templates merge strings (templates) with data, typically JSON, to compose interpolated and formatted output strings.  For example, with data such as {"first":"Hello", "second":"World!!} and a template like [Interpolation example: {first} {second}!!], the language will produce:
+            """);
+    }
+
+    // Template:
+    // [The goals of the project (not necessarily achieved with version 1) are to create a language  `
     // that is:
     //
     // 	{.} Concise, through the use of language constructs and default processing that `
@@ -1262,254 +816,188 @@ internal sealed class Startup(EvaluationContext context) : TemplateUnit(context)
     // 	    extraordinary manipulations
     // 	{.} Documented, through content that includes adequate examples to demonstrate the concepts
     // 	{.} Universal, through multiple implementations in a variety of computer languages, `
-    // 	    starting with JavaScript/Typescript, followed by Java, C# and others]}
-    // {#subexample:[subtemplates that can replace repeated expressions, `
-    //       be shared, be used as functions, replace conditional expressions as `
-    //       well as method arguments]}
-    // {#deadoralive:[{fname} {lname} is {isAlive=>[alive],[dead]}]}
-    // {#Click:[<a title='{$2=>[{$2}],[Click to see the Github project]}' `
-    //    style="font-style:italic;text-decoration: underline;cursor: pointer" `
-    //    href="{!$1.StartsWith('/')->[https:{'//'}]}{$1}">{$0}</a>]}
-    // {#examples:[`
-    // {.} Examples
-    //
-    // The following examples illustrate various aspects of the TextTemplate language:
-    //
-    //    {.} {'A simple template'.#Click('/load/simple','Simple template')}
-    //    {.} {'A demonstration of outlining'.#Click('/load/outline','Outline template')}
-    //    {.} {'A demonstration of bullets'.#Click('/load/bullets','Bullets template')}
-    //    {.} {'Use of Assert() for validating template output'.#Click('/load/tests','Tests template')}
-    //    {.} {'Some interesting ways of using TextTemplate with the web'.#Click('/load/web','Web template')}
-    //    {.} {'Date manipulation for a "To Do" list'.#Click('/load/events','Events template')}
-    //    {.} {'A demonstration of grouping and order'.#Click('/load/birthdays','Birthdays template')}
-    //    {.} {'Experimental application of a computed url to call ElasticSearch'.#Click('/load/elastic','Calling elastic')}
-    // ]}
-    // {#notes:[Note: This software is copyrighted and `
-    // {'licensed'.#Click(
-    // 'https://github.com/eisnerw/texttemplate-editor/blob/texttemplate-editor/LICENSE.txt', 
-    // 'Click to see the license')} under the MIT license.  The `
-    // software is beta and therefore subject to change.  In `
-    // its current state, it is primarily useful for refining the language, `
-    // building a reference implementation, and receiving feedback.  As `
-    // noted above, implementations in other languages are anticipated.  The `
-    // author welcomes comments, criticisms and suggestions.  ]}
-    // {#externalData:[{'/data/famousBirthdays'}]}
-    // Source: "templates/startup.template":3:12
-    private void defineSubtemplates(SubtemplateDefinitions definitions)
+    // 	    starting with JavaScript/Typescript, followed by Java, C# and others]
+    // Source: "templates/startup.template":142:9
+    private TemplateContent goals()
     {
-        definitions.Add("overview", definitionContext => new Startup(definitionContext).overview(), includedContext => new Startup(includedContext).includeOverview());
-        definitions.Add("intro", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).intro()), includedContext => new Startup(includedContext).includeIntro());
-        definitions.Add("goals", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).goals()), includedContext => new Startup(includedContext).includeGoals());
-        definitions.Add("subexample", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).subexample()), includedContext => new Startup(includedContext).includeSubexample());
-        definitions.Add("deadoralive", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).deadoralive()), includedContext => new Startup(includedContext).includeDeadoralive());
-        definitions.Add("Click", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).Click()), includedContext => new Startup(includedContext).includeClick());
-        definitions.Add("examples", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).examples()), includedContext => new Startup(includedContext).includeExamples());
-        definitions.Add("notes", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).notes()), includedContext => new Startup(includedContext).includeNotes());
-        definitions.Add("externalData", definitionContext => definitionContext.Each(itemContext => new Startup(itemContext).externalData()), includedContext => new Startup(includedContext).includeExternalData());
-    }
-
-    // Template:
-    //                              The TextTemplate Language
-    //
-    // {#overview}
-    //
-    // Subtemplates:
-    // {#overview:[`
-    // {.} Introduction
-    //
-    // {#intro}
-    //
-    //    {
-    //       '{"first":"Hello", "second":"World"}':
-    //       [Interpolation example: {first} {second}!!]
-    //    }
-    //
-    // {#goals}
-    //
-    // Notice that if you expand the folded lines in the TextTemplate Editor in the left pane, `
-    // you'll see text that is similar to this output.  That is because `
-    // this documentation is actually a "live" rendering of the texttemplate language input `
-    // in the editor.  If you change the text in the editor, `
-    // the documentation will change.  The editor can be a playground for `
-    // trying out examples of the language and developing templates.  Look through the
-    // TextTemplate source for the following paragraphs in the editor to see the language `
-    // in action
-    //
-    // While the TextTemplate language is similar to other string interpolation notations, it `
-    // has a number of unique features including:
-    //
-    //    {.} Automatic composition of multi-valued data into {
-    //    // this is the data
-    //    '{"pets":[ 
-    //       {"type":"cat"}
-    //       ,{"type":"dog"}
-    //       ,{"type":"tiger"}
-    //    ]}':
-    //    // this is the template
-    //    ["anded" phrases (e.g., "{pets:[{type}s].Join(', ',' and ')}") or bulleted `
-    //     lists
-    //     {pets:[
-    //        {.} {type}s]}].@BulletStyle('-')} 
-    //
-    //    {.} Control over the detection of {'{"test":"value"}':
-    //     [{test->[available]} values and replacement of `
-    //     {unavailable}].@MissingValue('missing')} values
-    //
-    //    {.} A rich set of methods that can perform string`
-    //       {'replacing'.Replace('ing','ement')}, `
-    //       {' trimming '.Trim()}, extract {' substringy'.Substr(1,9)}s, do `
-    //       {'padding'.Align(9,'C','-')}, `
-    //        change the {'case'.ToUpper()} of data, `
-    //       {'true'.Matches('yes','1',/True/i)=>[test],[fail]} data for  `
-    //       multiple criteria including matching regular expressions, `
-    //       count and compare {'{"element1":"multiple","element2":"values"}':
-    //          [{element1.LessThan([{element2}])->[{element1} {element2}]}]} and `
-    //          "@" (annotation) methods that can control template behavior
-    //
-    //    {.} Modularity through the use of {#subexample}
-    //       
-    //    {.} Data manipulation methods that allow data to be selected, ordered and `
-    //       grouped like the following example that selects and `
-    //       groups the birthdays of a few individuals `
-    //       from 1500 records of external data based on birth day and astrological sign:
-    //          {#externalData.Where(dob.ToDate('DD')='27' & lname.Substr(0,1) = 'D')
-    //             .GroupBy(sign, 'group'):[{sign} 
-    //            {group.OrderBy(lname):[{fname} {lname} ({dob})]}]
-    //                .@DateFormat('M/D/YYYY')
-    //                .@DateTest(/^d/i)}
-    //
-    //    {.} Date recognition and formatting methods that can use a single `
-    //      date, e.g., `
-    //        {#externalData.Where(dob.Substr(0,7) = '1967-10'):["{dob}", to `
-    //        show that {fname} {lname} was born in `
-    //        the month of {dob.ToDate('MMMM')} in `
-    //         {dob.ToDate('YYYY')} on {dob.ToDate('dddd')} the `
-    //         {dob.ToDate('do')}]}
-    //
-    //    {.} Data encoding that can be used to insure that data being templated `
-    //        for output as html, xml or uri's can be properly escaped, e.g., `
-    //        "{'{"data":"Joan\'s <data>"}':[{data}].@EncodeDataFor('html')
-    //           .EncodeFor('html')}"
-    //
-    //    {.} The ability to check for "falsiness", where, for example, the string "0" `
-    //        can be interpreted as false to show that`
-    //        {#externalData.Where(dob.Substr(5,5) = '01-25'): 
-    //        [{#deadoralive.@Falsy(/^0$/)}].Join(', ',' and ')}
-    //
-    //    {.} and, finally, as can be seen from this document, automatically `
-    //       bulleted and numbered outlining
-    //
-    // {.} Acknowledgements
-    //
-    // This project is based on a number of powerful opens-source technologies, without `
-    // which it would not have been possible.  These include:
-    //
-    //      {.} {'Microsoft\'s Monaco Editor'
-    //           .#Click('github.com/microsoft/monaco-editor')} the powerful `
-    //           open source Visual Studio that supports syntax colorizing, error `
-    //           reporting, folding, and so many more features
-    //      {.} {'ANTLR (ANother Tool for Language Recognition)'
-    //          .#Click('www.antlr.org/','click to go to the ANTLR website')} `
-    //           the open source lexer and parser technology that provides `
-    //           the foundation for processing the TextTemplate language
-    //      {.} {'The "calc-monaco-editor" project'
-    //          .#Click('github.com/Strumenta/calc-monaco-editor')} `
-    //           Federico Tomassetti's merging of ANTLR4 with Monaco that `
-    //           is described in this {'article'.#Click(
-    //                'tomassetti.me/writing-a-browser-based-editor-using-monaco-and-antlr/'
-    //                ,'Click to go to the article')}
-    //      {.} {'Moment.js'
-    //           .#Click('momentjs.com','Click to go to the website')} an open-source `
-    //           library for date formatting
-    //      
-    // {.} Documentation
-    //
-    // The TextTemplate language is documented using `
-    //      a "live" template-based web page  `
-    //      {'here'.#Click('/load/docs','Click to see the documentation using TextTemplate')}`
-    //      or if you prefer, you can view an HTML version rendered on the server `
-    //      {'here'.#Click('/runonserver/docs','Click to see the documentation rendered on the server')}.  Note  `
-    //      that any of the demo templates can be rendered on the server using the path `
-    //      '/runonserver/{'['}template name{']'}' as in `
-    //      {'/runonserver/events'.#Click('/runonserver/events','Click to see the events template')}.
-    //
-    // {#examples}
-    //
-    // {#notes}
-    //
-    //
-    // ].@BulletStyle('I.','(a)','•','1.').@BulletMode('explicit')}
-    // {#intro:[Welcome to the TextTemplate documentation and editor.  TextTemplate is a `
-    // declarative domain-specific language `
-    // for specifying string-interpolated templates.  It supports concise expressions `
-    // that can specify formatting, data manipulation, logic and layout in order to `
-    // facilitate the design and maintenance of code that transforms data into text.
-    //
-    // TextTemplate templates merge strings (templates) with data, typically JSON, to compose `
-    // interpolated and formatted output strings.  For `
-    // example, with data such as {'{"first":"Hello", "second":"World!!}'} and a `
-    // template like {'[Interpolation example: {first} {second}!!]'}, the language will `
-    // produce:]}
-    // {#goals:[The goals of the project (not necessarily achieved with version 1) are to create a language  `
-    // that is:
-    //
-    // 	{.} Concise, through the use of language constructs and default processing that `
-    // 		eliminate unnecessary verbiage
-    // 	{.} Readable, through the use of familiar syntax, properly-named methods, and `
-    // 		flexible comments and whitespace
-    // 	{.} Intuitive, through a highly generalized implementation such that once the `
-    // 		basic concepts of the language ` 
-    // 		are grasped for simple operations, performing more advanced operations `
-    // 		should not require unique or specialized knowledge
-    // 	{.} Consistent, through an implementation that avoids, wherever possible, special `
-    // 		cases and restrictions
-    // 	{.} Rich, through the anticipation and implementation of a wide range of methods and `
-    // 		operators that perform typical as well as `
-    // 	    extraordinary manipulations
-    // 	{.} Documented, through content that includes adequate examples to demonstrate the concepts
-    // 	{.} Universal, through multiple implementations in a variety of computer languages, `
-    // 	    starting with JavaScript/Typescript, followed by Java, C# and others]}
-    // {#subexample:[subtemplates that can replace repeated expressions, `
-    //       be shared, be used as functions, replace conditional expressions as `
-    //       well as method arguments]}
-    // {#deadoralive:[{fname} {lname} is {isAlive=>[alive],[dead]}]}
-    // {#Click:[<a title='{$2=>[{$2}],[Click to see the Github project]}' `
-    //    style="font-style:italic;text-decoration: underline;cursor: pointer" `
-    //    href="{!$1.StartsWith('/')->[https:{'//'}]}{$1}">{$0}</a>]}
-    // {#examples:[`
-    // {.} Examples
-    //
-    // The following examples illustrate various aspects of the TextTemplate language:
-    //
-    //    {.} {'A simple template'.#Click('/load/simple','Simple template')}
-    //    {.} {'A demonstration of outlining'.#Click('/load/outline','Outline template')}
-    //    {.} {'A demonstration of bullets'.#Click('/load/bullets','Bullets template')}
-    //    {.} {'Use of Assert() for validating template output'.#Click('/load/tests','Tests template')}
-    //    {.} {'Some interesting ways of using TextTemplate with the web'.#Click('/load/web','Web template')}
-    //    {.} {'Date manipulation for a "To Do" list'.#Click('/load/events','Events template')}
-    //    {.} {'A demonstration of grouping and order'.#Click('/load/birthdays','Birthdays template')}
-    //    {.} {'Experimental application of a computed url to call ElasticSearch'.#Click('/load/elastic','Calling elastic')}
-    // ]}
-    // {#notes:[Note: This software is copyrighted and `
-    // {'licensed'.#Click(
-    // 'https://github.com/eisnerw/texttemplate-editor/blob/texttemplate-editor/LICENSE.txt', 
-    // 'Click to see the license')} under the MIT license.  The `
-    // software is beta and therefore subject to change.  In `
-    // its current state, it is primarily useful for refining the language, `
-    // building a reference implementation, and receiving feedback.  As `
-    // noted above, implementations in other languages are anticipated.  The `
-    // author welcomes comments, criticisms and suggestions.  ]}
-    // {#externalData:[{'/data/famousBirthdays'}]}
-    // Source: "templates/startup.template":1:1
-    private TemplateContent renderStartup()
-    {
-        object? overview = Each(itemContext => itemContext.Named("overview"));
+        TemplateValue content = Value(Context.CreateBullet("\n    \u0001{.} "));
+        TemplateValue content_2 = Value(Context.CreateBullet("\n    \u0001{.} "));
+        TemplateValue content_3 = Value(Context.CreateBullet("\n    \u0001{.} "));
+        TemplateValue content_4 = Value(Context.CreateBullet("\n    \u0001{.} "));
+        TemplateValue content_5 = Value(Context.CreateBullet("\n    \u0001{.} "));
+        TemplateValue content_6 = Value(Context.CreateBullet("\n    \u0001{.} "));
+        TemplateValue content_7 = Value(Context.CreateBullet("\n    \u0001{.} "));
 
         return Line($$"""
-                                         The TextTemplate Language
-            
-            {{overview}}
+            The goals of the project (not necessarily achieved with version 1) are to create a language that is:
+            {{content}}Concise, through the use of language constructs and default processing that eliminate unnecessary verbiage{{content_2}}Readable, through the use of familiar syntax, properly-named methods, and flexible comments and whitespace{{content_3}}Intuitive, through a highly generalized implementation such that once the basic concepts of the language are grasped for simple operations, performing more advanced operations should not require unique or specialized knowledge{{content_4}}Consistent, through an implementation that avoids, wherever possible, special cases and restrictions{{content_5}}Rich, through the anticipation and implementation of a wide range of methods and operators that perform typical as well as extraordinary manipulations{{content_6}}Documented, through content that includes adequate examples to demonstrate the concepts{{content_7}}Universal, through multiple implementations in a variety of computer languages, starting with JavaScript/Typescript, followed by Java, C# and others
             """);
+    }
+
+    // Template:
+    // [subtemplates that can replace repeated expressions, `
+    //       be shared, be used as functions, replace conditional expressions as `
+    //       well as method arguments]
+    // Source: "templates/startup.template":161:14
+    private TemplateContent subexample()
+    {
+        return Line($"subtemplates that can replace repeated expressions, be shared, be used as functions, replace conditional expressions as well as method arguments");
+    }
+
+    // Template:
+    // [{fname} {lname} is {isAlive=>[alive],[dead]}]
+    // Source: "templates/startup.template":164:15
+    private TemplateContent deadoralive()
+    {
+        // Template:
+        // isAlive=>[alive],[dead]
+        // Source: "templates/startup.template":164:36
+        TemplateValue chooseIsAliveResult()
+        {
+            if (IsTruthy("isAlive"))
+            {
+                return Value(Each(itemContext => Line($"alive")));
+            }
+
+            return Value(Each(itemContext => Line($"dead")));
+        }
+
+        TemplateValue fname = Read("fname");
+        TemplateValue lname = Read("lname");
+        TemplateValue isAliveResult = chooseIsAliveResult();
+
+        return Line($"{fname} {lname} is {isAliveResult}");
+    }
+
+    // Template:
+    // [<a title='{$2=>[{$2}],[Click to see the Github project]}' `
+    //    style="font-style:italic;text-decoration: underline;cursor: pointer" `
+    //    href="{!$1.StartsWith('/')->[https:{'//'}]}{$1}">{$0}</a>]
+    // Source: "templates/startup.template":165:9
+    private TemplateContent Click()
+    {
+        // Template:
+        // $2=>[{$2}],[Click to see the Github project]
+        // Source: "templates/startup.template":165:21
+        TemplateValue chooseItem2Result()
+        {
+            if (IsTruthy("$2"))
+            {
+                return Value(Each(ForItem(item => item.renderItem2())));
+            }
+
+            return Value(Each(itemContext => Line($"Click to see the Github project")));
+        }
+
+        // Template:
+        // !$1.StartsWith('/')->[https:{'//'}]
+        // Source: "templates/startup.template":167:11
+        TemplateValue chooseChoice()
+        {
+            if (!(Context.TestCondition(Field("$1")
+            .StartsWith(() => ["/"]).Raw)))
+            {
+                return Value(Each(itemContext => Line($"https://")));
+            }
+
+            return Value("");
+        }
+
+        TemplateValue item2Result = chooseItem2Result();
+        TemplateValue choice = chooseChoice();
+        TemplateValue item1 = Read("$1");
+        TemplateValue item0 = Read("$0");
+
+        return Line($"<a title='{item2Result}' style=\"font-style:italic;text-decoration: underline;cursor: pointer\" href=\"{choice}{item1}\">{item0}</a>");
+    }
+
+    // Template:
+    // [{$2}]
+    // Source: "templates/startup.template":165:25
+    private TemplateContent renderItem2()
+    {
+        TemplateValue item2 = Read("$2");
+
+        return Line($"{item2}");
+    }
+
+    // Template:
+    // [`
+    // {.} Examples
+    //
+    // The following examples illustrate various aspects of the TextTemplate language:
+    //
+    //    {.} {'A simple template'.#Click('/load/simple','Simple template')}
+    //    {.} {'A demonstration of outlining'.#Click('/load/outline','Outline template')}
+    //    {.} {'A demonstration of bullets'.#Click('/load/bullets','Bullets template')}
+    //    {.} {'Use of Assert() for validating template output'.#Click('/load/tests','Tests template')}
+    //    {.} {'Some interesting ways of using TextTemplate with the web'.#Click('/load/web','Web template')}
+    //    {.} {'Date manipulation for a "To Do" list'.#Click('/load/events','Events template')}
+    //    {.} {'A demonstration of grouping and order'.#Click('/load/birthdays','Birthdays template')}
+    //    {.} {'Experimental application of a computed url to call ElasticSearch'.#Click('/load/elastic','Calling elastic')}
+    // ]
+    // Source: "templates/startup.template":168:12
+    private TemplateContent examples()
+    {
+        TemplateValue content = Value(Context.CreateBullet("\u0001{.} "));
+        TemplateValue content_2 = Value(Context.CreateBullet("\n   \u0001{.} "));
+        TemplateValue click = Collect("A simple template")
+            .Call("Click", () => ["/load/simple", "Simple template"]);
+        TemplateValue content_3 = Value(Context.CreateBullet("\n   \u0001{.} "));
+        TemplateValue click_2 = Collect("A demonstration of outlining")
+            .Call("Click", () => ["/load/outline", "Outline template"]);
+        TemplateValue content_4 = Value(Context.CreateBullet("\n   \u0001{.} "));
+        TemplateValue click_3 = Collect("A demonstration of bullets")
+            .Call("Click", () => ["/load/bullets", "Bullets template"]);
+        TemplateValue content_5 = Value(Context.CreateBullet("\n   \u0001{.} "));
+        TemplateValue click_4 = Collect("Use of Assert() for validating template output")
+            .Call("Click", () => ["/load/tests", "Tests template"]);
+        TemplateValue content_6 = Value(Context.CreateBullet("\n   \u0001{.} "));
+        TemplateValue click_5 = Collect("Some interesting ways of using TextTemplate with the web")
+            .Call("Click", () => ["/load/web", "Web template"]);
+        TemplateValue content_7 = Value(Context.CreateBullet("\n   \u0001{.} "));
+        TemplateValue click_6 = Collect("Date manipulation for a \"To Do\" list")
+            .Call("Click", () => ["/load/events", "Events template"]);
+        TemplateValue content_8 = Value(Context.CreateBullet("\n   \u0001{.} "));
+        TemplateValue click_7 = Collect("A demonstration of grouping and order")
+            .Call("Click", () => ["/load/birthdays", "Birthdays template"]);
+        TemplateValue content_9 = Value(Context.CreateBullet("\n   \u0001{.} "));
+        TemplateValue click_8 = Collect("Experimental application of a computed url to call ElasticSearch")
+            .Call("Click", () => ["/load/elastic", "Calling elastic"]);
+
+        return Line($$"""
+            {{content}}Examples
+            
+            The following examples illustrate various aspects of the TextTemplate language:
+            {{content_2}}{{click}}{{content_3}}{{click_2}}{{content_4}}{{click_3}}{{content_5}}{{click_4}}{{content_6}}{{click_5}}{{content_7}}{{click_6}}{{content_8}}{{click_7}}{{content_9}}{{click_8}}
+            """);
+    }
+
+    // Template:
+    // [Note: This software is copyrighted and `
+    // {'licensed'.#Click(
+    // 'https://github.com/eisnerw/texttemplate-editor/blob/texttemplate-editor/LICENSE.txt', 
+    // 'Click to see the license')} under the MIT license.  The `
+    // software is beta and therefore subject to change.  In `
+    // its current state, it is primarily useful for refining the language, `
+    // building a reference implementation, and receiving feedback.  As `
+    // noted above, implementations in other languages are anticipated.  The `
+    // author welcomes comments, criticisms and suggestions.  ]
+    // Source: "templates/startup.template":182:9
+    private TemplateContent notes()
+    {
+        TemplateValue click = Collect("licensed")
+            .Call("Click", () => ["https://github.com/eisnerw/texttemplate-editor/blob/texttemplate-editor/LICENSE.txt", "Click to see the license"]);
+
+        return Line($"Note: This software is copyrighted and {click} under the MIT license.  The software is beta and therefore subject to change.  In its current state, it is primarily useful for refining the language, building a reference implementation, and receiving feedback.  As noted above, implementations in other languages are anticipated.  The author welcomes comments, criticisms and suggestions.  ");
+    }
+
+    // Template:
+    // [{'/data/famousBirthdays'}]
+    // Source: "templates/startup.template":191:16
+    private TemplateContent externalData()
+    {
+        return Line($"/data/famousBirthdays");
     }
 
 }

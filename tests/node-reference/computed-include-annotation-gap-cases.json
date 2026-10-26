@@ -1,0 +1,8 @@
+[
+  {
+    "name": "computed-include-annotation-gap",
+    "script": "{[{absent}].@Include('#STYLE'.ToLower())}\nSubtemplates:\n{#style:[].@MissingValue('inside')}",
+    "data": {},
+    "expected": ""
+  }
+]

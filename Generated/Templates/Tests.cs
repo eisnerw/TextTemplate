@@ -7,30 +7,175 @@ using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
+internal sealed partial class Tests(EvaluationContext context) : TemplateUnit<Tests>(context, child => new Tests(child))
 {
+    // Entry point; scoped definitions are registered before rendering.
+    internal TemplateContent Evaluate()
+    {
+        return WithScope(defineSubtemplates, item => item.renderTests());
+    }
+
     // Template:
     // {#tests.Assert(#expected,'ALL TESTS PASSED')}
-    //
-    // Subtemplates:
-    // {#test:[{$0.Matches(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)->
-    // [Test {$0} {$1.Assert($2,'passed')}]}]}
-    // {#test1:[
+    // Source: "templates/tests.template":1:1
+    private TemplateContent renderTests()
+    {
+        TemplateValue assert = Subtemplate("tests")
+            .Assert(() => [EvaluateSubtemplate("expected"), "ALL TESTS PASSED"]);
+
+        return Line($"{assert}");
+    }
+
+    // Template:
+    // [{$0.Matches(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)->
+    // [Test {$0} {$1.Assert($2,'passed')}]}]
+    // Source: "templates/tests.template":4:8
+    private TemplateContent test()
+    {
+        // Template:
+        // $0.Matches(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)->
+        // [Test {$0} {$1.Assert($2,'passed')}]
+        // Source: "templates/tests.template":4:10
+        TemplateValue chooseChoice()
+        {
+            if (Context.TestCondition(Field("$0")
+            .Matches(() => [EvaluationContext.ParseInteger("1"), EvaluationContext.ParseInteger("2"), EvaluationContext.ParseInteger("3"), EvaluationContext.ParseInteger("4"), EvaluationContext.ParseInteger("5"), EvaluationContext.ParseInteger("6"), EvaluationContext.ParseInteger("7"), EvaluationContext.ParseInteger("8"), EvaluationContext.ParseInteger("9"), EvaluationContext.ParseInteger("10"), EvaluationContext.ParseInteger("11"), EvaluationContext.ParseInteger("12"), EvaluationContext.ParseInteger("13"), EvaluationContext.ParseInteger("14"), EvaluationContext.ParseInteger("15"), EvaluationContext.ParseInteger("16")]).Raw))
+            {
+                return Value(Each(ForItem(item => item.renderItem0())));
+            }
+
+            return Value("");
+        }
+
+        TemplateValue choice = chooseChoice();
+
+        return Line($"{choice}");
+    }
+
+    // Template:
+    // [Test {$0} {$1.Assert($2,'passed')}]
+    // Source: "templates/tests.template":5:1
+    private TemplateContent renderItem0()
+    {
+        TemplateValue item0 = Read("$0");
+        TemplateValue assert = Field("$1")
+            .Assert(() => [Get("$2"), "passed"]);
+
+        return Line($"Test {item0} {assert}");
+    }
+
+    // Template:
+    // [
     // Explicit Single Indent{#data:[
-    //    {lastName}]}]}
-    // {#test1Result:[
+    //    {lastName}]}]
+    // Source: "templates/tests.template":6:9
+    private TemplateContent test1()
+    {
+        TemplateValue data = Value(EvaluateSubtemplate("data"))
+            .Render(InScope(item => item.renderLastName()));
+
+        return Line($"Explicit Single Indent{data}");
+    }
+
+    // Template:
+    // [
+    //    {lastName}]
+    // Source: "templates/tests.template":7:30
+    private TemplateContent renderLastName()
+    {
+        TemplateValue lastName = Read("lastName");
+
+        return Line($"{lastName}");
+    }
+
+    // Template:
+    // [
     // Explicit Single Indent
     //    Johnson
-    //    Smith]}
-    // {#test2:[
-    // Implied Single Indent {#data:[{lastName}]}]}
-    // {#test2Result:[
+    //    Smith]
+    // Source: "templates/tests.template":9:15
+    private TemplateContent test1Result()
+    {
+        return Line($$"""
+            Explicit Single Indent
+               Johnson
+               Smith
+            """);
+    }
+
+    // Template:
+    // [
+    // Implied Single Indent {#data:[{lastName}]}]
+    // Source: "templates/tests.template":13:9
+    private TemplateContent test2()
+    {
+        TemplateValue data = Value(EvaluateSubtemplate("data"))
+            .Render(InScope(item => item.renderLastName_2()));
+
+        return Line($"Implied Single Indent {data}");
+    }
+
+    // Template:
+    // [{lastName}]
+    // Source: "templates/tests.template":14:30
+    private TemplateContent renderLastName_2()
+    {
+        TemplateValue lastName = Read("lastName");
+
+        return Line($"{lastName}");
+    }
+
+    // Template:
+    // [
     // Implied Single Indent 
     //    Johnson
-    //    Smith]}
-    // {#test3:[
-    // Implied Double Indent{#data:[{lastName}{pets:[{name}]}]}]}
-    // {#test3Result:[
+    //    Smith]
+    // Source: "templates/tests.template":15:15
+    private TemplateContent test2Result()
+    {
+        return Line($$"""
+            Implied Single Indent 
+               Johnson
+               Smith
+            """);
+    }
+
+    // Template:
+    // [
+    // Implied Double Indent{#data:[{lastName}{pets:[{name}]}]}]
+    // Source: "templates/tests.template":19:9
+    private TemplateContent test3()
+    {
+        TemplateValue data = Value(EvaluateSubtemplate("data"))
+            .Render(InScope(item => item.renderLastName_3()));
+
+        return Line($"Implied Double Indent{data}");
+    }
+
+    // Template:
+    // [{lastName}{pets:[{name}]}]
+    // Source: "templates/tests.template":20:29
+    private TemplateContent renderLastName_3()
+    {
+        TemplateValue lastName = Read("lastName");
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderName()));
+
+        return Line($"{lastName}{pets}");
+    }
+
+    // Template:
+    // [{name}]
+    // Source: "templates/tests.template":20:46
+    private TemplateContent renderName()
+    {
+        TemplateValue name = Read("name");
+
+        return Line($"{name}");
+    }
+
+    // Template:
+    // [
     // Implied Double Indent
     //    Johnson
     //       Buddy
@@ -39,11 +184,62 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //    Smith
     //       Toto
     //       Dolly
-    //       Stripes]}
-    // {#test4:[
+    //       Stripes]
+    // Source: "templates/tests.template":21:15
+    private TemplateContent test3Result()
+    {
+        return Line($$"""
+            Implied Double Indent
+               Johnson
+                  Buddy
+                  Ralph
+                  Stripes
+               Smith
+                  Toto
+                  Dolly
+                  Stripes
+            """);
+    }
+
+    // Template:
+    // [
     // Bulleted Implied Bulleted Indent{#data:[ //
-    // {.} {lastName}{pets:[{name}]}]}]}
-    // {#test4Result:[
+    // {.} {lastName}{pets:[{name}]}]}]
+    // Source: "templates/tests.template":31:9
+    private TemplateContent test4()
+    {
+        TemplateValue data = Value(EvaluateSubtemplate("data"))
+            .Render(InScope(item => item.renderLastName_4()));
+
+        return Line($"Bulleted Implied Bulleted Indent{data}");
+    }
+
+    // Template:
+    // [ //
+    // {.} {lastName}{pets:[{name}]}]
+    // Source: "templates/tests.template":32:40
+    private TemplateContent renderLastName_4()
+    {
+        TemplateValue content = Value(Context.CreateBullet("\n\u0001{.} "));
+        TemplateValue lastName = Read("lastName");
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderName_2()));
+
+        return Line($"{content}{lastName}{pets}");
+    }
+
+    // Template:
+    // [{name}]
+    // Source: "templates/tests.template":33:21
+    private TemplateContent renderName_2()
+    {
+        TemplateValue name = Read("name");
+
+        return Line($"{name}");
+    }
+
+    // Template:
+    // [
     // Bulleted Implied Bulleted Indent
     // (0.0) Johnson
     //    (1.0) Buddy
@@ -52,12 +248,79 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // (0.1) Smith
     //    (1.0) Toto
     //    (1.1) Dolly
-    //    (1.2) Stripes].Compose()}
-    // {#test5:[
+    //    (1.2) Stripes].Compose()
+    // Source: "templates/tests.template":34:15
+    private TemplateValue test4Result()
+    {
+        return Collect(itemContext => Line($$"""
+            Bulleted Implied Bulleted Indent
+            (0.0) Johnson
+               (1.0) Buddy
+               (1.1) Ralph
+               (1.2) Stripes
+            (0.1) Smith
+               (1.0) Toto
+               (1.1) Dolly
+               (1.2) Stripes
+            """))
+            .Compose();
+    }
+
+    // Template:
+    // [
     // Bulleted Explicit Bulleted Indent{#data:[ //
     // {.} {lastName}{pets:[ //
-    //     {.} {name}]}]}].Compose()}
-    // {#test5Result:[
+    //     {.} {name}]}]}]
+    // Source: "templates/tests.template":44:9
+    private TemplateContent renderBulletedExplicitBulleted()
+    {
+        TemplateValue data = Value(EvaluateSubtemplate("data"))
+            .Render(InScope(item => item.renderLastName_5()));
+
+        return Line($"Bulleted Explicit Bulleted Indent{data}");
+    }
+
+    // Template:
+    // [
+    // Bulleted Explicit Bulleted Indent{#data:[ //
+    // {.} {lastName}{pets:[ //
+    //     {.} {name}]}]}].Compose()
+    // Source: "templates/tests.template":44:9
+    private TemplateValue test5()
+    {
+        return Collect(ForItem(item => item.renderBulletedExplicitBulleted()))
+            .Compose();
+    }
+
+    // Template:
+    // [ //
+    // {.} {lastName}{pets:[ //
+    //     {.} {name}]}]
+    // Source: "templates/tests.template":45:41
+    private TemplateContent renderLastName_5()
+    {
+        TemplateValue content = Value(Context.CreateBullet("\n\u0001{.} "));
+        TemplateValue lastName = Read("lastName");
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderName_3()));
+
+        return Line($"{content}{lastName}{pets}");
+    }
+
+    // Template:
+    // [ //
+    //     {.} {name}]
+    // Source: "templates/tests.template":46:21
+    private TemplateContent renderName_3()
+    {
+        TemplateValue content = Value(Context.CreateBullet("\n    \u0001{.} "));
+        TemplateValue name = Read("name");
+
+        return Line($"{content}{name}");
+    }
+
+    // Template:
+    // [
     // Bulleted Explicit Bulleted Indent
     // (0.0) Johnson
     //     (1.0) Buddy
@@ -66,14 +329,113 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // (0.1) Smith
     //     (1.0) Toto
     //     (1.1) Dolly
-    //     (1.2) Stripes]}
-    // {#test6:[
+    //     (1.2) Stripes]
+    // Source: "templates/tests.template":48:15
+    private TemplateContent test5Result()
+    {
+        return Line($$"""
+            Bulleted Explicit Bulleted Indent
+            (0.0) Johnson
+                (1.0) Buddy
+                (1.1) Ralph
+                (1.2) Stripes
+            (0.1) Smith
+                (1.0) Toto
+                (1.1) Dolly
+                (1.2) Stripes
+            """);
+    }
+
+    // Template:
+    // [
     // Hierarchy{#data:[ //
     // {.} {lastName}{pets:[ //
     //     {.} {name} who is owned by 
     //          {.} {^.^:[{firstName} who owns
-    //               {.} {pets:[{type}]}]}]}]}].Compose()}
-    // {#test6Result:[
+    //               {.} {pets:[{type}]}]}]}]}]
+    // Source: "templates/tests.template":58:9
+    private TemplateContent renderHierarchy()
+    {
+        TemplateValue data = Value(EvaluateSubtemplate("data"))
+            .Render(InScope(item => item.renderLastName_6()));
+
+        return Line($"Hierarchy{data}");
+    }
+
+    // Template:
+    // [
+    // Hierarchy{#data:[ //
+    // {.} {lastName}{pets:[ //
+    //     {.} {name} who is owned by 
+    //          {.} {^.^:[{firstName} who owns
+    //               {.} {pets:[{type}]}]}]}]}].Compose()
+    // Source: "templates/tests.template":58:9
+    private TemplateValue test6()
+    {
+        return Collect(ForItem(item => item.renderHierarchy()))
+            .Compose();
+    }
+
+    // Template:
+    // [ //
+    // {.} {lastName}{pets:[ //
+    //     {.} {name} who is owned by 
+    //          {.} {^.^:[{firstName} who owns
+    //               {.} {pets:[{type}]}]}]}]
+    // Source: "templates/tests.template":59:17
+    private TemplateContent renderLastName_6()
+    {
+        TemplateValue content = Value(Context.CreateBullet("\n\u0001{.} "));
+        TemplateValue lastName = Read("lastName");
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderName_4()));
+
+        return Line($"{content}{lastName}{pets}");
+    }
+
+    // Template:
+    // [ //
+    //     {.} {name} who is owned by 
+    //          {.} {^.^:[{firstName} who owns
+    //               {.} {pets:[{type}]}]}]
+    // Source: "templates/tests.template":60:21
+    private TemplateContent renderName_4()
+    {
+        TemplateValue content = Value(Context.CreateBullet("\n    \u0001{.} "));
+        TemplateValue name = Read("name");
+        TemplateValue content_2 = Value(Context.CreateBullet("\n         \u0001{.} "));
+        TemplateValue content_3 = Read("^.^")
+            .Render(InScope(item => item.renderFirstName()));
+
+        return Line($"{content}{name} who is owned by {content_2}{content_3}");
+    }
+
+    // Template:
+    // [{firstName} who owns
+    //               {.} {pets:[{type}]}]
+    // Source: "templates/tests.template":62:19
+    private TemplateContent renderFirstName()
+    {
+        TemplateValue firstName = Read("firstName");
+        TemplateValue content = Value(Context.CreateBullet("\n              \u0001{.} "));
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderType()));
+
+        return Line($"{firstName} who owns{content}{pets}");
+    }
+
+    // Template:
+    // [{type}]
+    // Source: "templates/tests.template":63:25
+    private TemplateContent renderType()
+    {
+        TemplateValue type = Read("type");
+
+        return Line($"{type}");
+    }
+
+    // Template:
+    // [
     // Hierarchy
     // (0.0) Johnson
     //     (1.0) Buddy who is owned by 
@@ -106,14 +468,125 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //          (2.0) John who owns
     //               (3.0) dog
     //               (3.1) cat
-    //               (3.2) zebra]}
-    // {#test7:[
+    //               (3.2) zebra]
+    // Source: "templates/tests.template":64:15
+    private TemplateContent test6Result()
+    {
+        return Line($$"""
+            Hierarchy
+            (0.0) Johnson
+                (1.0) Buddy who is owned by 
+                     (2.0) Doris who owns
+                          (3.0) dog
+                          (3.1) lion
+                          (3.2) tiger
+                (1.1) Ralph who is owned by 
+                     (2.0) Doris who owns
+                          (3.0) dog
+                          (3.1) lion
+                          (3.2) tiger
+                (1.2) Stripes who is owned by 
+                     (2.0) Doris who owns
+                          (3.0) dog
+                          (3.1) lion
+                          (3.2) tiger
+            (0.1) Smith
+                (1.0) Toto who is owned by 
+                     (2.0) John who owns
+                          (3.0) dog
+                          (3.1) cat
+                          (3.2) zebra
+                (1.1) Dolly who is owned by 
+                     (2.0) John who owns
+                          (3.0) dog
+                          (3.1) cat
+                          (3.2) zebra
+                (1.2) Stripes who is owned by 
+                     (2.0) John who owns
+                          (3.0) dog
+                          (3.1) cat
+                          (3.2) zebra
+            """);
+    }
+
+    // Template:
+    // [
     // Hierarchy that transitions from indent to bullet {#data:[ //
     // {lastName}{pets:[ //
     //     {.} {name} who is owned by 
     //          {.} {^.^:[{firstName} who owns
-    //             {.} {pets:[{type}]}]}]}]}]}
-    // {#test7Result:[
+    //             {.} {pets:[{type}]}]}]}]}]
+    // Source: "templates/tests.template":98:9
+    private TemplateContent test7()
+    {
+        TemplateValue data = Value(EvaluateSubtemplate("data"))
+            .Render(InScope(item => item.renderLastName_7()));
+
+        return Line($"Hierarchy that transitions from indent to bullet {data}");
+    }
+
+    // Template:
+    // [ //
+    // {lastName}{pets:[ //
+    //     {.} {name} who is owned by 
+    //          {.} {^.^:[{firstName} who owns
+    //             {.} {pets:[{type}]}]}]}]
+    // Source: "templates/tests.template":99:57
+    private TemplateContent renderLastName_7()
+    {
+        TemplateValue lastName = Read("lastName");
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderName_5()));
+
+        return Line($$"""
+            
+            {{lastName}}{{pets}}
+            """);
+    }
+
+    // Template:
+    // [ //
+    //     {.} {name} who is owned by 
+    //          {.} {^.^:[{firstName} who owns
+    //             {.} {pets:[{type}]}]}]
+    // Source: "templates/tests.template":100:17
+    private TemplateContent renderName_5()
+    {
+        TemplateValue content = Value(Context.CreateBullet("\n    \u0001{.} "));
+        TemplateValue name = Read("name");
+        TemplateValue content_2 = Value(Context.CreateBullet("\n         \u0001{.} "));
+        TemplateValue content_3 = Read("^.^")
+            .Render(InScope(item => item.renderFirstName_2()));
+
+        return Line($"{content}{name} who is owned by {content_2}{content_3}");
+    }
+
+    // Template:
+    // [{firstName} who owns
+    //             {.} {pets:[{type}]}]
+    // Source: "templates/tests.template":102:19
+    private TemplateContent renderFirstName_2()
+    {
+        TemplateValue firstName = Read("firstName");
+        TemplateValue content = Value(Context.CreateBullet("\n            \u0001{.} "));
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderType_2()));
+
+        return Line($"{firstName} who owns{content}{pets}");
+    }
+
+    // Template:
+    // [{type}]
+    // Source: "templates/tests.template":103:23
+    private TemplateContent renderType_2()
+    {
+        TemplateValue type = Read("type");
+
+        return Line($"{type}");
+    }
+
+    // Template:
+    // [
     // Hierarchy that transitions from indent to bullet 
     // Johnson
     //     (0.0) Buddy who is owned by 
@@ -146,13 +619,122 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //          (1.0) John who owns
     //             (2.0) dog
     //             (2.1) cat
-    //             (2.2) zebra]}
-    // {#test8:[
+    //             (2.2) zebra]
+    // Source: "templates/tests.template":104:15
+    private TemplateContent test7Result()
+    {
+        return Line($$"""
+            Hierarchy that transitions from indent to bullet 
+            Johnson
+                (0.0) Buddy who is owned by 
+                     (1.0) Doris who owns
+                        (2.0) dog
+                        (2.1) lion
+                        (2.2) tiger
+                (0.1) Ralph who is owned by 
+                     (1.0) Doris who owns
+                        (2.0) dog
+                        (2.1) lion
+                        (2.2) tiger
+                (0.2) Stripes who is owned by 
+                     (1.0) Doris who owns
+                        (2.0) dog
+                        (2.1) lion
+                        (2.2) tiger
+            Smith
+                (0.0) Toto who is owned by 
+                     (1.0) John who owns
+                        (2.0) dog
+                        (2.1) cat
+                        (2.2) zebra
+                (0.1) Dolly who is owned by 
+                     (1.0) John who owns
+                        (2.0) dog
+                        (2.1) cat
+                        (2.2) zebra
+                (0.2) Stripes who is owned by 
+                     (1.0) John who owns
+                        (2.0) dog
+                        (2.1) cat
+                        (2.2) zebra
+            """);
+    }
+
+    // Template:
+    // [
     // Hierarchy that also transitions from indent to bullet {#data:[ //
     //   {firstName} {lastName} who owns {pets:[{name} who is owned by 
     //          {.} {^.^:[{firstName} who owns
-    //             {.} {pets:[{type}]}]}]}]}]}
-    // {#test8Result:[
+    //             {.} {pets:[{type}]}]}]}]}]
+    // Source: "templates/tests.template":138:9
+    private TemplateContent test8()
+    {
+        TemplateValue data = Value(EvaluateSubtemplate("data"))
+            .Render(InScope(item => item.renderFirstName_3()));
+
+        return Line($"Hierarchy that also transitions from indent to bullet {data}");
+    }
+
+    // Template:
+    // [ //
+    //   {firstName} {lastName} who owns {pets:[{name} who is owned by 
+    //          {.} {^.^:[{firstName} who owns
+    //             {.} {pets:[{type}]}]}]}]
+    // Source: "templates/tests.template":139:62
+    private TemplateContent renderFirstName_3()
+    {
+        TemplateValue firstName = Read("firstName");
+        TemplateValue lastName = Read("lastName");
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderName_6()));
+
+        return Line($$"""
+            
+              {{firstName}} {{lastName}} who owns {{pets}}
+            """);
+    }
+
+    // Template:
+    // [{name} who is owned by 
+    //          {.} {^.^:[{firstName} who owns
+    //             {.} {pets:[{type}]}]}]
+    // Source: "templates/tests.template":140:41
+    private TemplateContent renderName_6()
+    {
+        TemplateValue name = Read("name");
+        TemplateValue content = Value(Context.CreateBullet("\n         \u0001{.} "));
+        TemplateValue content_2 = Read("^.^")
+            .Render(InScope(item => item.renderFirstName_4()));
+
+        return Line($"{name} who is owned by {content}{content_2}");
+    }
+
+    // Template:
+    // [{firstName} who owns
+    //             {.} {pets:[{type}]}]
+    // Source: "templates/tests.template":141:19
+    private TemplateContent renderFirstName_4()
+    {
+        TemplateValue firstName = Read("firstName");
+        TemplateValue content = Value(Context.CreateBullet("\n            \u0001{.} "));
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderType_3()));
+
+        return Line($"{firstName} who owns{content}{pets}");
+    }
+
+    // Template:
+    // [{type}]
+    // Source: "templates/tests.template":142:23
+    private TemplateContent renderType_3()
+    {
+        TemplateValue type = Read("type");
+
+        return Line($"{type}");
+    }
+
+    // Template:
+    // [
     // Hierarchy that also transitions from indent to bullet 
     //   Doris Johnson who owns 
     //      Buddy who is owned by 
@@ -185,37 +767,248 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //          (0.0) John who owns
     //             (1.0) dog
     //             (1.1) cat
-    //             (1.2) zebra]}
-    // {#test9:[
-    // Continued list {#data:[{pets:[{name}]}]}]}
-    // {#test9Result:[
+    //             (1.2) zebra]
+    // Source: "templates/tests.template":143:15
+    private TemplateContent test8Result()
+    {
+        return Line($$"""
+            Hierarchy that also transitions from indent to bullet 
+              Doris Johnson who owns 
+                 Buddy who is owned by 
+                     (0.0) Doris who owns
+                        (1.0) dog
+                        (1.1) lion
+                        (1.2) tiger
+                 Ralph who is owned by 
+                     (0.0) Doris who owns
+                        (1.0) dog
+                        (1.1) lion
+                        (1.2) tiger
+                 Stripes who is owned by 
+                     (0.0) Doris who owns
+                        (1.0) dog
+                        (1.1) lion
+                        (1.2) tiger
+              John Smith who owns 
+                 Toto who is owned by 
+                     (0.0) John who owns
+                        (1.0) dog
+                        (1.1) cat
+                        (1.2) zebra
+                 Dolly who is owned by 
+                     (0.0) John who owns
+                        (1.0) dog
+                        (1.1) cat
+                        (1.2) zebra
+                 Stripes who is owned by 
+                     (0.0) John who owns
+                        (1.0) dog
+                        (1.1) cat
+                        (1.2) zebra
+            """);
+    }
+
+    // Template:
+    // [
+    // Continued list {#data:[{pets:[{name}]}]}]
+    // Source: "templates/tests.template":177:9
+    private TemplateContent test9()
+    {
+        TemplateValue data = Value(EvaluateSubtemplate("data"))
+            .Render(InScope(item => item.renderContent()));
+
+        return Line($"Continued list {data}");
+    }
+
+    // Template:
+    // [{pets:[{name}]}]
+    // Source: "templates/tests.template":178:23
+    private TemplateContent renderContent()
+    {
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderName_7()));
+
+        return Line($"{pets}");
+    }
+
+    // Template:
+    // [{name}]
+    // Source: "templates/tests.template":178:30
+    private TemplateContent renderName_7()
+    {
+        TemplateValue name = Read("name");
+
+        return Line($"{name}");
+    }
+
+    // Template:
+    // [
     // Continued list 
     //    Buddy
     //    Ralph
     //    Stripes
     //    Toto
     //    Dolly
-    //    Stripes]}
-    // {#test10:[
+    //    Stripes]
+    // Source: "templates/tests.template":179:15
+    private TemplateContent test9Result()
+    {
+        return Line($$"""
+            Continued list 
+               Buddy
+               Ralph
+               Stripes
+               Toto
+               Dolly
+               Stripes
+            """);
+    }
+
+    // Template:
+    // [
     // Bulleted Continued list ` 
     // {#data:[{pets:[ 
-    //     {.} {name}]}]}]}
-    // {#test10Result:[
+    //     {.} {name}]}]}]
+    // Source: "templates/tests.template":187:10
+    private TemplateContent test10()
+    {
+        TemplateValue data = Value(EvaluateSubtemplate("data"))
+            .Render(InScope(item => item.renderContent_2()));
+
+        return Line($"Bulleted Continued list {data}");
+    }
+
+    // Template:
+    // [{pets:[ 
+    //     {.} {name}]}]
+    // Source: "templates/tests.template":189:8
+    private TemplateContent renderContent_2()
+    {
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderName_8()));
+
+        return Line($"{pets}");
+    }
+
+    // Template:
+    // [ 
+    //     {.} {name}]
+    // Source: "templates/tests.template":189:15
+    private TemplateContent renderName_8()
+    {
+        TemplateValue content = Value(Context.CreateBullet("\n    \u0001{.} "));
+        TemplateValue name = Read("name");
+
+        return Line($"{content}{name}");
+    }
+
+    // Template:
+    // [
     // Bulleted Continued list 
     //     (0.0) Buddy
     //     (0.1) Ralph
     //     (0.2) Stripes
     //     (0.3) Toto
     //     (0.4) Dolly
-    //     (0.5) Stripes]}
-    // {#test11:[
+    //     (0.5) Stripes]
+    // Source: "templates/tests.template":191:16
+    private TemplateContent test10Result()
+    {
+        return Line($$"""
+            Bulleted Continued list 
+                (0.0) Buddy
+                (0.1) Ralph
+                (0.2) Stripes
+                (0.3) Toto
+                (0.4) Dolly
+                (0.5) Stripes
+            """);
+    }
+
+    // Template:
+    // [
     // Hierarchy that also transitions from indent to bullet and back {#data:[ //
     // {lastName} who owns 
     //     {.} {pets:[{name} who is owned by 
     //          {^.^:[{firstName} who owns 
     //              {.} {pets:[{type} // 
-    //             ]}]}]}]}]}
-    // {#test11Result:[
+    //             ]}]}]}]}]
+    // Source: "templates/tests.template":199:10
+    private TemplateContent test11()
+    {
+        TemplateValue data = Value(EvaluateSubtemplate("data"))
+            .Render(InScope(item => item.renderLastName_8()));
+
+        return Line($"Hierarchy that also transitions from indent to bullet and back {data}");
+    }
+
+    // Template:
+    // [ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //          {^.^:[{firstName} who owns 
+    //              {.} {pets:[{type} // 
+    //             ]}]}]}]
+    // Source: "templates/tests.template":200:71
+    private TemplateContent renderLastName_8()
+    {
+        TemplateValue lastName = Read("lastName");
+        TemplateValue content = Value(Context.CreateBullet("\n    \u0001{.} "));
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderName_9()));
+
+        return Line($$"""
+            
+            {{lastName}} who owns {{content}}{{pets}}
+            """);
+    }
+
+    // Template:
+    // [{name} who is owned by 
+    //          {^.^:[{firstName} who owns 
+    //              {.} {pets:[{type} // 
+    //             ]}]}]
+    // Source: "templates/tests.template":202:15
+    private TemplateContent renderName_9()
+    {
+        TemplateValue name = Read("name");
+        TemplateValue content = Read("^.^")
+            .Render(InScope(item => item.renderFirstName_5()));
+
+        return Line($$"""
+            {{name}} who is owned by 
+                     {{content}}
+            """);
+    }
+
+    // Template:
+    // [{firstName} who owns 
+    //              {.} {pets:[{type} // 
+    //             ]}]
+    // Source: "templates/tests.template":203:15
+    private TemplateContent renderFirstName_5()
+    {
+        TemplateValue firstName = Read("firstName");
+        TemplateValue content = Value(Context.CreateBullet("\n             \u0001{.} "));
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderType_4()));
+
+        return Line($"{firstName} who owns {content}{pets}");
+    }
+
+    // Template:
+    // [{type} // 
+    //             ]
+    // Source: "templates/tests.template":204:24
+    private TemplateContent renderType_4()
+    {
+        TemplateValue type = Read("type");
+
+        return Line($"{type}");
+    }
+
+    // Template:
+    // [
     // Hierarchy that also transitions from indent to bullet and back 
     // Johnson who owns 
     //     (0.0) Buddy who is owned by 
@@ -248,15 +1041,125 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //          John who owns 
     //              (1.0) dog
     //              (1.1) cat
-    //              (1.2) zebra]}
-    // {#test12:[
+    //              (1.2) zebra]
+    // Source: "templates/tests.template":206:16
+    private TemplateContent test11Result()
+    {
+        return Line($$"""
+            Hierarchy that also transitions from indent to bullet and back 
+            Johnson who owns 
+                (0.0) Buddy who is owned by 
+                     Doris who owns 
+                         (1.0) dog
+                         (1.1) lion
+                         (1.2) tiger
+                (0.1) Ralph who is owned by 
+                     Doris who owns 
+                         (1.0) dog
+                         (1.1) lion
+                         (1.2) tiger
+                (0.2) Stripes who is owned by 
+                     Doris who owns 
+                         (1.0) dog
+                         (1.1) lion
+                         (1.2) tiger
+            Smith who owns 
+                (0.0) Toto who is owned by 
+                     John who owns 
+                         (1.0) dog
+                         (1.1) cat
+                         (1.2) zebra
+                (0.1) Dolly who is owned by 
+                     John who owns 
+                         (1.0) dog
+                         (1.1) cat
+                         (1.2) zebra
+                (0.2) Stripes who is owned by 
+                     John who owns 
+                         (1.0) dog
+                         (1.1) cat
+                         (1.2) zebra
+            """);
+    }
+
+    // Template:
+    // [
     // Additional variation of hierarchy that also transitions from indent to bullet `
     //  and back {#data:[ //
     // {lastName} who owns 
     //     {.} {pets:[{name} who is owned by 
     //         {.} {^.^:[{firstName} who owns {pets:[{type} //  
-    //             ]}]}]}]}]}
-    // {#test12Result:[
+    //             ]}]}]}]}]
+    // Source: "templates/tests.template":240:10
+    private TemplateContent test12()
+    {
+        TemplateValue data = Value(EvaluateSubtemplate("data"))
+            .Render(InScope(item => item.renderLastName_9()));
+
+        return Line($"Additional variation of hierarchy that also transitions from indent to bullet and back {data}");
+    }
+
+    // Template:
+    // [ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //         {.} {^.^:[{firstName} who owns {pets:[{type} //  
+    //             ]}]}]}]
+    // Source: "templates/tests.template":242:18
+    private TemplateContent renderLastName_9()
+    {
+        TemplateValue lastName = Read("lastName");
+        TemplateValue content = Value(Context.CreateBullet("\n    \u0001{.} "));
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderName_10()));
+
+        return Line($$"""
+            
+            {{lastName}} who owns {{content}}{{pets}}
+            """);
+    }
+
+    // Template:
+    // [{name} who is owned by 
+    //         {.} {^.^:[{firstName} who owns {pets:[{type} //  
+    //             ]}]}]
+    // Source: "templates/tests.template":244:15
+    private TemplateContent renderName_10()
+    {
+        TemplateValue name = Read("name");
+        TemplateValue content = Value(Context.CreateBullet("\n        \u0001{.} "));
+        TemplateValue content_2 = Read("^.^")
+            .Render(InScope(item => item.renderFirstName_6()));
+
+        return Line($"{name} who is owned by {content}{content_2}");
+    }
+
+    // Template:
+    // [{firstName} who owns {pets:[{type} //  
+    //             ]}]
+    // Source: "templates/tests.template":245:18
+    private TemplateContent renderFirstName_6()
+    {
+        TemplateValue firstName = Read("firstName");
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderType_5()));
+
+        return Line($"{firstName} who owns {pets}");
+    }
+
+    // Template:
+    // [{type} //  
+    //             ]
+    // Source: "templates/tests.template":245:46
+    private TemplateContent renderType_5()
+    {
+        TemplateValue type = Read("type");
+
+        return Line($"{type}");
+    }
+
+    // Template:
+    // [
     // Additional variation of hierarchy that also transitions from indent to bullet and back 
     // Johnson who owns 
     //     (0.0) Buddy who is owned by 
@@ -289,15 +1192,127 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //         (1.0) John who owns 
     //            (2.0) dog
     //            (2.1) cat
-    //            (2.2) zebra]}
-    // {#test13:[
+    //            (2.2) zebra]
+    // Source: "templates/tests.template":247:16
+    private TemplateContent test12Result()
+    {
+        return Line($$"""
+            Additional variation of hierarchy that also transitions from indent to bullet and back 
+            Johnson who owns 
+                (0.0) Buddy who is owned by 
+                    (1.0) Doris who owns 
+                       (2.0) dog
+                       (2.1) lion
+                       (2.2) tiger
+                (0.1) Ralph who is owned by 
+                    (1.0) Doris who owns 
+                       (2.0) dog
+                       (2.1) lion
+                       (2.2) tiger
+                (0.2) Stripes who is owned by 
+                    (1.0) Doris who owns 
+                       (2.0) dog
+                       (2.1) lion
+                       (2.2) tiger
+            Smith who owns 
+                (0.0) Toto who is owned by 
+                    (1.0) John who owns 
+                       (2.0) dog
+                       (2.1) cat
+                       (2.2) zebra
+                (0.1) Dolly who is owned by 
+                    (1.0) John who owns 
+                       (2.0) dog
+                       (2.1) cat
+                       (2.2) zebra
+                (0.2) Stripes who is owned by 
+                    (1.0) John who owns 
+                       (2.0) dog
+                       (2.1) cat
+                       (2.2) zebra
+            """);
+    }
+
+    // Template:
+    // [
     // Yet another variation of hierarchy that also transitions from indent to bullet `
     //  and back {#data:[ //
     // {lastName} who owns 
     //     {.} {pets:[{name} who is owned by 
     //         {^.^:[{firstName} who owns {pets:[{type} //  
-    //             ]}]}]}]}]}
-    // {#test13Result:[
+    //             ]}]}]}]}]
+    // Source: "templates/tests.template":281:10
+    private TemplateContent test13()
+    {
+        TemplateValue data = Value(EvaluateSubtemplate("data"))
+            .Render(InScope(item => item.renderLastName_10()));
+
+        return Line($"Yet another variation of hierarchy that also transitions from indent to bullet and back {data}");
+    }
+
+    // Template:
+    // [ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //         {^.^:[{firstName} who owns {pets:[{type} //  
+    //             ]}]}]}]
+    // Source: "templates/tests.template":283:18
+    private TemplateContent renderLastName_10()
+    {
+        TemplateValue lastName = Read("lastName");
+        TemplateValue content = Value(Context.CreateBullet("\n    \u0001{.} "));
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderName_11()));
+
+        return Line($$"""
+            
+            {{lastName}} who owns {{content}}{{pets}}
+            """);
+    }
+
+    // Template:
+    // [{name} who is owned by 
+    //         {^.^:[{firstName} who owns {pets:[{type} //  
+    //             ]}]}]
+    // Source: "templates/tests.template":285:15
+    private TemplateContent renderName_11()
+    {
+        TemplateValue name = Read("name");
+        TemplateValue content = Read("^.^")
+            .Render(InScope(item => item.renderFirstName_7()));
+
+        return Line($$"""
+            {{name}} who is owned by 
+                    {{content}}
+            """);
+    }
+
+    // Template:
+    // [{firstName} who owns {pets:[{type} //  
+    //             ]}]
+    // Source: "templates/tests.template":286:14
+    private TemplateContent renderFirstName_7()
+    {
+        TemplateValue firstName = Read("firstName");
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderType_6()));
+
+        return Line($"{firstName} who owns {pets}");
+    }
+
+    // Template:
+    // [{type} //  
+    //             ]
+    // Source: "templates/tests.template":286:42
+    private TemplateContent renderType_6()
+    {
+        TemplateValue type = Read("type");
+
+        return Line($"{type}");
+    }
+
+    // Template:
+    // [
     // Yet another variation of hierarchy that also transitions from indent to bullet and back 
     // Johnson who owns 
     //     (0.0) Buddy who is owned by 
@@ -330,15 +1345,133 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //         John who owns 
     //            dog
     //            cat
-    //            zebra]}
-    // {#test14:[
+    //            zebra]
+    // Source: "templates/tests.template":288:16
+    private TemplateContent test13Result()
+    {
+        return Line($$"""
+            Yet another variation of hierarchy that also transitions from indent to bullet and back 
+            Johnson who owns 
+                (0.0) Buddy who is owned by 
+                    Doris who owns 
+                       dog
+                       lion
+                       tiger
+                (0.1) Ralph who is owned by 
+                    Doris who owns 
+                       dog
+                       lion
+                       tiger
+                (0.2) Stripes who is owned by 
+                    Doris who owns 
+                       dog
+                       lion
+                       tiger
+            Smith who owns 
+                (0.0) Toto who is owned by 
+                    John who owns 
+                       dog
+                       cat
+                       zebra
+                (0.1) Dolly who is owned by 
+                    John who owns 
+                       dog
+                       cat
+                       zebra
+                (0.2) Stripes who is owned by 
+                    John who owns 
+                       dog
+                       cat
+                       zebra
+            """);
+    }
+
+    // Template:
+    // [
     // Indent under indent under bullet {#data:[ //
     // {lastName} who owns 
     //     {.} {pets:[{name} who is owned by 
     //              {^.^:[{firstName} who owns 
     //                  {pets:[{type} //  
-    //             ]}]}]}]}]}
-    // {#test14Result:[
+    //             ]}]}]}]}]
+    // Source: "templates/tests.template":322:10
+    private TemplateContent test14()
+    {
+        TemplateValue data = Value(EvaluateSubtemplate("data"))
+            .Render(InScope(item => item.renderLastName_11()));
+
+        return Line($"Indent under indent under bullet {data}");
+    }
+
+    // Template:
+    // [ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //              {^.^:[{firstName} who owns 
+    //                  {pets:[{type} //  
+    //             ]}]}]}]
+    // Source: "templates/tests.template":323:41
+    private TemplateContent renderLastName_11()
+    {
+        TemplateValue lastName = Read("lastName");
+        TemplateValue content = Value(Context.CreateBullet("\n    \u0001{.} "));
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderName_12()));
+
+        return Line($$"""
+            
+            {{lastName}} who owns {{content}}{{pets}}
+            """);
+    }
+
+    // Template:
+    // [{name} who is owned by 
+    //              {^.^:[{firstName} who owns 
+    //                  {pets:[{type} //  
+    //             ]}]}]
+    // Source: "templates/tests.template":325:15
+    private TemplateContent renderName_12()
+    {
+        TemplateValue name = Read("name");
+        TemplateValue content = Read("^.^")
+            .Render(InScope(item => item.renderFirstName_8()));
+
+        return Line($$"""
+            {{name}} who is owned by 
+                         {{content}}
+            """);
+    }
+
+    // Template:
+    // [{firstName} who owns 
+    //                  {pets:[{type} //  
+    //             ]}]
+    // Source: "templates/tests.template":326:19
+    private TemplateContent renderFirstName_8()
+    {
+        TemplateValue firstName = Read("firstName");
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderType_7()));
+
+        return Line($$"""
+            {{firstName}} who owns 
+                             {{pets}}
+            """);
+    }
+
+    // Template:
+    // [{type} //  
+    //             ]
+    // Source: "templates/tests.template":327:24
+    private TemplateContent renderType_7()
+    {
+        TemplateValue type = Read("type");
+
+        return Line($"{type}");
+    }
+
+    // Template:
+    // [
     // Indent under indent under bullet 
     // Johnson who owns 
     //     (0.0) Buddy who is owned by 
@@ -371,15 +1504,133 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //              John who owns 
     //                  dog
     //                  cat
-    //                  zebra]}
-    // {#test15:[
+    //                  zebra]
+    // Source: "templates/tests.template":329:16
+    private TemplateContent test14Result()
+    {
+        return Line($$"""
+            Indent under indent under bullet 
+            Johnson who owns 
+                (0.0) Buddy who is owned by 
+                         Doris who owns 
+                             dog
+                             lion
+                             tiger
+                (0.1) Ralph who is owned by 
+                         Doris who owns 
+                             dog
+                             lion
+                             tiger
+                (0.2) Stripes who is owned by 
+                         Doris who owns 
+                             dog
+                             lion
+                             tiger
+            Smith who owns 
+                (0.0) Toto who is owned by 
+                         John who owns 
+                             dog
+                             cat
+                             zebra
+                (0.1) Dolly who is owned by 
+                         John who owns 
+                             dog
+                             cat
+                             zebra
+                (0.2) Stripes who is owned by 
+                         John who owns 
+                             dog
+                             cat
+                             zebra
+            """);
+    }
+
+    // Template:
+    // [
     // Automatic bulleting for multi-values{#data:[ //
     // {lastName} who owns 
     //     {.} {pets:[{name} who is owned by 
     //              {^.^:[{firstName} who owns 
     //                  {pets:[{type} //  
-    //             ]}]}]}]}]}
-    // {#test15Result:[
+    //             ]}]}]}]}]
+    // Source: "templates/tests.template":363:10
+    private TemplateContent test15()
+    {
+        TemplateValue data = Value(EvaluateSubtemplate("data"))
+            .Render(InScope(item => item.renderLastName_12()));
+
+        return Line($"Automatic bulleting for multi-values{data}");
+    }
+
+    // Template:
+    // [ //
+    // {lastName} who owns 
+    //     {.} {pets:[{name} who is owned by 
+    //              {^.^:[{firstName} who owns 
+    //                  {pets:[{type} //  
+    //             ]}]}]}]
+    // Source: "templates/tests.template":364:44
+    private TemplateContent renderLastName_12()
+    {
+        TemplateValue lastName = Read("lastName");
+        TemplateValue content = Value(Context.CreateBullet("\n    \u0001{.} "));
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderName_13()));
+
+        return Line($$"""
+            
+            {{lastName}} who owns {{content}}{{pets}}
+            """);
+    }
+
+    // Template:
+    // [{name} who is owned by 
+    //              {^.^:[{firstName} who owns 
+    //                  {pets:[{type} //  
+    //             ]}]}]
+    // Source: "templates/tests.template":366:15
+    private TemplateContent renderName_13()
+    {
+        TemplateValue name = Read("name");
+        TemplateValue content = Read("^.^")
+            .Render(InScope(item => item.renderFirstName_9()));
+
+        return Line($$"""
+            {{name}} who is owned by 
+                         {{content}}
+            """);
+    }
+
+    // Template:
+    // [{firstName} who owns 
+    //                  {pets:[{type} //  
+    //             ]}]
+    // Source: "templates/tests.template":367:19
+    private TemplateContent renderFirstName_9()
+    {
+        TemplateValue firstName = Read("firstName");
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderType_8()));
+
+        return Line($$"""
+            {{firstName}} who owns 
+                             {{pets}}
+            """);
+    }
+
+    // Template:
+    // [{type} //  
+    //             ]
+    // Source: "templates/tests.template":368:24
+    private TemplateContent renderType_8()
+    {
+        TemplateValue type = Read("type");
+
+        return Line($"{type}");
+    }
+
+    // Template:
+    // [
     // Automatic bulleting for multi-values
     // Johnson who owns 
     //     (0.0) Buddy who is owned by 
@@ -412,8 +1663,49 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     //              John who owns 
     //                  dog
     //                  cat
-    //                  zebra]}
-    // {#test16:[
+    //                  zebra]
+    // Source: "templates/tests.template":370:16
+    private TemplateContent test15Result()
+    {
+        return Line($$"""
+            Automatic bulleting for multi-values
+            Johnson who owns 
+                (0.0) Buddy who is owned by 
+                         Doris who owns 
+                             dog
+                             lion
+                             tiger
+                (0.1) Ralph who is owned by 
+                         Doris who owns 
+                             dog
+                             lion
+                             tiger
+                (0.2) Stripes who is owned by 
+                         Doris who owns 
+                             dog
+                             lion
+                             tiger
+            Smith who owns 
+                (0.0) Toto who is owned by 
+                         John who owns 
+                             dog
+                             cat
+                             zebra
+                (0.1) Dolly who is owned by 
+                         John who owns 
+                             dog
+                             cat
+                             zebra
+                (0.2) Stripes who is owned by 
+                         John who owns 
+                             dog
+                             cat
+                             zebra
+            """);
+    }
+
+    // Template:
+    // [
     // {''.Compose() // reset numbering from previous tests
     // }{[
     // A:
@@ -439,212 +1731,316 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // People:{'/data/people':[
     // {.} {lastName}{pets:[
     //  {.} {type}]}
-    // ].@MissingValue('No Information Provided').Compose()}]}]}
-    // {#test16Result:[
+    // ].@MissingValue('No Information Provided').Compose()}]}]
+    // Source: "templates/tests.template":404:10
+    private TemplateContent test16()
+    {
+        TemplateValue compose = Collect("")
+            .Compose();
+        TemplateValue aPeopleBPeopleCPeop = Value(Each(ForItem(item => item.renderAPeopleBPeopleCPeop())));
+
+        return Line($"{compose}{aPeopleBPeopleCPeop}");
+    }
+
+    // Template:
+    // [
     // A:
-    // People:
-    // (0.0) Pets 
-    //       (1.0) Domesticated
-    //          (2.0) dog
-    //          (2.1) lion
-    //          (2.2) tiger
-    // (0.1) Pets 
-    //       (1.0) Domesticated
-    //          (2.0) dog
-    //          (2.1) cat
-    //          (2.2) zebra
+    // People:{'/data/people':[
+    // {.} Pets {[
+    //       {.} Domesticated{pets:[{type}]}
+    //    ]
+    //    } //
+    // ].Compose()}
     // B:
-    // People:
-    //    (0.0) Johnson
-    //       (1.0) dog
-    //       (1.1) lion
-    //       (1.2) tiger
-    //    (0.1) Smith
-    //       (1.0) dog
-    //       (1.1) cat
-    //       (1.2) zebra
+    // People:{'/data/people':[
+    //    {.} {lastName}{pets:[{type}]}
+    // ].@MissingValue('No Information Provided').Compose()}
     // C:
-    // People:
-    //    (0.0) Johnson
-    //       (1.0) dog
-    //       (1.1) lion
-    //       (1.2) tiger
-    //    (0.1) Smith
-    //       (1.0) dog
-    //       (1.1) cat
-    //       (1.2) zebra   
+    // People:{'/data/people':[
+    //    {.} {lastName}{pets:[{type}]}
+    // ].Compose()}   
     // D:
-    // People:Johnson
-    //    dog
-    //    lion
-    //    tiger
-    // Smith
-    //    dog
-    //    cat
-    //    zebra
+    // People:{'/data/people':[
+    //           {lastName}{pets:[{type}]}
+    // ].@MissingValue('No Information Provided').Compose()}
     // E:
-    // People:
-    // (0.0) Johnson
-    //  (1.0) dog
-    //  (1.1) lion
-    //  (1.2) tiger
-    // (0.1) Smith
-    //  (1.0) dog
-    //  (1.1) cat
-    //  (1.2) zebra]}
-    // {#tests:[ //
-    // {'1'.#test(#test1,#test1Result)}
-    // {'2'.#test(#test2,#test2Result)}
-    // {'3'.#test(#test3,#test3Result)}
-    // {'4'.#test(#test4,#test4Result)}
-    // {'5'.#test(#test5,#test5Result)}
-    // {'6'.#test(#test6,#test6Result)}
-    // {'7'.#test(#test7,#test7Result)}
-    // {'8'.#test(#test8,#test8Result)}
-    // {'9'.#test(#test9,#test9Result)}
-    // {'10'.#test(#test10,#test10Result)}
-    // {'11'.#test(#test11,#test11Result)}
-    // {'12'.#test(#test12,#test12Result)}
-    // {'13'.#test(#test13,#test13Result)}
-    // {'14'.#test(#test14,#test14Result)}
-    // {'15'.#test(#test15,#test15Result)}
-    // {'16'.#test(#test16,#test16Result)}
-    // ]}
-    // {#expected:[ //
-    // Test 1 passed
-    // Test 2 passed
-    // Test 3 passed
-    // Test 4 passed
-    // Test 5 passed
-    // Test 6 passed
-    // Test 7 passed
-    // Test 8 passed
-    // Test 9 passed
-    // Test 10 passed
-    // Test 11 passed
-    // Test 12 passed
-    // Test 13 passed
-    // Test 14 passed
-    // Test 15 passed
-    // Test 16 passed
-    // ]}
-    // {#data:[/data/people]}
-    // Source: "templates/tests.template":1:1
-    internal TemplateContent Evaluate()
+    // People:{'/data/people':[
+    // {.} {lastName}{pets:[
+    //  {.} {type}]}
+    // ].@MissingValue('No Information Provided').Compose()}]
+    // Source: "templates/tests.template":406:3
+    private TemplateContent renderAPeopleBPeopleCPeop()
     {
-        return WithDefinitions(defineSubtemplates,
-            definitionContext => new Tests(definitionContext).renderTests());
-    }
+        TemplateValue content = Value("/data/people")
+            .Render(ForItem(item => item.renderCompose()));
+        TemplateValue content_2 = Value("/data/people")
+            .Render(ForItem(item => item.renderCompose_2()));
+        TemplateValue content_3 = Value("/data/people")
+            .Render(ForItem(item => item.renderCompose_4()));
+        TemplateValue content_4 = Value("/data/people")
+            .Render(ForItem(item => item.renderCompose_5()));
+        TemplateValue content_5 = Value("/data/people")
+            .Render(ForItem(item => item.renderCompose_7()));
 
-    // Template:
-    // [/data/people]
-    // Source: "templates/tests.template":519:8
-    private TemplateContent data()
-    {
-        return Line($"/data/people");
-    }
-
-    // Template:
-    // [ //
-    // Test 1 passed
-    // Test 2 passed
-    // Test 3 passed
-    // Test 4 passed
-    // Test 5 passed
-    // Test 6 passed
-    // Test 7 passed
-    // Test 8 passed
-    // Test 9 passed
-    // Test 10 passed
-    // Test 11 passed
-    // Test 12 passed
-    // Test 13 passed
-    // Test 14 passed
-    // Test 15 passed
-    // Test 16 passed
-    // ]
-    // Source: "templates/tests.template":501:12
-    private TemplateContent expected()
-    {
         return Line($$"""
-            
-            Test 1 passed
-            Test 2 passed
-            Test 3 passed
-            Test 4 passed
-            Test 5 passed
-            Test 6 passed
-            Test 7 passed
-            Test 8 passed
-            Test 9 passed
-            Test 10 passed
-            Test 11 passed
-            Test 12 passed
-            Test 13 passed
-            Test 14 passed
-            Test 15 passed
-            Test 16 passed
+            A:
+            People:{{content}}
+            B:
+            People:{{content_2}}
+            C:
+            People:{{content_3}}   
+            D:
+            People:{{content_4}}
+            E:
+            People:{{content_5}}
             """);
     }
 
     // Template:
-    // [ //
-    // {'1'.#test(#test1,#test1Result)}
-    // {'2'.#test(#test2,#test2Result)}
-    // {'3'.#test(#test3,#test3Result)}
-    // {'4'.#test(#test4,#test4Result)}
-    // {'5'.#test(#test5,#test5Result)}
-    // {'6'.#test(#test6,#test6Result)}
-    // {'7'.#test(#test7,#test7Result)}
-    // {'8'.#test(#test8,#test8Result)}
-    // {'9'.#test(#test9,#test9Result)}
-    // {'10'.#test(#test10,#test10Result)}
-    // {'11'.#test(#test11,#test11Result)}
-    // {'12'.#test(#test12,#test12Result)}
-    // {'13'.#test(#test13,#test13Result)}
-    // {'14'.#test(#test14,#test14Result)}
-    // {'15'.#test(#test15,#test15Result)}
-    // {'16'.#test(#test16,#test16Result)}
+    // [
+    // {.} Pets {[
+    //       {.} Domesticated{pets:[{type}]}
+    //    ]
+    //    } //
     // ]
-    // Source: "templates/tests.template":483:9
-    private TemplateContent tests()
+    // Source: "templates/tests.template":408:24
+    private TemplateContent renderDomesticated()
     {
-        object? test = EvaluationContext.Invoke(MethodInput(itemContext => "1"), methodValue => ApplySubtemplate("test", methodValue, Each(itemContext => itemContext.Named("test1")), Each(itemContext => itemContext.Named("test1Result"))));
-        object? test_2 = EvaluationContext.Invoke(MethodInput(itemContext => "2"), methodValue_2 => ApplySubtemplate("test", methodValue_2, Each(itemContext => itemContext.Named("test2")), Each(itemContext => itemContext.Named("test2Result"))));
-        object? test_3 = EvaluationContext.Invoke(MethodInput(itemContext => "3"), methodValue_3 => ApplySubtemplate("test", methodValue_3, Each(itemContext => itemContext.Named("test3")), Each(itemContext => itemContext.Named("test3Result"))));
-        object? test_4 = EvaluationContext.Invoke(MethodInput(itemContext => "4"), methodValue_4 => ApplySubtemplate("test", methodValue_4, Each(itemContext => itemContext.Named("test4")), Each(itemContext => itemContext.Named("test4Result"))));
-        object? test_5 = EvaluationContext.Invoke(MethodInput(itemContext => "5"), methodValue_5 => ApplySubtemplate("test", methodValue_5, Each(itemContext => itemContext.Named("test5")), Each(itemContext => itemContext.Named("test5Result"))));
-        object? test_6 = EvaluationContext.Invoke(MethodInput(itemContext => "6"), methodValue_6 => ApplySubtemplate("test", methodValue_6, Each(itemContext => itemContext.Named("test6")), Each(itemContext => itemContext.Named("test6Result"))));
-        object? test_7 = EvaluationContext.Invoke(MethodInput(itemContext => "7"), methodValue_7 => ApplySubtemplate("test", methodValue_7, Each(itemContext => itemContext.Named("test7")), Each(itemContext => itemContext.Named("test7Result"))));
-        object? test_8 = EvaluationContext.Invoke(MethodInput(itemContext => "8"), methodValue_8 => ApplySubtemplate("test", methodValue_8, Each(itemContext => itemContext.Named("test8")), Each(itemContext => itemContext.Named("test8Result"))));
-        object? test_9 = EvaluationContext.Invoke(MethodInput(itemContext => "9"), methodValue_9 => ApplySubtemplate("test", methodValue_9, Each(itemContext => itemContext.Named("test9")), Each(itemContext => itemContext.Named("test9Result"))));
-        object? test_10 = EvaluationContext.Invoke(MethodInput(itemContext => "10"), methodValue_10 => ApplySubtemplate("test", methodValue_10, Each(itemContext => itemContext.Named("test10")), Each(itemContext => itemContext.Named("test10Result"))));
-        object? test_11 = EvaluationContext.Invoke(MethodInput(itemContext => "11"), methodValue_11 => ApplySubtemplate("test", methodValue_11, Each(itemContext => itemContext.Named("test11")), Each(itemContext => itemContext.Named("test11Result"))));
-        object? test_12 = EvaluationContext.Invoke(MethodInput(itemContext => "12"), methodValue_12 => ApplySubtemplate("test", methodValue_12, Each(itemContext => itemContext.Named("test12")), Each(itemContext => itemContext.Named("test12Result"))));
-        object? test_13 = EvaluationContext.Invoke(MethodInput(itemContext => "13"), methodValue_13 => ApplySubtemplate("test", methodValue_13, Each(itemContext => itemContext.Named("test13")), Each(itemContext => itemContext.Named("test13Result"))));
-        object? test_14 = EvaluationContext.Invoke(MethodInput(itemContext => "14"), methodValue_14 => ApplySubtemplate("test", methodValue_14, Each(itemContext => itemContext.Named("test14")), Each(itemContext => itemContext.Named("test14Result"))));
-        object? test_15 = EvaluationContext.Invoke(MethodInput(itemContext => "15"), methodValue_15 => ApplySubtemplate("test", methodValue_15, Each(itemContext => itemContext.Named("test15")), Each(itemContext => itemContext.Named("test15Result"))));
-        object? test_16 = EvaluationContext.Invoke(MethodInput(itemContext => "16"), methodValue_16 => ApplySubtemplate("test", methodValue_16, Each(itemContext => itemContext.Named("test16")), Each(itemContext => itemContext.Named("test16Result"))));
+        TemplateValue content = Value(Context.CreateBullet("\n\u0001{.} "));
+        TemplateValue domesticated = Value(Each(ForItem(item => item.renderDomesticated_2())));
 
-        return Line($$"""
-            
-            {{test}}
-            {{test_2}}
-            {{test_3}}
-            {{test_4}}
-            {{test_5}}
-            {{test_6}}
-            {{test_7}}
-            {{test_8}}
-            {{test_9}}
-            {{test_10}}
-            {{test_11}}
-            {{test_12}}
-            {{test_13}}
-            {{test_14}}
-            {{test_15}}
-            {{test_16}}
-            """);
+        return Line($"{content}Pets {domesticated}");
+    }
+
+    // Template:
+    // [
+    // {.} Pets {[
+    //       {.} Domesticated{pets:[{type}]}
+    //    ]
+    //    } //
+    // ].Compose()
+    // Source: "templates/tests.template":408:24
+    private TemplateValue renderCompose()
+    {
+        return Collect(ForItem(item => item.renderDomesticated()))
+            .Compose();
+    }
+
+    // Template:
+    // [
+    //       {.} Domesticated{pets:[{type}]}
+    //    ]
+    // Source: "templates/tests.template":409:11
+    private TemplateContent renderDomesticated_2()
+    {
+        TemplateValue content = Value(Context.CreateBullet("\n      \u0001{.} "));
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderType_9()));
+
+        return Line($"{content}Domesticated{pets}");
+    }
+
+    // Template:
+    // [{type}]
+    // Source: "templates/tests.template":410:29
+    private TemplateContent renderType_9()
+    {
+        TemplateValue type = Read("type");
+
+        return Line($"{type}");
+    }
+
+    // Template:
+    // [
+    //    {.} {lastName}{pets:[{type}]}
+    // ]
+    // Source: "templates/tests.template":415:24
+    private TemplateContent renderLastName_13()
+    {
+        TemplateValue content = Value(Context.CreateBullet("\n   \u0001{.} "));
+        TemplateValue lastName = Read("lastName");
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderType_10()));
+
+        return Line($"{content}{lastName}{pets}");
+    }
+
+    // Template:
+    // [
+    //    {.} {lastName}{pets:[{type}]}
+    // ].@MissingValue('No Information Provided').Compose()
+    // Source: "templates/tests.template":415:24
+    private TemplateValue renderCompose_3()
+    {
+        return Collect(ForItem(item => item.renderLastName_13()))
+            .Compose();
+    }
+
+    // Template:
+    // [
+    //    {.} {lastName}{pets:[{type}]}
+    // ].@MissingValue('No Information Provided').Compose()
+    // Source: "templates/tests.template":415:24
+    private TemplateValue renderCompose_2()
+    {
+        return Value(Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithMissingValue("No Information Provided")
+            },
+            ForItem(item => item.renderCompose_3())));
+    }
+
+    // Template:
+    // [{type}]
+    // Source: "templates/tests.template":416:24
+    private TemplateContent renderType_10()
+    {
+        TemplateValue type = Read("type");
+
+        return Line($"{type}");
+    }
+
+    // Template:
+    // [
+    //    {.} {lastName}{pets:[{type}]}
+    // ]
+    // Source: "templates/tests.template":419:24
+    private TemplateContent renderLastName_14()
+    {
+        TemplateValue content = Value(Context.CreateBullet("\n   \u0001{.} "));
+        TemplateValue lastName = Read("lastName");
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderType_11()));
+
+        return Line($"{content}{lastName}{pets}");
+    }
+
+    // Template:
+    // [
+    //    {.} {lastName}{pets:[{type}]}
+    // ].Compose()
+    // Source: "templates/tests.template":419:24
+    private TemplateValue renderCompose_4()
+    {
+        return Collect(ForItem(item => item.renderLastName_14()))
+            .Compose();
+    }
+
+    // Template:
+    // [{type}]
+    // Source: "templates/tests.template":420:24
+    private TemplateContent renderType_11()
+    {
+        TemplateValue type = Read("type");
+
+        return Line($"{type}");
+    }
+
+    // Template:
+    // [
+    //           {lastName}{pets:[{type}]}
+    // ]
+    // Source: "templates/tests.template":423:24
+    private TemplateContent renderLastName_15()
+    {
+        TemplateValue lastName = Read("lastName");
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderType_12()));
+
+        return Line($"{lastName}{pets}");
+    }
+
+    // Template:
+    // [
+    //           {lastName}{pets:[{type}]}
+    // ].@MissingValue('No Information Provided').Compose()
+    // Source: "templates/tests.template":423:24
+    private TemplateValue renderCompose_6()
+    {
+        return Collect(ForItem(item => item.renderLastName_15()))
+            .Compose();
+    }
+
+    // Template:
+    // [
+    //           {lastName}{pets:[{type}]}
+    // ].@MissingValue('No Information Provided').Compose()
+    // Source: "templates/tests.template":423:24
+    private TemplateValue renderCompose_5()
+    {
+        return Value(Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithMissingValue("No Information Provided")
+            },
+            ForItem(item => item.renderCompose_6())));
+    }
+
+    // Template:
+    // [{type}]
+    // Source: "templates/tests.template":424:27
+    private TemplateContent renderType_12()
+    {
+        TemplateValue type = Read("type");
+
+        return Line($"{type}");
+    }
+
+    // Template:
+    // [
+    // {.} {lastName}{pets:[
+    //  {.} {type}]}
+    // ]
+    // Source: "templates/tests.template":427:24
+    private TemplateContent renderLastName_16()
+    {
+        TemplateValue content = Value(Context.CreateBullet("\n\u0001{.} "));
+        TemplateValue lastName = Read("lastName");
+        TemplateValue pets = Read("pets")
+            .Render(InScope(item => item.renderType_13()));
+
+        return Line($"{content}{lastName}{pets}");
+    }
+
+    // Template:
+    // [
+    // {.} {lastName}{pets:[
+    //  {.} {type}]}
+    // ].@MissingValue('No Information Provided').Compose()
+    // Source: "templates/tests.template":427:24
+    private TemplateValue renderCompose_8()
+    {
+        return Collect(ForItem(item => item.renderLastName_16()))
+            .Compose();
+    }
+
+    // Template:
+    // [
+    // {.} {lastName}{pets:[
+    //  {.} {type}]}
+    // ].@MissingValue('No Information Provided').Compose()
+    // Source: "templates/tests.template":427:24
+    private TemplateValue renderCompose_7()
+    {
+        return Value(Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithMissingValue("No Information Provided")
+            },
+            ForItem(item => item.renderCompose_8())));
+    }
+
+    // Template:
+    // [
+    //  {.} {type}]
+    // Source: "templates/tests.template":428:21
+    private TemplateContent renderType_13()
+    {
+        TemplateValue content = Value(Context.CreateBullet("\n \u0001{.} "));
+        TemplateValue type = Read("type");
+
+        return Line($"{content}{type}");
     }
 
     // Template:
@@ -759,2656 +2155,7 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     }
 
     // Template:
-    // [
-    // {''.Compose() // reset numbering from previous tests
-    // }{[
-    // A:
-    // People:{'/data/people':[
-    // {.} Pets {[
-    //       {.} Domesticated{pets:[{type}]}
-    //    ]
-    //    } //
-    // ].Compose()}
-    // B:
-    // People:{'/data/people':[
-    //    {.} {lastName}{pets:[{type}]}
-    // ].@MissingValue('No Information Provided').Compose()}
-    // C:
-    // People:{'/data/people':[
-    //    {.} {lastName}{pets:[{type}]}
-    // ].Compose()}   
-    // D:
-    // People:{'/data/people':[
-    //           {lastName}{pets:[{type}]}
-    // ].@MissingValue('No Information Provided').Compose()}
-    // E:
-    // People:{'/data/people':[
-    // {.} {lastName}{pets:[
-    //  {.} {type}]}
-    // ].@MissingValue('No Information Provided').Compose()}]}]
-    // Source: "templates/tests.template":404:10
-    private TemplateContent test16()
-    {
-        object? compose = EvaluationContext.Invoke(MethodInput(itemContext => ""), methodValue => Builtins.Compose(Context, methodValue));
-        object? aPeopleBPeopleCPeop = Each(itemContext => new Tests(itemContext).renderAPeopleBPeopleCPeop());
-
-        return Line($"{compose}{aPeopleBPeopleCPeop}");
-    }
-
-    // Template:
-    // [
-    // A:
-    // People:{'/data/people':[
-    // {.} Pets {[
-    //       {.} Domesticated{pets:[{type}]}
-    //    ]
-    //    } //
-    // ].Compose()}
-    // B:
-    // People:{'/data/people':[
-    //    {.} {lastName}{pets:[{type}]}
-    // ].@MissingValue('No Information Provided').Compose()}
-    // C:
-    // People:{'/data/people':[
-    //    {.} {lastName}{pets:[{type}]}
-    // ].Compose()}   
-    // D:
-    // People:{'/data/people':[
-    //           {lastName}{pets:[{type}]}
-    // ].@MissingValue('No Information Provided').Compose()}
-    // E:
-    // People:{'/data/people':[
-    // {.} {lastName}{pets:[
-    //  {.} {type}]}
-    // ].@MissingValue('No Information Provided').Compose()}]
-    // Source: "templates/tests.template":406:3
-    private TemplateContent renderAPeopleBPeopleCPeop()
-    {
-        object? content = InContext("/data/people", dataContext => new Tests(dataContext).renderCompose());
-        object? content_2 = InContext("/data/people", dataContext => new Tests(dataContext).renderCompose_2());
-        object? content_3 = InContext("/data/people", dataContext => new Tests(dataContext).renderCompose_4());
-        object? content_4 = InContext("/data/people", dataContext => new Tests(dataContext).renderCompose_5());
-        object? content_5 = InContext("/data/people", dataContext => new Tests(dataContext).renderCompose_7());
-
-        return Line($$"""
-            A:
-            People:{{content}}
-            B:
-            People:{{content_2}}
-            C:
-            People:{{content_3}}   
-            D:
-            People:{{content_4}}
-            E:
-            People:{{content_5}}
-            """);
-    }
-
-    // Template:
-    // [
-    // {.} {lastName}{pets:[
-    //  {.} {type}]}
-    // ].@MissingValue('No Information Provided').Compose()
-    // Source: "templates/tests.template":427:24
-    private object? renderCompose_7()
-    {
-        return Annotate(
-            new Func<EvaluationContext, EvaluationContext>[]
-            {
-                annotatedContext => annotatedContext.WithMissingValue("No Information Provided")
-            },
-            annotatedContext => new Tests(annotatedContext).renderCompose_8());
-    }
-
-    // Template:
-    // [
-    // {.} {lastName}{pets:[
-    //  {.} {type}]}
-    // ].@MissingValue('No Information Provided').Compose()
-    // Source: "templates/tests.template":427:24
-    private object? renderCompose_8()
-    {
-        return EvaluationContext.Invoke(MethodInput(itemContext => new Tests(itemContext).renderLastName_16()), methodValue => Builtins.Compose(Context, methodValue));
-    }
-
-    // Template:
-    // [
-    // {.} {lastName}{pets:[
-    //  {.} {type}]}
-    // ]
-    // Source: "templates/tests.template":427:24
-    private TemplateContent renderLastName_16()
-    {
-        object? content = Context.CreateBullet("\n\u0001{.} ");
-        object? lastName = Get("lastName");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_13()));
-
-        return Line($"{content}{lastName}{pets}");
-    }
-
-    // Template:
-    // [
-    //  {.} {type}]
-    // Source: "templates/tests.template":428:21
-    private TemplateContent renderType_13()
-    {
-        object? content = Context.CreateBullet("\n \u0001{.} ");
-        object? type = Get("type");
-
-        return Line($"{content}{type}");
-    }
-
-    // Template:
-    // [
-    //           {lastName}{pets:[{type}]}
-    // ].@MissingValue('No Information Provided').Compose()
-    // Source: "templates/tests.template":423:24
-    private object? renderCompose_5()
-    {
-        return Annotate(
-            new Func<EvaluationContext, EvaluationContext>[]
-            {
-                annotatedContext => annotatedContext.WithMissingValue("No Information Provided")
-            },
-            annotatedContext => new Tests(annotatedContext).renderCompose_6());
-    }
-
-    // Template:
-    // [
-    //           {lastName}{pets:[{type}]}
-    // ].@MissingValue('No Information Provided').Compose()
-    // Source: "templates/tests.template":423:24
-    private object? renderCompose_6()
-    {
-        return EvaluationContext.Invoke(MethodInput(itemContext => new Tests(itemContext).renderLastName_15()), methodValue => Builtins.Compose(Context, methodValue));
-    }
-
-    // Template:
-    // [
-    //           {lastName}{pets:[{type}]}
-    // ]
-    // Source: "templates/tests.template":423:24
-    private TemplateContent renderLastName_15()
-    {
-        object? lastName = Get("lastName");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_12()));
-
-        return Line($"{lastName}{pets}");
-    }
-
-    // Template:
-    // [{type}]
-    // Source: "templates/tests.template":424:27
-    private TemplateContent renderType_12()
-    {
-        object? type = Get("type");
-
-        return Line($"{type}");
-    }
-
-    // Template:
-    // [
-    //    {.} {lastName}{pets:[{type}]}
-    // ].Compose()
-    // Source: "templates/tests.template":419:24
-    private object? renderCompose_4()
-    {
-        return EvaluationContext.Invoke(MethodInput(itemContext => new Tests(itemContext).renderLastName_14()), methodValue => Builtins.Compose(Context, methodValue));
-    }
-
-    // Template:
-    // [
-    //    {.} {lastName}{pets:[{type}]}
-    // ]
-    // Source: "templates/tests.template":419:24
-    private TemplateContent renderLastName_14()
-    {
-        object? content = Context.CreateBullet("\n   \u0001{.} ");
-        object? lastName = Get("lastName");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_11()));
-
-        return Line($"{content}{lastName}{pets}");
-    }
-
-    // Template:
-    // [{type}]
-    // Source: "templates/tests.template":420:24
-    private TemplateContent renderType_11()
-    {
-        object? type = Get("type");
-
-        return Line($"{type}");
-    }
-
-    // Template:
-    // [
-    //    {.} {lastName}{pets:[{type}]}
-    // ].@MissingValue('No Information Provided').Compose()
-    // Source: "templates/tests.template":415:24
-    private object? renderCompose_2()
-    {
-        return Annotate(
-            new Func<EvaluationContext, EvaluationContext>[]
-            {
-                annotatedContext => annotatedContext.WithMissingValue("No Information Provided")
-            },
-            annotatedContext => new Tests(annotatedContext).renderCompose_3());
-    }
-
-    // Template:
-    // [
-    //    {.} {lastName}{pets:[{type}]}
-    // ].@MissingValue('No Information Provided').Compose()
-    // Source: "templates/tests.template":415:24
-    private object? renderCompose_3()
-    {
-        return EvaluationContext.Invoke(MethodInput(itemContext => new Tests(itemContext).renderLastName_13()), methodValue => Builtins.Compose(Context, methodValue));
-    }
-
-    // Template:
-    // [
-    //    {.} {lastName}{pets:[{type}]}
-    // ]
-    // Source: "templates/tests.template":415:24
-    private TemplateContent renderLastName_13()
-    {
-        object? content = Context.CreateBullet("\n   \u0001{.} ");
-        object? lastName = Get("lastName");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_10()));
-
-        return Line($"{content}{lastName}{pets}");
-    }
-
-    // Template:
-    // [{type}]
-    // Source: "templates/tests.template":416:24
-    private TemplateContent renderType_10()
-    {
-        object? type = Get("type");
-
-        return Line($"{type}");
-    }
-
-    // Template:
-    // [
-    // {.} Pets {[
-    //       {.} Domesticated{pets:[{type}]}
-    //    ]
-    //    } //
-    // ].Compose()
-    // Source: "templates/tests.template":408:24
-    private object? renderCompose()
-    {
-        return EvaluationContext.Invoke(MethodInput(itemContext => new Tests(itemContext).renderDomesticated()), methodValue => Builtins.Compose(Context, methodValue));
-    }
-
-    // Template:
-    // [
-    // {.} Pets {[
-    //       {.} Domesticated{pets:[{type}]}
-    //    ]
-    //    } //
-    // ]
-    // Source: "templates/tests.template":408:24
-    private TemplateContent renderDomesticated()
-    {
-        object? content = Context.CreateBullet("\n\u0001{.} ");
-        object? domesticated = Each(itemContext => new Tests(itemContext).renderDomesticated_2());
-
-        return Line($"{content}Pets {domesticated}");
-    }
-
-    // Template:
-    // [
-    //       {.} Domesticated{pets:[{type}]}
-    //    ]
-    // Source: "templates/tests.template":409:11
-    private TemplateContent renderDomesticated_2()
-    {
-        object? content = Context.CreateBullet("\n      \u0001{.} ");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_9()));
-
-        return Line($"{content}Domesticated{pets}");
-    }
-
-    // Template:
-    // [{type}]
-    // Source: "templates/tests.template":410:29
-    private TemplateContent renderType_9()
-    {
-        object? type = Get("type");
-
-        return Line($"{type}");
-    }
-
-    // Template:
-    // [
-    // Automatic bulleting for multi-values
-    // Johnson who owns 
-    //     (0.0) Buddy who is owned by 
-    //              Doris who owns 
-    //                  dog
-    //                  lion
-    //                  tiger
-    //     (0.1) Ralph who is owned by 
-    //              Doris who owns 
-    //                  dog
-    //                  lion
-    //                  tiger
-    //     (0.2) Stripes who is owned by 
-    //              Doris who owns 
-    //                  dog
-    //                  lion
-    //                  tiger
-    // Smith who owns 
-    //     (0.0) Toto who is owned by 
-    //              John who owns 
-    //                  dog
-    //                  cat
-    //                  zebra
-    //     (0.1) Dolly who is owned by 
-    //              John who owns 
-    //                  dog
-    //                  cat
-    //                  zebra
-    //     (0.2) Stripes who is owned by 
-    //              John who owns 
-    //                  dog
-    //                  cat
-    //                  zebra]
-    // Source: "templates/tests.template":370:16
-    private TemplateContent test15Result()
-    {
-        return Line($$"""
-            Automatic bulleting for multi-values
-            Johnson who owns 
-                (0.0) Buddy who is owned by 
-                         Doris who owns 
-                             dog
-                             lion
-                             tiger
-                (0.1) Ralph who is owned by 
-                         Doris who owns 
-                             dog
-                             lion
-                             tiger
-                (0.2) Stripes who is owned by 
-                         Doris who owns 
-                             dog
-                             lion
-                             tiger
-            Smith who owns 
-                (0.0) Toto who is owned by 
-                         John who owns 
-                             dog
-                             cat
-                             zebra
-                (0.1) Dolly who is owned by 
-                         John who owns 
-                             dog
-                             cat
-                             zebra
-                (0.2) Stripes who is owned by 
-                         John who owns 
-                             dog
-                             cat
-                             zebra
-            """);
-    }
-
-    // Template:
-    // [
-    // Automatic bulleting for multi-values{#data:[ //
-    // {lastName} who owns 
-    //     {.} {pets:[{name} who is owned by 
-    //              {^.^:[{firstName} who owns 
-    //                  {pets:[{type} //  
-    //             ]}]}]}]}]
-    // Source: "templates/tests.template":363:10
-    private TemplateContent test15()
-    {
-        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_12()));
-
-        return Line($"Automatic bulleting for multi-values{data}");
-    }
-
-    // Template:
     // [ //
-    // {lastName} who owns 
-    //     {.} {pets:[{name} who is owned by 
-    //              {^.^:[{firstName} who owns 
-    //                  {pets:[{type} //  
-    //             ]}]}]}]
-    // Source: "templates/tests.template":364:44
-    private TemplateContent renderLastName_12()
-    {
-        object? lastName = Get("lastName");
-        object? content = Context.CreateBullet("\n    \u0001{.} ");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_13()));
-
-        return Line($$"""
-            
-            {{lastName}} who owns {{content}}{{pets}}
-            """);
-    }
-
-    // Template:
-    // [{name} who is owned by 
-    //              {^.^:[{firstName} who owns 
-    //                  {pets:[{type} //  
-    //             ]}]}]
-    // Source: "templates/tests.template":366:15
-    private TemplateContent renderName_13()
-    {
-        object? name = Get("name");
-        object? content = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_9()));
-
-        return Line($$"""
-            {{name}} who is owned by 
-                         {{content}}
-            """);
-    }
-
-    // Template:
-    // [{firstName} who owns 
-    //                  {pets:[{type} //  
-    //             ]}]
-    // Source: "templates/tests.template":367:19
-    private TemplateContent renderFirstName_9()
-    {
-        object? firstName = Get("firstName");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_8()));
-
-        return Line($$"""
-            {{firstName}} who owns 
-                             {{pets}}
-            """);
-    }
-
-    // Template:
-    // [{type} //  
-    //             ]
-    // Source: "templates/tests.template":368:24
-    private TemplateContent renderType_8()
-    {
-        object? type = Get("type");
-
-        return Line($"{type}");
-    }
-
-    // Template:
-    // [
-    // Indent under indent under bullet 
-    // Johnson who owns 
-    //     (0.0) Buddy who is owned by 
-    //              Doris who owns 
-    //                  dog
-    //                  lion
-    //                  tiger
-    //     (0.1) Ralph who is owned by 
-    //              Doris who owns 
-    //                  dog
-    //                  lion
-    //                  tiger
-    //     (0.2) Stripes who is owned by 
-    //              Doris who owns 
-    //                  dog
-    //                  lion
-    //                  tiger
-    // Smith who owns 
-    //     (0.0) Toto who is owned by 
-    //              John who owns 
-    //                  dog
-    //                  cat
-    //                  zebra
-    //     (0.1) Dolly who is owned by 
-    //              John who owns 
-    //                  dog
-    //                  cat
-    //                  zebra
-    //     (0.2) Stripes who is owned by 
-    //              John who owns 
-    //                  dog
-    //                  cat
-    //                  zebra]
-    // Source: "templates/tests.template":329:16
-    private TemplateContent test14Result()
-    {
-        return Line($$"""
-            Indent under indent under bullet 
-            Johnson who owns 
-                (0.0) Buddy who is owned by 
-                         Doris who owns 
-                             dog
-                             lion
-                             tiger
-                (0.1) Ralph who is owned by 
-                         Doris who owns 
-                             dog
-                             lion
-                             tiger
-                (0.2) Stripes who is owned by 
-                         Doris who owns 
-                             dog
-                             lion
-                             tiger
-            Smith who owns 
-                (0.0) Toto who is owned by 
-                         John who owns 
-                             dog
-                             cat
-                             zebra
-                (0.1) Dolly who is owned by 
-                         John who owns 
-                             dog
-                             cat
-                             zebra
-                (0.2) Stripes who is owned by 
-                         John who owns 
-                             dog
-                             cat
-                             zebra
-            """);
-    }
-
-    // Template:
-    // [
-    // Indent under indent under bullet {#data:[ //
-    // {lastName} who owns 
-    //     {.} {pets:[{name} who is owned by 
-    //              {^.^:[{firstName} who owns 
-    //                  {pets:[{type} //  
-    //             ]}]}]}]}]
-    // Source: "templates/tests.template":322:10
-    private TemplateContent test14()
-    {
-        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_11()));
-
-        return Line($"Indent under indent under bullet {data}");
-    }
-
-    // Template:
-    // [ //
-    // {lastName} who owns 
-    //     {.} {pets:[{name} who is owned by 
-    //              {^.^:[{firstName} who owns 
-    //                  {pets:[{type} //  
-    //             ]}]}]}]
-    // Source: "templates/tests.template":323:41
-    private TemplateContent renderLastName_11()
-    {
-        object? lastName = Get("lastName");
-        object? content = Context.CreateBullet("\n    \u0001{.} ");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_12()));
-
-        return Line($$"""
-            
-            {{lastName}} who owns {{content}}{{pets}}
-            """);
-    }
-
-    // Template:
-    // [{name} who is owned by 
-    //              {^.^:[{firstName} who owns 
-    //                  {pets:[{type} //  
-    //             ]}]}]
-    // Source: "templates/tests.template":325:15
-    private TemplateContent renderName_12()
-    {
-        object? name = Get("name");
-        object? content = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_8()));
-
-        return Line($$"""
-            {{name}} who is owned by 
-                         {{content}}
-            """);
-    }
-
-    // Template:
-    // [{firstName} who owns 
-    //                  {pets:[{type} //  
-    //             ]}]
-    // Source: "templates/tests.template":326:19
-    private TemplateContent renderFirstName_8()
-    {
-        object? firstName = Get("firstName");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_7()));
-
-        return Line($$"""
-            {{firstName}} who owns 
-                             {{pets}}
-            """);
-    }
-
-    // Template:
-    // [{type} //  
-    //             ]
-    // Source: "templates/tests.template":327:24
-    private TemplateContent renderType_7()
-    {
-        object? type = Get("type");
-
-        return Line($"{type}");
-    }
-
-    // Template:
-    // [
-    // Yet another variation of hierarchy that also transitions from indent to bullet and back 
-    // Johnson who owns 
-    //     (0.0) Buddy who is owned by 
-    //         Doris who owns 
-    //            dog
-    //            lion
-    //            tiger
-    //     (0.1) Ralph who is owned by 
-    //         Doris who owns 
-    //            dog
-    //            lion
-    //            tiger
-    //     (0.2) Stripes who is owned by 
-    //         Doris who owns 
-    //            dog
-    //            lion
-    //            tiger
-    // Smith who owns 
-    //     (0.0) Toto who is owned by 
-    //         John who owns 
-    //            dog
-    //            cat
-    //            zebra
-    //     (0.1) Dolly who is owned by 
-    //         John who owns 
-    //            dog
-    //            cat
-    //            zebra
-    //     (0.2) Stripes who is owned by 
-    //         John who owns 
-    //            dog
-    //            cat
-    //            zebra]
-    // Source: "templates/tests.template":288:16
-    private TemplateContent test13Result()
-    {
-        return Line($$"""
-            Yet another variation of hierarchy that also transitions from indent to bullet and back 
-            Johnson who owns 
-                (0.0) Buddy who is owned by 
-                    Doris who owns 
-                       dog
-                       lion
-                       tiger
-                (0.1) Ralph who is owned by 
-                    Doris who owns 
-                       dog
-                       lion
-                       tiger
-                (0.2) Stripes who is owned by 
-                    Doris who owns 
-                       dog
-                       lion
-                       tiger
-            Smith who owns 
-                (0.0) Toto who is owned by 
-                    John who owns 
-                       dog
-                       cat
-                       zebra
-                (0.1) Dolly who is owned by 
-                    John who owns 
-                       dog
-                       cat
-                       zebra
-                (0.2) Stripes who is owned by 
-                    John who owns 
-                       dog
-                       cat
-                       zebra
-            """);
-    }
-
-    // Template:
-    // [
-    // Yet another variation of hierarchy that also transitions from indent to bullet `
-    //  and back {#data:[ //
-    // {lastName} who owns 
-    //     {.} {pets:[{name} who is owned by 
-    //         {^.^:[{firstName} who owns {pets:[{type} //  
-    //             ]}]}]}]}]
-    // Source: "templates/tests.template":281:10
-    private TemplateContent test13()
-    {
-        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_10()));
-
-        return Line($"Yet another variation of hierarchy that also transitions from indent to bullet and back {data}");
-    }
-
-    // Template:
-    // [ //
-    // {lastName} who owns 
-    //     {.} {pets:[{name} who is owned by 
-    //         {^.^:[{firstName} who owns {pets:[{type} //  
-    //             ]}]}]}]
-    // Source: "templates/tests.template":283:18
-    private TemplateContent renderLastName_10()
-    {
-        object? lastName = Get("lastName");
-        object? content = Context.CreateBullet("\n    \u0001{.} ");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_11()));
-
-        return Line($$"""
-            
-            {{lastName}} who owns {{content}}{{pets}}
-            """);
-    }
-
-    // Template:
-    // [{name} who is owned by 
-    //         {^.^:[{firstName} who owns {pets:[{type} //  
-    //             ]}]}]
-    // Source: "templates/tests.template":285:15
-    private TemplateContent renderName_11()
-    {
-        object? name = Get("name");
-        object? content = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_7()));
-
-        return Line($$"""
-            {{name}} who is owned by 
-                    {{content}}
-            """);
-    }
-
-    // Template:
-    // [{firstName} who owns {pets:[{type} //  
-    //             ]}]
-    // Source: "templates/tests.template":286:14
-    private TemplateContent renderFirstName_7()
-    {
-        object? firstName = Get("firstName");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_6()));
-
-        return Line($"{firstName} who owns {pets}");
-    }
-
-    // Template:
-    // [{type} //  
-    //             ]
-    // Source: "templates/tests.template":286:42
-    private TemplateContent renderType_6()
-    {
-        object? type = Get("type");
-
-        return Line($"{type}");
-    }
-
-    // Template:
-    // [
-    // Additional variation of hierarchy that also transitions from indent to bullet and back 
-    // Johnson who owns 
-    //     (0.0) Buddy who is owned by 
-    //         (1.0) Doris who owns 
-    //            (2.0) dog
-    //            (2.1) lion
-    //            (2.2) tiger
-    //     (0.1) Ralph who is owned by 
-    //         (1.0) Doris who owns 
-    //            (2.0) dog
-    //            (2.1) lion
-    //            (2.2) tiger
-    //     (0.2) Stripes who is owned by 
-    //         (1.0) Doris who owns 
-    //            (2.0) dog
-    //            (2.1) lion
-    //            (2.2) tiger
-    // Smith who owns 
-    //     (0.0) Toto who is owned by 
-    //         (1.0) John who owns 
-    //            (2.0) dog
-    //            (2.1) cat
-    //            (2.2) zebra
-    //     (0.1) Dolly who is owned by 
-    //         (1.0) John who owns 
-    //            (2.0) dog
-    //            (2.1) cat
-    //            (2.2) zebra
-    //     (0.2) Stripes who is owned by 
-    //         (1.0) John who owns 
-    //            (2.0) dog
-    //            (2.1) cat
-    //            (2.2) zebra]
-    // Source: "templates/tests.template":247:16
-    private TemplateContent test12Result()
-    {
-        return Line($$"""
-            Additional variation of hierarchy that also transitions from indent to bullet and back 
-            Johnson who owns 
-                (0.0) Buddy who is owned by 
-                    (1.0) Doris who owns 
-                       (2.0) dog
-                       (2.1) lion
-                       (2.2) tiger
-                (0.1) Ralph who is owned by 
-                    (1.0) Doris who owns 
-                       (2.0) dog
-                       (2.1) lion
-                       (2.2) tiger
-                (0.2) Stripes who is owned by 
-                    (1.0) Doris who owns 
-                       (2.0) dog
-                       (2.1) lion
-                       (2.2) tiger
-            Smith who owns 
-                (0.0) Toto who is owned by 
-                    (1.0) John who owns 
-                       (2.0) dog
-                       (2.1) cat
-                       (2.2) zebra
-                (0.1) Dolly who is owned by 
-                    (1.0) John who owns 
-                       (2.0) dog
-                       (2.1) cat
-                       (2.2) zebra
-                (0.2) Stripes who is owned by 
-                    (1.0) John who owns 
-                       (2.0) dog
-                       (2.1) cat
-                       (2.2) zebra
-            """);
-    }
-
-    // Template:
-    // [
-    // Additional variation of hierarchy that also transitions from indent to bullet `
-    //  and back {#data:[ //
-    // {lastName} who owns 
-    //     {.} {pets:[{name} who is owned by 
-    //         {.} {^.^:[{firstName} who owns {pets:[{type} //  
-    //             ]}]}]}]}]
-    // Source: "templates/tests.template":240:10
-    private TemplateContent test12()
-    {
-        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_9()));
-
-        return Line($"Additional variation of hierarchy that also transitions from indent to bullet and back {data}");
-    }
-
-    // Template:
-    // [ //
-    // {lastName} who owns 
-    //     {.} {pets:[{name} who is owned by 
-    //         {.} {^.^:[{firstName} who owns {pets:[{type} //  
-    //             ]}]}]}]
-    // Source: "templates/tests.template":242:18
-    private TemplateContent renderLastName_9()
-    {
-        object? lastName = Get("lastName");
-        object? content = Context.CreateBullet("\n    \u0001{.} ");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_10()));
-
-        return Line($$"""
-            
-            {{lastName}} who owns {{content}}{{pets}}
-            """);
-    }
-
-    // Template:
-    // [{name} who is owned by 
-    //         {.} {^.^:[{firstName} who owns {pets:[{type} //  
-    //             ]}]}]
-    // Source: "templates/tests.template":244:15
-    private TemplateContent renderName_10()
-    {
-        object? name = Get("name");
-        object? content = Context.CreateBullet("\n        \u0001{.} ");
-        object? content_2 = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_6()));
-
-        return Line($"{name} who is owned by {content}{content_2}");
-    }
-
-    // Template:
-    // [{firstName} who owns {pets:[{type} //  
-    //             ]}]
-    // Source: "templates/tests.template":245:18
-    private TemplateContent renderFirstName_6()
-    {
-        object? firstName = Get("firstName");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_5()));
-
-        return Line($"{firstName} who owns {pets}");
-    }
-
-    // Template:
-    // [{type} //  
-    //             ]
-    // Source: "templates/tests.template":245:46
-    private TemplateContent renderType_5()
-    {
-        object? type = Get("type");
-
-        return Line($"{type}");
-    }
-
-    // Template:
-    // [
-    // Hierarchy that also transitions from indent to bullet and back 
-    // Johnson who owns 
-    //     (0.0) Buddy who is owned by 
-    //          Doris who owns 
-    //              (1.0) dog
-    //              (1.1) lion
-    //              (1.2) tiger
-    //     (0.1) Ralph who is owned by 
-    //          Doris who owns 
-    //              (1.0) dog
-    //              (1.1) lion
-    //              (1.2) tiger
-    //     (0.2) Stripes who is owned by 
-    //          Doris who owns 
-    //              (1.0) dog
-    //              (1.1) lion
-    //              (1.2) tiger
-    // Smith who owns 
-    //     (0.0) Toto who is owned by 
-    //          John who owns 
-    //              (1.0) dog
-    //              (1.1) cat
-    //              (1.2) zebra
-    //     (0.1) Dolly who is owned by 
-    //          John who owns 
-    //              (1.0) dog
-    //              (1.1) cat
-    //              (1.2) zebra
-    //     (0.2) Stripes who is owned by 
-    //          John who owns 
-    //              (1.0) dog
-    //              (1.1) cat
-    //              (1.2) zebra]
-    // Source: "templates/tests.template":206:16
-    private TemplateContent test11Result()
-    {
-        return Line($$"""
-            Hierarchy that also transitions from indent to bullet and back 
-            Johnson who owns 
-                (0.0) Buddy who is owned by 
-                     Doris who owns 
-                         (1.0) dog
-                         (1.1) lion
-                         (1.2) tiger
-                (0.1) Ralph who is owned by 
-                     Doris who owns 
-                         (1.0) dog
-                         (1.1) lion
-                         (1.2) tiger
-                (0.2) Stripes who is owned by 
-                     Doris who owns 
-                         (1.0) dog
-                         (1.1) lion
-                         (1.2) tiger
-            Smith who owns 
-                (0.0) Toto who is owned by 
-                     John who owns 
-                         (1.0) dog
-                         (1.1) cat
-                         (1.2) zebra
-                (0.1) Dolly who is owned by 
-                     John who owns 
-                         (1.0) dog
-                         (1.1) cat
-                         (1.2) zebra
-                (0.2) Stripes who is owned by 
-                     John who owns 
-                         (1.0) dog
-                         (1.1) cat
-                         (1.2) zebra
-            """);
-    }
-
-    // Template:
-    // [
-    // Hierarchy that also transitions from indent to bullet and back {#data:[ //
-    // {lastName} who owns 
-    //     {.} {pets:[{name} who is owned by 
-    //          {^.^:[{firstName} who owns 
-    //              {.} {pets:[{type} // 
-    //             ]}]}]}]}]
-    // Source: "templates/tests.template":199:10
-    private TemplateContent test11()
-    {
-        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_8()));
-
-        return Line($"Hierarchy that also transitions from indent to bullet and back {data}");
-    }
-
-    // Template:
-    // [ //
-    // {lastName} who owns 
-    //     {.} {pets:[{name} who is owned by 
-    //          {^.^:[{firstName} who owns 
-    //              {.} {pets:[{type} // 
-    //             ]}]}]}]
-    // Source: "templates/tests.template":200:71
-    private TemplateContent renderLastName_8()
-    {
-        object? lastName = Get("lastName");
-        object? content = Context.CreateBullet("\n    \u0001{.} ");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_9()));
-
-        return Line($$"""
-            
-            {{lastName}} who owns {{content}}{{pets}}
-            """);
-    }
-
-    // Template:
-    // [{name} who is owned by 
-    //          {^.^:[{firstName} who owns 
-    //              {.} {pets:[{type} // 
-    //             ]}]}]
-    // Source: "templates/tests.template":202:15
-    private TemplateContent renderName_9()
-    {
-        object? name = Get("name");
-        object? content = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_5()));
-
-        return Line($$"""
-            {{name}} who is owned by 
-                     {{content}}
-            """);
-    }
-
-    // Template:
-    // [{firstName} who owns 
-    //              {.} {pets:[{type} // 
-    //             ]}]
-    // Source: "templates/tests.template":203:15
-    private TemplateContent renderFirstName_5()
-    {
-        object? firstName = Get("firstName");
-        object? content = Context.CreateBullet("\n             \u0001{.} ");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_4()));
-
-        return Line($"{firstName} who owns {content}{pets}");
-    }
-
-    // Template:
-    // [{type} // 
-    //             ]
-    // Source: "templates/tests.template":204:24
-    private TemplateContent renderType_4()
-    {
-        object? type = Get("type");
-
-        return Line($"{type}");
-    }
-
-    // Template:
-    // [
-    // Bulleted Continued list 
-    //     (0.0) Buddy
-    //     (0.1) Ralph
-    //     (0.2) Stripes
-    //     (0.3) Toto
-    //     (0.4) Dolly
-    //     (0.5) Stripes]
-    // Source: "templates/tests.template":191:16
-    private TemplateContent test10Result()
-    {
-        return Line($$"""
-            Bulleted Continued list 
-                (0.0) Buddy
-                (0.1) Ralph
-                (0.2) Stripes
-                (0.3) Toto
-                (0.4) Dolly
-                (0.5) Stripes
-            """);
-    }
-
-    // Template:
-    // [
-    // Bulleted Continued list ` 
-    // {#data:[{pets:[ 
-    //     {.} {name}]}]}]
-    // Source: "templates/tests.template":187:10
-    private TemplateContent test10()
-    {
-        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderContent_2()));
-
-        return Line($"Bulleted Continued list {data}");
-    }
-
-    // Template:
-    // [{pets:[ 
-    //     {.} {name}]}]
-    // Source: "templates/tests.template":189:8
-    private TemplateContent renderContent_2()
-    {
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_8()));
-
-        return Line($"{pets}");
-    }
-
-    // Template:
-    // [ 
-    //     {.} {name}]
-    // Source: "templates/tests.template":189:15
-    private TemplateContent renderName_8()
-    {
-        object? content = Context.CreateBullet("\n    \u0001{.} ");
-        object? name = Get("name");
-
-        return Line($"{content}{name}");
-    }
-
-    // Template:
-    // [
-    // Continued list 
-    //    Buddy
-    //    Ralph
-    //    Stripes
-    //    Toto
-    //    Dolly
-    //    Stripes]
-    // Source: "templates/tests.template":179:15
-    private TemplateContent test9Result()
-    {
-        return Line($$"""
-            Continued list 
-               Buddy
-               Ralph
-               Stripes
-               Toto
-               Dolly
-               Stripes
-            """);
-    }
-
-    // Template:
-    // [
-    // Continued list {#data:[{pets:[{name}]}]}]
-    // Source: "templates/tests.template":177:9
-    private TemplateContent test9()
-    {
-        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderContent()));
-
-        return Line($"Continued list {data}");
-    }
-
-    // Template:
-    // [{pets:[{name}]}]
-    // Source: "templates/tests.template":178:23
-    private TemplateContent renderContent()
-    {
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_7()));
-
-        return Line($"{pets}");
-    }
-
-    // Template:
-    // [{name}]
-    // Source: "templates/tests.template":178:30
-    private TemplateContent renderName_7()
-    {
-        object? name = Get("name");
-
-        return Line($"{name}");
-    }
-
-    // Template:
-    // [
-    // Hierarchy that also transitions from indent to bullet 
-    //   Doris Johnson who owns 
-    //      Buddy who is owned by 
-    //          (0.0) Doris who owns
-    //             (1.0) dog
-    //             (1.1) lion
-    //             (1.2) tiger
-    //      Ralph who is owned by 
-    //          (0.0) Doris who owns
-    //             (1.0) dog
-    //             (1.1) lion
-    //             (1.2) tiger
-    //      Stripes who is owned by 
-    //          (0.0) Doris who owns
-    //             (1.0) dog
-    //             (1.1) lion
-    //             (1.2) tiger
-    //   John Smith who owns 
-    //      Toto who is owned by 
-    //          (0.0) John who owns
-    //             (1.0) dog
-    //             (1.1) cat
-    //             (1.2) zebra
-    //      Dolly who is owned by 
-    //          (0.0) John who owns
-    //             (1.0) dog
-    //             (1.1) cat
-    //             (1.2) zebra
-    //      Stripes who is owned by 
-    //          (0.0) John who owns
-    //             (1.0) dog
-    //             (1.1) cat
-    //             (1.2) zebra]
-    // Source: "templates/tests.template":143:15
-    private TemplateContent test8Result()
-    {
-        return Line($$"""
-            Hierarchy that also transitions from indent to bullet 
-              Doris Johnson who owns 
-                 Buddy who is owned by 
-                     (0.0) Doris who owns
-                        (1.0) dog
-                        (1.1) lion
-                        (1.2) tiger
-                 Ralph who is owned by 
-                     (0.0) Doris who owns
-                        (1.0) dog
-                        (1.1) lion
-                        (1.2) tiger
-                 Stripes who is owned by 
-                     (0.0) Doris who owns
-                        (1.0) dog
-                        (1.1) lion
-                        (1.2) tiger
-              John Smith who owns 
-                 Toto who is owned by 
-                     (0.0) John who owns
-                        (1.0) dog
-                        (1.1) cat
-                        (1.2) zebra
-                 Dolly who is owned by 
-                     (0.0) John who owns
-                        (1.0) dog
-                        (1.1) cat
-                        (1.2) zebra
-                 Stripes who is owned by 
-                     (0.0) John who owns
-                        (1.0) dog
-                        (1.1) cat
-                        (1.2) zebra
-            """);
-    }
-
-    // Template:
-    // [
-    // Hierarchy that also transitions from indent to bullet {#data:[ //
-    //   {firstName} {lastName} who owns {pets:[{name} who is owned by 
-    //          {.} {^.^:[{firstName} who owns
-    //             {.} {pets:[{type}]}]}]}]}]
-    // Source: "templates/tests.template":138:9
-    private TemplateContent test8()
-    {
-        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_3()));
-
-        return Line($"Hierarchy that also transitions from indent to bullet {data}");
-    }
-
-    // Template:
-    // [ //
-    //   {firstName} {lastName} who owns {pets:[{name} who is owned by 
-    //          {.} {^.^:[{firstName} who owns
-    //             {.} {pets:[{type}]}]}]}]
-    // Source: "templates/tests.template":139:62
-    private TemplateContent renderFirstName_3()
-    {
-        object? firstName = Get("firstName");
-        object? lastName = Get("lastName");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_6()));
-
-        return Line($$"""
-            
-              {{firstName}} {{lastName}} who owns {{pets}}
-            """);
-    }
-
-    // Template:
-    // [{name} who is owned by 
-    //          {.} {^.^:[{firstName} who owns
-    //             {.} {pets:[{type}]}]}]
-    // Source: "templates/tests.template":140:41
-    private TemplateContent renderName_6()
-    {
-        object? name = Get("name");
-        object? content = Context.CreateBullet("\n         \u0001{.} ");
-        object? content_2 = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_4()));
-
-        return Line($"{name} who is owned by {content}{content_2}");
-    }
-
-    // Template:
-    // [{firstName} who owns
-    //             {.} {pets:[{type}]}]
-    // Source: "templates/tests.template":141:19
-    private TemplateContent renderFirstName_4()
-    {
-        object? firstName = Get("firstName");
-        object? content = Context.CreateBullet("\n            \u0001{.} ");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_3()));
-
-        return Line($"{firstName} who owns{content}{pets}");
-    }
-
-    // Template:
-    // [{type}]
-    // Source: "templates/tests.template":142:23
-    private TemplateContent renderType_3()
-    {
-        object? type = Get("type");
-
-        return Line($"{type}");
-    }
-
-    // Template:
-    // [
-    // Hierarchy that transitions from indent to bullet 
-    // Johnson
-    //     (0.0) Buddy who is owned by 
-    //          (1.0) Doris who owns
-    //             (2.0) dog
-    //             (2.1) lion
-    //             (2.2) tiger
-    //     (0.1) Ralph who is owned by 
-    //          (1.0) Doris who owns
-    //             (2.0) dog
-    //             (2.1) lion
-    //             (2.2) tiger
-    //     (0.2) Stripes who is owned by 
-    //          (1.0) Doris who owns
-    //             (2.0) dog
-    //             (2.1) lion
-    //             (2.2) tiger
-    // Smith
-    //     (0.0) Toto who is owned by 
-    //          (1.0) John who owns
-    //             (2.0) dog
-    //             (2.1) cat
-    //             (2.2) zebra
-    //     (0.1) Dolly who is owned by 
-    //          (1.0) John who owns
-    //             (2.0) dog
-    //             (2.1) cat
-    //             (2.2) zebra
-    //     (0.2) Stripes who is owned by 
-    //          (1.0) John who owns
-    //             (2.0) dog
-    //             (2.1) cat
-    //             (2.2) zebra]
-    // Source: "templates/tests.template":104:15
-    private TemplateContent test7Result()
-    {
-        return Line($$"""
-            Hierarchy that transitions from indent to bullet 
-            Johnson
-                (0.0) Buddy who is owned by 
-                     (1.0) Doris who owns
-                        (2.0) dog
-                        (2.1) lion
-                        (2.2) tiger
-                (0.1) Ralph who is owned by 
-                     (1.0) Doris who owns
-                        (2.0) dog
-                        (2.1) lion
-                        (2.2) tiger
-                (0.2) Stripes who is owned by 
-                     (1.0) Doris who owns
-                        (2.0) dog
-                        (2.1) lion
-                        (2.2) tiger
-            Smith
-                (0.0) Toto who is owned by 
-                     (1.0) John who owns
-                        (2.0) dog
-                        (2.1) cat
-                        (2.2) zebra
-                (0.1) Dolly who is owned by 
-                     (1.0) John who owns
-                        (2.0) dog
-                        (2.1) cat
-                        (2.2) zebra
-                (0.2) Stripes who is owned by 
-                     (1.0) John who owns
-                        (2.0) dog
-                        (2.1) cat
-                        (2.2) zebra
-            """);
-    }
-
-    // Template:
-    // [
-    // Hierarchy that transitions from indent to bullet {#data:[ //
-    // {lastName}{pets:[ //
-    //     {.} {name} who is owned by 
-    //          {.} {^.^:[{firstName} who owns
-    //             {.} {pets:[{type}]}]}]}]}]
-    // Source: "templates/tests.template":98:9
-    private TemplateContent test7()
-    {
-        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_7()));
-
-        return Line($"Hierarchy that transitions from indent to bullet {data}");
-    }
-
-    // Template:
-    // [ //
-    // {lastName}{pets:[ //
-    //     {.} {name} who is owned by 
-    //          {.} {^.^:[{firstName} who owns
-    //             {.} {pets:[{type}]}]}]}]
-    // Source: "templates/tests.template":99:57
-    private TemplateContent renderLastName_7()
-    {
-        object? lastName = Get("lastName");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_5()));
-
-        return Line($$"""
-            
-            {{lastName}}{{pets}}
-            """);
-    }
-
-    // Template:
-    // [ //
-    //     {.} {name} who is owned by 
-    //          {.} {^.^:[{firstName} who owns
-    //             {.} {pets:[{type}]}]}]
-    // Source: "templates/tests.template":100:17
-    private TemplateContent renderName_5()
-    {
-        object? content = Context.CreateBullet("\n    \u0001{.} ");
-        object? name = Get("name");
-        object? content_2 = Context.CreateBullet("\n         \u0001{.} ");
-        object? content_3 = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName_2()));
-
-        return Line($"{content}{name} who is owned by {content_2}{content_3}");
-    }
-
-    // Template:
-    // [{firstName} who owns
-    //             {.} {pets:[{type}]}]
-    // Source: "templates/tests.template":102:19
-    private TemplateContent renderFirstName_2()
-    {
-        object? firstName = Get("firstName");
-        object? content = Context.CreateBullet("\n            \u0001{.} ");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType_2()));
-
-        return Line($"{firstName} who owns{content}{pets}");
-    }
-
-    // Template:
-    // [{type}]
-    // Source: "templates/tests.template":103:23
-    private TemplateContent renderType_2()
-    {
-        object? type = Get("type");
-
-        return Line($"{type}");
-    }
-
-    // Template:
-    // [
-    // Hierarchy
-    // (0.0) Johnson
-    //     (1.0) Buddy who is owned by 
-    //          (2.0) Doris who owns
-    //               (3.0) dog
-    //               (3.1) lion
-    //               (3.2) tiger
-    //     (1.1) Ralph who is owned by 
-    //          (2.0) Doris who owns
-    //               (3.0) dog
-    //               (3.1) lion
-    //               (3.2) tiger
-    //     (1.2) Stripes who is owned by 
-    //          (2.0) Doris who owns
-    //               (3.0) dog
-    //               (3.1) lion
-    //               (3.2) tiger
-    // (0.1) Smith
-    //     (1.0) Toto who is owned by 
-    //          (2.0) John who owns
-    //               (3.0) dog
-    //               (3.1) cat
-    //               (3.2) zebra
-    //     (1.1) Dolly who is owned by 
-    //          (2.0) John who owns
-    //               (3.0) dog
-    //               (3.1) cat
-    //               (3.2) zebra
-    //     (1.2) Stripes who is owned by 
-    //          (2.0) John who owns
-    //               (3.0) dog
-    //               (3.1) cat
-    //               (3.2) zebra]
-    // Source: "templates/tests.template":64:15
-    private TemplateContent test6Result()
-    {
-        return Line($$"""
-            Hierarchy
-            (0.0) Johnson
-                (1.0) Buddy who is owned by 
-                     (2.0) Doris who owns
-                          (3.0) dog
-                          (3.1) lion
-                          (3.2) tiger
-                (1.1) Ralph who is owned by 
-                     (2.0) Doris who owns
-                          (3.0) dog
-                          (3.1) lion
-                          (3.2) tiger
-                (1.2) Stripes who is owned by 
-                     (2.0) Doris who owns
-                          (3.0) dog
-                          (3.1) lion
-                          (3.2) tiger
-            (0.1) Smith
-                (1.0) Toto who is owned by 
-                     (2.0) John who owns
-                          (3.0) dog
-                          (3.1) cat
-                          (3.2) zebra
-                (1.1) Dolly who is owned by 
-                     (2.0) John who owns
-                          (3.0) dog
-                          (3.1) cat
-                          (3.2) zebra
-                (1.2) Stripes who is owned by 
-                     (2.0) John who owns
-                          (3.0) dog
-                          (3.1) cat
-                          (3.2) zebra
-            """);
-    }
-
-    // Template:
-    // [
-    // Hierarchy{#data:[ //
-    // {.} {lastName}{pets:[ //
-    //     {.} {name} who is owned by 
-    //          {.} {^.^:[{firstName} who owns
-    //               {.} {pets:[{type}]}]}]}]}].Compose()
-    // Source: "templates/tests.template":58:9
-    private object? test6()
-    {
-        return EvaluationContext.Invoke(MethodInput(itemContext => new Tests(itemContext).renderHierarchy()), methodValue => Builtins.Compose(Context, methodValue));
-    }
-
-    // Template:
-    // [
-    // Hierarchy{#data:[ //
-    // {.} {lastName}{pets:[ //
-    //     {.} {name} who is owned by 
-    //          {.} {^.^:[{firstName} who owns
-    //               {.} {pets:[{type}]}]}]}]}]
-    // Source: "templates/tests.template":58:9
-    private TemplateContent renderHierarchy()
-    {
-        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_6()));
-
-        return Line($"Hierarchy{data}");
-    }
-
-    // Template:
-    // [ //
-    // {.} {lastName}{pets:[ //
-    //     {.} {name} who is owned by 
-    //          {.} {^.^:[{firstName} who owns
-    //               {.} {pets:[{type}]}]}]}]
-    // Source: "templates/tests.template":59:17
-    private TemplateContent renderLastName_6()
-    {
-        object? content = Context.CreateBullet("\n\u0001{.} ");
-        object? lastName = Get("lastName");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_4()));
-
-        return Line($"{content}{lastName}{pets}");
-    }
-
-    // Template:
-    // [ //
-    //     {.} {name} who is owned by 
-    //          {.} {^.^:[{firstName} who owns
-    //               {.} {pets:[{type}]}]}]
-    // Source: "templates/tests.template":60:21
-    private TemplateContent renderName_4()
-    {
-        object? content = Context.CreateBullet("\n    \u0001{.} ");
-        object? name = Get("name");
-        object? content_2 = Context.CreateBullet("\n         \u0001{.} ");
-        object? content_3 = InContext(Get("^.^"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderFirstName()));
-
-        return Line($"{content}{name} who is owned by {content_2}{content_3}");
-    }
-
-    // Template:
-    // [{firstName} who owns
-    //               {.} {pets:[{type}]}]
-    // Source: "templates/tests.template":62:19
-    private TemplateContent renderFirstName()
-    {
-        object? firstName = Get("firstName");
-        object? content = Context.CreateBullet("\n              \u0001{.} ");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderType()));
-
-        return Line($"{firstName} who owns{content}{pets}");
-    }
-
-    // Template:
-    // [{type}]
-    // Source: "templates/tests.template":63:25
-    private TemplateContent renderType()
-    {
-        object? type = Get("type");
-
-        return Line($"{type}");
-    }
-
-    // Template:
-    // [
-    // Bulleted Explicit Bulleted Indent
-    // (0.0) Johnson
-    //     (1.0) Buddy
-    //     (1.1) Ralph
-    //     (1.2) Stripes
-    // (0.1) Smith
-    //     (1.0) Toto
-    //     (1.1) Dolly
-    //     (1.2) Stripes]
-    // Source: "templates/tests.template":48:15
-    private TemplateContent test5Result()
-    {
-        return Line($$"""
-            Bulleted Explicit Bulleted Indent
-            (0.0) Johnson
-                (1.0) Buddy
-                (1.1) Ralph
-                (1.2) Stripes
-            (0.1) Smith
-                (1.0) Toto
-                (1.1) Dolly
-                (1.2) Stripes
-            """);
-    }
-
-    // Template:
-    // [
-    // Bulleted Explicit Bulleted Indent{#data:[ //
-    // {.} {lastName}{pets:[ //
-    //     {.} {name}]}]}].Compose()
-    // Source: "templates/tests.template":44:9
-    private object? test5()
-    {
-        return EvaluationContext.Invoke(MethodInput(itemContext => new Tests(itemContext).renderBulletedExplicitBulleted()), methodValue => Builtins.Compose(Context, methodValue));
-    }
-
-    // Template:
-    // [
-    // Bulleted Explicit Bulleted Indent{#data:[ //
-    // {.} {lastName}{pets:[ //
-    //     {.} {name}]}]}]
-    // Source: "templates/tests.template":44:9
-    private TemplateContent renderBulletedExplicitBulleted()
-    {
-        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_5()));
-
-        return Line($"Bulleted Explicit Bulleted Indent{data}");
-    }
-
-    // Template:
-    // [ //
-    // {.} {lastName}{pets:[ //
-    //     {.} {name}]}]
-    // Source: "templates/tests.template":45:41
-    private TemplateContent renderLastName_5()
-    {
-        object? content = Context.CreateBullet("\n\u0001{.} ");
-        object? lastName = Get("lastName");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_3()));
-
-        return Line($"{content}{lastName}{pets}");
-    }
-
-    // Template:
-    // [ //
-    //     {.} {name}]
-    // Source: "templates/tests.template":46:21
-    private TemplateContent renderName_3()
-    {
-        object? content = Context.CreateBullet("\n    \u0001{.} ");
-        object? name = Get("name");
-
-        return Line($"{content}{name}");
-    }
-
-    // Template:
-    // [
-    // Bulleted Implied Bulleted Indent
-    // (0.0) Johnson
-    //    (1.0) Buddy
-    //    (1.1) Ralph
-    //    (1.2) Stripes
-    // (0.1) Smith
-    //    (1.0) Toto
-    //    (1.1) Dolly
-    //    (1.2) Stripes].Compose()
-    // Source: "templates/tests.template":34:15
-    private object? test4Result()
-    {
-        return EvaluationContext.Invoke(MethodInput(itemContext => Line($$"""
-            Bulleted Implied Bulleted Indent
-            (0.0) Johnson
-               (1.0) Buddy
-               (1.1) Ralph
-               (1.2) Stripes
-            (0.1) Smith
-               (1.0) Toto
-               (1.1) Dolly
-               (1.2) Stripes
-            """)), methodValue => Builtins.Compose(Context, methodValue));
-    }
-
-    // Template:
-    // [
-    // Bulleted Implied Bulleted Indent{#data:[ //
-    // {.} {lastName}{pets:[{name}]}]}]
-    // Source: "templates/tests.template":31:9
-    private TemplateContent test4()
-    {
-        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_4()));
-
-        return Line($"Bulleted Implied Bulleted Indent{data}");
-    }
-
-    // Template:
-    // [ //
-    // {.} {lastName}{pets:[{name}]}]
-    // Source: "templates/tests.template":32:40
-    private TemplateContent renderLastName_4()
-    {
-        object? content = Context.CreateBullet("\n\u0001{.} ");
-        object? lastName = Get("lastName");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName_2()));
-
-        return Line($"{content}{lastName}{pets}");
-    }
-
-    // Template:
-    // [{name}]
-    // Source: "templates/tests.template":33:21
-    private TemplateContent renderName_2()
-    {
-        object? name = Get("name");
-
-        return Line($"{name}");
-    }
-
-    // Template:
-    // [
-    // Implied Double Indent
-    //    Johnson
-    //       Buddy
-    //       Ralph
-    //       Stripes
-    //    Smith
-    //       Toto
-    //       Dolly
-    //       Stripes]
-    // Source: "templates/tests.template":21:15
-    private TemplateContent test3Result()
-    {
-        return Line($$"""
-            Implied Double Indent
-               Johnson
-                  Buddy
-                  Ralph
-                  Stripes
-               Smith
-                  Toto
-                  Dolly
-                  Stripes
-            """);
-    }
-
-    // Template:
-    // [
-    // Implied Double Indent{#data:[{lastName}{pets:[{name}]}]}]
-    // Source: "templates/tests.template":19:9
-    private TemplateContent test3()
-    {
-        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_3()));
-
-        return Line($"Implied Double Indent{data}");
-    }
-
-    // Template:
-    // [{lastName}{pets:[{name}]}]
-    // Source: "templates/tests.template":20:29
-    private TemplateContent renderLastName_3()
-    {
-        object? lastName = Get("lastName");
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderName()));
-
-        return Line($"{lastName}{pets}");
-    }
-
-    // Template:
-    // [{name}]
-    // Source: "templates/tests.template":20:46
-    private TemplateContent renderName()
-    {
-        object? name = Get("name");
-
-        return Line($"{name}");
-    }
-
-    // Template:
-    // [
-    // Implied Single Indent 
-    //    Johnson
-    //    Smith]
-    // Source: "templates/tests.template":15:15
-    private TemplateContent test2Result()
-    {
-        return Line($$"""
-            Implied Single Indent 
-               Johnson
-               Smith
-            """);
-    }
-
-    // Template:
-    // [
-    // Implied Single Indent {#data:[{lastName}]}]
-    // Source: "templates/tests.template":13:9
-    private TemplateContent test2()
-    {
-        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName_2()));
-
-        return Line($"Implied Single Indent {data}");
-    }
-
-    // Template:
-    // [{lastName}]
-    // Source: "templates/tests.template":14:30
-    private TemplateContent renderLastName_2()
-    {
-        object? lastName = Get("lastName");
-
-        return Line($"{lastName}");
-    }
-
-    // Template:
-    // [
-    // Explicit Single Indent
-    //    Johnson
-    //    Smith]
-    // Source: "templates/tests.template":9:15
-    private TemplateContent test1Result()
-    {
-        return Line($$"""
-            Explicit Single Indent
-               Johnson
-               Smith
-            """);
-    }
-
-    // Template:
-    // [
-    // Explicit Single Indent{#data:[
-    //    {lastName}]}]
-    // Source: "templates/tests.template":6:9
-    private TemplateContent test1()
-    {
-        object? data = InContext(Each(itemContext => itemContext.Named("data")), dataContext => dataContext.Each(itemContext => new Tests(itemContext).renderLastName()));
-
-        return Line($"Explicit Single Indent{data}");
-    }
-
-    // Template:
-    // [
-    //    {lastName}]
-    // Source: "templates/tests.template":7:30
-    private TemplateContent renderLastName()
-    {
-        object? lastName = Get("lastName");
-
-        return Line($"{lastName}");
-    }
-
-    // Template:
-    // [{$0.Matches(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)->
-    // [Test {$0} {$1.Assert($2,'passed')}]}]
-    // Source: "templates/tests.template":4:8
-    private TemplateContent test()
-    {
-        object? choice = (Context.TestCondition(EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Matches(Context, methodValue, EvaluationContext.ParseInteger("1"), EvaluationContext.ParseInteger("2"), EvaluationContext.ParseInteger("3"), EvaluationContext.ParseInteger("4"), EvaluationContext.ParseInteger("5"), EvaluationContext.ParseInteger("6"), EvaluationContext.ParseInteger("7"), EvaluationContext.ParseInteger("8"), EvaluationContext.ParseInteger("9"), EvaluationContext.ParseInteger("10"), EvaluationContext.ParseInteger("11"), EvaluationContext.ParseInteger("12"), EvaluationContext.ParseInteger("13"), EvaluationContext.ParseInteger("14"), EvaluationContext.ParseInteger("15"), EvaluationContext.ParseInteger("16")))) ? Each(itemContext => new Tests(itemContext).renderItem0()) : "");
-
-        return Line($"{choice}");
-    }
-
-    // Template:
-    // [Test {$0} {$1.Assert($2,'passed')}]
-    // Source: "templates/tests.template":5:1
-    private TemplateContent renderItem0()
-    {
-        object? item0 = Get("$0");
-        object? assert = EvaluationContext.Invoke(MethodInput("$1"), methodValue => Builtins.Assert(Context, methodValue, Get("$2"), "passed"));
-
-        return Line($"Test {item0} {assert}");
-    }
-
-    internal EvaluationContext includeTest()
-    {
-        EvaluationContext included = Context;
-        _ = new Tests(included).test();
-        return included;
-    }
-
-    internal EvaluationContext includeTest1()
-    {
-        EvaluationContext included = Context;
-        _ = new Tests(included).test1();
-        return included;
-    }
-
-    internal EvaluationContext includeTest1Result()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    internal EvaluationContext includeTest2()
-    {
-        EvaluationContext included = Context;
-        _ = new Tests(included).test2();
-        return included;
-    }
-
-    internal EvaluationContext includeTest2Result()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    internal EvaluationContext includeTest3()
-    {
-        EvaluationContext included = Context;
-        _ = new Tests(included).test3();
-        return included;
-    }
-
-    internal EvaluationContext includeTest3Result()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    internal EvaluationContext includeTest4()
-    {
-        EvaluationContext included = Context;
-        _ = new Tests(included).test4();
-        return included;
-    }
-
-    internal EvaluationContext includeTest4Result()
-    {
-        throw new NotImplementedException("templates/tests.template:34:15: This include unit requires unsupported execution features.");
-    }
-
-    internal EvaluationContext includeTest5()
-    {
-        throw new NotImplementedException("templates/tests.template:44:9: This include unit requires unsupported execution features.");
-    }
-
-    internal EvaluationContext includeTest5Result()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    internal EvaluationContext includeTest6()
-    {
-        throw new NotImplementedException("templates/tests.template:58:9: This include unit requires unsupported execution features.");
-    }
-
-    internal EvaluationContext includeTest6Result()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    internal EvaluationContext includeTest7()
-    {
-        EvaluationContext included = Context;
-        _ = new Tests(included).test7();
-        return included;
-    }
-
-    internal EvaluationContext includeTest7Result()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    internal EvaluationContext includeTest8()
-    {
-        EvaluationContext included = Context;
-        _ = new Tests(included).test8();
-        return included;
-    }
-
-    internal EvaluationContext includeTest8Result()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    internal EvaluationContext includeTest9()
-    {
-        EvaluationContext included = Context;
-        _ = new Tests(included).test9();
-        return included;
-    }
-
-    internal EvaluationContext includeTest9Result()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    internal EvaluationContext includeTest10()
-    {
-        EvaluationContext included = Context;
-        _ = new Tests(included).test10();
-        return included;
-    }
-
-    internal EvaluationContext includeTest10Result()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    internal EvaluationContext includeTest11()
-    {
-        EvaluationContext included = Context;
-        _ = new Tests(included).test11();
-        return included;
-    }
-
-    internal EvaluationContext includeTest11Result()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    internal EvaluationContext includeTest12()
-    {
-        EvaluationContext included = Context;
-        _ = new Tests(included).test12();
-        return included;
-    }
-
-    internal EvaluationContext includeTest12Result()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    internal EvaluationContext includeTest13()
-    {
-        EvaluationContext included = Context;
-        _ = new Tests(included).test13();
-        return included;
-    }
-
-    internal EvaluationContext includeTest13Result()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    internal EvaluationContext includeTest14()
-    {
-        EvaluationContext included = Context;
-        _ = new Tests(included).test14();
-        return included;
-    }
-
-    internal EvaluationContext includeTest14Result()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    internal EvaluationContext includeTest15()
-    {
-        EvaluationContext included = Context;
-        _ = new Tests(included).test15();
-        return included;
-    }
-
-    internal EvaluationContext includeTest15Result()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    internal EvaluationContext includeTest16()
-    {
-        EvaluationContext included = Context;
-        _ = new Tests(included).test16();
-        return included;
-    }
-
-    internal EvaluationContext includeTest16Result()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    internal EvaluationContext includeTests()
-    {
-        EvaluationContext included = Context;
-        _ = new Tests(included).tests();
-        return included;
-    }
-
-    internal EvaluationContext includeExpected()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    internal EvaluationContext includeData()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    // Template:
-    //
-    //
-    // Subtemplates:
-    // {#test:[{$0.Matches(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)->
-    // [Test {$0} {$1.Assert($2,'passed')}]}]}
-    // {#test1:[
-    // Explicit Single Indent{#data:[
-    //    {lastName}]}]}
-    // {#test1Result:[
-    // Explicit Single Indent
-    //    Johnson
-    //    Smith]}
-    // {#test2:[
-    // Implied Single Indent {#data:[{lastName}]}]}
-    // {#test2Result:[
-    // Implied Single Indent 
-    //    Johnson
-    //    Smith]}
-    // {#test3:[
-    // Implied Double Indent{#data:[{lastName}{pets:[{name}]}]}]}
-    // {#test3Result:[
-    // Implied Double Indent
-    //    Johnson
-    //       Buddy
-    //       Ralph
-    //       Stripes
-    //    Smith
-    //       Toto
-    //       Dolly
-    //       Stripes]}
-    // {#test4:[
-    // Bulleted Implied Bulleted Indent{#data:[ //
-    // {.} {lastName}{pets:[{name}]}]}]}
-    // {#test4Result:[
-    // Bulleted Implied Bulleted Indent
-    // (0.0) Johnson
-    //    (1.0) Buddy
-    //    (1.1) Ralph
-    //    (1.2) Stripes
-    // (0.1) Smith
-    //    (1.0) Toto
-    //    (1.1) Dolly
-    //    (1.2) Stripes].Compose()}
-    // {#test5:[
-    // Bulleted Explicit Bulleted Indent{#data:[ //
-    // {.} {lastName}{pets:[ //
-    //     {.} {name}]}]}].Compose()}
-    // {#test5Result:[
-    // Bulleted Explicit Bulleted Indent
-    // (0.0) Johnson
-    //     (1.0) Buddy
-    //     (1.1) Ralph
-    //     (1.2) Stripes
-    // (0.1) Smith
-    //     (1.0) Toto
-    //     (1.1) Dolly
-    //     (1.2) Stripes]}
-    // {#test6:[
-    // Hierarchy{#data:[ //
-    // {.} {lastName}{pets:[ //
-    //     {.} {name} who is owned by 
-    //          {.} {^.^:[{firstName} who owns
-    //               {.} {pets:[{type}]}]}]}]}].Compose()}
-    // {#test6Result:[
-    // Hierarchy
-    // (0.0) Johnson
-    //     (1.0) Buddy who is owned by 
-    //          (2.0) Doris who owns
-    //               (3.0) dog
-    //               (3.1) lion
-    //               (3.2) tiger
-    //     (1.1) Ralph who is owned by 
-    //          (2.0) Doris who owns
-    //               (3.0) dog
-    //               (3.1) lion
-    //               (3.2) tiger
-    //     (1.2) Stripes who is owned by 
-    //          (2.0) Doris who owns
-    //               (3.0) dog
-    //               (3.1) lion
-    //               (3.2) tiger
-    // (0.1) Smith
-    //     (1.0) Toto who is owned by 
-    //          (2.0) John who owns
-    //               (3.0) dog
-    //               (3.1) cat
-    //               (3.2) zebra
-    //     (1.1) Dolly who is owned by 
-    //          (2.0) John who owns
-    //               (3.0) dog
-    //               (3.1) cat
-    //               (3.2) zebra
-    //     (1.2) Stripes who is owned by 
-    //          (2.0) John who owns
-    //               (3.0) dog
-    //               (3.1) cat
-    //               (3.2) zebra]}
-    // {#test7:[
-    // Hierarchy that transitions from indent to bullet {#data:[ //
-    // {lastName}{pets:[ //
-    //     {.} {name} who is owned by 
-    //          {.} {^.^:[{firstName} who owns
-    //             {.} {pets:[{type}]}]}]}]}]}
-    // {#test7Result:[
-    // Hierarchy that transitions from indent to bullet 
-    // Johnson
-    //     (0.0) Buddy who is owned by 
-    //          (1.0) Doris who owns
-    //             (2.0) dog
-    //             (2.1) lion
-    //             (2.2) tiger
-    //     (0.1) Ralph who is owned by 
-    //          (1.0) Doris who owns
-    //             (2.0) dog
-    //             (2.1) lion
-    //             (2.2) tiger
-    //     (0.2) Stripes who is owned by 
-    //          (1.0) Doris who owns
-    //             (2.0) dog
-    //             (2.1) lion
-    //             (2.2) tiger
-    // Smith
-    //     (0.0) Toto who is owned by 
-    //          (1.0) John who owns
-    //             (2.0) dog
-    //             (2.1) cat
-    //             (2.2) zebra
-    //     (0.1) Dolly who is owned by 
-    //          (1.0) John who owns
-    //             (2.0) dog
-    //             (2.1) cat
-    //             (2.2) zebra
-    //     (0.2) Stripes who is owned by 
-    //          (1.0) John who owns
-    //             (2.0) dog
-    //             (2.1) cat
-    //             (2.2) zebra]}
-    // {#test8:[
-    // Hierarchy that also transitions from indent to bullet {#data:[ //
-    //   {firstName} {lastName} who owns {pets:[{name} who is owned by 
-    //          {.} {^.^:[{firstName} who owns
-    //             {.} {pets:[{type}]}]}]}]}]}
-    // {#test8Result:[
-    // Hierarchy that also transitions from indent to bullet 
-    //   Doris Johnson who owns 
-    //      Buddy who is owned by 
-    //          (0.0) Doris who owns
-    //             (1.0) dog
-    //             (1.1) lion
-    //             (1.2) tiger
-    //      Ralph who is owned by 
-    //          (0.0) Doris who owns
-    //             (1.0) dog
-    //             (1.1) lion
-    //             (1.2) tiger
-    //      Stripes who is owned by 
-    //          (0.0) Doris who owns
-    //             (1.0) dog
-    //             (1.1) lion
-    //             (1.2) tiger
-    //   John Smith who owns 
-    //      Toto who is owned by 
-    //          (0.0) John who owns
-    //             (1.0) dog
-    //             (1.1) cat
-    //             (1.2) zebra
-    //      Dolly who is owned by 
-    //          (0.0) John who owns
-    //             (1.0) dog
-    //             (1.1) cat
-    //             (1.2) zebra
-    //      Stripes who is owned by 
-    //          (0.0) John who owns
-    //             (1.0) dog
-    //             (1.1) cat
-    //             (1.2) zebra]}
-    // {#test9:[
-    // Continued list {#data:[{pets:[{name}]}]}]}
-    // {#test9Result:[
-    // Continued list 
-    //    Buddy
-    //    Ralph
-    //    Stripes
-    //    Toto
-    //    Dolly
-    //    Stripes]}
-    // {#test10:[
-    // Bulleted Continued list ` 
-    // {#data:[{pets:[ 
-    //     {.} {name}]}]}]}
-    // {#test10Result:[
-    // Bulleted Continued list 
-    //     (0.0) Buddy
-    //     (0.1) Ralph
-    //     (0.2) Stripes
-    //     (0.3) Toto
-    //     (0.4) Dolly
-    //     (0.5) Stripes]}
-    // {#test11:[
-    // Hierarchy that also transitions from indent to bullet and back {#data:[ //
-    // {lastName} who owns 
-    //     {.} {pets:[{name} who is owned by 
-    //          {^.^:[{firstName} who owns 
-    //              {.} {pets:[{type} // 
-    //             ]}]}]}]}]}
-    // {#test11Result:[
-    // Hierarchy that also transitions from indent to bullet and back 
-    // Johnson who owns 
-    //     (0.0) Buddy who is owned by 
-    //          Doris who owns 
-    //              (1.0) dog
-    //              (1.1) lion
-    //              (1.2) tiger
-    //     (0.1) Ralph who is owned by 
-    //          Doris who owns 
-    //              (1.0) dog
-    //              (1.1) lion
-    //              (1.2) tiger
-    //     (0.2) Stripes who is owned by 
-    //          Doris who owns 
-    //              (1.0) dog
-    //              (1.1) lion
-    //              (1.2) tiger
-    // Smith who owns 
-    //     (0.0) Toto who is owned by 
-    //          John who owns 
-    //              (1.0) dog
-    //              (1.1) cat
-    //              (1.2) zebra
-    //     (0.1) Dolly who is owned by 
-    //          John who owns 
-    //              (1.0) dog
-    //              (1.1) cat
-    //              (1.2) zebra
-    //     (0.2) Stripes who is owned by 
-    //          John who owns 
-    //              (1.0) dog
-    //              (1.1) cat
-    //              (1.2) zebra]}
-    // {#test12:[
-    // Additional variation of hierarchy that also transitions from indent to bullet `
-    //  and back {#data:[ //
-    // {lastName} who owns 
-    //     {.} {pets:[{name} who is owned by 
-    //         {.} {^.^:[{firstName} who owns {pets:[{type} //  
-    //             ]}]}]}]}]}
-    // {#test12Result:[
-    // Additional variation of hierarchy that also transitions from indent to bullet and back 
-    // Johnson who owns 
-    //     (0.0) Buddy who is owned by 
-    //         (1.0) Doris who owns 
-    //            (2.0) dog
-    //            (2.1) lion
-    //            (2.2) tiger
-    //     (0.1) Ralph who is owned by 
-    //         (1.0) Doris who owns 
-    //            (2.0) dog
-    //            (2.1) lion
-    //            (2.2) tiger
-    //     (0.2) Stripes who is owned by 
-    //         (1.0) Doris who owns 
-    //            (2.0) dog
-    //            (2.1) lion
-    //            (2.2) tiger
-    // Smith who owns 
-    //     (0.0) Toto who is owned by 
-    //         (1.0) John who owns 
-    //            (2.0) dog
-    //            (2.1) cat
-    //            (2.2) zebra
-    //     (0.1) Dolly who is owned by 
-    //         (1.0) John who owns 
-    //            (2.0) dog
-    //            (2.1) cat
-    //            (2.2) zebra
-    //     (0.2) Stripes who is owned by 
-    //         (1.0) John who owns 
-    //            (2.0) dog
-    //            (2.1) cat
-    //            (2.2) zebra]}
-    // {#test13:[
-    // Yet another variation of hierarchy that also transitions from indent to bullet `
-    //  and back {#data:[ //
-    // {lastName} who owns 
-    //     {.} {pets:[{name} who is owned by 
-    //         {^.^:[{firstName} who owns {pets:[{type} //  
-    //             ]}]}]}]}]}
-    // {#test13Result:[
-    // Yet another variation of hierarchy that also transitions from indent to bullet and back 
-    // Johnson who owns 
-    //     (0.0) Buddy who is owned by 
-    //         Doris who owns 
-    //            dog
-    //            lion
-    //            tiger
-    //     (0.1) Ralph who is owned by 
-    //         Doris who owns 
-    //            dog
-    //            lion
-    //            tiger
-    //     (0.2) Stripes who is owned by 
-    //         Doris who owns 
-    //            dog
-    //            lion
-    //            tiger
-    // Smith who owns 
-    //     (0.0) Toto who is owned by 
-    //         John who owns 
-    //            dog
-    //            cat
-    //            zebra
-    //     (0.1) Dolly who is owned by 
-    //         John who owns 
-    //            dog
-    //            cat
-    //            zebra
-    //     (0.2) Stripes who is owned by 
-    //         John who owns 
-    //            dog
-    //            cat
-    //            zebra]}
-    // {#test14:[
-    // Indent under indent under bullet {#data:[ //
-    // {lastName} who owns 
-    //     {.} {pets:[{name} who is owned by 
-    //              {^.^:[{firstName} who owns 
-    //                  {pets:[{type} //  
-    //             ]}]}]}]}]}
-    // {#test14Result:[
-    // Indent under indent under bullet 
-    // Johnson who owns 
-    //     (0.0) Buddy who is owned by 
-    //              Doris who owns 
-    //                  dog
-    //                  lion
-    //                  tiger
-    //     (0.1) Ralph who is owned by 
-    //              Doris who owns 
-    //                  dog
-    //                  lion
-    //                  tiger
-    //     (0.2) Stripes who is owned by 
-    //              Doris who owns 
-    //                  dog
-    //                  lion
-    //                  tiger
-    // Smith who owns 
-    //     (0.0) Toto who is owned by 
-    //              John who owns 
-    //                  dog
-    //                  cat
-    //                  zebra
-    //     (0.1) Dolly who is owned by 
-    //              John who owns 
-    //                  dog
-    //                  cat
-    //                  zebra
-    //     (0.2) Stripes who is owned by 
-    //              John who owns 
-    //                  dog
-    //                  cat
-    //                  zebra]}
-    // {#test15:[
-    // Automatic bulleting for multi-values{#data:[ //
-    // {lastName} who owns 
-    //     {.} {pets:[{name} who is owned by 
-    //              {^.^:[{firstName} who owns 
-    //                  {pets:[{type} //  
-    //             ]}]}]}]}]}
-    // {#test15Result:[
-    // Automatic bulleting for multi-values
-    // Johnson who owns 
-    //     (0.0) Buddy who is owned by 
-    //              Doris who owns 
-    //                  dog
-    //                  lion
-    //                  tiger
-    //     (0.1) Ralph who is owned by 
-    //              Doris who owns 
-    //                  dog
-    //                  lion
-    //                  tiger
-    //     (0.2) Stripes who is owned by 
-    //              Doris who owns 
-    //                  dog
-    //                  lion
-    //                  tiger
-    // Smith who owns 
-    //     (0.0) Toto who is owned by 
-    //              John who owns 
-    //                  dog
-    //                  cat
-    //                  zebra
-    //     (0.1) Dolly who is owned by 
-    //              John who owns 
-    //                  dog
-    //                  cat
-    //                  zebra
-    //     (0.2) Stripes who is owned by 
-    //              John who owns 
-    //                  dog
-    //                  cat
-    //                  zebra]}
-    // {#test16:[
-    // {''.Compose() // reset numbering from previous tests
-    // }{[
-    // A:
-    // People:{'/data/people':[
-    // {.} Pets {[
-    //       {.} Domesticated{pets:[{type}]}
-    //    ]
-    //    } //
-    // ].Compose()}
-    // B:
-    // People:{'/data/people':[
-    //    {.} {lastName}{pets:[{type}]}
-    // ].@MissingValue('No Information Provided').Compose()}
-    // C:
-    // People:{'/data/people':[
-    //    {.} {lastName}{pets:[{type}]}
-    // ].Compose()}   
-    // D:
-    // People:{'/data/people':[
-    //           {lastName}{pets:[{type}]}
-    // ].@MissingValue('No Information Provided').Compose()}
-    // E:
-    // People:{'/data/people':[
-    // {.} {lastName}{pets:[
-    //  {.} {type}]}
-    // ].@MissingValue('No Information Provided').Compose()}]}]}
-    // {#test16Result:[
-    // A:
-    // People:
-    // (0.0) Pets 
-    //       (1.0) Domesticated
-    //          (2.0) dog
-    //          (2.1) lion
-    //          (2.2) tiger
-    // (0.1) Pets 
-    //       (1.0) Domesticated
-    //          (2.0) dog
-    //          (2.1) cat
-    //          (2.2) zebra
-    // B:
-    // People:
-    //    (0.0) Johnson
-    //       (1.0) dog
-    //       (1.1) lion
-    //       (1.2) tiger
-    //    (0.1) Smith
-    //       (1.0) dog
-    //       (1.1) cat
-    //       (1.2) zebra
-    // C:
-    // People:
-    //    (0.0) Johnson
-    //       (1.0) dog
-    //       (1.1) lion
-    //       (1.2) tiger
-    //    (0.1) Smith
-    //       (1.0) dog
-    //       (1.1) cat
-    //       (1.2) zebra   
-    // D:
-    // People:Johnson
-    //    dog
-    //    lion
-    //    tiger
-    // Smith
-    //    dog
-    //    cat
-    //    zebra
-    // E:
-    // People:
-    // (0.0) Johnson
-    //  (1.0) dog
-    //  (1.1) lion
-    //  (1.2) tiger
-    // (0.1) Smith
-    //  (1.0) dog
-    //  (1.1) cat
-    //  (1.2) zebra]}
-    // {#tests:[ //
     // {'1'.#test(#test1,#test1Result)}
     // {'2'.#test(#test2,#test2Result)}
     // {'3'.#test(#test3,#test3Result)}
@@ -3425,569 +2172,66 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // {'14'.#test(#test14,#test14Result)}
     // {'15'.#test(#test15,#test15Result)}
     // {'16'.#test(#test16,#test16Result)}
-    // ]}
-    // {#expected:[ //
-    // Test 1 passed
-    // Test 2 passed
-    // Test 3 passed
-    // Test 4 passed
-    // Test 5 passed
-    // Test 6 passed
-    // Test 7 passed
-    // Test 8 passed
-    // Test 9 passed
-    // Test 10 passed
-    // Test 11 passed
-    // Test 12 passed
-    // Test 13 passed
-    // Test 14 passed
-    // Test 15 passed
-    // Test 16 passed
-    // ]}
-    // {#data:[/data/people]}
-    // Source: "templates/tests.template":1:46
-    private void defineSubtemplates(SubtemplateDefinitions definitions)
+    // ]
+    // Source: "templates/tests.template":483:9
+    private TemplateContent tests()
     {
-        definitions.Add("test", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test()), includedContext => new Tests(includedContext).includeTest());
-        definitions.Add("test1", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test1()), includedContext => new Tests(includedContext).includeTest1());
-        definitions.Add("test1Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test1Result()), includedContext => new Tests(includedContext).includeTest1Result());
-        definitions.Add("test2", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test2()), includedContext => new Tests(includedContext).includeTest2());
-        definitions.Add("test2Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test2Result()), includedContext => new Tests(includedContext).includeTest2Result());
-        definitions.Add("test3", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test3()), includedContext => new Tests(includedContext).includeTest3());
-        definitions.Add("test3Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test3Result()), includedContext => new Tests(includedContext).includeTest3Result());
-        definitions.Add("test4", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test4()), includedContext => new Tests(includedContext).includeTest4());
-        definitions.Add("test4Result", definitionContext => new Tests(definitionContext).test4Result(), includedContext => new Tests(includedContext).includeTest4Result());
-        definitions.Add("test5", definitionContext => new Tests(definitionContext).test5(), includedContext => new Tests(includedContext).includeTest5());
-        definitions.Add("test5Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test5Result()), includedContext => new Tests(includedContext).includeTest5Result());
-        definitions.Add("test6", definitionContext => new Tests(definitionContext).test6(), includedContext => new Tests(includedContext).includeTest6());
-        definitions.Add("test6Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test6Result()), includedContext => new Tests(includedContext).includeTest6Result());
-        definitions.Add("test7", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test7()), includedContext => new Tests(includedContext).includeTest7());
-        definitions.Add("test7Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test7Result()), includedContext => new Tests(includedContext).includeTest7Result());
-        definitions.Add("test8", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test8()), includedContext => new Tests(includedContext).includeTest8());
-        definitions.Add("test8Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test8Result()), includedContext => new Tests(includedContext).includeTest8Result());
-        definitions.Add("test9", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test9()), includedContext => new Tests(includedContext).includeTest9());
-        definitions.Add("test9Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test9Result()), includedContext => new Tests(includedContext).includeTest9Result());
-        definitions.Add("test10", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test10()), includedContext => new Tests(includedContext).includeTest10());
-        definitions.Add("test10Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test10Result()), includedContext => new Tests(includedContext).includeTest10Result());
-        definitions.Add("test11", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test11()), includedContext => new Tests(includedContext).includeTest11());
-        definitions.Add("test11Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test11Result()), includedContext => new Tests(includedContext).includeTest11Result());
-        definitions.Add("test12", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test12()), includedContext => new Tests(includedContext).includeTest12());
-        definitions.Add("test12Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test12Result()), includedContext => new Tests(includedContext).includeTest12Result());
-        definitions.Add("test13", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test13()), includedContext => new Tests(includedContext).includeTest13());
-        definitions.Add("test13Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test13Result()), includedContext => new Tests(includedContext).includeTest13Result());
-        definitions.Add("test14", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test14()), includedContext => new Tests(includedContext).includeTest14());
-        definitions.Add("test14Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test14Result()), includedContext => new Tests(includedContext).includeTest14Result());
-        definitions.Add("test15", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test15()), includedContext => new Tests(includedContext).includeTest15());
-        definitions.Add("test15Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test15Result()), includedContext => new Tests(includedContext).includeTest15Result());
-        definitions.Add("test16", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test16()), includedContext => new Tests(includedContext).includeTest16());
-        definitions.Add("test16Result", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).test16Result()), includedContext => new Tests(includedContext).includeTest16Result());
-        definitions.Add("tests", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).tests()), includedContext => new Tests(includedContext).includeTests());
-        definitions.Add("expected", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).expected()), includedContext => new Tests(includedContext).includeExpected());
-        definitions.Add("data", definitionContext => definitionContext.Each(itemContext => new Tests(itemContext).data()), includedContext => new Tests(includedContext).includeData());
+        TemplateValue test = Collect("1")
+            .Call("test", () => [EvaluateSubtemplate("test1"), EvaluateSubtemplate("test1Result")]);
+        TemplateValue test_2 = Collect("2")
+            .Call("test", () => [EvaluateSubtemplate("test2"), EvaluateSubtemplate("test2Result")]);
+        TemplateValue test_3 = Collect("3")
+            .Call("test", () => [EvaluateSubtemplate("test3"), EvaluateSubtemplate("test3Result")]);
+        TemplateValue test_4 = Collect("4")
+            .Call("test", () => [EvaluateSubtemplate("test4"), EvaluateSubtemplate("test4Result")]);
+        TemplateValue test_5 = Collect("5")
+            .Call("test", () => [EvaluateSubtemplate("test5"), EvaluateSubtemplate("test5Result")]);
+        TemplateValue test_6 = Collect("6")
+            .Call("test", () => [EvaluateSubtemplate("test6"), EvaluateSubtemplate("test6Result")]);
+        TemplateValue test_7 = Collect("7")
+            .Call("test", () => [EvaluateSubtemplate("test7"), EvaluateSubtemplate("test7Result")]);
+        TemplateValue test_8 = Collect("8")
+            .Call("test", () => [EvaluateSubtemplate("test8"), EvaluateSubtemplate("test8Result")]);
+        TemplateValue test_9 = Collect("9")
+            .Call("test", () => [EvaluateSubtemplate("test9"), EvaluateSubtemplate("test9Result")]);
+        TemplateValue test_10 = Collect("10")
+            .Call("test", () => [EvaluateSubtemplate("test10"), EvaluateSubtemplate("test10Result")]);
+        TemplateValue test_11 = Collect("11")
+            .Call("test", () => [EvaluateSubtemplate("test11"), EvaluateSubtemplate("test11Result")]);
+        TemplateValue test_12 = Collect("12")
+            .Call("test", () => [EvaluateSubtemplate("test12"), EvaluateSubtemplate("test12Result")]);
+        TemplateValue test_13 = Collect("13")
+            .Call("test", () => [EvaluateSubtemplate("test13"), EvaluateSubtemplate("test13Result")]);
+        TemplateValue test_14 = Collect("14")
+            .Call("test", () => [EvaluateSubtemplate("test14"), EvaluateSubtemplate("test14Result")]);
+        TemplateValue test_15 = Collect("15")
+            .Call("test", () => [EvaluateSubtemplate("test15"), EvaluateSubtemplate("test15Result")]);
+        TemplateValue test_16 = Collect("16")
+            .Call("test", () => [EvaluateSubtemplate("test16"), EvaluateSubtemplate("test16Result")]);
+
+        return Line($$"""
+            
+            {{test}}
+            {{test_2}}
+            {{test_3}}
+            {{test_4}}
+            {{test_5}}
+            {{test_6}}
+            {{test_7}}
+            {{test_8}}
+            {{test_9}}
+            {{test_10}}
+            {{test_11}}
+            {{test_12}}
+            {{test_13}}
+            {{test_14}}
+            {{test_15}}
+            {{test_16}}
+            """);
     }
 
     // Template:
-    // {#tests.Assert(#expected,'ALL TESTS PASSED')}
-    //
-    // Subtemplates:
-    // {#test:[{$0.Matches(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)->
-    // [Test {$0} {$1.Assert($2,'passed')}]}]}
-    // {#test1:[
-    // Explicit Single Indent{#data:[
-    //    {lastName}]}]}
-    // {#test1Result:[
-    // Explicit Single Indent
-    //    Johnson
-    //    Smith]}
-    // {#test2:[
-    // Implied Single Indent {#data:[{lastName}]}]}
-    // {#test2Result:[
-    // Implied Single Indent 
-    //    Johnson
-    //    Smith]}
-    // {#test3:[
-    // Implied Double Indent{#data:[{lastName}{pets:[{name}]}]}]}
-    // {#test3Result:[
-    // Implied Double Indent
-    //    Johnson
-    //       Buddy
-    //       Ralph
-    //       Stripes
-    //    Smith
-    //       Toto
-    //       Dolly
-    //       Stripes]}
-    // {#test4:[
-    // Bulleted Implied Bulleted Indent{#data:[ //
-    // {.} {lastName}{pets:[{name}]}]}]}
-    // {#test4Result:[
-    // Bulleted Implied Bulleted Indent
-    // (0.0) Johnson
-    //    (1.0) Buddy
-    //    (1.1) Ralph
-    //    (1.2) Stripes
-    // (0.1) Smith
-    //    (1.0) Toto
-    //    (1.1) Dolly
-    //    (1.2) Stripes].Compose()}
-    // {#test5:[
-    // Bulleted Explicit Bulleted Indent{#data:[ //
-    // {.} {lastName}{pets:[ //
-    //     {.} {name}]}]}].Compose()}
-    // {#test5Result:[
-    // Bulleted Explicit Bulleted Indent
-    // (0.0) Johnson
-    //     (1.0) Buddy
-    //     (1.1) Ralph
-    //     (1.2) Stripes
-    // (0.1) Smith
-    //     (1.0) Toto
-    //     (1.1) Dolly
-    //     (1.2) Stripes]}
-    // {#test6:[
-    // Hierarchy{#data:[ //
-    // {.} {lastName}{pets:[ //
-    //     {.} {name} who is owned by 
-    //          {.} {^.^:[{firstName} who owns
-    //               {.} {pets:[{type}]}]}]}]}].Compose()}
-    // {#test6Result:[
-    // Hierarchy
-    // (0.0) Johnson
-    //     (1.0) Buddy who is owned by 
-    //          (2.0) Doris who owns
-    //               (3.0) dog
-    //               (3.1) lion
-    //               (3.2) tiger
-    //     (1.1) Ralph who is owned by 
-    //          (2.0) Doris who owns
-    //               (3.0) dog
-    //               (3.1) lion
-    //               (3.2) tiger
-    //     (1.2) Stripes who is owned by 
-    //          (2.0) Doris who owns
-    //               (3.0) dog
-    //               (3.1) lion
-    //               (3.2) tiger
-    // (0.1) Smith
-    //     (1.0) Toto who is owned by 
-    //          (2.0) John who owns
-    //               (3.0) dog
-    //               (3.1) cat
-    //               (3.2) zebra
-    //     (1.1) Dolly who is owned by 
-    //          (2.0) John who owns
-    //               (3.0) dog
-    //               (3.1) cat
-    //               (3.2) zebra
-    //     (1.2) Stripes who is owned by 
-    //          (2.0) John who owns
-    //               (3.0) dog
-    //               (3.1) cat
-    //               (3.2) zebra]}
-    // {#test7:[
-    // Hierarchy that transitions from indent to bullet {#data:[ //
-    // {lastName}{pets:[ //
-    //     {.} {name} who is owned by 
-    //          {.} {^.^:[{firstName} who owns
-    //             {.} {pets:[{type}]}]}]}]}]}
-    // {#test7Result:[
-    // Hierarchy that transitions from indent to bullet 
-    // Johnson
-    //     (0.0) Buddy who is owned by 
-    //          (1.0) Doris who owns
-    //             (2.0) dog
-    //             (2.1) lion
-    //             (2.2) tiger
-    //     (0.1) Ralph who is owned by 
-    //          (1.0) Doris who owns
-    //             (2.0) dog
-    //             (2.1) lion
-    //             (2.2) tiger
-    //     (0.2) Stripes who is owned by 
-    //          (1.0) Doris who owns
-    //             (2.0) dog
-    //             (2.1) lion
-    //             (2.2) tiger
-    // Smith
-    //     (0.0) Toto who is owned by 
-    //          (1.0) John who owns
-    //             (2.0) dog
-    //             (2.1) cat
-    //             (2.2) zebra
-    //     (0.1) Dolly who is owned by 
-    //          (1.0) John who owns
-    //             (2.0) dog
-    //             (2.1) cat
-    //             (2.2) zebra
-    //     (0.2) Stripes who is owned by 
-    //          (1.0) John who owns
-    //             (2.0) dog
-    //             (2.1) cat
-    //             (2.2) zebra]}
-    // {#test8:[
-    // Hierarchy that also transitions from indent to bullet {#data:[ //
-    //   {firstName} {lastName} who owns {pets:[{name} who is owned by 
-    //          {.} {^.^:[{firstName} who owns
-    //             {.} {pets:[{type}]}]}]}]}]}
-    // {#test8Result:[
-    // Hierarchy that also transitions from indent to bullet 
-    //   Doris Johnson who owns 
-    //      Buddy who is owned by 
-    //          (0.0) Doris who owns
-    //             (1.0) dog
-    //             (1.1) lion
-    //             (1.2) tiger
-    //      Ralph who is owned by 
-    //          (0.0) Doris who owns
-    //             (1.0) dog
-    //             (1.1) lion
-    //             (1.2) tiger
-    //      Stripes who is owned by 
-    //          (0.0) Doris who owns
-    //             (1.0) dog
-    //             (1.1) lion
-    //             (1.2) tiger
-    //   John Smith who owns 
-    //      Toto who is owned by 
-    //          (0.0) John who owns
-    //             (1.0) dog
-    //             (1.1) cat
-    //             (1.2) zebra
-    //      Dolly who is owned by 
-    //          (0.0) John who owns
-    //             (1.0) dog
-    //             (1.1) cat
-    //             (1.2) zebra
-    //      Stripes who is owned by 
-    //          (0.0) John who owns
-    //             (1.0) dog
-    //             (1.1) cat
-    //             (1.2) zebra]}
-    // {#test9:[
-    // Continued list {#data:[{pets:[{name}]}]}]}
-    // {#test9Result:[
-    // Continued list 
-    //    Buddy
-    //    Ralph
-    //    Stripes
-    //    Toto
-    //    Dolly
-    //    Stripes]}
-    // {#test10:[
-    // Bulleted Continued list ` 
-    // {#data:[{pets:[ 
-    //     {.} {name}]}]}]}
-    // {#test10Result:[
-    // Bulleted Continued list 
-    //     (0.0) Buddy
-    //     (0.1) Ralph
-    //     (0.2) Stripes
-    //     (0.3) Toto
-    //     (0.4) Dolly
-    //     (0.5) Stripes]}
-    // {#test11:[
-    // Hierarchy that also transitions from indent to bullet and back {#data:[ //
-    // {lastName} who owns 
-    //     {.} {pets:[{name} who is owned by 
-    //          {^.^:[{firstName} who owns 
-    //              {.} {pets:[{type} // 
-    //             ]}]}]}]}]}
-    // {#test11Result:[
-    // Hierarchy that also transitions from indent to bullet and back 
-    // Johnson who owns 
-    //     (0.0) Buddy who is owned by 
-    //          Doris who owns 
-    //              (1.0) dog
-    //              (1.1) lion
-    //              (1.2) tiger
-    //     (0.1) Ralph who is owned by 
-    //          Doris who owns 
-    //              (1.0) dog
-    //              (1.1) lion
-    //              (1.2) tiger
-    //     (0.2) Stripes who is owned by 
-    //          Doris who owns 
-    //              (1.0) dog
-    //              (1.1) lion
-    //              (1.2) tiger
-    // Smith who owns 
-    //     (0.0) Toto who is owned by 
-    //          John who owns 
-    //              (1.0) dog
-    //              (1.1) cat
-    //              (1.2) zebra
-    //     (0.1) Dolly who is owned by 
-    //          John who owns 
-    //              (1.0) dog
-    //              (1.1) cat
-    //              (1.2) zebra
-    //     (0.2) Stripes who is owned by 
-    //          John who owns 
-    //              (1.0) dog
-    //              (1.1) cat
-    //              (1.2) zebra]}
-    // {#test12:[
-    // Additional variation of hierarchy that also transitions from indent to bullet `
-    //  and back {#data:[ //
-    // {lastName} who owns 
-    //     {.} {pets:[{name} who is owned by 
-    //         {.} {^.^:[{firstName} who owns {pets:[{type} //  
-    //             ]}]}]}]}]}
-    // {#test12Result:[
-    // Additional variation of hierarchy that also transitions from indent to bullet and back 
-    // Johnson who owns 
-    //     (0.0) Buddy who is owned by 
-    //         (1.0) Doris who owns 
-    //            (2.0) dog
-    //            (2.1) lion
-    //            (2.2) tiger
-    //     (0.1) Ralph who is owned by 
-    //         (1.0) Doris who owns 
-    //            (2.0) dog
-    //            (2.1) lion
-    //            (2.2) tiger
-    //     (0.2) Stripes who is owned by 
-    //         (1.0) Doris who owns 
-    //            (2.0) dog
-    //            (2.1) lion
-    //            (2.2) tiger
-    // Smith who owns 
-    //     (0.0) Toto who is owned by 
-    //         (1.0) John who owns 
-    //            (2.0) dog
-    //            (2.1) cat
-    //            (2.2) zebra
-    //     (0.1) Dolly who is owned by 
-    //         (1.0) John who owns 
-    //            (2.0) dog
-    //            (2.1) cat
-    //            (2.2) zebra
-    //     (0.2) Stripes who is owned by 
-    //         (1.0) John who owns 
-    //            (2.0) dog
-    //            (2.1) cat
-    //            (2.2) zebra]}
-    // {#test13:[
-    // Yet another variation of hierarchy that also transitions from indent to bullet `
-    //  and back {#data:[ //
-    // {lastName} who owns 
-    //     {.} {pets:[{name} who is owned by 
-    //         {^.^:[{firstName} who owns {pets:[{type} //  
-    //             ]}]}]}]}]}
-    // {#test13Result:[
-    // Yet another variation of hierarchy that also transitions from indent to bullet and back 
-    // Johnson who owns 
-    //     (0.0) Buddy who is owned by 
-    //         Doris who owns 
-    //            dog
-    //            lion
-    //            tiger
-    //     (0.1) Ralph who is owned by 
-    //         Doris who owns 
-    //            dog
-    //            lion
-    //            tiger
-    //     (0.2) Stripes who is owned by 
-    //         Doris who owns 
-    //            dog
-    //            lion
-    //            tiger
-    // Smith who owns 
-    //     (0.0) Toto who is owned by 
-    //         John who owns 
-    //            dog
-    //            cat
-    //            zebra
-    //     (0.1) Dolly who is owned by 
-    //         John who owns 
-    //            dog
-    //            cat
-    //            zebra
-    //     (0.2) Stripes who is owned by 
-    //         John who owns 
-    //            dog
-    //            cat
-    //            zebra]}
-    // {#test14:[
-    // Indent under indent under bullet {#data:[ //
-    // {lastName} who owns 
-    //     {.} {pets:[{name} who is owned by 
-    //              {^.^:[{firstName} who owns 
-    //                  {pets:[{type} //  
-    //             ]}]}]}]}]}
-    // {#test14Result:[
-    // Indent under indent under bullet 
-    // Johnson who owns 
-    //     (0.0) Buddy who is owned by 
-    //              Doris who owns 
-    //                  dog
-    //                  lion
-    //                  tiger
-    //     (0.1) Ralph who is owned by 
-    //              Doris who owns 
-    //                  dog
-    //                  lion
-    //                  tiger
-    //     (0.2) Stripes who is owned by 
-    //              Doris who owns 
-    //                  dog
-    //                  lion
-    //                  tiger
-    // Smith who owns 
-    //     (0.0) Toto who is owned by 
-    //              John who owns 
-    //                  dog
-    //                  cat
-    //                  zebra
-    //     (0.1) Dolly who is owned by 
-    //              John who owns 
-    //                  dog
-    //                  cat
-    //                  zebra
-    //     (0.2) Stripes who is owned by 
-    //              John who owns 
-    //                  dog
-    //                  cat
-    //                  zebra]}
-    // {#test15:[
-    // Automatic bulleting for multi-values{#data:[ //
-    // {lastName} who owns 
-    //     {.} {pets:[{name} who is owned by 
-    //              {^.^:[{firstName} who owns 
-    //                  {pets:[{type} //  
-    //             ]}]}]}]}]}
-    // {#test15Result:[
-    // Automatic bulleting for multi-values
-    // Johnson who owns 
-    //     (0.0) Buddy who is owned by 
-    //              Doris who owns 
-    //                  dog
-    //                  lion
-    //                  tiger
-    //     (0.1) Ralph who is owned by 
-    //              Doris who owns 
-    //                  dog
-    //                  lion
-    //                  tiger
-    //     (0.2) Stripes who is owned by 
-    //              Doris who owns 
-    //                  dog
-    //                  lion
-    //                  tiger
-    // Smith who owns 
-    //     (0.0) Toto who is owned by 
-    //              John who owns 
-    //                  dog
-    //                  cat
-    //                  zebra
-    //     (0.1) Dolly who is owned by 
-    //              John who owns 
-    //                  dog
-    //                  cat
-    //                  zebra
-    //     (0.2) Stripes who is owned by 
-    //              John who owns 
-    //                  dog
-    //                  cat
-    //                  zebra]}
-    // {#test16:[
-    // {''.Compose() // reset numbering from previous tests
-    // }{[
-    // A:
-    // People:{'/data/people':[
-    // {.} Pets {[
-    //       {.} Domesticated{pets:[{type}]}
-    //    ]
-    //    } //
-    // ].Compose()}
-    // B:
-    // People:{'/data/people':[
-    //    {.} {lastName}{pets:[{type}]}
-    // ].@MissingValue('No Information Provided').Compose()}
-    // C:
-    // People:{'/data/people':[
-    //    {.} {lastName}{pets:[{type}]}
-    // ].Compose()}   
-    // D:
-    // People:{'/data/people':[
-    //           {lastName}{pets:[{type}]}
-    // ].@MissingValue('No Information Provided').Compose()}
-    // E:
-    // People:{'/data/people':[
-    // {.} {lastName}{pets:[
-    //  {.} {type}]}
-    // ].@MissingValue('No Information Provided').Compose()}]}]}
-    // {#test16Result:[
-    // A:
-    // People:
-    // (0.0) Pets 
-    //       (1.0) Domesticated
-    //          (2.0) dog
-    //          (2.1) lion
-    //          (2.2) tiger
-    // (0.1) Pets 
-    //       (1.0) Domesticated
-    //          (2.0) dog
-    //          (2.1) cat
-    //          (2.2) zebra
-    // B:
-    // People:
-    //    (0.0) Johnson
-    //       (1.0) dog
-    //       (1.1) lion
-    //       (1.2) tiger
-    //    (0.1) Smith
-    //       (1.0) dog
-    //       (1.1) cat
-    //       (1.2) zebra
-    // C:
-    // People:
-    //    (0.0) Johnson
-    //       (1.0) dog
-    //       (1.1) lion
-    //       (1.2) tiger
-    //    (0.1) Smith
-    //       (1.0) dog
-    //       (1.1) cat
-    //       (1.2) zebra   
-    // D:
-    // People:Johnson
-    //    dog
-    //    lion
-    //    tiger
-    // Smith
-    //    dog
-    //    cat
-    //    zebra
-    // E:
-    // People:
-    // (0.0) Johnson
-    //  (1.0) dog
-    //  (1.1) lion
-    //  (1.2) tiger
-    // (0.1) Smith
-    //  (1.0) dog
-    //  (1.1) cat
-    //  (1.2) zebra]}
-    // {#tests:[ //
-    // {'1'.#test(#test1,#test1Result)}
-    // {'2'.#test(#test2,#test2Result)}
-    // {'3'.#test(#test3,#test3Result)}
-    // {'4'.#test(#test4,#test4Result)}
-    // {'5'.#test(#test5,#test5Result)}
-    // {'6'.#test(#test6,#test6Result)}
-    // {'7'.#test(#test7,#test7Result)}
-    // {'8'.#test(#test8,#test8Result)}
-    // {'9'.#test(#test9,#test9Result)}
-    // {'10'.#test(#test10,#test10Result)}
-    // {'11'.#test(#test11,#test11Result)}
-    // {'12'.#test(#test12,#test12Result)}
-    // {'13'.#test(#test13,#test13Result)}
-    // {'14'.#test(#test14,#test14Result)}
-    // {'15'.#test(#test15,#test15Result)}
-    // {'16'.#test(#test16,#test16Result)}
-    // ]}
-    // {#expected:[ //
+    // [ //
     // Test 1 passed
     // Test 2 passed
     // Test 3 passed
@@ -4004,14 +2248,37 @@ internal sealed class Tests(EvaluationContext context) : TemplateUnit(context)
     // Test 14 passed
     // Test 15 passed
     // Test 16 passed
-    // ]}
-    // {#data:[/data/people]}
-    // Source: "templates/tests.template":1:1
-    private TemplateContent renderTests()
+    // ]
+    // Source: "templates/tests.template":501:12
+    private TemplateContent expected()
     {
-        object? assert = EvaluationContext.Invoke(SubtemplateInput("tests"), methodValue => Builtins.Assert(Context, methodValue, Each(itemContext => itemContext.Named("expected")), "ALL TESTS PASSED"));
+        return Line($$"""
+            
+            Test 1 passed
+            Test 2 passed
+            Test 3 passed
+            Test 4 passed
+            Test 5 passed
+            Test 6 passed
+            Test 7 passed
+            Test 8 passed
+            Test 9 passed
+            Test 10 passed
+            Test 11 passed
+            Test 12 passed
+            Test 13 passed
+            Test 14 passed
+            Test 15 passed
+            Test 16 passed
+            """);
+    }
 
-        return Line($"{assert}");
+    // Template:
+    // [/data/people]
+    // Source: "templates/tests.template":519:8
+    private TemplateContent data()
+    {
+        return Line($"/data/people");
     }
 
 }

@@ -99,3 +99,26 @@ around maintained template operations, not syntax nodes. Follow DESIGN.md sectio
   maintain naming/layout regressions in addition to independent Node A/B tests.
 - Treat this repository's `Generated/` as disposable compiler output. Regenerate
   without automatic backups; preserve manual changes only when explicitly requested.
+
+### Typed fluent output direction
+
+- Target one-time conversion followed by manual C# maintenance. Prefer typed fluent
+  template operations over nested compatibility calls; use short readable chains,
+  meaningful intermediate values, and explicit control flow for complex branches.
+- Separate registration and context-construction plumbing from editable template
+  logic. Helpers must preserve caller-context binding, inherited annotations, deferred
+  evaluation, and the distinction between collected method inputs and rendered lists.
+- Replace `object?` in the authoring surface with meaningful value, data, content,
+  and context types where possible. Dynamic representation may remain inside support.
+  Do not substitute ordinary LINQ or string semantics for verified legacy behavior.
+- Provide JSON-first, side-effect-free data `ToString()` and debugger summaries,
+  excluding implementation links such as parents. Use explanatory fallback text when
+  faithful JSON is unavailable. Preserve content rendering semantics; debugger inspection
+  may preview already-evaluated content in an isolated rendering context, but must
+  not execute deferred code, resolve resources, or mutate live rendering state.
+- Evolve the existing emitter incrementally under DESIGN.md section 11.1; do not
+  duplicate the parser or compatibility implementation for the new output style.
+
+- Original template fragments, paths, and source coordinates belong only in comments.
+  Generated runtime diagnostics should identify the maintained C# source. Do not emit
+  template source expressions as metadata when semantic flags or data keys suffice.

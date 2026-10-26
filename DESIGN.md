@@ -279,6 +279,136 @@ map and combined `.cs` output are both supported. Tests compile both independent
 of TextTemplate assemblies, compare execution with Node, and check the readability
 contract (including keywords, name collisions, scope isolation and editable output).
 
+### 11.1 Typed fluent output for manual maintenance
+
+Agreed direction (2026-10-26): generated C# should support conversion once followed
+by ordinary manual maintenance. The current emitter is the migration starting point;
+the API below is a design target, not a claim about implemented functionality.
+Section 11's existing `Line` and helper examples describe the current implementation.
+
+**Authoring surface.** Introduce meaningful types for template values, data, structured
+content, and evaluation context. Prefer a typed fluent API to nested static calls,
+repeated lambdas constructing template instances, and pervasive `object?`. Keep dynamic
+payloads inside compatibility support where needed. Fluent methods retain TextTemplate
+semantics, including missing values, JavaScript conversions, grouping, and ordering;
+they are not automatic replacements with LINQ or ordinary C# string operations.
+Choose exact names and signatures during the first implementation slice.
+
+A method receiver is the value before the dot in a template method invocation.
+Its collection semantics differ from rendering each item: the existing Receiver helper
+collects intermediate values as Arguments, whereas Each filters missing output and
+constructs a rendered list. The public authoring API should express this distinction
+through operations and types without requiring routine use of the word receiver.
+Do not collapse these two paths merely to shorten generated code.
+
+Prefer fluent chains in execution order. Introduce intermediate variables at meaningful
+stages or useful breakpoint locations, not for every syntax node. Use ordinary if/else
+for complex branches and local functions for substantial deferred bodies. Preserve
+left-to-right execution, short-circuiting, argument timing, annotation ordering, and
+resource-loading replay. Callbacks remain explicit where evaluation must be deferred.
+Do not eagerly evaluate a chain or cache its results unless legacy semantics allow it.
+
+**Context and registration.** Context-aware helpers expose field access, subtemplate
+calls, truth testing, and rendering against named current items. Internally they retain
+parent data, scoped definitions, annotations, and recursion accounting. Registration
+helpers hide binding/import adapter construction; registration belongs after template
+logic or in a companion partial-class file. A bound method on the registration instance
+is not sufficient when a definition must execute in the invocation context. Use direct
+C# calls only where binding is demonstrably fixed; otherwise preserve scoped resolution.
+Keep named subtemplates recognizable and small anonymous fragments near their owner.
+Place the entry point and main body first, then named operations in source order.
+Retain original fragment/location comments without repeating the entire source on
+multiple entry wrappers.
+
+**Structured content.** Retain the interpolated-string handler and hierarchical content
+until rendering. Consider Content instead of Line because the helper adds no newline
+and can contain multiple lines. A rename must account for generated-name collisions.
+Do not replace content with prematurely flattened strings or StringBuilder output.
+
+**Debugger and ToString.** Data objects should return compact JSON for their logical
+values, excluding parent links and other internal plumbing. Prefer this same JSON in
+hover displays, with optional bounded previews for large values. Expanding an object
+must still expose useful data. Use explanatory text only where faithful JSON cannot
+be produced (for example unsupported values, cycles, or unrepresentable missing values).
+Do not silently equate missing and null or truncate the underlying data ToString JSON.
+Serialization must not mutate data, evaluate deferred values, or perform resource I/O.
+Implement debugger displays/proxies as needed; verify actual hover behavior separately
+from automated serialization tests. Preserve TemplateContent.ToString rendering behavior,
+and preview already-evaluated content in an isolated context for debugger displays.
+Validate content graphs before previewing; reject cycles and callbacks, and never
+mutate the live rendering or numbering state. Data retains a JSON-first DebugView.
+Use DebuggerStepThrough selectively for mechanical adapters, leaving template operations
+and deliberate investigation of support code accessible.
+
+**Implementation sequence and acceptance.**
+
+1. Prototype a coherent typed authoring API and representative generated shapes for
+   Simple (formatting/context), Tests (calls/arguments), and Birthdays (data pipelines).
+   Route the API through existing compatibility algorithms; avoid a second evaluator.
+2. Update emission for those operations, including scoped calls, fluent pipelines,
+   deferred branches, naming, and registration separation. Compile the resulting
+   standalone projects and compare exact output against the unchanged Node oracle.
+3. Add JSON-first data display and typed debugger views with tests for nested data,
+   parent exclusion, missing/null distinctions, and side-effect-free inspection.
+4. Extend the same approach to remaining operations, regenerate Generated/, and run
+   the relevant full regression suite. Review the three representative source files
+   for manual editability as well as test success.
+
+Each slice must preserve standalone deployment and existing supported behavior.
+Keep naming/layout regressions, add behavioral tests for new helper boundaries, and
+validate a representative manual edit without regenerating. Record remaining migration
+work explicitly; passing parity alone does not establish readability acceptance.
+
+### 11.2 First fluent implementation
+
+The emitter now generates `TemplateValue` chains for supported method calls, filtering,
+grouping, ordering, and context rendering. It retains the existing evaluation algorithms
+behind a generated facade. Template locals and dynamic operation methods use
+`TemplateValue`; proven scalar and content types remain narrower. Compatibility values
+are unwrapped at adapter boundaries and by the structured interpolation handler.
+Arguments remain deferred until the original Invoke boundary. Small scalar selectors
+are emitted inline; complex branches use deferred local functions with if statements.
+
+Template classes are partial: editable operations live in Templates/ or Includes/,
+while binding/include adapters live in Registration/. A generic TemplateUnit factory
+and RegisterEach helpers execute definitions in their caller context. Entry/main methods
+come first, followed by operations in source order. JSON inspection reads stored data
+without following parents or running evaluation. Content retains its existing ToString
+contract and has a separate safe debugger display.
+
+See [EDITING_GENERATED.md](EDITING_GENERATED.md) for the current API and manual workflow.
+The initial acceptance cases are Simple, Tests, and Birthdays, including all three
+birthday grouping modes, the pets-present Simple branch, and editing/rebuilding a named
+C# operation without regeneration. Since emission rules are general, other generated
+units also use the new layout and must pass the existing regression suite.
+
+This is an incremental facade, not a complete replacement of dynamic runtime values.
+Some Case/stub bodies still expose object values; data/context implementation types
+remain EvaluationContext.Data and EvaluationContext. Resource probe/replay metadata
+is still explicit in pipelines. Additional context API and anonymous-helper naming
+refinements can follow without changing the verified evaluation algorithms.
+
+### 11.3 Known compatibility gap found during fluent boundary testing
+
+The newly characterized input in
+`tests/node-reference/computed-include-annotation-gap-cases.json` renders empty text
+under the unchanged Node interpreter, but `inside` under both the pre-fluent generator
+(commit `d1f0bca4d9261db15d72b88cdf28dcefb33dfe10`) and the fluent generator:
+
+```text
+{[{absent}].@Include('#STYLE'.ToLower())}
+Subtemplates:
+{#style:[].@MissingValue('inside')}
+```
+
+This is a preexisting annotation-scope mismatch for a computed include argument
+containing a method invocation. The interpreter saves/restores annotation objects
+around nested invocations; a faithful fix needs separate characterization of that
+interaction. The A/B suite records this exact expected Node output as an explicitly
+skipped regression, not as a passing parity case. Include arguments containing calls
+that export definitions are separately exercised by the fluent tests and pass.
+Do not change the golden output to match C# when addressing this gap.
+
 ## 12. Includes and the simpledata singleton-data path
 
 Source inspection uses `invokeMethods`, `visitNamedSubtemplate`, `callMethod`, and
@@ -656,3 +786,11 @@ and simpledata variants). Those tests now materialize the frozen JSON templates 
 subtemplates into temporary files before comparing loading modes. Original JSON
 goldens and reference files are unchanged; the new collection goldens cover the
 actual current file scripts independently.
+
+### Generated diagnostic locations (2026-10-26)
+
+Original template paths, coordinates, and fragments appear only in comments. Fluent
+ToDate/EncodeFor calls obtain C# caller locations automatically; regex, annotation,
+and unsupported-operation diagnostics use the C# call site. Grouping retains inferred
+data keys and computed-key markers for legacy validation, not copied selector source.
+This supersedes earlier requirements to embed original locations in runtime errors.

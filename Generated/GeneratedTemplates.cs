@@ -46,7 +46,7 @@ public static class GeneratedTemplates
     public static string Render(string name, JsonElement? data = null, string? dataRoot = null)
     {
         if (!Templates.TryGetValue(name, out Func<EvaluationContext, object?>? template)) throw new ArgumentException("Unknown template: " + name);
-        return (string)EvaluationContext.At("templates/" + name + ".template:1:1", () => new EvaluationContext(data, Shared, dataRoot, Imports).Render(template) ?? "")!;
+        return (string)EvaluationContext.At(nameof(GeneratedTemplates), () => new EvaluationContext(data, Shared, dataRoot, Imports).Render(template) ?? "")!;
     }
 
 }

@@ -8,9 +8,31 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 
 // Short instance helpers keep compatibility machinery out of template bodies.
-internal abstract class TemplateUnit(EvaluationContext context)
+internal abstract class TemplateUnit<TUnit>(EvaluationContext context, Func<EvaluationContext, TUnit> create)
 {
     protected EvaluationContext Context => context;
+    protected static string SourceLocation(
+        [System.Runtime.CompilerServices.CallerFilePath] string file = "",
+        [System.Runtime.CompilerServices.CallerLineNumber] int line = 0) => file + ":" + line;
+    protected TemplateValue Value(object? value) => value is TemplateValue typed ? typed : new(context, value);
+    private static object? Unwrap(object? value) => value is TemplateValue typed ? typed.Raw : value;
+    protected TemplateValue Read(string path) => Value(context.Lookup(path));
+    protected TemplateValue Collect(Func<EvaluationContext, object?> body) => Value(context.Receiver(body));
+    protected TemplateValue Collect(object? literal) => Collect(_ => literal);
+    protected void RegisterEach(SubtemplateDefinitions definitions, string name, Func<TUnit, object?> body, Func<TUnit, EvaluationContext> import)
+        => definitions.AddEach(name, create, body, import);
+    protected TemplateContent WithScope(Action<SubtemplateDefinitions> register, Func<TUnit, TemplateContent> body)
+        => WithDefinitions(register, child => body(create(child)));
+    protected TemplateValue Field(string path) => Value(context.Receiver(item => item.Lookup(path)));
+    protected TemplateValue Subtemplate(string name) => Value(context.Receiver(item => item.Named(name)));
+    protected object? EvaluateSubtemplate(string name) => context.Each(item => item.Named(name));
+    [System.Diagnostics.DebuggerStepThrough]
+    protected Func<EvaluationContext, object?> ForItem(Func<TUnit, object?> body)
+        => child => Unwrap(body(create(child)));
+    [System.Diagnostics.DebuggerStepThrough]
+    protected Func<EvaluationContext, object?> InScope(Func<TUnit, object?> body)
+        => child => child.Each(item => Unwrap(body(create(item))));
+
     protected object? Annotate(Func<EvaluationContext, EvaluationContext>[] annotations, Func<EvaluationContext, object?> body)
         => context.Annotate(annotations, body);
     protected object? ApplySubtemplate(string name, object? value, params object?[] arguments) => context.CallNamed(name, value, arguments);
@@ -31,8 +53,10 @@ internal abstract class TemplateUnit(EvaluationContext context)
     {
         internal Dictionary<string, Func<EvaluationContext, object?>> Bindings { get; } = new(StringComparer.Ordinal);
         internal Dictionary<string, Func<EvaluationContext, EvaluationContext>> Imports { get; } = new(StringComparer.Ordinal);
+        public void AddEach<T>(string name, Func<EvaluationContext, T> create, Func<T, object?> body, Func<T, EvaluationContext> import)
+            => Add(name, caller => caller.Each(item => Unwrap(body(create(item)))), caller => import(create(caller)));
         public void Add(string name, Func<EvaluationContext, object?> body, Func<EvaluationContext, EvaluationContext> import)
-        { Bindings[name] = body; Imports[name] = import; }
+        { Bindings[name] = caller => Unwrap(body(caller)); Imports[name] = import; }
     }
     private static SubtemplateDefinitions Register(Action<SubtemplateDefinitions> register)
     {
@@ -41,12 +65,12 @@ internal abstract class TemplateUnit(EvaluationContext context)
         return definitions;
     }
     protected TResult WithDefinitions<TResult>(Action<SubtemplateDefinitions> register, Func<EvaluationContext, TResult> body)
-        {
+    {
         var definitions = Register(register);
         return context.Scope(definitions.Bindings, body, definitions.Imports);
     }
     protected EvaluationContext DefineSubtemplates(Action<SubtemplateDefinitions> register)
-        {
+    {
         var definitions = Register(register);
         return context.Define(definitions.Bindings, definitions.Imports);
     }

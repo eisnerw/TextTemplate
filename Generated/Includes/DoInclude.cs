@@ -7,22 +7,17 @@ using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-internal sealed class DoInclude(EvaluationContext context) : TemplateUnit(context)
+internal sealed partial class DoInclude(EvaluationContext context) : TemplateUnit<DoInclude>(context, child => new DoInclude(child))
 {
-    // Template:
-    // [
-    // Subtemplates:
-    // {#a:[]}
-    // ].@MissingValue('missing --{key}--')
-    // Source: "subtemplates/doInclude.template":1:1
+    // Entry point; scoped definitions are registered before rendering.
     internal TemplateContent Evaluate()
     {
-        object? missingValue = Annotate(
+        TemplateValue missingValue = Value(Annotate(
             new Func<EvaluationContext, EvaluationContext>[]
             {
                 annotatedContext => annotatedContext.WithMissingValue("missing --{key}--")
             },
-            annotatedContext => annotatedContext.Receiver(itemContext => new DoInclude(itemContext).renderSubtemplates()));
+            annotatedContext => annotatedContext.Receiver(ForItem(item => item.renderSubtemplates()))));
 
         return Line($"{missingValue}");
     }
@@ -35,7 +30,8 @@ internal sealed class DoInclude(EvaluationContext context) : TemplateUnit(contex
     // Source: "subtemplates/doInclude.template":1:1
     private TemplateContent renderSubtemplates()
     {
-        object? a = InContext(Each(itemContext => itemContext.Named("a")), dataContext => dataContext.Each(itemContext => new DoInclude(itemContext).a()));
+        TemplateValue a = Value(EvaluateSubtemplate("a"))
+            .Render(InScope(item => item.a()));
 
         return Line($$"""
             Subtemplates:
@@ -49,30 +45,6 @@ internal sealed class DoInclude(EvaluationContext context) : TemplateUnit(contex
     private TemplateContent a()
     {
         return Line($"");
-    }
-
-    internal EvaluationContext includeA()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    // Template:
-    // [
-    // Subtemplates:
-    // {#a:[]}
-    // ]
-    // Source: "subtemplates/doInclude.template":1:1
-    private void defineIncludedSubtemplates(SubtemplateDefinitions definitions)
-    {
-        definitions.Add("a", definitionContext => new DoInclude(definitionContext).a(), includedContext => new DoInclude(includedContext).includeA());
-    }
-
-    internal EvaluationContext Import()
-    {
-        EvaluationContext included = DefineSubtemplates(defineIncludedSubtemplates);
-        included = included.WithMissingValue("missing --{key}--");
-        return included;
     }
 
 }

@@ -1,0 +1,80 @@
+// Typed authoring facade over the verified compatibility algorithms.
+// Raw values never escape into interpolation: the handler retains their structure.
+[System.Diagnostics.DebuggerDisplay("{DebugView,nq}")]
+internal sealed class TemplateValue(EvaluationContext context, object? value)
+{
+    internal object? Raw { get; } = Unwrap(value);
+    private static object? Unwrap(object? value) => value is TemplateValue typed ? typed.Raw : value;
+    private static object?[] Arguments(object?[] values)
+    {
+        object?[] result = new object?[values.Length];
+        for (int i = 0; i < values.Length; i++) result[i] = Unwrap(values[i]);
+        return result;
+    }
+    internal string DebugView => TemplateDebug.View(Raw);
+    public override string ToString() => DebugView;
+
+    // Arguments are evaluated inside Invoke, exactly as in the original generated calls.
+    // In particular a multiline value is transformed before arguments are evaluated.
+    [System.Diagnostics.DebuggerStepThrough]
+    internal TemplateValue Apply(Func<object?, object?> method)
+        => new(context, EvaluationContext.Invoke(Raw, method));
+    internal TemplateValue Call(string name, Func<object?[]>? arguments = null)
+        => Apply(value => context.CallNamed(name, value, Arguments(arguments?.Invoke() ?? [])));
+    internal TemplateValue Where(Func<EvaluationContext, object?>? predicate)
+        => new(context, context.Where(Raw, predicate));
+    internal TemplateValue GroupBy(Func<EvaluationContext, object?> selector, string keyText, object?[] arguments, bool contextProbe = false)
+        => new(context, context.GroupBy(Raw, selector, keyText, Arguments(arguments), contextProbe));
+    internal TemplateValue OrderBy(Func<EvaluationContext, object?> selector, string keyText, object?[] arguments, bool contextProbe = false)
+        => new(context, context.OrderBy(Raw, selector, keyText, Arguments(arguments), contextProbe));
+    internal TemplateValue Render(Func<EvaluationContext, object?> body, Func<object?>? fallback = null, Func<EvaluationContext, object?>? replay = null)
+        => new(context, context.Context(Raw, body, fallback, replay));
+    internal TemplateValue Count()
+        => Apply(value => Builtins.Count(value));
+    internal TemplateValue EncodeFor(Func<object?[]>? arguments = null,
+        [System.Runtime.CompilerServices.CallerFilePath] string file = "",
+        [System.Runtime.CompilerServices.CallerLineNumber] int line = 0)
+        => Apply(value => Builtins.EncodeFor(file + ":" + line, value, Arguments(arguments?.Invoke() ?? [])));
+    internal TemplateValue ToDate(Func<object?[]>? arguments = null,
+        [System.Runtime.CompilerServices.CallerFilePath] string file = "",
+        [System.Runtime.CompilerServices.CallerLineNumber] int line = 0)
+        => Apply(value => context.ToDate(file + ":" + line, value, Arguments(arguments?.Invoke() ?? [])));
+    internal TemplateValue Compose(Func<object?[]>? arguments = null)
+        => Apply(value => Builtins.Compose(context, value, Arguments(arguments?.Invoke() ?? [])));
+    internal TemplateValue IfMissing(Func<object?[]>? arguments = null)
+        => Apply(value => Builtins.IfMissing(value, Arguments(arguments?.Invoke() ?? [])));
+    internal TemplateValue Join(Func<object?[]>? arguments = null)
+        => Apply(value => Builtins.Join(value, Arguments(arguments?.Invoke() ?? [])));
+    internal TemplateValue Align(Func<object?[]>? arguments = null)
+        => Apply(value => Builtins.Align(value, Arguments(arguments?.Invoke() ?? [])));
+    internal TemplateValue Trim(Func<object?[]>? arguments = null)
+        => Apply(value => Builtins.Trim(value, Arguments(arguments?.Invoke() ?? [])));
+    internal TemplateValue StartsWith(Func<object?[]>? arguments = null)
+        => Apply(value => Builtins.StartsWith(value, Arguments(arguments?.Invoke() ?? [])));
+    internal TemplateValue EndsWith(Func<object?[]>? arguments = null)
+        => Apply(value => Builtins.EndsWith(value, Arguments(arguments?.Invoke() ?? [])));
+    internal TemplateValue Contains(Func<object?[]>? arguments = null)
+        => Apply(value => Builtins.Contains(value, Arguments(arguments?.Invoke() ?? [])));
+    internal TemplateValue Replace(Func<object?[]>? arguments = null)
+        => Apply(value => Builtins.Replace(value, Arguments(arguments?.Invoke() ?? [])));
+    internal TemplateValue Substr(Func<object?[]>? arguments = null)
+        => Apply(value => Builtins.Substr(value, Arguments(arguments?.Invoke() ?? [])));
+    internal TemplateValue IndexOf(Func<object?[]>? arguments = null)
+        => Apply(value => Builtins.IndexOf(value, Arguments(arguments?.Invoke() ?? [])));
+    internal TemplateValue LastIndexOf(Func<object?[]>? arguments = null)
+        => Apply(value => Builtins.LastIndexOf(value, Arguments(arguments?.Invoke() ?? [])));
+    internal TemplateValue EndIndexOf(Func<object?[]>? arguments = null)
+        => Apply(value => Builtins.EndIndexOf(value, Arguments(arguments?.Invoke() ?? [])));
+    internal TemplateValue ToUpper(Func<object?[]>? arguments = null)
+        => Apply(value => Builtins.ToUpper(value, Arguments(arguments?.Invoke() ?? [])));
+    internal TemplateValue ToLower(Func<object?[]>? arguments = null)
+        => Apply(value => Builtins.ToLower(value, Arguments(arguments?.Invoke() ?? [])));
+    internal TemplateValue GreaterThan(Func<object?[]>? arguments = null)
+        => Apply(value => Builtins.GreaterThan(value, Arguments(arguments?.Invoke() ?? [])));
+    internal TemplateValue LessThan(Func<object?[]>? arguments = null)
+        => Apply(value => Builtins.LessThan(value, Arguments(arguments?.Invoke() ?? [])));
+    internal TemplateValue Matches(Func<object?[]>? arguments = null)
+        => Apply(value => Builtins.Matches(context, value, Arguments(arguments?.Invoke() ?? [])));
+    internal TemplateValue Assert(Func<object?[]>? arguments = null)
+        => Apply(value => Builtins.Assert(context, value, Arguments(arguments?.Invoke() ?? [])));
+}

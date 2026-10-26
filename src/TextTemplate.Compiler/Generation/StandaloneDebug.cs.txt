@@ -1,0 +1,119 @@
+// Debug inspection reads stored values only. It never follows parent links,
+// materializes data or invokes callbacks. Already-evaluated content is rendered
+// in an isolated context, never against the live context or its numbering state.
+internal static class TemplateDebug
+{
+    internal static string View(object? value)
+    {
+        if (value is TemplateValue typed) return View(typed.Raw);
+        return value is TemplateContent or EvaluationContext.RenderedList or object?[]
+            ? Preview(value) : Json(value);
+    }
+
+    private static string Preview(object? value)
+    {
+        try
+        {
+            // Validate before composition: cycles and callbacks must not reach the renderer.
+            HashSet<object> ancestors = new(System.Collections.Generic.ReferenceEqualityComparer.Instance);
+            void Check(object? item, int depth)
+            {
+                if (depth > 64) throw new NotSupportedException("content exceeds inspection depth");
+                if (item is null or string or bool or double or int or long or JsonElement or
+                    TemplateDate or EvaluationContext.Missing or EvaluationContext.Bullet or EvaluationContext.Multiline) return;
+                if (item is TemplateValue typed) { Check(typed.Raw, depth + 1); return; }
+                if (!ancestors.Add(item)) throw new NotSupportedException("cyclic content");
+                try
+                {
+                    IEnumerable<object?> children = item switch
+                    {
+                        TemplateContent content => content.Fragments,
+                        EvaluationContext.RenderedList list => list.Items,
+                        EvaluationContext.Arguments arguments => arguments.Items,
+                        EvaluationContext.Data { Items: not null } data => data.Items,
+                        EvaluationContext.Data data => data.Values.Values,
+                        object?[] array => array,
+                        _ => throw new NotSupportedException("unsupported preview value: " + item.GetType().Name)
+                    };
+                    foreach (object? child in children) Check(child, depth + 1);
+                }
+                finally { ancestors.Remove(item); }
+            }
+            Check(value, 0);
+            EvaluationContext isolated = new(null, new Dictionary<string, Func<EvaluationContext, object?>>());
+            return isolated.Render(_ => value) ?? "<missing content>";
+        }
+        catch (Exception error) when (error is NotSupportedException or NotImplementedException or InvalidOperationException or ArgumentException or JsonException)
+        {
+            return "<" + error.Message + ">";
+        }
+    }
+
+    internal static string Json(object? value)
+    {
+        try
+        {
+            using MemoryStream stream = new();
+            using (Utf8JsonWriter writer = new(stream, new JsonWriterOptions
+            {
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            }))
+            {
+                HashSet<object> ancestors = new(System.Collections.Generic.ReferenceEqualityComparer.Instance);
+                void Write(object? item, int depth)
+                {
+                    if (depth > 64) throw new NotSupportedException("data exceeds inspection depth");
+                    switch (item)
+                    {
+                        case null: writer.WriteNullValue(); return;
+                        case string text: writer.WriteStringValue(text); return;
+                        case bool flag: writer.WriteBooleanValue(flag); return;
+                        case double number when double.IsFinite(number): writer.WriteNumberValue(number); return;
+                        case int number: writer.WriteNumberValue(number); return;
+                        case long number: writer.WriteNumberValue(number); return;
+                        case JsonElement json when json.ValueKind != JsonValueKind.Undefined: json.WriteTo(writer); return;
+                        case TemplateValue typed: Write(typed.Raw, depth + 1); return;
+                        case EvaluationContext.Missing: throw new NotSupportedException("missing value has no JSON representation");
+                        case TemplateContent content: writer.WriteStringValue(Preview(content)); return;
+                    }
+                    if (item is not EvaluationContext.Data and not EvaluationContext.Arguments and not EvaluationContext.RenderedList and not object?[])
+                        throw new NotSupportedException("unsupported JSON value: " + item.GetType().Name);
+                    if (!ancestors.Add(item)) throw new NotSupportedException("cyclic data");
+                    try
+                    {
+                        if (item is EvaluationContext.Data { Items: null } record)
+                        {
+                            writer.WriteStartObject();
+                            foreach (var entry in record.Values)
+                            {
+                                writer.WritePropertyName(entry.Key);
+                                Write(entry.Value, depth + 1);
+                            }
+                            writer.WriteEndObject();
+                        }
+                        else
+                        {
+                            IEnumerable<object?> items = item switch
+                            {
+                                EvaluationContext.Data data => data.Items!,
+                                EvaluationContext.Arguments arguments => arguments.Items,
+                                EvaluationContext.RenderedList list => list.Items,
+                                _ => (object?[])item
+                            };
+                            writer.WriteStartArray();
+                            foreach (object? element in items) Write(element, depth + 1);
+                            writer.WriteEndArray();
+                        }
+                    }
+                    finally { ancestors.Remove(item); }
+                }
+                Write(value, 0);
+            }
+            return System.Text.Encoding.UTF8.GetString(stream.ToArray());
+        }
+        catch (Exception error) when (error is NotSupportedException or JsonException or ObjectDisposedException or ArgumentException or InvalidOperationException)
+        {
+            return "<" + error.Message + ">";
+        }
+    }
+}

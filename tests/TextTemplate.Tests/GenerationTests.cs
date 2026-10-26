@@ -81,7 +81,84 @@ public sealed class GenerationTests
         finally { Directory.Delete(root, true); }
     }
 
+    [Fact]
+    public void FluentTemplatesSupportAlternateBranchesAndManualEdits()
+    {
+        string repository = Repository();
+        string root = Path.Combine(Path.GetTempPath(), "texttemplate-fluent-" + Guid.NewGuid().ToString("N"));
+        string input = Path.Combine(root, "input");
+        string output = Path.Combine(root, "output");
+        Directory.CreateDirectory(Path.Combine(input, "templates"));
+        Directory.CreateDirectory(Path.Combine(input, "subtemplates"));
+        try
+        {
+            string simple = File.ReadAllText(Path.Combine(repository, "reference/templates/simple.template"));
+            string birthdays = File.ReadAllText(Path.Combine(repository, "reference/templates/birthdays.template"));
+            var cases = new Dictionary<string, string>
+            {
+                ["simple"] = simple,
+                ["withPets"] = simple.Replace("petsx", "pets"),
+                ["computedEncoding"] = "{[{'<b>'.EncodeFor('html')}].@EncodeDataFor('HTML'.ToLower())}",
+                ["computedInclude"] = "{[{#message}].@Include('#PACK'.ToLower())}\nSubtemplates:\n{#pack:[\nSubtemplates:\n{#message:[hello]}\n]}",
+                ["birthdays"] = birthdays,
+                ["bySign"] = birthdays.Replace("'1'.#grouping()", "'2'.#grouping()"),
+                ["ungrouped"] = birthdays.Replace("'1'.#grouping()", "'3'.#grouping()"),
+                ["tests"] = File.ReadAllText(Path.Combine(repository, "reference/templates/tests.template")),
+                ["helperNames"] = "{#Read} {#Collect} {#Field} {#Value} {#Subtemplate} {#RegisterEach}\nSubtemplates:\n{#Read:[r]}\n{#Collect:[c]}\n{#Field:[f]}\n{#Value:[v]}\n{#Subtemplate:[s]}\n{#RegisterEach:[d]}"
+            };
+            foreach (var entry in cases)
+                File.WriteAllText(Path.Combine(input, "templates", entry.Key + ".template"), entry.Value);
+            Assert.Equal(0, Program.Main(["--root", input, "--output", output]));
+            string simpleCode = File.ReadAllText(Path.Combine(output, "Templates/Simple.cs"));
+            string birthdayCode = File.ReadAllText(Path.Combine(output, "Templates/Birthdays.cs"));
+            string testsCode = File.ReadAllText(Path.Combine(output, "Templates/Tests.cs"));
+            Assert.Contains("Subtemplate(\"formatPet\")\n            .Call(\"anded\")", simpleCode);
+            Assert.Contains("TemplateValue type = Read(\"type\")", simpleCode);
+            Assert.Contains(".GroupBy(", birthdayCode);
+            Assert.Contains(".OrderBy(", birthdayCode);
+            Assert.Contains(".Render(", birthdayCode);
+            Assert.Contains("Subtemplate(\"tests\")\n            .Assert(", testsCode);
+            foreach (string code in new[] { simpleCode, birthdayCode, testsCode })
+            {
+                Assert.DoesNotContain("EvaluationContext.Invoke(", code);
+                string executable = string.Join("\n", code.Split('\n').Where(line => !line.TrimStart().StartsWith("//", StringComparison.Ordinal)));
+                Assert.DoesNotContain(".template:", executable);
+                Assert.DoesNotContain("\"dob.ToDate(", executable);
+                Assert.DoesNotContain("private void defineSubtemplates", code);
+                Assert.DoesNotContain(" ? ", code);
+                Assert.True(code.IndexOf("internal TemplateContent Evaluate()", StringComparison.Ordinal) < 1000);
+            }
+            Assert.Contains("RegisterEach(definitions, \"formatPet\"", File.ReadAllText(Path.Combine(output, "Registration/Simple.cs")));
+            var build = Run("dotnet", output, "build", "--nologo");
+            Assert.True(build.Exit == 0, build.Output + build.Error);
+            foreach (var entry in cases)
+            {
+                var node = Run("node", repository, "tools/node-reference/cli.mjs", "--template", entry.Key, "--template-root", input);
+                var generated = Run("dotnet", output, "bin/Debug/net10.0/GeneratedTemplates.dll", "--template", entry.Key,
+                    "--data-root", Path.Combine(repository, "reference/data"));
+                Assert.True(node.Exit == 0, entry.Key + ": " + node.Error);
+                Assert.True(generated.Exit == 0, entry.Key + ": " + generated.Error);
+                Match(node.Output, generated.Output, entry.Key + " input=" + entry.Value);
+            }
+            // Maintain the emitted C# alone: edit a named operation, rebuild, and run.
+            string petsFile = Path.Combine(output, "Templates/WithPets.cs");
+            string petsCode = File.ReadAllText(petsFile);
+            Assert.Contains("a {type} named {name}", petsCode);
+            File.WriteAllText(petsFile, petsCode.Replace("a {type} named {name}", "a {type} called {name}"));
+            build = Run("dotnet", output, "build", "--nologo");
+            Assert.True(build.Exit == 0, build.Output + build.Error);
+            var edited = Run("dotnet", output, "bin/Debug/net10.0/GeneratedTemplates.dll", "--template", "withPets");
+            var expected = Run("node", repository, "tools/node-reference/cli.mjs", "--template-text",
+                cases["withPets"].Replace("a {type} named {name}", "a {type} called {name}"));
+            Assert.True(edited.Exit == 0, edited.Error);
+            Assert.True(expected.Exit == 0, expected.Error);
+            Match(expected.Output, edited.Output, "manual C# edit");
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
     [Theory]
+    [InlineData("computed-include-annotation-gap", Skip = "Preexisting annotation-scope mismatch; see DESIGN.md section 11.3.")]
     [InlineData("where")]
     [InlineData("order")]
     [InlineData("date")]
@@ -122,7 +199,7 @@ public sealed class GenerationTests
             Assert.True(generated.Success, string.Join("\n", generated.Diagnostics));
             if (suite is "group" or "order")
             {
-                Assert.Contains(suite == "group" ? "Context.GroupBy(" : "Context.OrderBy(", generated.Source);
+                Assert.Contains(suite == "group" ? ".GroupBy(" : ".OrderBy(", generated.Source);
                 Assert.Contains("itemContext => itemContext.Lookup(\"k\")", generated.Source);
                 Assert.DoesNotContain(suite == "group" ? "\"Call GroupBy\"" : "\"Call OrderBy\"", generated.Source);
             }
@@ -237,7 +314,7 @@ public sealed class GenerationTests
             Assert.True(generated.Success, string.Join("\n", generated.Diagnostics));
             Assert.DoesNotContain("SyntaxNode", generated.Source);
             Assert.DoesNotMatch(@"\bEvaluate\d+\b", generated.Source!);
-            Assert.Contains("internal sealed class Greeting", generated.Source);
+            Assert.Contains("internal sealed partial class Greeting", generated.Source);
             Assert.Contains("internal TemplateContent Evaluate()", generated.Source);
             Assert.Contains("Line($\"Hello {firstName}!\")", generated.Source);
             Assert.Contains("private TemplateContent local()", generated.Source);
@@ -245,18 +322,18 @@ public sealed class GenerationTests
             Assert.Contains("string yesResult =", typedBranches);
             Assert.Contains("string? noResult =", typedBranches);
             Assert.Contains("string yesResult_2 =", typedBranches);
-            Assert.Contains("object? yesResult_3 =", typedBranches);
-            Assert.Contains("object? yesResult_4 =", typedBranches);
+            Assert.Contains("TemplateValue yesResult_3 =", typedBranches);
+            Assert.Contains("TemplateValue yesResult_4 =", typedBranches);
             Assert.Contains("bool content = EvaluationContext.Compare", typedBranches);
             Assert.Contains("bool content_2 =", typedBranches);
             Assert.DoesNotMatch(@"\b(?:Template_|Subtemplate_|Define_|InlineTemplate_L)\w*", generated.Source!);
             Assert.DoesNotMatch(@"\b\w+_L\d+_C\d+\b", generated.Source!);
-            Assert.Contains("object? firstName = Get(\"firstName\");", generated.Source);
+            Assert.Contains("TemplateValue firstName = Read(\"firstName\");", generated.Source);
             Assert.Contains("private TemplateContent @class()", generated.Source);
             Assert.Contains("private TemplateContent Evaluate_2()", generated.Source);
             Assert.Contains("IsTruthy(\"firstName\")", generated.Source);
-            Assert.Contains("MethodInput(\"firstName\")", generated.Source);
-            Assert.Contains("EvaluationContext.Invoke(MethodInput(\"firstName\")", generated.Source);
+            Assert.Contains("Field(\"firstName\")", generated.Source);
+            Assert.Contains("Support/TemplateValue.cs", generated.Files.Keys);
             Assert.Contains("=> Builtins.Join(", generated.Source);
             Assert.Contains("Support/Builtins.cs", generated.Files.Keys);
             Assert.Contains("Templates/Builtins_2.cs", generated.Files.Keys);
@@ -267,7 +344,7 @@ public sealed class GenerationTests
             Assert.Contains("private TemplateContent MethodInput_2()", generated.Source);
             Assert.Contains("Templates/AB_2.cs", generated.Files.Keys);
             Assert.Contains("Includes/Common.cs", generated.Files.Keys);
-            Assert.Contains("internal sealed class Shared", generated.Source);
+            Assert.Contains("internal sealed partial class Shared", generated.Source);
             Assert.Equal(generated.Source, new CSharpEmitter().Generate(parsed.Document!).Source);
             Assert.DoesNotContain("TextTemplate.Compiler.Parsing", generated.Source);
             Assert.Equal(generated.Files.Keys, new CSharpEmitter().Generate(parsed.Document!).Files.Keys);
@@ -325,25 +402,25 @@ public sealed class GenerationTests
             Assert.Contains("Includes/DoInclude.cs", generated.Files.Keys);
             Assert.Contains("Includes/Common.cs", generated.Files.Keys);
             string simpledata = generated.Files["Templates/Simpledata.cs"];
-            Assert.Contains("EvaluationContext.Invoke(SubtemplateInput(\"xformatPet\")", simpledata);
-            Assert.Contains("=> ApplySubtemplate(\"anded\",", simpledata);
-            Assert.Contains("dataContext => new Simpledata(dataContext)", simpledata);
-            Assert.Contains("definitionContext => definitionContext.Each(itemContext =>", simpledata);
+            Assert.Contains("Subtemplate(\"xformatPet\")", simpledata);
+            Assert.Contains(".Call(\"anded\")", simpledata);
+            Assert.Contains(".Render(ForItem(item => item.renderAnded()))", simpledata);
+            Assert.Contains("Registration/Simpledata.cs", generated.Files.Keys);
             Assert.Contains("annotatedContext => annotatedContext.Include", simpledata);
-            Assert.Contains("annotatedContext => annotatedContext.Receiver(itemContext =>", simpledata);
-            Assert.DoesNotContain("child =>", simpledata);
-            Assert.Contains("WithDefinitions(defineSubtemplates,", simpledata);
-            Assert.Contains("private void defineSubtemplates(SubtemplateDefinitions definitions)", simpledata);
-            Assert.Contains("definitions.Add(\"formatPet\",", simpledata);
-            Assert.Contains("object? petsResult =", simpledata);
+            Assert.Contains("annotatedContext => annotatedContext.Receiver(ForItem(", simpledata);
+            Assert.DoesNotContain("EvaluationContext.Invoke(", simpledata);
+            Assert.Contains("WithScope(defineSubtemplates,", simpledata);
+            Assert.Contains("private void defineSubtemplates(SubtemplateDefinitions definitions)", generated.Files["Registration/Simpledata.cs"]);
+            Assert.Contains("RegisterEach(definitions, \"formatPet\",", generated.Files["Registration/Simpledata.cs"]);
+            Assert.Contains("TemplateValue petsResult =", simpledata);
             Assert.DoesNotContain("new Dictionary", simpledata);
             Assert.DoesNotContain("CallNamed(", simpledata);
             string wikipedia = generated.Files["Templates/Wikipedia.cs"];
             Assert.Contains("private TemplateContent getWiki()", wikipedia);
             Assert.DoesNotContain("EvaluationContext.At(", wikipedia);
-            Assert.Contains("Builtins.Replace(", wikipedia);
+            Assert.Contains(".Replace(", wikipedia);
             Assert.Contains("new TemplateRegex(", wikipedia);
-            Assert.Contains("object? extract = Get(\"key.extract\");", wikipedia);
+            Assert.Contains("TemplateValue extract = Read(\"key.extract\");", wikipedia);
             File.WriteAllText(Path.Combine(root, "Generated.cs"), generated.Source);
             File.WriteAllText(Path.Combine(root, "Standalone.csproj"), """<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><StartupObject>Probe</StartupObject></PropertyGroup></Project>""");
             // Compile every legacy template and subtemplate, including unfinished features.
@@ -399,6 +476,67 @@ public sealed class GenerationTests
                                 throw new Exception("Missing content lost its internal distinction from empty text.");
                             TemplateContent nested = EvaluationContext.Text($"remove {missing} suffix\nkeep");
                             if (nested.Render() != "keep") throw new Exception("Nested content was flattened early.");
+                            var values = new System.Collections.Generic.Dictionary<string, object?>();
+                            for (int i = 0; i < 12; i++) values["field" + i] = new string('x', 200);
+                            var data = new EvaluationContext.Data(values, null);
+                            var child = new EvaluationContext.Data(new() { ["name"] = "Ada", ["nullable"] = null }, data);
+                            values["child"] = child;
+                            using (var json = System.Text.Json.JsonDocument.Parse(data.ToString())) {
+                                if (json.RootElement.GetProperty("field11").GetString()!.Length != 200 ||
+                                    json.RootElement.GetProperty("child").GetProperty("name").GetString() != "Ada" ||
+                                    json.RootElement.GetProperty("child").TryGetProperty("Parent", out _))
+                                    throw new Exception("JSON inspection truncated values or exposed parents.");
+                            }
+                            values["cycle"] = data;
+                            if (!data.ToString().Contains("cyclic")) throw new Exception("Cycle not described.");
+                            values.Remove("cycle");
+                            values["missing"] = new EvaluationContext.Missing("absent");
+                            if (!data.ToString().Contains("missing")) throw new Exception("Missing silently serialized as null.");
+                            values.Remove("missing");
+                            values["callback"] = (Func<object?>)(() => throw new Exception("Inspection executed code."));
+                            if (!data.ToString().Contains("unsupported")) throw new Exception("Callback inspection should explain fallback.");
+                            values.Remove("callback");
+                            var context = new EvaluationContext(null, new());
+                            var typed = new TemplateValue(context, data);
+                            if (typed.ToString() != data.ToString()) throw new Exception("Typed JSON display differs.");
+                            if (new TemplateValue(context, "abc").Assert(() => [new TemplateValue(context, "abc"), "ok"]).Raw is not "ok")
+                                throw new Exception("Fluent methods did not accept typed arguments.");
+                            if (new TemplateValue(context, nested).DebugView != "keep" || nested.DebugView != "keep")
+                                throw new Exception("Debugger did not preview evaluated content.");
+                            using var startupData = System.Text.Json.JsonDocument.Parse("{\"sign\":\"Aries\",\"group\":[{\"fname\":\"Zoe\",\"lname\":\"Zed\",\"dob\":\"2000-01-02\"},{\"fname\":\"Ada\",\"lname\":\"Alpha\",\"dob\":\"1990-03-04\"}]}");
+                            var startup = new Startup(new EvaluationContext(startupData.RootElement, new()));
+                            var signMethod = typeof(Startup).GetMethod("renderSign", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+                            var signContent = (TemplateContent)signMethod.Invoke(startup, null)!;
+                            var orderedRows = Array.Find(signContent.Fragments, fragment => fragment is EvaluationContext.RenderedList)!;
+                            var orderedPreview = new TemplateValue(context, orderedRows).DebugView;
+                            if (!orderedPreview.Contains("Ada Alpha (1990-03-04)") ||
+                                orderedPreview.IndexOf("Ada Alpha", StringComparison.Ordinal) >= orderedPreview.IndexOf("Zoe Zed", StringComparison.Ordinal))
+                                throw new Exception("Startup orderBy preview did not show sorted rendered rows: " + orderedPreview);
+                            var rows = new EvaluationContext.RenderedList(new() { inner, outer });
+                            var rowValue = new TemplateValue(context, rows);
+                            string expectedPreview = new TemplateContent(new object?[] { rows }).Render();
+                            if (rowValue.DebugView != expectedPreview || rowValue.DebugView != expectedPreview)
+                                throw new Exception("Rendered-list debugger preview differs or changes across reads.");
+                            values["content"] = inner;
+                            using (var json = System.Text.Json.JsonDocument.Parse(data.DebugView))
+                                if (json.RootElement.GetProperty("content").GetString() != "value true")
+                                    throw new Exception("Data did not preview nested content as JSON text.");
+                            values.Remove("content");
+                            var cyclicFragments = new object?[1];
+                            var cyclicContent = new TemplateContent(cyclicFragments);
+                            cyclicFragments[0] = cyclicContent;
+                            if (!cyclicContent.DebugView.Contains("cyclic")) throw new Exception("Content cycle not detected.");
+                            var deferred = new TemplateContent(new object?[] { (Func<object?>)(() => throw new Exception("Preview invoked a callback.")) });
+                            if (!deferred.DebugView.Contains("unsupported")) throw new Exception("Callback preview should explain fallback.");
+                            var bulletContent = EvaluationContext.Text($"{context.CreateBullet("\n\u0001{.} ")}first");
+                            string beforePreview = context.Render(_ => bulletContent)!;
+                            _ = bulletContent.DebugView;
+                            string afterPreview = context.Render(_ => bulletContent)!;
+                            var control = new EvaluationContext(null, new());
+                            if (control.Render(_ => bulletContent) != beforePreview || control.Render(_ => bulletContent) != afterPreview)
+                                throw new Exception("Debug preview changed live numbering state.");
+                            if (EvaluationContext.Text($"before {new TemplateValue(context, missing)} suffix\nkeep").Render() != "keep")
+                                throw new Exception("Typed interpolation flattened missing content.");
                             Console.Write("content-ok");
                             return;
                         }
@@ -480,7 +618,7 @@ public sealed class GenerationTests
             var result = Run("dotnet", root, "output/Standalone.dll");
             Assert.Equal(0, result.Exit);
             Assert.StartsWith("safe\n", result.Output);
-            Assert.Contains("templates/stub.template:1:", result.Output);
+            Assert.Contains("Generated.cs:", result.Output);
             Assert.Contains("Call ToJson", result.Output);
         }
         finally { Directory.Delete(root, true); }

@@ -7,8 +7,14 @@ using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
+internal sealed partial class Web(EvaluationContext context) : TemplateUnit<Web>(context, child => new Web(child))
 {
+    // Entry point; scoped definitions are registered before rendering.
+    internal TemplateContent Evaluate()
+    {
+        return WithScope(defineSubtemplates, item => item.renderWeb());
+    }
+
     // Template:
     // Here is an example of tagging and styling using Text Templates:
     // {[Hello {'test'.#Style('outlined-red-dots')} `
@@ -24,146 +30,123 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // } you can hover over and click.
     //
     // {#external}
-    // Subtemplates:
-    // {#Style: 
-    // [<span style="{$1.#StyleCases(
-    //    $2,$3,$4,$5,$6,$7,$8,$9  
-    // )}">{$0}</span>]} 
-    // {#ToHtml:[<pre><span>{$0}</span><pre>]}
-    // {#Tag:[<{$1}>{$0}</{$1}>]}
-    // {#Click:[<a title='{$2=>[{$2}],[Click this]}' `
-    //    onclick="document.location='/#{$1}'; `
-    //    document.location.reload()">{$0}</a>]
-    //    .#OptionalStyle('link',$2,$3,$4,$5,$6,$7,$8,$9)}
-    // {#StyleCases:[ `
-    //    {$0
-    //       .Case(
-    //          'italic','font-style:italic'
-    //          ,'normal','font-weight:normal;white-space:normal'
-    //          ,'bold','font-weight:bold'
-    //          ,'red','color:red'
-    //          ,'blue','color:blue'
-    //          ,'black','color:black'
-    //          ,'outlined-red-dots','outline-color:red;outline-style:dotted'
-    //          ,'underline','text-decoration: underline'
-    //          ,'link','text-decoration: underline;color:blue'
-    //       )
-    //    };
-    //    {$1->[{$1.#StyleCases($2,$3,$4,$5,$6,$7,$8,$9)}]}
-    // ]}
-    // {#OptionalStyle:[{$2=>[
-    //       {$0.#Style($2,$3,$4,$5,$6,$7,$8,$9)}
-    //    ],[
-    //       {$0.#Style($1)}]}
-    // ]}
-    // {#external:[
-    // This is an example of an external data source (in this case, Github)
-    //
-    // my repos: {'https://api.github.com/users/eisnerw/repos': #formatGitRepos}
-    // Subtemplates:    
-    //
-    // {#formatGitRepos:[- {name}{description->[ ({description})]}]} 
-    // ]}
     // Source: "templates/web.template":1:1
-    internal TemplateContent Evaluate()
+    private TemplateContent renderWeb()
     {
-        return WithDefinitions(defineSubtemplates,
-            definitionContext => new Web(definitionContext).renderWeb());
-    }
-
-    // Template:
-    // [
-    // This is an example of an external data source (in this case, Github)
-    //
-    // my repos: {'https://api.github.com/users/eisnerw/repos': #formatGitRepos}
-    // Subtemplates:    
-    //
-    // {#formatGitRepos:[- {name}{description->[ ({description})]}]} 
-    // ]
-    // Source: "templates/web.template":47:12
-    private TemplateContent renderThisisanexampleofanexter()
-    {
-        object? content = InContext("https://api.github.com/users/eisnerw/repos", dataContext => dataContext.Each(itemContext => itemContext.Named("formatGitRepos")));
+        TemplateValue toHtml = Collect(ForItem(item => item.renderStyle()))
+            .Call("Style", () => ["normal", "blue"])
+            .Call("Tag", () => ["h2"])
+            .Call("ToHtml");
+        TemplateValue click = Collect("Link")
+            .Call("Click", () => ["simple", "Click this to load a simple template", "link", "italic"]);
+        TemplateValue external = Value(EvaluateSubtemplate("external"));
 
         return Line($$"""
-            This is an example of an external data source (in this case, Github)
+            Here is an example of tagging and styling using Text Templates:
+            {{toHtml}} 
+            Here's an example of a {{click}} you can hover over and click.
             
-            my repos: {{content}}
+            {{external}}
             """);
     }
 
     // Template:
-    // [
-    // This is an example of an external data source (in this case, Github)
-    //
-    // my repos: {'https://api.github.com/users/eisnerw/repos': #formatGitRepos}
-    // Subtemplates:    
-    //
-    // {#formatGitRepos:[- {name}{description->[ ({description})]}]} 
-    // ]
-    // Source: "templates/web.template":47:12
-    private TemplateContent external()
+    // [Hello {'test'.#Style('outlined-red-dots')} `
+    // {"World".#Style('italic','bold','red')}!!]
+    // Source: "templates/web.template":2:2
+    private TemplateContent renderStyle()
     {
-        return WithDefinitions(externalDefinitions,
-            definitionContext => new Web(definitionContext).externalContent());
+        TemplateValue style = Collect("test")
+            .Call("Style", () => ["outlined-red-dots"]);
+        TemplateValue style_2 = Collect("World")
+            .Call("Style", () => ["italic", "bold", "red"]);
+
+        return Line($"Hello {style} {style_2}!!");
     }
 
     // Template:
-    // [- {name}{description->[ ({description})]}]
-    // Source: "templates/web.template":53:18
-    private TemplateContent formatGitRepos()
+    // [<span style="{$1.#StyleCases(
+    //    $2,$3,$4,$5,$6,$7,$8,$9  
+    // )}">{$0}</span>]
+    // Source: "templates/web.template":17:1
+    private TemplateContent Style()
     {
-        object? name = Get("name");
-        object? descriptionResult = (IsTruthy("description") ? Each(itemContext => new Web(itemContext).renderDescription()) : "");
+        TemplateValue styleCases = Field("$1")
+            .Call("StyleCases", () => [Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9")]);
+        TemplateValue item0 = Read("$0");
 
-        return Line($"- {name}{descriptionResult}");
+        return Line($"<span style=\"{styleCases}\">{item0}</span>");
     }
 
     // Template:
-    // [ ({description})]
-    // Source: "templates/web.template":53:41
-    private TemplateContent renderDescription()
+    // [<pre><span>{$0}</span><pre>]
+    // Source: "templates/web.template":20:10
+    private TemplateContent ToHtml()
     {
-        object? description = Get("description");
+        TemplateValue item0 = Read("$0");
 
-        return Line($" ({description})");
+        return Line($"<pre><span>{item0}</span><pre>");
     }
 
     // Template:
-    // [{$2=>[
-    //       {$0.#Style($2,$3,$4,$5,$6,$7,$8,$9)}
-    //    ],[
-    //       {$0.#Style($1)}]}
-    // ]
-    // Source: "templates/web.template":42:17
-    private TemplateContent OptionalStyle()
+    // [<{$1}>{$0}</{$1}>]
+    // Source: "templates/web.template":21:7
+    private TemplateContent Tag()
     {
-        object? item2Result = (IsTruthy("$2") ? Each(itemContext => new Web(itemContext).renderStyle_2()) : Each(itemContext => new Web(itemContext).renderStyle_3()));
+        TemplateValue item1 = Read("$1");
+        TemplateValue item0 = Read("$0");
+        TemplateValue item1_2 = Read("$1");
 
-        return Line($"{item2Result}");
+        return Line($"<{item1}>{item0}</{item1_2}>");
     }
 
     // Template:
-    // [
-    //       {$0.#Style($1)}]
-    // Source: "templates/web.template":44:6
-    private TemplateContent renderStyle_3()
+    // [<a title='{$2=>[{$2}],[Click this]}' `
+    //    onclick="document.location='/#{$1}'; `
+    //    document.location.reload()">{$0}</a>]
+    // Source: "templates/web.template":22:9
+    private TemplateContent renderItem2Result()
     {
-        object? style = EvaluationContext.Invoke(MethodInput("$0"), methodValue => ApplySubtemplate("Style", methodValue, Get("$1")));
+        // Template:
+        // $2=>[{$2}],[Click this]
+        // Source: "templates/web.template":22:21
+        TemplateValue chooseItem2Result()
+        {
+            if (IsTruthy("$2"))
+            {
+                return Value(Each(ForItem(item => item.renderItem2())));
+            }
 
-        return Line($"{style}");
+            return Value(Each(itemContext => Line($"Click this")));
+        }
+
+        TemplateValue item2Result = chooseItem2Result();
+        TemplateValue item1 = Read("$1");
+        TemplateValue item0 = Read("$0");
+
+        return Line($"<a title='{item2Result}' onclick=\"document.location='/#{item1}'; document.location.reload()\">{item0}</a>");
     }
 
     // Template:
-    // [
-    //       {$0.#Style($2,$3,$4,$5,$6,$7,$8,$9)}
-    //    ]
-    // Source: "templates/web.template":42:23
-    private TemplateContent renderStyle_2()
+    // [<a title='{$2=>[{$2}],[Click this]}' `
+    //    onclick="document.location='/#{$1}'; `
+    //    document.location.reload()">{$0}</a>]
+    //    .#OptionalStyle('link',$2,$3,$4,$5,$6,$7,$8,$9)
+    // Source: "templates/web.template":22:9
+    private TemplateValue Click()
     {
-        object? style = EvaluationContext.Invoke(MethodInput("$0"), methodValue => ApplySubtemplate("Style", methodValue, Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9")));
+        return Collect(ForItem(item => item.renderItem2Result()))
+            .Call("OptionalStyle", () => ["link", Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9")]);
+    }
 
-        return Line($"{style}");
+    // Template:
+    // [{$2}]
+    // Source: "templates/web.template":22:25
+    private TemplateContent renderItem2()
+    {
+        TemplateValue item2 = Read("$2");
+
+        return Line($"{item2}");
     }
 
     // Template:
@@ -230,8 +213,22 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
             }
         }
 
-        object? @case = EvaluationContext.Invoke(MethodInput(itemContext => itemContext.Lookup("$0")), selectCase);
-        object? item1Result = (IsTruthy("$1") ? Each(itemContext => new Web(itemContext).renderStyleCases()) : "");
+        // Template:
+        // $1->[{$1.#StyleCases($2,$3,$4,$5,$6,$7,$8,$9)}]
+        // Source: "templates/web.template":40:5
+        TemplateValue chooseItem1Result()
+        {
+            if (IsTruthy("$1"))
+            {
+                return Value(Each(ForItem(item => item.renderStyleCases())));
+            }
+
+            return Value("");
+        }
+
+        TemplateValue @case = Field("$0")
+            .Apply(selectCase);
+        TemplateValue item1Result = chooseItem1Result();
 
         return Line($$"""
                {{@case}};
@@ -244,149 +241,94 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/web.template":40:9
     private TemplateContent renderStyleCases()
     {
-        object? styleCases = EvaluationContext.Invoke(MethodInput("$1"), methodValue => ApplySubtemplate("StyleCases", methodValue, Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9")));
+        TemplateValue styleCases = Field("$1")
+            .Call("StyleCases", () => [Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9")]);
 
         return Line($"{styleCases}");
     }
 
     // Template:
-    // [<a title='{$2=>[{$2}],[Click this]}' `
-    //    onclick="document.location='/#{$1}'; `
-    //    document.location.reload()">{$0}</a>]
-    //    .#OptionalStyle('link',$2,$3,$4,$5,$6,$7,$8,$9)
-    // Source: "templates/web.template":22:9
-    private object? Click()
+    // [{$2=>[
+    //       {$0.#Style($2,$3,$4,$5,$6,$7,$8,$9)}
+    //    ],[
+    //       {$0.#Style($1)}]}
+    // ]
+    // Source: "templates/web.template":42:17
+    private TemplateContent OptionalStyle()
     {
-        return EvaluationContext.Invoke(MethodInput(itemContext => new Web(itemContext).renderItem2Result()), methodValue => ApplySubtemplate("OptionalStyle", methodValue, "link", Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9")));
+        // Template:
+        // $2=>[
+        //       {$0.#Style($2,$3,$4,$5,$6,$7,$8,$9)}
+        //    ],[
+        //       {$0.#Style($1)}]
+        // Source: "templates/web.template":42:19
+        TemplateValue chooseItem2Result()
+        {
+            if (IsTruthy("$2"))
+            {
+                return Value(Each(ForItem(item => item.renderStyle_2())));
+            }
+
+            return Value(Each(ForItem(item => item.renderStyle_3())));
+        }
+
+        TemplateValue item2Result = chooseItem2Result();
+
+        return Line($"{item2Result}");
     }
 
     // Template:
-    // [<a title='{$2=>[{$2}],[Click this]}' `
-    //    onclick="document.location='/#{$1}'; `
-    //    document.location.reload()">{$0}</a>]
-    // Source: "templates/web.template":22:9
-    private TemplateContent renderItem2Result()
+    // [
+    //       {$0.#Style($2,$3,$4,$5,$6,$7,$8,$9)}
+    //    ]
+    // Source: "templates/web.template":42:23
+    private TemplateContent renderStyle_2()
     {
-        object? item2Result = (IsTruthy("$2") ? Each(itemContext => new Web(itemContext).renderItem2()) : Each(itemContext => Line($"Click this")));
-        object? item1 = Get("$1");
-        object? item0 = Get("$0");
+        TemplateValue style = Field("$0")
+            .Call("Style", () => [Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9")]);
 
-        return Line($"<a title='{item2Result}' onclick=\"document.location='/#{item1}'; document.location.reload()\">{item0}</a>");
+        return Line($"{style}");
     }
 
     // Template:
-    // [{$2}]
-    // Source: "templates/web.template":22:25
-    private TemplateContent renderItem2()
+    // [
+    //       {$0.#Style($1)}]
+    // Source: "templates/web.template":44:6
+    private TemplateContent renderStyle_3()
     {
-        object? item2 = Get("$2");
+        TemplateValue style = Field("$0")
+            .Call("Style", () => [Get("$1")]);
 
-        return Line($"{item2}");
+        return Line($"{style}");
     }
 
     // Template:
-    // [<{$1}>{$0}</{$1}>]
-    // Source: "templates/web.template":21:7
-    private TemplateContent Tag()
-    {
-        object? item1 = Get("$1");
-        object? item0 = Get("$0");
-        object? item1_2 = Get("$1");
-
-        return Line($"<{item1}>{item0}</{item1_2}>");
-    }
-
-    // Template:
-    // [<pre><span>{$0}</span><pre>]
-    // Source: "templates/web.template":20:10
-    private TemplateContent ToHtml()
-    {
-        object? item0 = Get("$0");
-
-        return Line($"<pre><span>{item0}</span><pre>");
-    }
-
-    // Template:
-    // [<span style="{$1.#StyleCases(
-    //    $2,$3,$4,$5,$6,$7,$8,$9  
-    // )}">{$0}</span>]
-    // Source: "templates/web.template":17:1
-    private TemplateContent Style()
-    {
-        object? styleCases = EvaluationContext.Invoke(MethodInput("$1"), methodValue => ApplySubtemplate("StyleCases", methodValue, Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9")));
-        object? item0 = Get("$0");
-
-        return Line($"<span style=\"{styleCases}\">{item0}</span>");
-    }
-
-    // Template:
-    // [Hello {'test'.#Style('outlined-red-dots')} `
-    // {"World".#Style('italic','bold','red')}!!]
-    // Source: "templates/web.template":2:2
-    private TemplateContent renderStyle()
-    {
-        object? style = EvaluationContext.Invoke(MethodInput(itemContext => "test"), methodValue => ApplySubtemplate("Style", methodValue, "outlined-red-dots"));
-        object? style_2 = EvaluationContext.Invoke(MethodInput(itemContext => "World"), methodValue_2 => ApplySubtemplate("Style", methodValue_2, "italic", "bold", "red"));
-
-        return Line($"Hello {style} {style_2}!!");
-    }
-
-    internal EvaluationContext includeStyle()
-    {
-        EvaluationContext included = Context;
-        _ = new Web(included).Style();
-        return included;
-    }
-
-    internal EvaluationContext includeToHtml()
-    {
-        EvaluationContext included = Context;
-        _ = new Web(included).ToHtml();
-        return included;
-    }
-
-    internal EvaluationContext includeTag()
-    {
-        EvaluationContext included = Context;
-        _ = new Web(included).Tag();
-        return included;
-    }
-
-    internal EvaluationContext includeClick()
-    {
-        throw new NotImplementedException("templates/web.template:22:9: This include unit requires unsupported execution features.");
-    }
-
-    internal EvaluationContext includeStyleCases()
-    {
-        EvaluationContext included = Context;
-        _ = new Web(included).StyleCases();
-        return included;
-    }
-
-    internal EvaluationContext includeOptionalStyle()
-    {
-        EvaluationContext included = Context;
-        _ = new Web(included).OptionalStyle();
-        return included;
-    }
-
-    internal EvaluationContext includeFormatGitRepos()
-    {
-        EvaluationContext included = Context;
-        _ = new Web(included).formatGitRepos();
-        return included;
-    }
-
-    // Template:
+    // [
+    // This is an example of an external data source (in this case, Github)
     //
-    // Subtemplates:    
-    //
-    // {#formatGitRepos:[- {name}{description->[ ({description})]}]}
-    // Source: "templates/web.template":50:74
-    private void externalDefinitions(SubtemplateDefinitions definitions)
+    // my repos: {'https://api.github.com/users/eisnerw/repos': #formatGitRepos}
+    // Source: "templates/web.template":47:12
+    private TemplateContent externalContent()
     {
-        definitions.Add("formatGitRepos", definitionContext => definitionContext.Each(itemContext => new Web(itemContext).formatGitRepos()), includedContext => new Web(includedContext).includeFormatGitRepos());
+        TemplateValue content = Value("https://api.github.com/users/eisnerw/repos")
+            .Render(dataContext => dataContext.Each(item => item.Named("formatGitRepos")));
+
+        return Line($$"""
+            This is an example of an external data source (in this case, Github)
+            
+            my repos: {{content}}
+            """);
+    }
+
+    // Template:
+    // [
+    // This is an example of an external data source (in this case, Github)
+    //
+    // my repos: {'https://api.github.com/users/eisnerw/repos': #formatGitRepos}
+    // Source: "templates/web.template":47:12
+    private TemplateContent external()
+    {
+        return WithScope(externalDefinitions, item => item.externalContent());
     }
 
     // Template:
@@ -399,9 +341,10 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
     // {#formatGitRepos:[- {name}{description->[ ({description})]}]} 
     // ]
     // Source: "templates/web.template":47:12
-    private TemplateContent externalContent()
+    private TemplateContent renderThisisanexampleofanexter()
     {
-        object? content = InContext("https://api.github.com/users/eisnerw/repos", dataContext => dataContext.Each(itemContext => itemContext.Named("formatGitRepos")));
+        TemplateValue content = Value("https://api.github.com/users/eisnerw/repos")
+            .Render(dataContext => dataContext.Each(item => item.Named("formatGitRepos")));
 
         return Line($$"""
             This is an example of an external data source (in this case, Github)
@@ -410,154 +353,38 @@ internal sealed class Web(EvaluationContext context) : TemplateUnit(context)
             """);
     }
 
-    internal EvaluationContext includeFormatGitRepos_2()
+    // Template:
+    // [- {name}{description->[ ({description})]}]
+    // Source: "templates/web.template":53:18
+    private TemplateContent formatGitRepos()
     {
-        EvaluationContext included = Context;
-        _ = new Web(included).formatGitRepos();
-        return included;
+        // Template:
+        // description->[ ({description})]
+        // Source: "templates/web.template":53:28
+        TemplateValue chooseDescriptionResult()
+        {
+            if (IsTruthy("description"))
+            {
+                return Value(Each(ForItem(item => item.renderDescription())));
+            }
+
+            return Value("");
+        }
+
+        TemplateValue name = Read("name");
+        TemplateValue descriptionResult = chooseDescriptionResult();
+
+        return Line($"- {name}{descriptionResult}");
     }
 
     // Template:
-    //
-    // Subtemplates:    
-    //
-    // {#formatGitRepos:[- {name}{description->[ ({description})]}]}
-    // Source: "templates/web.template":50:74
-    private void defineIncludedSubtemplates(SubtemplateDefinitions definitions)
+    // [ ({description})]
+    // Source: "templates/web.template":53:41
+    private TemplateContent renderDescription()
     {
-        definitions.Add("formatGitRepos", definitionContext => new Web(definitionContext).formatGitRepos(), includedContext => new Web(includedContext).includeFormatGitRepos_2());
-    }
+        TemplateValue description = Read("description");
 
-    internal EvaluationContext includeExternal()
-    {
-        EvaluationContext included = DefineSubtemplates(defineIncludedSubtemplates);
-        _ = new Web(included).renderThisisanexampleofanexter();
-        return included;
-    }
-
-    // Template:
-    //
-    // Subtemplates:
-    // {#Style: 
-    // [<span style="{$1.#StyleCases(
-    //    $2,$3,$4,$5,$6,$7,$8,$9  
-    // )}">{$0}</span>]} 
-    // {#ToHtml:[<pre><span>{$0}</span><pre>]}
-    // {#Tag:[<{$1}>{$0}</{$1}>]}
-    // {#Click:[<a title='{$2=>[{$2}],[Click this]}' `
-    //    onclick="document.location='/#{$1}'; `
-    //    document.location.reload()">{$0}</a>]
-    //    .#OptionalStyle('link',$2,$3,$4,$5,$6,$7,$8,$9)}
-    // {#StyleCases:[ `
-    //    {$0
-    //       .Case(
-    //          'italic','font-style:italic'
-    //          ,'normal','font-weight:normal;white-space:normal'
-    //          ,'bold','font-weight:bold'
-    //          ,'red','color:red'
-    //          ,'blue','color:blue'
-    //          ,'black','color:black'
-    //          ,'outlined-red-dots','outline-color:red;outline-style:dotted'
-    //          ,'underline','text-decoration: underline'
-    //          ,'link','text-decoration: underline;color:blue'
-    //       )
-    //    };
-    //    {$1->[{$1.#StyleCases($2,$3,$4,$5,$6,$7,$8,$9)}]}
-    // ]}
-    // {#OptionalStyle:[{$2=>[
-    //       {$0.#Style($2,$3,$4,$5,$6,$7,$8,$9)}
-    //    ],[
-    //       {$0.#Style($1)}]}
-    // ]}
-    // {#external:[
-    // This is an example of an external data source (in this case, Github)
-    //
-    // my repos: {'https://api.github.com/users/eisnerw/repos': #formatGitRepos}
-    // Subtemplates:    
-    //
-    // {#formatGitRepos:[- {name}{description->[ ({description})]}]} 
-    // ]}
-    // Source: "templates/web.template":14:12
-    private void defineSubtemplates(SubtemplateDefinitions definitions)
-    {
-        definitions.Add("Style", definitionContext => definitionContext.Each(itemContext => new Web(itemContext).Style()), includedContext => new Web(includedContext).includeStyle());
-        definitions.Add("ToHtml", definitionContext => definitionContext.Each(itemContext => new Web(itemContext).ToHtml()), includedContext => new Web(includedContext).includeToHtml());
-        definitions.Add("Tag", definitionContext => definitionContext.Each(itemContext => new Web(itemContext).Tag()), includedContext => new Web(includedContext).includeTag());
-        definitions.Add("Click", definitionContext => new Web(definitionContext).Click(), includedContext => new Web(includedContext).includeClick());
-        definitions.Add("StyleCases", definitionContext => definitionContext.Each(itemContext => new Web(itemContext).StyleCases()), includedContext => new Web(includedContext).includeStyleCases());
-        definitions.Add("OptionalStyle", definitionContext => definitionContext.Each(itemContext => new Web(itemContext).OptionalStyle()), includedContext => new Web(includedContext).includeOptionalStyle());
-        definitions.Add("external", definitionContext => definitionContext.Each(itemContext => new Web(itemContext).external()), includedContext => new Web(includedContext).includeExternal());
-    }
-
-    // Template:
-    // Here is an example of tagging and styling using Text Templates:
-    // {[Hello {'test'.#Style('outlined-red-dots')} `
-    // {"World".#Style('italic','bold','red')}!!] 
-    // .#Style('normal','blue').#Tag('h2').#ToHtml()} 
-    // Here's an example of a ` 
-    // {
-    //    'Link'.#Click(
-    //          'simple'  // the link name
-    //          ,'Click this to load a simple template'
-    //          , 'link','italic' // style attributes
-    //       )
-    // } you can hover over and click.
-    //
-    // {#external}
-    // Subtemplates:
-    // {#Style: 
-    // [<span style="{$1.#StyleCases(
-    //    $2,$3,$4,$5,$6,$7,$8,$9  
-    // )}">{$0}</span>]} 
-    // {#ToHtml:[<pre><span>{$0}</span><pre>]}
-    // {#Tag:[<{$1}>{$0}</{$1}>]}
-    // {#Click:[<a title='{$2=>[{$2}],[Click this]}' `
-    //    onclick="document.location='/#{$1}'; `
-    //    document.location.reload()">{$0}</a>]
-    //    .#OptionalStyle('link',$2,$3,$4,$5,$6,$7,$8,$9)}
-    // {#StyleCases:[ `
-    //    {$0
-    //       .Case(
-    //          'italic','font-style:italic'
-    //          ,'normal','font-weight:normal;white-space:normal'
-    //          ,'bold','font-weight:bold'
-    //          ,'red','color:red'
-    //          ,'blue','color:blue'
-    //          ,'black','color:black'
-    //          ,'outlined-red-dots','outline-color:red;outline-style:dotted'
-    //          ,'underline','text-decoration: underline'
-    //          ,'link','text-decoration: underline;color:blue'
-    //       )
-    //    };
-    //    {$1->[{$1.#StyleCases($2,$3,$4,$5,$6,$7,$8,$9)}]}
-    // ]}
-    // {#OptionalStyle:[{$2=>[
-    //       {$0.#Style($2,$3,$4,$5,$6,$7,$8,$9)}
-    //    ],[
-    //       {$0.#Style($1)}]}
-    // ]}
-    // {#external:[
-    // This is an example of an external data source (in this case, Github)
-    //
-    // my repos: {'https://api.github.com/users/eisnerw/repos': #formatGitRepos}
-    // Subtemplates:    
-    //
-    // {#formatGitRepos:[- {name}{description->[ ({description})]}]} 
-    // ]}
-    // Source: "templates/web.template":1:1
-    private TemplateContent renderWeb()
-    {
-        object? toHtml = EvaluationContext.Invoke(EvaluationContext.Invoke(EvaluationContext.Invoke(MethodInput(itemContext => new Web(itemContext).renderStyle()), methodValue => ApplySubtemplate("Style", methodValue, "normal", "blue")), methodValue_2 => ApplySubtemplate("Tag", methodValue_2, "h2")), methodValue_3 => ApplySubtemplate("ToHtml", methodValue_3));
-        object? click = EvaluationContext.Invoke(MethodInput(itemContext => "Link"), methodValue_4 => ApplySubtemplate("Click", methodValue_4, "simple", "Click this to load a simple template", "link", "italic"));
-        object? external = Each(itemContext => itemContext.Named("external"));
-
-        return Line($$"""
-            Here is an example of tagging and styling using Text Templates:
-            {{toHtml}} 
-            Here's an example of a {{click}} you can hover over and click.
-            
-            {{external}}
-            """);
+        return Line($" ({description})");
     }
 
 }

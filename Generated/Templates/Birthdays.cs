@@ -7,283 +7,25 @@ using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(context)
+internal sealed partial class Birthdays(EvaluationContext context) : TemplateUnit<Birthdays>(context, child => new Birthdays(child))
 {
+    // Entry point; scoped definitions are registered before rendering.
+    internal TemplateContent Evaluate()
+    {
+        return WithScope(defineSubtemplates, item => item.renderBirthdays());
+    }
+
     // Template:
     // // change the '1' to '2' to see grouping by astrological sign and year
     // // '3' to see ungrouped data
-    // {'1'.#grouping()} 
-    // Subtemplates:
-    // {#grouping:[{$0.Case(3,[{#ungrouped}],2,[{#bySign}],[{#byDate}])}].@Falsy(/^0$/)}
-    // {#byDate:[{'/data/famousBirthdays'.Where(!isAlive).GroupBy(dob.ToDate('MM'),'group','month'):
-    //      [{[2020-{month}-01].ToDate('MMMM')}{ // using the date formatter for the month
-    //         group.GroupBy(dob.ToDate('DD'),'daygroup','day')
-    //           .OrderBy(day):[{day}
-    //      {daygroup
-    //           .OrderBy(dob, 'D'):
-    //                [{#name} {#date}]}]}]}]}
-    // {#bySign:[{'/data/famousBirthdays'.GroupBy(sign, 'group'):
-    //      [{sign}{group.GroupBy(dob.ToDate('yyyy'),'yeargroup','year')
-    //           .OrderBy(year,'D'):[{year}
-    //      {yeargroup
-    //           .OrderBy(dob, 'A'):
-    //                [{fname->[{fname} ]}{lname} {#date}]}]}]}]}
-    // {#name:[{fname->[{fname} ]}{lname}]}               
-    // {#date:[({dob.ToDate()})]}
-    // {#ungrouped:[{'/data/famousBirthdays'.OrderBy(lname.ToUpper()):
-    //    [{#name} {#date} {sign}{!isAlive->[ (dead)]}]}]}
+    // {'1'.#grouping()}
     // Source: "templates/birthdays.template":1:1
-    internal TemplateContent Evaluate()
+    private TemplateContent renderBirthdays()
     {
-        return WithDefinitions(defineSubtemplates,
-            definitionContext => new Birthdays(definitionContext).renderBirthdays());
-    }
+        TemplateValue grouping = Collect("1")
+            .Call("grouping");
 
-    // Template:
-    // [{'/data/famousBirthdays'.OrderBy(lname.ToUpper()):
-    //    [{#name} {#date} {sign}{!isAlive->[ (dead)]}]}]
-    // Source: "templates/birthdays.template":21:13
-    private TemplateContent ungrouped()
-    {
-        object? orderBy = InContext(Context.OrderBy(MethodInput(itemContext => "/data/famousBirthdays"), itemContext => new Birthdays(itemContext).renderToUpper(), "lname.ToUpper()", new object?[] {  }, true), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderName_2()), null, dataContext => new Birthdays(dataContext).orderLoadedData_5());
-
-        return Line($"{orderBy}");
-    }
-
-    // Template:
-    // [{#name} {#date} {sign}{!isAlive->[ (dead)]}]
-    // Source: "templates/birthdays.template":22:4
-    private TemplateContent renderName_2()
-    {
-        object? name = Each(itemContext => itemContext.Named("name"));
-        object? date = Each(itemContext => itemContext.Named("date"));
-        object? sign = Get("sign");
-        object? choice = (!(IsTruthy("isAlive")) ? Each(itemContext => Line($" (dead)")) : "");
-
-        return Line($"{name} {date} {sign}{choice}");
-    }
-
-    // Template:
-    // lname.ToUpper()
-    // Source: "templates/birthdays.template":21:47
-    private object? renderToUpper()
-    {
-        return EvaluationContext.Invoke(MethodInput("lname"), methodValue => Builtins.ToUpper(methodValue));
-    }
-
-    // Template:
-    // [({dob.ToDate()})]
-    // Source: "templates/birthdays.template":20:8
-    private TemplateContent date()
-    {
-        object? toDate = EvaluationContext.Invoke(MethodInput("dob"), methodValue => Context.ToDate("templates/birthdays.template:20:11", methodValue));
-
-        return Line($"({toDate})");
-    }
-
-    // Template:
-    // [{fname->[{fname} ]}{lname}]
-    // Source: "templates/birthdays.template":19:8
-    private TemplateContent name()
-    {
-        object? fnameResult = (IsTruthy("fname") ? Each(itemContext => new Birthdays(itemContext).renderFname_2()) : "");
-        object? lname = Get("lname");
-
-        return Line($"{fnameResult}{lname}");
-    }
-
-    // Template:
-    // [{fname} ]
-    // Source: "templates/birthdays.template":19:17
-    private TemplateContent renderFname_2()
-    {
-        object? fname = Get("fname");
-
-        return Line($"{fname} ");
-    }
-
-    // Template:
-    // [{'/data/famousBirthdays'.GroupBy(sign, 'group'):
-    //      [{sign}{group.GroupBy(dob.ToDate('yyyy'),'yeargroup','year')
-    //           .OrderBy(year,'D'):[{year}
-    //      {yeargroup
-    //           .OrderBy(dob, 'A'):
-    //                [{fname->[{fname} ]}{lname} {#date}]}]}]}]
-    // Source: "templates/birthdays.template":13:10
-    private TemplateContent bySign()
-    {
-        object? groupBy = InContext(Context.GroupBy(MethodInput(itemContext => "/data/famousBirthdays"), itemContext => itemContext.Lookup("sign"), "sign", new object?[] { "group" }, true), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderSign()), null, dataContext => new Birthdays(dataContext).groupLoadedData_2());
-
-        return Line($"{groupBy}");
-    }
-
-    // Template:
-    // [{sign}{group.GroupBy(dob.ToDate('yyyy'),'yeargroup','year')
-    //           .OrderBy(year,'D'):[{year}
-    //      {yeargroup
-    //           .OrderBy(dob, 'A'):
-    //                [{fname->[{fname} ]}{lname} {#date}]}]}]
-    // Source: "templates/birthdays.template":14:6
-    private TemplateContent renderSign()
-    {
-        object? sign = Get("sign");
-        object? orderBy = InContext(Context.OrderBy(Context.GroupBy(MethodInput(itemContext => itemContext.Lookup("group")), itemContext => new Birthdays(itemContext).renderToDate_4(), "dob.ToDate('yyyy')", new object?[] { "yeargroup", "year" }, true), itemContext => itemContext.Lookup("year"), "year", new object?[] { "D" }, true), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderYear()), null, dataContext => new Birthdays(dataContext).orderLoadedData_3());
-
-        return Line($"{sign}{orderBy}");
-    }
-
-    // Template:
-    // [{year}
-    //      {yeargroup
-    //           .OrderBy(dob, 'A'):
-    //                [{fname->[{fname} ]}{lname} {#date}]}]
-    // Source: "templates/birthdays.template":15:30
-    private TemplateContent renderYear()
-    {
-        object? year = Get("year");
-        object? orderBy = InContext(Context.OrderBy(MethodInput(itemContext => itemContext.Lookup("yeargroup")), itemContext => itemContext.Lookup("dob"), "dob", new object?[] { "A" }, true), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderFnameResult()), null, dataContext => new Birthdays(dataContext).orderLoadedData_4());
-
-        return Line($$"""
-            {{year}}
-                 {{orderBy}}
-            """);
-    }
-
-    // Template:
-    // [{fname->[{fname} ]}{lname} {#date}]
-    // Source: "templates/birthdays.template":18:16
-    private TemplateContent renderFnameResult()
-    {
-        object? fnameResult = (IsTruthy("fname") ? Each(itemContext => new Birthdays(itemContext).renderFname()) : "");
-        object? lname = Get("lname");
-        object? date = Each(itemContext => itemContext.Named("date"));
-
-        return Line($"{fnameResult}{lname} {date}");
-    }
-
-    // Template:
-    // [{fname} ]
-    // Source: "templates/birthdays.template":18:25
-    private TemplateContent renderFname()
-    {
-        object? fname = Get("fname");
-
-        return Line($"{fname} ");
-    }
-
-    // Template:
-    // dob.ToDate('yyyy')
-    // Source: "templates/birthdays.template":14:28
-    private object? renderToDate_4()
-    {
-        return EvaluationContext.Invoke(MethodInput("dob"), methodValue => Context.ToDate("templates/birthdays.template:14:28", methodValue, "yyyy"));
-    }
-
-    // Template:
-    // [{'/data/famousBirthdays'.Where(!isAlive).GroupBy(dob.ToDate('MM'),'group','month'):
-    //      [{[2020-{month}-01].ToDate('MMMM')}{ // using the date formatter for the month
-    //         group.GroupBy(dob.ToDate('DD'),'daygroup','day')
-    //           .OrderBy(day):[{day}
-    //      {daygroup
-    //           .OrderBy(dob, 'D'):
-    //                [{#name} {#date}]}]}]}]
-    // Source: "templates/birthdays.template":6:10
-    private TemplateContent byDate()
-    {
-        object? groupBy = InContext(Context.GroupBy(Context.Where(MethodInput(itemContext => "/data/famousBirthdays"), itemContext => new Birthdays(itemContext).renderContent()), itemContext => new Birthdays(itemContext).renderToDate(), "dob.ToDate('MM')", new object?[] { "group", "month" }, true), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderToDate_2()), null, dataContext => new Birthdays(dataContext).groupLoadedData());
-
-        return Line($"{groupBy}");
-    }
-
-    // Template:
-    // [{[2020-{month}-01].ToDate('MMMM')}{ // using the date formatter for the month
-    //         group.GroupBy(dob.ToDate('DD'),'daygroup','day')
-    //           .OrderBy(day):[{day}
-    //      {daygroup
-    //           .OrderBy(dob, 'D'):
-    //                [{#name} {#date}]}]}]
-    // Source: "templates/birthdays.template":7:6
-    private TemplateContent renderToDate_2()
-    {
-        object? toDate = EvaluationContext.Invoke(MethodInput(itemContext => new Birthdays(itemContext).renderMonth()), methodValue => Context.ToDate("templates/birthdays.template:7:8", methodValue, "MMMM"));
-        object? orderBy = InContext(Context.OrderBy(Context.GroupBy(MethodInput(itemContext => itemContext.Lookup("group")), itemContext => new Birthdays(itemContext).renderToDate_3(), "dob.ToDate('DD')", new object?[] { "daygroup", "day" }, true), itemContext => itemContext.Lookup("day"), "day", new object?[] {  }, true), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderDay()), null, dataContext => new Birthdays(dataContext).orderLoadedData());
-
-        return Line($"{toDate}{orderBy}");
-    }
-
-    // Template:
-    // [{day}
-    //      {daygroup
-    //           .OrderBy(dob, 'D'):
-    //                [{#name} {#date}]}]
-    // Source: "templates/birthdays.template":9:25
-    private TemplateContent renderDay()
-    {
-        object? day = Get("day");
-        object? orderBy = InContext(Context.OrderBy(MethodInput(itemContext => itemContext.Lookup("daygroup")), itemContext => itemContext.Lookup("dob"), "dob", new object?[] { "D" }, true), dataContext => dataContext.Each(itemContext => new Birthdays(itemContext).renderName()), null, dataContext => new Birthdays(dataContext).orderLoadedData_2());
-
-        return Line($$"""
-            {{day}}
-                 {{orderBy}}
-            """);
-    }
-
-    // Template:
-    // [{#name} {#date}]
-    // Source: "templates/birthdays.template":12:16
-    private TemplateContent renderName()
-    {
-        object? name = Each(itemContext => itemContext.Named("name"));
-        object? date = Each(itemContext => itemContext.Named("date"));
-
-        return Line($"{name} {date}");
-    }
-
-    // Template:
-    // dob.ToDate('DD')
-    // Source: "templates/birthdays.template":8:23
-    private object? renderToDate_3()
-    {
-        return EvaluationContext.Invoke(MethodInput("dob"), methodValue => Context.ToDate("templates/birthdays.template:8:23", methodValue, "DD"));
-    }
-
-    // Template:
-    // [2020-{month}-01]
-    // Source: "templates/birthdays.template":7:8
-    private TemplateContent renderMonth()
-    {
-        object? month = Get("month");
-
-        return Line($"2020-{month}-01");
-    }
-
-    // Template:
-    // !isAlive
-    // Source: "templates/birthdays.template":6:42
-    private bool renderContent()
-    {
-        return !(IsTruthy("isAlive"));
-    }
-
-    // Template:
-    // dob.ToDate('MM')
-    // Source: "templates/birthdays.template":6:60
-    private object? renderToDate()
-    {
-        return EvaluationContext.Invoke(MethodInput("dob"), methodValue => Context.ToDate("templates/birthdays.template:6:60", methodValue, "MM"));
-    }
-
-    // Template:
-    // [{$0.Case(3,[{#ungrouped}],2,[{#bySign}],[{#byDate}])}].@Falsy(/^0$/)
-    // Source: "templates/birthdays.template":5:12
-    private object? grouping()
-    {
-        return Annotate(
-            new Func<EvaluationContext, EvaluationContext>[]
-            {
-                annotatedContext => annotatedContext.WithFalsy(new TemplateRegex("/^0$/", "templates/birthdays.template:5:75"))
-            },
-            annotatedContext => annotatedContext.Receiver(itemContext => new Birthdays(itemContext).renderCase()));
+        return Line($"{grouping}");
     }
 
     // Template:
@@ -302,37 +44,31 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
             switch (value)
             {
                 case var candidate when Builtins.CaseMatches(candidate, EvaluationContext.ParseInteger("3")):
-                    return EvaluationContext.Intermediate(Each(itemContext => new Birthdays(itemContext).renderUngrouped()));
+                    return EvaluationContext.Intermediate(Each(ForItem(item => item.renderUngrouped())));
                 case var candidate when Builtins.CaseMatches(candidate, EvaluationContext.ParseInteger("2")):
-                    return EvaluationContext.Intermediate(Each(itemContext => new Birthdays(itemContext).renderBySign()));
+                    return EvaluationContext.Intermediate(Each(ForItem(item => item.renderBySign())));
                 default:
-                    return EvaluationContext.Intermediate(Each(itemContext => new Birthdays(itemContext).renderByDate()));
+                    return EvaluationContext.Intermediate(Each(ForItem(item => item.renderByDate())));
             }
         }
 
-        object? @case = EvaluationContext.Invoke(MethodInput(itemContext => itemContext.Lookup("$0")), selectCase);
+        TemplateValue @case = Field("$0")
+            .Apply(selectCase);
 
         return Line($"{@case}");
     }
 
     // Template:
-    // [{#byDate}]
-    // Source: "templates/birthdays.template":5:53
-    private TemplateContent renderByDate()
+    // [{$0.Case(3,[{#ungrouped}],2,[{#bySign}],[{#byDate}])}].@Falsy(/^0$/)
+    // Source: "templates/birthdays.template":5:12
+    private TemplateValue grouping()
     {
-        object? byDate = Each(itemContext => itemContext.Named("byDate"));
-
-        return Line($"{byDate}");
-    }
-
-    // Template:
-    // [{#bySign}]
-    // Source: "templates/birthdays.template":5:41
-    private TemplateContent renderBySign()
-    {
-        object? bySign = Each(itemContext => itemContext.Named("bySign"));
-
-        return Line($"{bySign}");
+        return Value(Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithFalsy(new TemplateRegex("/^0$/", SourceLocation()))
+            },
+            annotatedContext => annotatedContext.Receiver(ForItem(item => item.renderCase()))));
     }
 
     // Template:
@@ -340,175 +76,351 @@ internal sealed class Birthdays(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/birthdays.template":5:24
     private TemplateContent renderUngrouped()
     {
-        object? ungrouped = Each(itemContext => itemContext.Named("ungrouped"));
+        TemplateValue ungrouped = Value(EvaluateSubtemplate("ungrouped"));
 
         return Line($"{ungrouped}");
     }
 
-    internal EvaluationContext includeGrouping()
+    // Template:
+    // [{#bySign}]
+    // Source: "templates/birthdays.template":5:41
+    private TemplateContent renderBySign()
     {
-        EvaluationContext included = Context;
-        included = included.WithFalsy(new TemplateRegex("/^0$/", "templates/birthdays.template:5:75"));
-        _ = new Birthdays(included).renderCase();
-        return included;
+        TemplateValue bySign = Value(EvaluateSubtemplate("bySign"));
+
+        return Line($"{bySign}");
+    }
+
+    // Template:
+    // [{#byDate}]
+    // Source: "templates/birthdays.template":5:53
+    private TemplateContent renderByDate()
+    {
+        TemplateValue byDate = Value(EvaluateSubtemplate("byDate"));
+
+        return Line($"{byDate}");
+    }
+
+    // Template:
+    // [{'/data/famousBirthdays'.Where(!isAlive).GroupBy(dob.ToDate('MM'),'group','month'):
+    //      [{[2020-{month}-01].ToDate('MMMM')}{ // using the date formatter for the month
+    //         group.GroupBy(dob.ToDate('DD'),'daygroup','day')
+    //           .OrderBy(day):[{day}
+    //      {daygroup
+    //           .OrderBy(dob, 'D'):
+    //                [{#name} {#date}]}]}]}]
+    // Source: "templates/birthdays.template":6:10
+    private TemplateContent byDate()
+    {
+        TemplateValue groupBy = Collect("/data/famousBirthdays")
+            .Where(itemContext => !itemContext.TestCondition(itemContext.Lookup("isAlive")))
+            .GroupBy(ForItem(item => item.Field("dob").ToDate(() => ["MM"])), "<computed>", ["group", "month"], contextProbe: true)
+            .Render(InScope(item => item.renderToDate()), null, replay: ForItem(item => item.groupLoadedData()));
+
+        return Line($"{groupBy}");
     }
 
     // Template:
     // '/data/famousBirthdays'.Where(!isAlive).GroupBy(dob.ToDate('MM'),'group','month')
     // Source: "templates/birthdays.template":6:12
-    private object? groupLoadedData()
+    private TemplateValue groupLoadedData()
     {
-        return Context.GroupBy(Context.Where(Context.Current, itemContext => new Birthdays(itemContext).renderContent()), itemContext => new Birthdays(itemContext).renderToDate(), "dob.ToDate('MM')", new object?[] { "group", "month" }, false);
+        return Value(Context.Current)
+            .Where(itemContext => !itemContext.TestCondition(itemContext.Lookup("isAlive")))
+            .GroupBy(ForItem(item => item.Field("dob").ToDate(() => ["MM"])), "<computed>", ["group", "month"], contextProbe: false);
+    }
+
+    // Template:
+    // [{[2020-{month}-01].ToDate('MMMM')}{ // using the date formatter for the month
+    //         group.GroupBy(dob.ToDate('DD'),'daygroup','day')
+    //           .OrderBy(day):[{day}
+    //      {daygroup
+    //           .OrderBy(dob, 'D'):
+    //                [{#name} {#date}]}]}]
+    // Source: "templates/birthdays.template":7:6
+    private TemplateContent renderToDate()
+    {
+        TemplateValue toDate = Collect(ForItem(item => item.renderMonth()))
+            .ToDate(() => ["MMMM"]);
+        TemplateValue orderBy = Field("group")
+            .GroupBy(ForItem(item => item.Field("dob").ToDate(() => ["DD"])), "<computed>", ["daygroup", "day"], contextProbe: true)
+            .OrderBy(itemContext => itemContext.Lookup("day"), "key", [], contextProbe: true)
+            .Render(InScope(item => item.renderDay()), null, replay: ForItem(item => item.orderLoadedData()));
+
+        return Line($"{toDate}{orderBy}");
+    }
+
+    // Template:
+    // [2020-{month}-01]
+    // Source: "templates/birthdays.template":7:8
+    private TemplateContent renderMonth()
+    {
+        TemplateValue month = Read("month");
+
+        return Line($"2020-{month}-01");
     }
 
     // Template:
     // group.GroupBy(dob.ToDate('DD'),'daygroup','day')
     //           .OrderBy(day)
     // Source: "templates/birthdays.template":8:9
-    private object? orderLoadedData()
+    private TemplateValue orderLoadedData()
     {
-        return Context.OrderBy(Context.GroupBy(Context.Current, itemContext => new Birthdays(itemContext).renderToDate_3(), "dob.ToDate('DD')", new object?[] { "daygroup", "day" }, false), itemContext => itemContext.Lookup("day"), "day", new object?[] {  }, false);
+        return Value(Context.Current)
+            .GroupBy(ForItem(item => item.Field("dob").ToDate(() => ["DD"])), "<computed>", ["daygroup", "day"], contextProbe: false)
+            .OrderBy(itemContext => itemContext.Lookup("day"), "key", [], contextProbe: false);
+    }
+
+    // Template:
+    // [{day}
+    //      {daygroup
+    //           .OrderBy(dob, 'D'):
+    //                [{#name} {#date}]}]
+    // Source: "templates/birthdays.template":9:25
+    private TemplateContent renderDay()
+    {
+        TemplateValue day = Read("day");
+        TemplateValue orderBy = Field("daygroup")
+            .OrderBy(itemContext => itemContext.Lookup("dob"), "key", ["D"], contextProbe: true)
+            .Render(InScope(item => item.renderName()), null, replay: ForItem(item => item.orderLoadedData_2()));
+
+        return Line($$"""
+            {{day}}
+                 {{orderBy}}
+            """);
     }
 
     // Template:
     // daygroup
     //           .OrderBy(dob, 'D')
     // Source: "templates/birthdays.template":10:7
-    private object? orderLoadedData_2()
+    private TemplateValue orderLoadedData_2()
     {
-        return Context.OrderBy(Context.Current, itemContext => itemContext.Lookup("dob"), "dob", new object?[] { "D" }, false);
+        return Value(Context.Current)
+            .OrderBy(itemContext => itemContext.Lookup("dob"), "key", ["D"], contextProbe: false);
     }
 
-    internal EvaluationContext includeByDate()
+    // Template:
+    // [{#name} {#date}]
+    // Source: "templates/birthdays.template":12:16
+    private TemplateContent renderName()
     {
-        EvaluationContext included = Context;
-        _ = new Birthdays(included).byDate();
-        return included;
+        TemplateValue name = Value(EvaluateSubtemplate("name"));
+        TemplateValue date = Value(EvaluateSubtemplate("date"));
+
+        return Line($"{name} {date}");
+    }
+
+    // Template:
+    // [{'/data/famousBirthdays'.GroupBy(sign, 'group'):
+    //      [{sign}{group.GroupBy(dob.ToDate('yyyy'),'yeargroup','year')
+    //           .OrderBy(year,'D'):[{year}
+    //      {yeargroup
+    //           .OrderBy(dob, 'A'):
+    //                [{fname->[{fname} ]}{lname} {#date}]}]}]}]
+    // Source: "templates/birthdays.template":13:10
+    private TemplateContent bySign()
+    {
+        TemplateValue groupBy = Collect("/data/famousBirthdays")
+            .GroupBy(itemContext => itemContext.Lookup("sign"), "sign", ["group"], contextProbe: true)
+            .Render(InScope(item => item.renderSign()), null, replay: ForItem(item => item.groupLoadedData_2()));
+
+        return Line($"{groupBy}");
     }
 
     // Template:
     // '/data/famousBirthdays'.GroupBy(sign, 'group')
     // Source: "templates/birthdays.template":13:12
-    private object? groupLoadedData_2()
+    private TemplateValue groupLoadedData_2()
     {
-        return Context.GroupBy(Context.Current, itemContext => itemContext.Lookup("sign"), "sign", new object?[] { "group" }, false);
+        return Value(Context.Current)
+            .GroupBy(itemContext => itemContext.Lookup("sign"), "sign", ["group"], contextProbe: false);
+    }
+
+    // Template:
+    // [{sign}{group.GroupBy(dob.ToDate('yyyy'),'yeargroup','year')
+    //           .OrderBy(year,'D'):[{year}
+    //      {yeargroup
+    //           .OrderBy(dob, 'A'):
+    //                [{fname->[{fname} ]}{lname} {#date}]}]}]
+    // Source: "templates/birthdays.template":14:6
+    private TemplateContent renderSign()
+    {
+        TemplateValue sign = Read("sign");
+        TemplateValue orderBy = Field("group")
+            .GroupBy(ForItem(item => item.Field("dob").ToDate(() => ["yyyy"])), "<computed>", ["yeargroup", "year"], contextProbe: true)
+            .OrderBy(itemContext => itemContext.Lookup("year"), "key", ["D"], contextProbe: true)
+            .Render(InScope(item => item.renderYear()), null, replay: ForItem(item => item.orderLoadedData_3()));
+
+        return Line($"{sign}{orderBy}");
     }
 
     // Template:
     // group.GroupBy(dob.ToDate('yyyy'),'yeargroup','year')
     //           .OrderBy(year,'D')
     // Source: "templates/birthdays.template":14:14
-    private object? orderLoadedData_3()
+    private TemplateValue orderLoadedData_3()
     {
-        return Context.OrderBy(Context.GroupBy(Context.Current, itemContext => new Birthdays(itemContext).renderToDate_4(), "dob.ToDate('yyyy')", new object?[] { "yeargroup", "year" }, false), itemContext => itemContext.Lookup("year"), "year", new object?[] { "D" }, false);
+        return Value(Context.Current)
+            .GroupBy(ForItem(item => item.Field("dob").ToDate(() => ["yyyy"])), "<computed>", ["yeargroup", "year"], contextProbe: false)
+            .OrderBy(itemContext => itemContext.Lookup("year"), "key", ["D"], contextProbe: false);
+    }
+
+    // Template:
+    // [{year}
+    //      {yeargroup
+    //           .OrderBy(dob, 'A'):
+    //                [{fname->[{fname} ]}{lname} {#date}]}]
+    // Source: "templates/birthdays.template":15:30
+    private TemplateContent renderYear()
+    {
+        TemplateValue year = Read("year");
+        TemplateValue orderBy = Field("yeargroup")
+            .OrderBy(itemContext => itemContext.Lookup("dob"), "key", ["A"], contextProbe: true)
+            .Render(InScope(item => item.renderFnameResult()), null, replay: ForItem(item => item.orderLoadedData_4()));
+
+        return Line($$"""
+            {{year}}
+                 {{orderBy}}
+            """);
     }
 
     // Template:
     // yeargroup
     //           .OrderBy(dob, 'A')
     // Source: "templates/birthdays.template":16:7
-    private object? orderLoadedData_4()
+    private TemplateValue orderLoadedData_4()
     {
-        return Context.OrderBy(Context.Current, itemContext => itemContext.Lookup("dob"), "dob", new object?[] { "A" }, false);
+        return Value(Context.Current)
+            .OrderBy(itemContext => itemContext.Lookup("dob"), "key", ["A"], contextProbe: false);
     }
 
-    internal EvaluationContext includeBySign()
+    // Template:
+    // [{fname->[{fname} ]}{lname} {#date}]
+    // Source: "templates/birthdays.template":18:16
+    private TemplateContent renderFnameResult()
     {
-        EvaluationContext included = Context;
-        _ = new Birthdays(included).bySign();
-        return included;
+        // Template:
+        // fname->[{fname} ]
+        // Source: "templates/birthdays.template":18:18
+        TemplateValue chooseFnameResult()
+        {
+            if (IsTruthy("fname"))
+            {
+                return Value(Each(ForItem(item => item.renderFname())));
+            }
+
+            return Value("");
+        }
+
+        TemplateValue fnameResult = chooseFnameResult();
+        TemplateValue lname = Read("lname");
+        TemplateValue date = Value(EvaluateSubtemplate("date"));
+
+        return Line($"{fnameResult}{lname} {date}");
     }
 
-    internal EvaluationContext includeName()
+    // Template:
+    // [{fname} ]
+    // Source: "templates/birthdays.template":18:25
+    private TemplateContent renderFname()
     {
-        EvaluationContext included = Context;
-        _ = new Birthdays(included).name();
-        return included;
+        TemplateValue fname = Read("fname");
+
+        return Line($"{fname} ");
     }
 
-    internal EvaluationContext includeDate()
+    // Template:
+    // [{fname->[{fname} ]}{lname}]
+    // Source: "templates/birthdays.template":19:8
+    private TemplateContent name()
     {
-        EvaluationContext included = Context;
-        _ = new Birthdays(included).date();
-        return included;
+        // Template:
+        // fname->[{fname} ]
+        // Source: "templates/birthdays.template":19:10
+        TemplateValue chooseFnameResult()
+        {
+            if (IsTruthy("fname"))
+            {
+                return Value(Each(ForItem(item => item.renderFname_2())));
+            }
+
+            return Value("");
+        }
+
+        TemplateValue fnameResult = chooseFnameResult();
+        TemplateValue lname = Read("lname");
+
+        return Line($"{fnameResult}{lname}");
+    }
+
+    // Template:
+    // [{fname} ]
+    // Source: "templates/birthdays.template":19:17
+    private TemplateContent renderFname_2()
+    {
+        TemplateValue fname = Read("fname");
+
+        return Line($"{fname} ");
+    }
+
+    // Template:
+    // [({dob.ToDate()})]
+    // Source: "templates/birthdays.template":20:8
+    private TemplateContent date()
+    {
+        TemplateValue toDate = Field("dob")
+            .ToDate();
+
+        return Line($"({toDate})");
+    }
+
+    // Template:
+    // [{'/data/famousBirthdays'.OrderBy(lname.ToUpper()):
+    //    [{#name} {#date} {sign}{!isAlive->[ (dead)]}]}]
+    // Source: "templates/birthdays.template":21:13
+    private TemplateContent ungrouped()
+    {
+        TemplateValue orderBy = Collect("/data/famousBirthdays")
+            .OrderBy(ForItem(item => item.Field("lname").ToUpper()), "key", [], contextProbe: true)
+            .Render(InScope(item => item.renderName_2()), null, replay: ForItem(item => item.orderLoadedData_5()));
+
+        return Line($"{orderBy}");
     }
 
     // Template:
     // '/data/famousBirthdays'.OrderBy(lname.ToUpper())
     // Source: "templates/birthdays.template":21:15
-    private object? orderLoadedData_5()
+    private TemplateValue orderLoadedData_5()
     {
-        return Context.OrderBy(Context.Current, itemContext => new Birthdays(itemContext).renderToUpper(), "lname.ToUpper()", new object?[] {  }, false);
-    }
-
-    internal EvaluationContext includeUngrouped()
-    {
-        EvaluationContext included = Context;
-        _ = new Birthdays(included).ungrouped();
-        return included;
+        return Value(Context.Current)
+            .OrderBy(ForItem(item => item.Field("lname").ToUpper()), "key", [], contextProbe: false);
     }
 
     // Template:
-    //  
-    // Subtemplates:
-    // {#grouping:[{$0.Case(3,[{#ungrouped}],2,[{#bySign}],[{#byDate}])}].@Falsy(/^0$/)}
-    // {#byDate:[{'/data/famousBirthdays'.Where(!isAlive).GroupBy(dob.ToDate('MM'),'group','month'):
-    //      [{[2020-{month}-01].ToDate('MMMM')}{ // using the date formatter for the month
-    //         group.GroupBy(dob.ToDate('DD'),'daygroup','day')
-    //           .OrderBy(day):[{day}
-    //      {daygroup
-    //           .OrderBy(dob, 'D'):
-    //                [{#name} {#date}]}]}]}]}
-    // {#bySign:[{'/data/famousBirthdays'.GroupBy(sign, 'group'):
-    //      [{sign}{group.GroupBy(dob.ToDate('yyyy'),'yeargroup','year')
-    //           .OrderBy(year,'D'):[{year}
-    //      {yeargroup
-    //           .OrderBy(dob, 'A'):
-    //                [{fname->[{fname} ]}{lname} {#date}]}]}]}]}
-    // {#name:[{fname->[{fname} ]}{lname}]}               
-    // {#date:[({dob.ToDate()})]}
-    // {#ungrouped:[{'/data/famousBirthdays'.OrderBy(lname.ToUpper()):
-    //    [{#name} {#date} {sign}{!isAlive->[ (dead)]}]}]}
-    // Source: "templates/birthdays.template":3:18
-    private void defineSubtemplates(SubtemplateDefinitions definitions)
+    // [{#name} {#date} {sign}{!isAlive->[ (dead)]}]
+    // Source: "templates/birthdays.template":22:4
+    private TemplateContent renderName_2()
     {
-        definitions.Add("grouping", definitionContext => new Birthdays(definitionContext).grouping(), includedContext => new Birthdays(includedContext).includeGrouping());
-        definitions.Add("byDate", definitionContext => definitionContext.Each(itemContext => new Birthdays(itemContext).byDate()), includedContext => new Birthdays(includedContext).includeByDate());
-        definitions.Add("bySign", definitionContext => definitionContext.Each(itemContext => new Birthdays(itemContext).bySign()), includedContext => new Birthdays(includedContext).includeBySign());
-        definitions.Add("name", definitionContext => definitionContext.Each(itemContext => new Birthdays(itemContext).name()), includedContext => new Birthdays(includedContext).includeName());
-        definitions.Add("date", definitionContext => definitionContext.Each(itemContext => new Birthdays(itemContext).date()), includedContext => new Birthdays(includedContext).includeDate());
-        definitions.Add("ungrouped", definitionContext => definitionContext.Each(itemContext => new Birthdays(itemContext).ungrouped()), includedContext => new Birthdays(includedContext).includeUngrouped());
-    }
+        // Template:
+        // !isAlive->[ (dead)]
+        // Source: "templates/birthdays.template":22:28
+        TemplateValue chooseChoice()
+        {
+            if (!(IsTruthy("isAlive")))
+            {
+                return Value(Each(itemContext => Line($" (dead)")));
+            }
 
-    // Template:
-    // // change the '1' to '2' to see grouping by astrological sign and year
-    // // '3' to see ungrouped data
-    // {'1'.#grouping()} 
-    // Subtemplates:
-    // {#grouping:[{$0.Case(3,[{#ungrouped}],2,[{#bySign}],[{#byDate}])}].@Falsy(/^0$/)}
-    // {#byDate:[{'/data/famousBirthdays'.Where(!isAlive).GroupBy(dob.ToDate('MM'),'group','month'):
-    //      [{[2020-{month}-01].ToDate('MMMM')}{ // using the date formatter for the month
-    //         group.GroupBy(dob.ToDate('DD'),'daygroup','day')
-    //           .OrderBy(day):[{day}
-    //      {daygroup
-    //           .OrderBy(dob, 'D'):
-    //                [{#name} {#date}]}]}]}]}
-    // {#bySign:[{'/data/famousBirthdays'.GroupBy(sign, 'group'):
-    //      [{sign}{group.GroupBy(dob.ToDate('yyyy'),'yeargroup','year')
-    //           .OrderBy(year,'D'):[{year}
-    //      {yeargroup
-    //           .OrderBy(dob, 'A'):
-    //                [{fname->[{fname} ]}{lname} {#date}]}]}]}]}
-    // {#name:[{fname->[{fname} ]}{lname}]}               
-    // {#date:[({dob.ToDate()})]}
-    // {#ungrouped:[{'/data/famousBirthdays'.OrderBy(lname.ToUpper()):
-    //    [{#name} {#date} {sign}{!isAlive->[ (dead)]}]}]}
-    // Source: "templates/birthdays.template":1:1
-    private TemplateContent renderBirthdays()
-    {
-        object? grouping = EvaluationContext.Invoke(MethodInput(itemContext => "1"), methodValue => ApplySubtemplate("grouping", methodValue));
+            return Value("");
+        }
 
-        return Line($"{grouping}");
+        TemplateValue name = Value(EvaluateSubtemplate("name"));
+        TemplateValue date = Value(EvaluateSubtemplate("date"));
+        TemplateValue sign = Read("sign");
+        TemplateValue choice = chooseChoice();
+
+        return Line($"{name} {date} {sign}{choice}");
     }
 
 }

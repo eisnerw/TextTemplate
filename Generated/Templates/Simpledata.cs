@@ -7,44 +7,47 @@ using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(context)
+internal sealed partial class Simpledata(EvaluationContext context) : TemplateUnit<Simpledata>(context, child => new Simpledata(child))
 {
+    // Entry point; scoped definitions are registered before rendering.
+    internal TemplateContent Evaluate()
+    {
+        return WithScope(defineSubtemplates, item => item.renderSimpledata());
+    }
+
     // Template:
     // {"Hello"} {lastName}, {firstName} with {pets=>
     //    [{pets:#xformatPet.#anded()}].@Include('#doInclude')
     //    ,[no pets]
     // }!!
-    //
-    // Subtemplates:
-    //
-    // {#formatPet:[a {type} named {name}]}
-    // {#anded:[{$0.Join(', ',' and ')}]}
     // Source: "templates/simpledata.template":1:1
-    internal TemplateContent Evaluate()
+    private TemplateContent renderSimpledata()
     {
-        return WithDefinitions(defineSubtemplates,
-            definitionContext => new Simpledata(definitionContext).renderSimpledata());
-    }
+        // Template:
+        // pets=>
+        //    [{pets:#xformatPet.#anded()}].@Include('#doInclude')
+        //    ,[no pets]
+        // Source: "templates/simpledata.template":1:41
+        TemplateValue choosePetsResult()
+        {
+            if (IsTruthy("pets"))
+            {
+                return Value(Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.Include(EvaluationContext.Compose("#doInclude"))
+            },
+            annotatedContext => annotatedContext.Receiver(ForItem(item => item.renderContent()))));
+            }
 
-    // Template:
-    // [{$0.Join(', ',' and ')}]
-    // Source: "templates/simpledata.template":9:9
-    private TemplateContent anded()
-    {
-        object? join = EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Join(methodValue, ", ", " and "));
+            return Value(Each(itemContext => Line($"no pets")));
+        }
 
-        return Line($"{join}");
-    }
+        TemplateValue lastName = Read("lastName");
+        TemplateValue firstName = Read("firstName");
+        TemplateValue petsResult = choosePetsResult();
 
-    // Template:
-    // [a {type} named {name}]
-    // Source: "templates/simpledata.template":8:13
-    private TemplateContent formatPet()
-    {
-        object? type = Get("type");
-        object? name = Get("name");
-
-        return Line($"a {type} named {name}");
+        return Line($"Hello {lastName}, {firstName} with {petsResult}!!");
     }
 
     // Template:
@@ -52,7 +55,8 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
     // Source: "templates/simpledata.template":2:4
     private TemplateContent renderContent()
     {
-        object? pets = InContext(Get("pets"), dataContext => new Simpledata(dataContext).renderAnded());
+        TemplateValue pets = Read("pets")
+            .Render(ForItem(item => item.renderAnded()));
 
         return Line($"{pets}");
     }
@@ -60,62 +64,32 @@ internal sealed class Simpledata(EvaluationContext context) : TemplateUnit(conte
     // Template:
     // #xformatPet.#anded()
     // Source: "templates/simpledata.template":2:11
-    private object? renderAnded()
+    private TemplateValue renderAnded()
     {
-        return EvaluationContext.Invoke(SubtemplateInput("xformatPet"), methodValue => ApplySubtemplate("anded", methodValue));
-    }
-
-    internal EvaluationContext includeFormatPet()
-    {
-        EvaluationContext included = Context;
-        _ = new Simpledata(included).formatPet();
-        return included;
-    }
-
-    internal EvaluationContext includeAnded()
-    {
-        EvaluationContext included = Context;
-        _ = new Simpledata(included).anded();
-        return included;
+        return Subtemplate("xformatPet")
+            .Call("anded");
     }
 
     // Template:
-    //
-    //
-    // Subtemplates:
-    //
-    // {#formatPet:[a {type} named {name}]}
-    // {#anded:[{$0.Join(', ',' and ')}]}
-    // Source: "templates/simpledata.template":4:4
-    private void defineSubtemplates(SubtemplateDefinitions definitions)
+    // [a {type} named {name}]
+    // Source: "templates/simpledata.template":8:13
+    private TemplateContent formatPet()
     {
-        definitions.Add("formatPet", definitionContext => definitionContext.Each(itemContext => new Simpledata(itemContext).formatPet()), includedContext => new Simpledata(includedContext).includeFormatPet());
-        definitions.Add("anded", definitionContext => definitionContext.Each(itemContext => new Simpledata(itemContext).anded()), includedContext => new Simpledata(includedContext).includeAnded());
+        TemplateValue type = Read("type");
+        TemplateValue name = Read("name");
+
+        return Line($"a {type} named {name}");
     }
 
     // Template:
-    // {"Hello"} {lastName}, {firstName} with {pets=>
-    //    [{pets:#xformatPet.#anded()}].@Include('#doInclude')
-    //    ,[no pets]
-    // }!!
-    //
-    // Subtemplates:
-    //
-    // {#formatPet:[a {type} named {name}]}
-    // {#anded:[{$0.Join(', ',' and ')}]}
-    // Source: "templates/simpledata.template":1:1
-    private TemplateContent renderSimpledata()
+    // [{$0.Join(', ',' and ')}]
+    // Source: "templates/simpledata.template":9:9
+    private TemplateContent anded()
     {
-        object? lastName = Get("lastName");
-        object? firstName = Get("firstName");
-        object? petsResult = (IsTruthy("pets") ? Annotate(
-            new Func<EvaluationContext, EvaluationContext>[]
-            {
-                annotatedContext => annotatedContext.Include(EvaluationContext.Compose("#doInclude"))
-            },
-            annotatedContext => annotatedContext.Receiver(itemContext => new Simpledata(itemContext).renderContent())) : Each(itemContext => Line($"no pets")));
+        TemplateValue join = Field("$0")
+            .Join(() => [", ", " and "]);
 
-        return Line($"Hello {lastName}, {firstName} with {petsResult}!!");
+        return Line($"{join}");
     }
 
 }

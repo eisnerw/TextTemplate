@@ -13,14 +13,15 @@ using System.Text.RegularExpressions;
 [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 internal sealed class EvaluationContext
 {
-    [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+    [System.Diagnostics.DebuggerDisplay("{DebugView,nq}")]
     internal sealed class Data(Dictionary<string, object?> values, Data? parent)
     {
         internal Dictionary<string, object?> Values { get; } = values;
         internal Data? Parent { get; } = parent;
         // Null denotes a dictionary; a list keeps its children and their parent links.
         internal List<Data>? Items { get; set; }
-        public override string ToString() => DebugSummary(this);
+        internal string DebugView => TemplateDebug.Json(this);
+        public override string ToString() => DebugView;
     }
     // Debug summaries inspect stored values only: no lookup, rendering, callbacks,
     // or parent traversal. Bound depth and collection size for large/cyclic data.
@@ -83,7 +84,7 @@ internal sealed class EvaluationContext
         });
     }
     public override string ToString()
-        => $"Context {DebugSummary(Current)} (locals: {Locals.Count}, shared: {Shared.Count})";
+        => TemplateDebug.Json(Current);
     // TODO: implement each feature at its emitted call site. Keep operands deferred:
     // annotations and short-circuiting must not evaluate receiver/arguments prematurely.
     internal static object? NotImplemented(string feature, params Func<object?>[] operands)
@@ -157,6 +158,7 @@ internal sealed class EvaluationContext
         private readonly List<object?> fragments;
         public StructuredText(int literalLength, int formattedCount) => fragments = new();
         public void AppendLiteral(string text) => fragments.Add(text);
+        public void AppendFormatted(TemplateValue value) => fragments.Add(value.Raw);
         public void AppendFormatted(object? value) => fragments.Add(value);
         internal object?[] ToFragments() => fragments.ToArray();
         public override string ToString() => DebugSummary(fragments?.ToArray());
@@ -263,12 +265,12 @@ internal sealed class EvaluationContext
     [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
     internal sealed record RenderedList(List<object?> Items, string? DefaultIndent = null)
     {
-        public override string ToString() => DebugSummary(this);
+        public override string ToString() => TemplateDebug.Json(this);
     }
     [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
     internal sealed record Arguments(List<object?> Items)
     {
-        public override string ToString() => DebugSummary(this);
+        public override string ToString() => TemplateDebug.Json(this);
     }
     internal object? Each(Func<EvaluationContext, object?> body)
     {

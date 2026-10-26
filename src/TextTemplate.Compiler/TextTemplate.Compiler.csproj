@@ -11,6 +11,8 @@
     <EmbeddedResource Include="Generation/StandaloneRegex.cs.txt" WithCulture="false" LogicalName="TextTemplate.Compiler.Generation.StandaloneRegex.cs.txt" />
     <EmbeddedResource Include="Generation/StandaloneDate.cs.txt" WithCulture="false" LogicalName="TextTemplate.Compiler.Generation.StandaloneDate.cs.txt" />
     <EmbeddedResource Include="Generation/StandaloneBuiltins.cs.txt" WithCulture="false" LogicalName="TextTemplate.Compiler.Generation.StandaloneBuiltins.cs.txt" />
+    <EmbeddedResource Include="Generation/StandaloneDebug.cs.txt" WithCulture="false" LogicalName="TextTemplate.Compiler.Generation.StandaloneDebug.cs.txt" />
+    <EmbeddedResource Include="Generation/StandaloneValue.cs.txt" WithCulture="false" LogicalName="TextTemplate.Compiler.Generation.StandaloneValue.cs.txt" />
     <EmbeddedResource Include="Generation/StandaloneRuntime.cs.txt" WithCulture="false" LogicalName="TextTemplate.Compiler.Generation.StandaloneRuntime.cs.txt" />
   </ItemGroup>
 

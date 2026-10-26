@@ -2,16 +2,16 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Generated: simpledata with nested data",
+      "name": "Generated: birthday with call-back data",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "Build Generated (Debug)",
       "program": "${workspaceFolder}/Generated/bin/Debug/net10.0/GeneratedTemplates.dll",
       "args": [
         "--template",
-        "simpledata",
-        "--data-file",
-        "reference/data/simpledata.json"
+        "startup",
+        "--data-root",
+        "reference/data/"
       ],
       "cwd": "${workspaceFolder}",
       "console": "internalConsole",

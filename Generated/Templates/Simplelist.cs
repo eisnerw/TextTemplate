@@ -7,54 +7,64 @@ using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-internal sealed class Simplelist(EvaluationContext context) : TemplateUnit(context)
+internal sealed partial class Simplelist(EvaluationContext context) : TemplateUnit<Simplelist>(context, child => new Simplelist(child))
 {
+    // Entry point; scoped definitions are registered before rendering.
+    internal TemplateContent Evaluate()
+    {
+        return WithScope(defineSubtemplates, item => item.renderSimplelist());
+    }
+
     // Template:
     // {"Hello"} {lastName}, {firstName.Matches(/jo/i)->[Mr. ]}{firstName.ToLower().Replace('john', [{firstName.ToUpper()}])} with {pets=>
     //    [{pets:#xformatPet}].@Include('#doInclude')
     //    ,[no pets]
     // }!!
-    //
-    // Subtemplates:
-    //
-    // {#formatPet:[a {type} named {name}]}
-    // {#anded:[{$0.Join(', ',' and ')}]}
     // Source: "templates/simplelist.template":1:1
-    internal TemplateContent Evaluate()
+    private TemplateContent renderSimplelist()
     {
-        return WithDefinitions(defineSubtemplates,
-            definitionContext => new Simplelist(definitionContext).renderSimplelist());
-    }
+        // Template:
+        // firstName.Matches(/jo/i)->[Mr. ]
+        // Source: "templates/simplelist.template":1:24
+        TemplateValue chooseChoice()
+        {
+            if (Context.TestCondition(Field("firstName")
+            .Matches(() => [new TemplateRegex("/jo/i", SourceLocation())]).Raw))
+            {
+                return Value(Each(itemContext => Line($"Mr. ")));
+            }
 
-    // Template:
-    // [{$0.Join(', ',' and ')}]
-    // Source: "templates/simplelist.template":9:9
-    private TemplateContent anded()
-    {
-        object? join = EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Join(methodValue, ", ", " and "));
+            return Value("");
+        }
 
-        return Line($"{join}");
-    }
+        // Template:
+        // pets=>
+        //    [{pets:#xformatPet}].@Include('#doInclude')
+        //    ,[no pets]
+        // Source: "templates/simplelist.template":1:126
+        TemplateValue choosePetsResult()
+        {
+            if (IsTruthy("pets"))
+            {
+                return Value(Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.Include(EvaluationContext.Compose("#doInclude"))
+            },
+            annotatedContext => annotatedContext.Receiver(ForItem(item => item.renderContent()))));
+            }
 
-    // Template:
-    // [a {type} named {name}]
-    // Source: "templates/simplelist.template":8:13
-    private TemplateContent formatPet()
-    {
-        object? type = Get("type");
-        object? name = Get("name");
+            return Value(Each(itemContext => Line($"no pets")));
+        }
 
-        return Line($"a {type} named {name}");
-    }
+        TemplateValue lastName = Read("lastName");
+        TemplateValue choice = chooseChoice();
+        TemplateValue replace = Field("firstName")
+            .ToLower()
+            .Replace(() => ["john", Each(ForItem(item => item.renderToUpper()))]);
+        TemplateValue petsResult = choosePetsResult();
 
-    // Template:
-    // [{pets:#xformatPet}]
-    // Source: "templates/simplelist.template":2:4
-    private TemplateContent renderContent()
-    {
-        object? pets = InContext(Get("pets"), dataContext => dataContext.Each(itemContext => itemContext.Named("xformatPet")));
-
-        return Line($"{pets}");
+        return Line($"Hello {lastName}, {choice}{replace} with {petsResult}!!");
     }
 
     // Template:
@@ -62,63 +72,43 @@ internal sealed class Simplelist(EvaluationContext context) : TemplateUnit(conte
     // Source: "templates/simplelist.template":1:94
     private TemplateContent renderToUpper()
     {
-        object? toUpper = EvaluationContext.Invoke(MethodInput("firstName"), methodValue => Builtins.ToUpper(methodValue));
+        TemplateValue toUpper = Field("firstName")
+            .ToUpper();
 
         return Line($"{toUpper}");
     }
 
-    internal EvaluationContext includeFormatPet()
+    // Template:
+    // [{pets:#xformatPet}]
+    // Source: "templates/simplelist.template":2:4
+    private TemplateContent renderContent()
     {
-        EvaluationContext included = Context;
-        _ = new Simplelist(included).formatPet();
-        return included;
-    }
+        TemplateValue pets = Read("pets")
+            .Render(dataContext => dataContext.Each(item => item.Named("xformatPet")));
 
-    internal EvaluationContext includeAnded()
-    {
-        EvaluationContext included = Context;
-        _ = new Simplelist(included).anded();
-        return included;
+        return Line($"{pets}");
     }
 
     // Template:
-    //
-    //
-    // Subtemplates:
-    //
-    // {#formatPet:[a {type} named {name}]}
-    // {#anded:[{$0.Join(', ',' and ')}]}
-    // Source: "templates/simplelist.template":4:4
-    private void defineSubtemplates(SubtemplateDefinitions definitions)
+    // [a {type} named {name}]
+    // Source: "templates/simplelist.template":8:13
+    private TemplateContent formatPet()
     {
-        definitions.Add("formatPet", definitionContext => definitionContext.Each(itemContext => new Simplelist(itemContext).formatPet()), includedContext => new Simplelist(includedContext).includeFormatPet());
-        definitions.Add("anded", definitionContext => definitionContext.Each(itemContext => new Simplelist(itemContext).anded()), includedContext => new Simplelist(includedContext).includeAnded());
+        TemplateValue type = Read("type");
+        TemplateValue name = Read("name");
+
+        return Line($"a {type} named {name}");
     }
 
     // Template:
-    // {"Hello"} {lastName}, {firstName.Matches(/jo/i)->[Mr. ]}{firstName.ToLower().Replace('john', [{firstName.ToUpper()}])} with {pets=>
-    //    [{pets:#xformatPet}].@Include('#doInclude')
-    //    ,[no pets]
-    // }!!
-    //
-    // Subtemplates:
-    //
-    // {#formatPet:[a {type} named {name}]}
-    // {#anded:[{$0.Join(', ',' and ')}]}
-    // Source: "templates/simplelist.template":1:1
-    private TemplateContent renderSimplelist()
+    // [{$0.Join(', ',' and ')}]
+    // Source: "templates/simplelist.template":9:9
+    private TemplateContent anded()
     {
-        object? lastName = Get("lastName");
-        object? choice = (Context.TestCondition(EvaluationContext.Invoke(MethodInput("firstName"), methodValue => Builtins.Matches(Context, methodValue, new TemplateRegex("/jo/i", "templates/simplelist.template:1:42")))) ? Each(itemContext => Line($"Mr. ")) : "");
-        object? replace = EvaluationContext.Invoke(EvaluationContext.Invoke(MethodInput("firstName"), methodValue_2 => Builtins.ToLower(methodValue_2)), methodValue_3 => Builtins.Replace(methodValue_3, "john", Each(itemContext => new Simplelist(itemContext).renderToUpper())));
-        object? petsResult = (IsTruthy("pets") ? Annotate(
-            new Func<EvaluationContext, EvaluationContext>[]
-            {
-                annotatedContext => annotatedContext.Include(EvaluationContext.Compose("#doInclude"))
-            },
-            annotatedContext => annotatedContext.Receiver(itemContext => new Simplelist(itemContext).renderContent())) : Each(itemContext => Line($"no pets")));
+        TemplateValue join = Field("$0")
+            .Join(() => [", ", " and "]);
 
-        return Line($"Hello {lastName}, {choice}{replace} with {petsResult}!!");
+        return Line($"{join}");
     }
 
 }

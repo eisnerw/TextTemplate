@@ -7,227 +7,12 @@ using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
+internal sealed partial class Elastic(EvaluationContext context) : TemplateUnit<Elastic>(context, child => new Elastic(child))
 {
-    // Template:
-    // {[{'fname,lname,isAlive'.#elasticSpec('lname:c* AND fname:c*',1000)}]:[/*{*.ToJson()}*/]}`
-    // {[{'fname,lname,isAlive'
-    //   .#elasticQuery(
-    //      'lname:c* AND fname:c*',1000
-    // ).OrderBy(lname):
-    //    [{fname} {lname} {!isAlive->[(dead)]}].@Falsy(/0/)}].@Debug(0)}
-    // Subtemplates:
-    // {#elasticQuery:[{#elasticSpec:[{hits.hits._source}]}]}
-    // {#elasticSpec:[{#elasticUrl}{#elasticQueryString}&q={$1}]}
-    // {#elasticUrl:[{'https://7303xa0iq9'}{#colon}{'4cdkz0o14'}{#at}{'texttemplate-testing-7087740692.us-east-1.bonsaisearch.net:443'}]}
-    // {#elasticQueryString:[{'/_search?from=0&size='}{$2=>[{$2}],[1000]}{'&_source='}{$0}{'&filter_path=hits.hits._source'}]}
-    // {#colon:[:]}
-    // {#at:[@]}
-    // Source: "templates/elastic.template":1:1
+    // Entry point; scoped definitions are registered before rendering.
     internal TemplateContent Evaluate()
     {
-        return WithDefinitions(defineSubtemplates,
-            definitionContext => new Elastic(definitionContext).renderElastic());
-    }
-
-    // Template:
-    // [@]
-    // Source: "templates/elastic.template":13:6
-    private TemplateContent at()
-    {
-        return Line($"@");
-    }
-
-    // Template:
-    // [:]
-    // Source: "templates/elastic.template":12:9
-    private TemplateContent colon()
-    {
-        return Line($":");
-    }
-
-    // Template:
-    // [{'/_search?from=0&size='}{$2=>[{$2}],[1000]}{'&_source='}{$0}{'&filter_path=hits.hits._source'}]
-    // Source: "templates/elastic.template":11:22
-    private TemplateContent elasticQueryString()
-    {
-        object? item2Result = (IsTruthy("$2") ? Each(itemContext => new Elastic(itemContext).renderItem2()) : Each(itemContext => Line($"1000")));
-        object? item0 = Get("$0");
-
-        return Line($"/_search?from=0&size={item2Result}&_source={item0}&filter_path=hits.hits._source");
-    }
-
-    // Template:
-    // [{$2}]
-    // Source: "templates/elastic.template":11:53
-    private TemplateContent renderItem2()
-    {
-        object? item2 = Get("$2");
-
-        return Line($"{item2}");
-    }
-
-    // Template:
-    // [{'https://7303xa0iq9'}{#colon}{'4cdkz0o14'}{#at}{'texttemplate-testing-7087740692.us-east-1.bonsaisearch.net:443'}]
-    // Source: "templates/elastic.template":10:14
-    private TemplateContent elasticUrl()
-    {
-        object? colon = Each(itemContext => itemContext.Named("colon"));
-        object? at = Each(itemContext => itemContext.Named("at"));
-
-        return Line($"https://7303xa0iq9{colon}4cdkz0o14{at}texttemplate-testing-7087740692.us-east-1.bonsaisearch.net:443");
-    }
-
-    // Template:
-    // [{#elasticUrl}{#elasticQueryString}&q={$1}]
-    // Source: "templates/elastic.template":9:15
-    private TemplateContent elasticSpec()
-    {
-        object? elasticUrl = Each(itemContext => itemContext.Named("elasticUrl"));
-        object? elasticQueryString = Each(itemContext => itemContext.Named("elasticQueryString"));
-        object? item1 = Get("$1");
-
-        return Line($"{elasticUrl}{elasticQueryString}&q={item1}");
-    }
-
-    // Template:
-    // [{#elasticSpec:[{hits.hits._source}]}]
-    // Source: "templates/elastic.template":8:16
-    private TemplateContent elasticQuery()
-    {
-        object? elasticSpec = InContext(Each(itemContext => itemContext.Named("elasticSpec")), dataContext => dataContext.Each(itemContext => new Elastic(itemContext).render_source()));
-
-        return Line($"{elasticSpec}");
-    }
-
-    // Template:
-    // [{hits.hits._source}]
-    // Source: "templates/elastic.template":8:31
-    private TemplateContent render_source()
-    {
-        object? _source = Get("hits.hits._source");
-
-        return Line($"{_source}");
-    }
-
-    // Template:
-    // [{'fname,lname,isAlive'
-    //   .#elasticQuery(
-    //      'lname:c* AND fname:c*',1000
-    // ).OrderBy(lname):
-    //    [{fname} {lname} {!isAlive->[(dead)]}].@Falsy(/0/)}]
-    // Source: "templates/elastic.template":2:2
-    private TemplateContent renderContent()
-    {
-        object? orderBy = InContext(Context.OrderBy(EvaluationContext.Invoke(MethodInput(itemContext => "fname,lname,isAlive"), methodValue => ApplySubtemplate("elasticQuery", methodValue, "lname:c* AND fname:c*", EvaluationContext.ParseInteger("1000"))), itemContext => itemContext.Lookup("lname"), "lname", new object?[] {  }, true), dataContext => new Elastic(dataContext).renderFalsy(), null, dataContext => new Elastic(dataContext).orderLoadedData());
-
-        return Line($"{orderBy}");
-    }
-
-    // Template:
-    // [{fname} {lname} {!isAlive->[(dead)]}].@Falsy(/0/)
-    // Source: "templates/elastic.template":6:4
-    private object? renderFalsy()
-    {
-        return Annotate(
-            new Func<EvaluationContext, EvaluationContext>[]
-            {
-                annotatedContext => annotatedContext.WithFalsy(new TemplateRegex("/0/", "templates/elastic.template:6:50"))
-            },
-            annotatedContext => annotatedContext.Receiver(itemContext => new Elastic(itemContext).renderFname()));
-    }
-
-    // Template:
-    // [{fname} {lname} {!isAlive->[(dead)]}]
-    // Source: "templates/elastic.template":6:4
-    private TemplateContent renderFname()
-    {
-        object? fname = Get("fname");
-        object? lname = Get("lname");
-        object? choice = (!(IsTruthy("isAlive")) ? Each(itemContext => Line($"(dead)")) : "");
-
-        return Line($"{fname} {lname} {choice}");
-    }
-
-    // Template:
-    // [{'fname,lname,isAlive'.#elasticSpec('lname:c* AND fname:c*',1000)}]
-    // Source: "templates/elastic.template":1:2
-    private TemplateContent renderElasticSpec()
-    {
-        object? elasticSpec = EvaluationContext.Invoke(MethodInput(itemContext => "fname,lname,isAlive"), methodValue => ApplySubtemplate("elasticSpec", methodValue, "lname:c* AND fname:c*", EvaluationContext.ParseInteger("1000")));
-
-        return Line($"{elasticSpec}");
-    }
-
-    // Template:
-    // 'fname,lname,isAlive'
-    //   .#elasticQuery(
-    //      'lname:c* AND fname:c*',1000
-    // ).OrderBy(lname)
-    // Source: "templates/elastic.template":2:4
-    private object? orderLoadedData()
-    {
-        return Context.OrderBy(EvaluationContext.Invoke(Context.Current, methodValue => ApplySubtemplate("elasticQuery", methodValue, "lname:c* AND fname:c*", EvaluationContext.ParseInteger("1000"))), itemContext => itemContext.Lookup("lname"), "lname", new object?[] {  }, false);
-    }
-
-    internal EvaluationContext includeElasticQuery()
-    {
-        EvaluationContext included = Context;
-        _ = new Elastic(included).elasticQuery();
-        return included;
-    }
-
-    internal EvaluationContext includeElasticSpec()
-    {
-        EvaluationContext included = Context;
-        _ = new Elastic(included).elasticSpec();
-        return included;
-    }
-
-    internal EvaluationContext includeElasticUrl()
-    {
-        EvaluationContext included = Context;
-        _ = new Elastic(included).elasticUrl();
-        return included;
-    }
-
-    internal EvaluationContext includeElasticQueryString()
-    {
-        EvaluationContext included = Context;
-        _ = new Elastic(included).elasticQueryString();
-        return included;
-    }
-
-    internal EvaluationContext includeColon()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    internal EvaluationContext includeAt()
-    {
-        EvaluationContext included = Context;
-        return included;
-    }
-
-    // Template:
-    //
-    // Subtemplates:
-    // {#elasticQuery:[{#elasticSpec:[{hits.hits._source}]}]}
-    // {#elasticSpec:[{#elasticUrl}{#elasticQueryString}&q={$1}]}
-    // {#elasticUrl:[{'https://7303xa0iq9'}{#colon}{'4cdkz0o14'}{#at}{'texttemplate-testing-7087740692.us-east-1.bonsaisearch.net:443'}]}
-    // {#elasticQueryString:[{'/_search?from=0&size='}{$2=>[{$2}],[1000]}{'&_source='}{$0}{'&filter_path=hits.hits._source'}]}
-    // {#colon:[:]}
-    // {#at:[@]}
-    // Source: "templates/elastic.template":6:67
-    private void defineSubtemplates(SubtemplateDefinitions definitions)
-    {
-        definitions.Add("elasticQuery", definitionContext => definitionContext.Each(itemContext => new Elastic(itemContext).elasticQuery()), includedContext => new Elastic(includedContext).includeElasticQuery());
-        definitions.Add("elasticSpec", definitionContext => definitionContext.Each(itemContext => new Elastic(itemContext).elasticSpec()), includedContext => new Elastic(includedContext).includeElasticSpec());
-        definitions.Add("elasticUrl", definitionContext => definitionContext.Each(itemContext => new Elastic(itemContext).elasticUrl()), includedContext => new Elastic(includedContext).includeElasticUrl());
-        definitions.Add("elasticQueryString", definitionContext => definitionContext.Each(itemContext => new Elastic(itemContext).elasticQueryString()), includedContext => new Elastic(includedContext).includeElasticQueryString());
-        definitions.Add("colon", definitionContext => definitionContext.Each(itemContext => new Elastic(itemContext).colon()), includedContext => new Elastic(includedContext).includeColon());
-        definitions.Add("at", definitionContext => definitionContext.Each(itemContext => new Elastic(itemContext).at()), includedContext => new Elastic(includedContext).includeAt());
+        return WithScope(defineSubtemplates, item => item.renderElastic());
     }
 
     // Template:
@@ -237,13 +22,6 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
     //      'lname:c* AND fname:c*',1000
     // ).OrderBy(lname):
     //    [{fname} {lname} {!isAlive->[(dead)]}].@Falsy(/0/)}].@Debug(0)}
-    // Subtemplates:
-    // {#elasticQuery:[{#elasticSpec:[{hits.hits._source}]}]}
-    // {#elasticSpec:[{#elasticUrl}{#elasticQueryString}&q={$1}]}
-    // {#elasticUrl:[{'https://7303xa0iq9'}{#colon}{'4cdkz0o14'}{#at}{'texttemplate-testing-7087740692.us-east-1.bonsaisearch.net:443'}]}
-    // {#elasticQueryString:[{'/_search?from=0&size='}{$2=>[{$2}],[1000]}{'&_source='}{$0}{'&filter_path=hits.hits._source'}]}
-    // {#colon:[:]}
-    // {#at:[@]}
     // Source: "templates/elastic.template":1:1
     private TemplateContent renderElastic()
     {
@@ -256,14 +34,196 @@ internal sealed class Elastic(EvaluationContext context) : TemplateUnit(context)
         // Source: "templates/elastic.template":2:2
         object? applyDebug() => Unsupported(
             "Call @Debug",
-            "templates/elastic.template:2:2",
-            () => Each(itemContext => new Elastic(itemContext).renderContent()),
+            SourceLocation(),
+            () => Each(ForItem(item => item.renderContent_2())),
             () => new object?[] { EvaluationContext.ParseInteger("0") });
 
-        object? elasticSpec = InContext(Each(itemContext => new Elastic(itemContext).renderElasticSpec()), dataContext => dataContext.Each(itemContext => Line($"")));
-        object? debug = applyDebug();
+        TemplateValue elasticSpec = Value(Each(ForItem(item => item.renderElasticSpec())))
+            .Render(InScope(item => item.renderContent()));
+        TemplateValue debug = Value(applyDebug());
 
         return Line($"{elasticSpec} {debug}");
+    }
+
+    // Template:
+    // [{'fname,lname,isAlive'.#elasticSpec('lname:c* AND fname:c*',1000)}]
+    // Source: "templates/elastic.template":1:2
+    private TemplateContent renderElasticSpec()
+    {
+        TemplateValue elasticSpec = Collect("fname,lname,isAlive")
+            .Call("elasticSpec", () => ["lname:c* AND fname:c*", EvaluationContext.ParseInteger("1000")]);
+
+        return Line($"{elasticSpec}");
+    }
+
+    // Template:
+    // [/*{*.ToJson()}*/]
+    // Source: "templates/elastic.template":1:71
+    private TemplateContent renderContent()
+    {
+        return Line($"");
+    }
+
+    // Template:
+    // [{'fname,lname,isAlive'
+    //   .#elasticQuery(
+    //      'lname:c* AND fname:c*',1000
+    // ).OrderBy(lname):
+    //    [{fname} {lname} {!isAlive->[(dead)]}].@Falsy(/0/)}]
+    // Source: "templates/elastic.template":2:2
+    private TemplateContent renderContent_2()
+    {
+        TemplateValue orderBy = Collect("fname,lname,isAlive")
+            .Call("elasticQuery", () => ["lname:c* AND fname:c*", EvaluationContext.ParseInteger("1000")])
+            .OrderBy(itemContext => itemContext.Lookup("lname"), "key", [], contextProbe: true)
+            .Render(ForItem(item => item.renderFalsy()), null, replay: ForItem(item => item.orderLoadedData()));
+
+        return Line($"{orderBy}");
+    }
+
+    // Template:
+    // 'fname,lname,isAlive'
+    //   .#elasticQuery(
+    //      'lname:c* AND fname:c*',1000
+    // ).OrderBy(lname)
+    // Source: "templates/elastic.template":2:4
+    private TemplateValue orderLoadedData()
+    {
+        return Value(Context.Current)
+            .Call("elasticQuery", () => ["lname:c* AND fname:c*", EvaluationContext.ParseInteger("1000")])
+            .OrderBy(itemContext => itemContext.Lookup("lname"), "key", [], contextProbe: false);
+    }
+
+    // Template:
+    // [{fname} {lname} {!isAlive->[(dead)]}]
+    // Source: "templates/elastic.template":6:4
+    private TemplateContent renderFname()
+    {
+        // Template:
+        // !isAlive->[(dead)]
+        // Source: "templates/elastic.template":6:22
+        TemplateValue chooseChoice()
+        {
+            if (!(IsTruthy("isAlive")))
+            {
+                return Value(Each(itemContext => Line($"(dead)")));
+            }
+
+            return Value("");
+        }
+
+        TemplateValue fname = Read("fname");
+        TemplateValue lname = Read("lname");
+        TemplateValue choice = chooseChoice();
+
+        return Line($"{fname} {lname} {choice}");
+    }
+
+    // Template:
+    // [{fname} {lname} {!isAlive->[(dead)]}].@Falsy(/0/)
+    // Source: "templates/elastic.template":6:4
+    private TemplateValue renderFalsy()
+    {
+        return Value(Annotate(
+            new Func<EvaluationContext, EvaluationContext>[]
+            {
+                annotatedContext => annotatedContext.WithFalsy(new TemplateRegex("/0/", SourceLocation()))
+            },
+            annotatedContext => annotatedContext.Receiver(ForItem(item => item.renderFname()))));
+    }
+
+    // Template:
+    // [{#elasticSpec:[{hits.hits._source}]}]
+    // Source: "templates/elastic.template":8:16
+    private TemplateContent elasticQuery()
+    {
+        TemplateValue elasticSpec = Value(EvaluateSubtemplate("elasticSpec"))
+            .Render(InScope(item => item.render_source()));
+
+        return Line($"{elasticSpec}");
+    }
+
+    // Template:
+    // [{hits.hits._source}]
+    // Source: "templates/elastic.template":8:31
+    private TemplateContent render_source()
+    {
+        TemplateValue _source = Read("hits.hits._source");
+
+        return Line($"{_source}");
+    }
+
+    // Template:
+    // [{#elasticUrl}{#elasticQueryString}&q={$1}]
+    // Source: "templates/elastic.template":9:15
+    private TemplateContent elasticSpec()
+    {
+        TemplateValue elasticUrl = Value(EvaluateSubtemplate("elasticUrl"));
+        TemplateValue elasticQueryString = Value(EvaluateSubtemplate("elasticQueryString"));
+        TemplateValue item1 = Read("$1");
+
+        return Line($"{elasticUrl}{elasticQueryString}&q={item1}");
+    }
+
+    // Template:
+    // [{'https://7303xa0iq9'}{#colon}{'4cdkz0o14'}{#at}{'texttemplate-testing-7087740692.us-east-1.bonsaisearch.net:443'}]
+    // Source: "templates/elastic.template":10:14
+    private TemplateContent elasticUrl()
+    {
+        TemplateValue colon = Value(EvaluateSubtemplate("colon"));
+        TemplateValue at = Value(EvaluateSubtemplate("at"));
+
+        return Line($"https://7303xa0iq9{colon}4cdkz0o14{at}texttemplate-testing-7087740692.us-east-1.bonsaisearch.net:443");
+    }
+
+    // Template:
+    // [{'/_search?from=0&size='}{$2=>[{$2}],[1000]}{'&_source='}{$0}{'&filter_path=hits.hits._source'}]
+    // Source: "templates/elastic.template":11:22
+    private TemplateContent elasticQueryString()
+    {
+        // Template:
+        // $2=>[{$2}],[1000]
+        // Source: "templates/elastic.template":11:49
+        TemplateValue chooseItem2Result()
+        {
+            if (IsTruthy("$2"))
+            {
+                return Value(Each(ForItem(item => item.renderItem2())));
+            }
+
+            return Value(Each(itemContext => Line($"1000")));
+        }
+
+        TemplateValue item2Result = chooseItem2Result();
+        TemplateValue item0 = Read("$0");
+
+        return Line($"/_search?from=0&size={item2Result}&_source={item0}&filter_path=hits.hits._source");
+    }
+
+    // Template:
+    // [{$2}]
+    // Source: "templates/elastic.template":11:53
+    private TemplateContent renderItem2()
+    {
+        TemplateValue item2 = Read("$2");
+
+        return Line($"{item2}");
+    }
+
+    // Template:
+    // [:]
+    // Source: "templates/elastic.template":12:9
+    private TemplateContent colon()
+    {
+        return Line($":");
+    }
+
+    // Template:
+    // [@]
+    // Source: "templates/elastic.template":13:6
+    private TemplateContent at()
+    {
+        return Line($"@");
     }
 
 }

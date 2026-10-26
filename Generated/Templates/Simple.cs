@@ -7,8 +7,14 @@ using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
+internal sealed partial class Simple(EvaluationContext context) : TemplateUnit<Simple>(context, child => new Simple(child))
 {
+    // Entry point; scoped definitions are registered before rendering.
+    internal TemplateContent Evaluate()
+    {
+        return WithScope(defineSubtemplates, item => item.renderSimple());
+    }
+
     // Template:
     // // data context:
     // {'{"firstName": "Robert", "lastName": "Smith", "petsx":[
@@ -21,37 +27,13 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
     //    [{pets:#formatPet.#anded()}]
     //    ,[no pets]
     // }!!]}
-    //
-    // Subtemplates:
-    //
-    // {#formatPet:[a {type} named {name}]}
-    // {#anded:[{$0.Join(', ',' and ')}]}
     // Source: "templates/simple.template":1:1
-    internal TemplateContent Evaluate()
+    private TemplateContent renderSimple()
     {
-        return WithDefinitions(defineSubtemplates,
-            definitionContext => new Simple(definitionContext).renderSimple());
-    }
+        TemplateValue content = Value("{\"firstName\": \"Robert\", \"lastName\": \"Smith\", \"petsx\":[\n{\"type\":\"dog\", \"name\": \"Toto\"}\n,{\"type\":\"cat\", \"name\": \"Dolly\"}\n,{\"type\":\"zebra\", \"name\": \"Stripes\"}\n]}")
+            .Render(InScope(item => item.renderContent()));
 
-    // Template:
-    // [{$0.Join(', ',' and ')}]
-    // Source: "templates/simple.template":16:9
-    private TemplateContent anded()
-    {
-        object? join = EvaluationContext.Invoke(MethodInput("$0"), methodValue => Builtins.Join(methodValue, ", ", " and "));
-
-        return Line($"{join}");
-    }
-
-    // Template:
-    // [a {type} named {name}]
-    // Source: "templates/simple.template":15:13
-    private TemplateContent formatPet()
-    {
-        object? type = Get("type");
-        object? name = Get("name");
-
-        return Line($"a {type} named {name}");
+        return Line($"{content}");
     }
 
     // Template:
@@ -62,9 +44,24 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/simple.template":8:1
     private TemplateContent renderContent()
     {
-        object? lastName = Get("lastName");
-        object? firstName = Get("firstName");
-        object? petsResult = (IsTruthy("pets") ? Each(itemContext => new Simple(itemContext).renderContent_2()) : Each(itemContext => Line($"no pets")));
+        // Template:
+        // pets=>
+        //    [{pets:#formatPet.#anded()}]
+        //    ,[no pets]
+        // Source: "templates/simple.template":8:42
+        TemplateValue choosePetsResult()
+        {
+            if (IsTruthy("pets"))
+            {
+                return Value(Each(ForItem(item => item.renderContent_2())));
+            }
+
+            return Value(Each(itemContext => Line($"no pets")));
+        }
+
+        TemplateValue lastName = Read("lastName");
+        TemplateValue firstName = Read("firstName");
+        TemplateValue petsResult = choosePetsResult();
 
         return Line($"Hello {lastName}, {firstName} with {petsResult}!!");
     }
@@ -74,7 +71,8 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
     // Source: "templates/simple.template":9:4
     private TemplateContent renderContent_2()
     {
-        object? pets = InContext(Get("pets"), dataContext => new Simple(dataContext).renderAnded());
+        TemplateValue pets = Read("pets")
+            .Render(ForItem(item => item.renderAnded()));
 
         return Line($"{pets}");
     }
@@ -82,62 +80,32 @@ internal sealed class Simple(EvaluationContext context) : TemplateUnit(context)
     // Template:
     // #formatPet.#anded()
     // Source: "templates/simple.template":9:11
-    private object? renderAnded()
+    private TemplateValue renderAnded()
     {
-        return EvaluationContext.Invoke(SubtemplateInput("formatPet"), methodValue => ApplySubtemplate("anded", methodValue));
-    }
-
-    internal EvaluationContext includeFormatPet()
-    {
-        EvaluationContext included = Context;
-        _ = new Simple(included).formatPet();
-        return included;
-    }
-
-    internal EvaluationContext includeAnded()
-    {
-        EvaluationContext included = Context;
-        _ = new Simple(included).anded();
-        return included;
+        return Subtemplate("formatPet")
+            .Call("anded");
     }
 
     // Template:
-    //
-    //
-    // Subtemplates:
-    //
-    // {#formatPet:[a {type} named {name}]}
-    // {#anded:[{$0.Join(', ',' and ')}]}
-    // Source: "templates/simple.template":11:6
-    private void defineSubtemplates(SubtemplateDefinitions definitions)
+    // [a {type} named {name}]
+    // Source: "templates/simple.template":15:13
+    private TemplateContent formatPet()
     {
-        definitions.Add("formatPet", definitionContext => definitionContext.Each(itemContext => new Simple(itemContext).formatPet()), includedContext => new Simple(includedContext).includeFormatPet());
-        definitions.Add("anded", definitionContext => definitionContext.Each(itemContext => new Simple(itemContext).anded()), includedContext => new Simple(includedContext).includeAnded());
+        TemplateValue type = Read("type");
+        TemplateValue name = Read("name");
+
+        return Line($"a {type} named {name}");
     }
 
     // Template:
-    // // data context:
-    // {'{"firstName": "Robert", "lastName": "Smith", "petsx":[
-    // {"type":"dog", "name": "Toto"}
-    // ,{"type":"cat", "name": "Dolly"}
-    // ,{"type":"zebra", "name": "Stripes"}
-    // ]}':
-    // // Template:
-    // [{"Hello"} {lastName}, {firstName} with {pets=>
-    //    [{pets:#formatPet.#anded()}]
-    //    ,[no pets]
-    // }!!]}
-    //
-    // Subtemplates:
-    //
-    // {#formatPet:[a {type} named {name}]}
-    // {#anded:[{$0.Join(', ',' and ')}]}
-    // Source: "templates/simple.template":1:1
-    private TemplateContent renderSimple()
+    // [{$0.Join(', ',' and ')}]
+    // Source: "templates/simple.template":16:9
+    private TemplateContent anded()
     {
-        object? content = InContext("{\"firstName\": \"Robert\", \"lastName\": \"Smith\", \"petsx\":[\n{\"type\":\"dog\", \"name\": \"Toto\"}\n,{\"type\":\"cat\", \"name\": \"Dolly\"}\n,{\"type\":\"zebra\", \"name\": \"Stripes\"}\n]}", dataContext => dataContext.Each(itemContext => new Simple(itemContext).renderContent()));
+        TemplateValue join = Field("$0")
+            .Join(() => [", ", " and "]);
 
-        return Line($"{content}");
+        return Line($"{join}");
     }
 
 }

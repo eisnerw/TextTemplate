@@ -9,9 +9,11 @@ using System.Text.RegularExpressions;
 
 // Structured output, retained until the final rendering pass.
 // Argument arrays and input data are distinct from template content.
+[System.Diagnostics.DebuggerDisplay("{DebugView,nq}")]
 public sealed class TemplateContent
 {
     internal object?[] Fragments { get; }
+    internal string DebugView => TemplateDebug.View(this);
     internal TemplateContent(object?[] fragments) => Fragments = fragments;
     public string Render() => new EvaluationContext(null, new Dictionary<string, Func<EvaluationContext, object?>>()).Render(_ => this) ?? "";
     public override string ToString() => Render();

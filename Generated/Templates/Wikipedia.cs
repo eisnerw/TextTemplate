@@ -7,30 +7,44 @@ using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(context)
+internal sealed partial class Wikipedia(EvaluationContext context) : TemplateUnit<Wikipedia>(context, child => new Wikipedia(child))
 {
-    // Template:
-    //  {'Paul Simon'.#getWiki()}
-    //
-    // Subtemplates:
-    // {#getWiki:[{#Wiki:[{key.extract}]}]}
-    // {#Wiki:[{#wikiapi:[{query.pages:[{*.ToJson().Replace(/"\d+"/,'"key"')}]}]}]}
-    // {#wikiapi:[{'https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exintro=&titles='}{$0}]}
-    // Source: "templates/wikipedia.template":1:1
+    // Entry point; scoped definitions are registered before rendering.
     internal TemplateContent Evaluate()
     {
-        return WithDefinitions(defineSubtemplates,
-            definitionContext => new Wikipedia(definitionContext).renderWikipedia());
+        return WithScope(defineSubtemplates, item => item.renderWikipedia());
     }
 
     // Template:
-    // [{'https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exintro=&titles='}{$0}]
-    // Source: "templates/wikipedia.template":6:11
-    private TemplateContent wikiapi()
+    //  {'Paul Simon'.#getWiki()}
+    // Source: "templates/wikipedia.template":1:1
+    private TemplateContent renderWikipedia()
     {
-        object? item0 = Get("$0");
+        TemplateValue getWiki = Collect("Paul Simon")
+            .Call("getWiki");
 
-        return Line($"https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exintro=&titles={item0}");
+        return Line($" {getWiki}");
+    }
+
+    // Template:
+    // [{#Wiki:[{key.extract}]}]
+    // Source: "templates/wikipedia.template":4:11
+    private TemplateContent getWiki()
+    {
+        TemplateValue wiki = Value(EvaluateSubtemplate("Wiki"))
+            .Render(InScope(item => item.renderExtract()));
+
+        return Line($"{wiki}");
+    }
+
+    // Template:
+    // [{key.extract}]
+    // Source: "templates/wikipedia.template":4:19
+    private TemplateContent renderExtract()
+    {
+        TemplateValue extract = Read("key.extract");
+
+        return Line($"{extract}");
     }
 
     // Template:
@@ -38,7 +52,8 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/wikipedia.template":5:8
     private TemplateContent Wiki()
     {
-        object? wikiapi = InContext(Each(itemContext => itemContext.Named("wikiapi")), dataContext => dataContext.Each(itemContext => new Wikipedia(itemContext).renderContent()));
+        TemplateValue wikiapi = Value(EvaluateSubtemplate("wikiapi"))
+            .Render(InScope(item => item.renderContent()));
 
         return Line($"{wikiapi}");
     }
@@ -48,7 +63,8 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
     // Source: "templates/wikipedia.template":5:19
     private TemplateContent renderContent()
     {
-        object? pages = InContext(Get("query.pages"), dataContext => dataContext.Each(itemContext => new Wikipedia(itemContext).renderReplace()));
+        TemplateValue pages = Read("query.pages")
+            .Render(InScope(item => item.renderReplace()));
 
         return Line($"{pages}");
     }
@@ -63,83 +79,23 @@ internal sealed class Wikipedia(EvaluationContext context) : TemplateUnit(contex
         // Source: "templates/wikipedia.template":5:35
         object? applyToJson() => Unsupported(
             "Call ToJson",
-            "templates/wikipedia.template:5:35",
+            SourceLocation(),
             () => Get("*"));
 
-        object? replace = EvaluationContext.Invoke(applyToJson(), methodValue => Builtins.Replace(methodValue, new TemplateRegex("/\"\\d+\"/", "templates/wikipedia.template:5:54"), "\"key\""));
+        TemplateValue replace = Value(applyToJson())
+            .Replace(() => [new TemplateRegex("/\"\\d+\"/", SourceLocation()), "\"key\""]);
 
         return Line($"{replace}");
     }
 
     // Template:
-    // [{#Wiki:[{key.extract}]}]
-    // Source: "templates/wikipedia.template":4:11
-    private TemplateContent getWiki()
+    // [{'https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exintro=&titles='}{$0}]
+    // Source: "templates/wikipedia.template":6:11
+    private TemplateContent wikiapi()
     {
-        object? wiki = InContext(Each(itemContext => itemContext.Named("Wiki")), dataContext => dataContext.Each(itemContext => new Wikipedia(itemContext).renderExtract()));
+        TemplateValue item0 = Read("$0");
 
-        return Line($"{wiki}");
-    }
-
-    // Template:
-    // [{key.extract}]
-    // Source: "templates/wikipedia.template":4:19
-    private TemplateContent renderExtract()
-    {
-        object? extract = Get("key.extract");
-
-        return Line($"{extract}");
-    }
-
-    internal EvaluationContext includeGetWiki()
-    {
-        EvaluationContext included = Context;
-        _ = new Wikipedia(included).getWiki();
-        return included;
-    }
-
-    internal EvaluationContext includeWiki()
-    {
-        EvaluationContext included = Context;
-        _ = new Wikipedia(included).Wiki();
-        return included;
-    }
-
-    internal EvaluationContext includeWikiapi()
-    {
-        EvaluationContext included = Context;
-        _ = new Wikipedia(included).wikiapi();
-        return included;
-    }
-
-    // Template:
-    //
-    //
-    // Subtemplates:
-    // {#getWiki:[{#Wiki:[{key.extract}]}]}
-    // {#Wiki:[{#wikiapi:[{query.pages:[{*.ToJson().Replace(/"\d+"/,'"key"')}]}]}]}
-    // {#wikiapi:[{'https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exintro=&titles='}{$0}]}
-    // Source: "templates/wikipedia.template":1:27
-    private void defineSubtemplates(SubtemplateDefinitions definitions)
-    {
-        definitions.Add("getWiki", definitionContext => definitionContext.Each(itemContext => new Wikipedia(itemContext).getWiki()), includedContext => new Wikipedia(includedContext).includeGetWiki());
-        definitions.Add("Wiki", definitionContext => definitionContext.Each(itemContext => new Wikipedia(itemContext).Wiki()), includedContext => new Wikipedia(includedContext).includeWiki());
-        definitions.Add("wikiapi", definitionContext => definitionContext.Each(itemContext => new Wikipedia(itemContext).wikiapi()), includedContext => new Wikipedia(includedContext).includeWikiapi());
-    }
-
-    // Template:
-    //  {'Paul Simon'.#getWiki()}
-    //
-    // Subtemplates:
-    // {#getWiki:[{#Wiki:[{key.extract}]}]}
-    // {#Wiki:[{#wikiapi:[{query.pages:[{*.ToJson().Replace(/"\d+"/,'"key"')}]}]}]}
-    // {#wikiapi:[{'https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exintro=&titles='}{$0}]}
-    // Source: "templates/wikipedia.template":1:1
-    private TemplateContent renderWikipedia()
-    {
-        object? getWiki = EvaluationContext.Invoke(MethodInput(itemContext => "Paul Simon"), methodValue => ApplySubtemplate("getWiki", methodValue));
-
-        return Line($" {getWiki}");
+        return Line($"https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exintro=&titles={item0}");
     }
 
 }
