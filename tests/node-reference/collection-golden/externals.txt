@@ -1,0 +1,9 @@
+Normal lookup: Alice
+External method: <ALICE>
+Structured receiver: <HELLO ALICE>
+Evaluated arguments: <ALICE>
+Value function: >>Alice
+Non-string lookup: 42
+Combined: <>>ALICE>
+Inherited scope: outer=>>Alice; inner=>>Alice; cleared=Alice; restored=>>Alice
+After scope: Alice

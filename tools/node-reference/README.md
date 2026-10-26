@@ -3,6 +3,9 @@
 This is Milestone 1's executable A-side oracle. It calls the preserved TypeScript
 interpreter directly; it contains no C# implementation or replacement evaluation logic.
 
+See [the Externals example](EXTERNALS.md) for custom methods, value functions,
+annotation scope, observed JavaScript output, and the pending C# compatibility gap.
+
 ## Build and run
 
 Requires Node.js 22 or later, npm, and a Java runtime capable of running ANTLR 4.9.3.

@@ -1,0 +1,9 @@
+Normal lookup: {name}
+External method: {name.test('<', '>')}
+Structured receiver: {[Hello {name}].test('<', '>')}
+Evaluated arguments: {name.test(prefix, suffix)}
+Value function: {[{name}].@ValueFunction('test')}
+Non-string lookup: {[{age}].@ValueFunction('test')}
+Combined: {[{name.test('<', '>')}].@ValueFunction('test')}
+Inherited scope: {[outer={name}; inner={[{name}]}; cleared={[{name}].@ValueFunction()}; restored={name}].@ValueFunction('test')}
+After scope: {name}

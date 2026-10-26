@@ -23,15 +23,20 @@ There is no whitespace or newline normalization. Exit status is 0 only when ever
 template matches; mismatches, execution failures, timeouts, and unavailable external
 resources return 1. Build failures abort with diagnostics.
 
-Current result: **10 exact matches; 3 external-resource cases**. `web`, `wikipedia`,
+Current result: **10 exact matches; 1 unimplemented extension case; 3 external-resource cases**.
+The new `externals` template runs successfully in Node but reaches the generated
+C# `Call test` not-implemented stub. Its Node output is frozen for future extension
+support; see [the Externals example](../node-reference/EXTERNALS.md).
+`web`, `wikipedia`,
 and `elastic` require HTTP resources that both offline hosts reject. Matching
 failure categories are recorded separately and are not rendering parity. The tool
 does not make network requests or change those templates.
 
 Frozen outputs and the evaluation-input manifest are in
 `tests/node-reference/collection-golden/`. `LocalReferenceTemplatesMatchNode`
-builds an independent executable and checks all ten local templates against both
-the live Node oracle and these goldens. The legacy `tests` template deliberately
+builds an independent executable and checks all local templates against both
+the live Node oracle and these goldens. It currently fails on `externals` until C#
+extension support is implemented. The legacy `tests` template deliberately
 renders `ALL TESTS PASSED`; byte equality with that result is tested too.
 
 ```sh
