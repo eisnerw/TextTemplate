@@ -13,6 +13,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Registration/Birthdays.cs" />
     <Compile Include="Registration/Bullets.cs" />
+    <Compile Include="Registration/Countpredicate.cs" />
     <Compile Include="Registration/DoInclude.cs" />
     <Compile Include="Registration/Docs.cs" />
     <Compile Include="Registration/Doit.cs" />
@@ -43,6 +44,7 @@
     <Compile Include="Support/TemplateValue.cs" />
     <Compile Include="Templates/Birthdays.cs" />
     <Compile Include="Templates/Bullets.cs" />
+    <Compile Include="Templates/Countpredicate.cs" />
     <Compile Include="Templates/Docs.cs" />
     <Compile Include="Templates/Elastic.cs" />
     <Compile Include="Templates/Events.cs" />

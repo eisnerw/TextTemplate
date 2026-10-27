@@ -57,6 +57,15 @@ public sealed class TemplateValue
         => Dispatch("OrderBy", selector is null ? arguments : [() => selector(context), ..arguments], value => context.OrderBy(value, selector ?? (_ => null), keyText, Arguments(arguments), contextProbe));
     internal TemplateValue Render(Func<EvaluationContext, object?> body, Func<object?>? fallback = null, Func<EvaluationContext, object?>? replay = null)
         => new(context, context.Context(Raw, body, fallback, replay));
+    internal TemplateValue Count(Func<EvaluationContext, object?> predicate, params Func<object?>[] extraArguments)
+        => Dispatch("Count", [() => predicate(context), ..extraArguments], value =>
+        {
+            // Legacy callMethod evaluates arguments in the caller before filtering.
+            // This happens only after external-method dispatch has declined the call.
+            _ = predicate(context);
+            foreach (var argument in extraArguments) _ = argument();
+            return context.CountWhere(value, predicate);
+        });
     internal TemplateValue Count()
         => Dispatch("Count", [], value => Builtins.Count(value));
     internal TemplateValue EncodeFor(Func<object?>[]? arguments = null,

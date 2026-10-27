@@ -1,0 +1,11 @@
+People: 3
+Active: 2
+Adults: 2
+Active adults over 30: 1
+Inactive: 1
+Names starting with A: 1
+Missing predicate values: 0
+Empty list: 0
+Single accepted person: 1
+Single rejected person: 0
+Caller argument: 2

@@ -1,0 +1,391 @@
+[
+  {
+    "name": "predicate-selected",
+    "script": "{rows.Count(active)}",
+    "data": {
+      "rows": [
+        {
+          "name": "Alice",
+          "active": true,
+          "age": 42
+        },
+        {
+          "name": "Bob",
+          "active": false,
+          "age": 17
+        },
+        {
+          "name": "Cara",
+          "active": true,
+          "age": 23
+        }
+      ]
+    },
+    "expected": "2"
+  },
+  {
+    "name": "predicate-relational",
+    "script": "{rows.Count(age >= 18)}",
+    "data": {
+      "rows": [
+        {
+          "name": "Alice",
+          "active": true,
+          "age": 42
+        },
+        {
+          "name": "Bob",
+          "active": false,
+          "age": 17
+        },
+        {
+          "name": "Cara",
+          "active": true,
+          "age": 23
+        }
+      ]
+    },
+    "expected": "2"
+  },
+  {
+    "name": "predicate-negated",
+    "script": "{rows.Count(!active)}",
+    "data": {
+      "rows": [
+        {
+          "name": "Alice",
+          "active": true,
+          "age": 42
+        },
+        {
+          "name": "Bob",
+          "active": false,
+          "age": 17
+        },
+        {
+          "name": "Cara",
+          "active": true,
+          "age": 23
+        }
+      ]
+    },
+    "expected": "1"
+  },
+  {
+    "name": "predicate-logical",
+    "script": "{rows.Count(active & age > 30)}",
+    "data": {
+      "rows": [
+        {
+          "name": "Alice",
+          "active": true,
+          "age": 42
+        },
+        {
+          "name": "Bob",
+          "active": false,
+          "age": 17
+        },
+        {
+          "name": "Cara",
+          "active": true,
+          "age": 23
+        }
+      ]
+    },
+    "expected": "1"
+  },
+  {
+    "name": "predicate-none",
+    "script": "{rows.Count(absent)}",
+    "data": {
+      "rows": [
+        {
+          "name": "Alice",
+          "active": true,
+          "age": 42
+        },
+        {
+          "name": "Bob",
+          "active": false,
+          "age": 17
+        },
+        {
+          "name": "Cara",
+          "active": true,
+          "age": 23
+        }
+      ]
+    },
+    "expected": "0"
+  },
+  {
+    "name": "predicate-empty",
+    "script": "{rows.Count(active)}",
+    "data": {
+      "rows": []
+    },
+    "expected": "0"
+  },
+  {
+    "name": "predicate-missing",
+    "script": "{rows.Count(active)}",
+    "data": {},
+    "expected": "0"
+  },
+  {
+    "name": "predicate-null",
+    "script": "{rows.Count(active)}",
+    "data": {
+      "rows": null
+    },
+    "expected": ""
+  },
+  {
+    "name": "predicate-singleton",
+    "script": "{rows.Count(active)}",
+    "data": {
+      "rows": [
+        {
+          "name": "Alice",
+          "active": true,
+          "age": 42
+        }
+      ]
+    },
+    "expected": "1"
+  },
+  {
+    "name": "predicate-singleton-false",
+    "script": "{rows.Count(active)}",
+    "data": {
+      "rows": [
+        {
+          "name": "Bob",
+          "active": false,
+          "age": 17
+        }
+      ]
+    },
+    "expected": "0"
+  },
+  {
+    "name": "predicate-dictionary",
+    "script": "{rows.Count(active)}",
+    "data": {
+      "rows": {
+        "name": "Alice",
+        "active": true,
+        "age": 42
+      }
+    },
+    "expected": "1"
+  },
+  {
+    "name": "predicate-scalar",
+    "script": "{value.Count(active)}",
+    "data": {
+      "value": "hello"
+    },
+    "expected": "1"
+  },
+  {
+    "name": "predicate-false",
+    "script": "{value.Count(active)}",
+    "data": {
+      "value": false
+    },
+    "expected": "1"
+  },
+  {
+    "name": "predicate-zero",
+    "script": "{value.Count(active)}",
+    "data": {
+      "value": 0
+    },
+    "expected": "1"
+  },
+  {
+    "name": "predicate-arguments",
+    "script": "{name.Count(active)}",
+    "data": [
+      {
+        "name": "Alice",
+        "active": true,
+        "age": 42
+      },
+      {
+        "name": "Bob",
+        "active": false,
+        "age": 17
+      },
+      {
+        "name": "Cara",
+        "active": true,
+        "age": 23
+      }
+    ],
+    "expected": "1"
+  },
+  {
+    "name": "predicate-method-predicate",
+    "script": "{rows.Count(name.StartsWith('A'))}",
+    "data": {
+      "rows": [
+        {
+          "name": "Alice",
+          "active": true,
+          "age": 42
+        },
+        {
+          "name": "Bob",
+          "active": false,
+          "age": 17
+        },
+        {
+          "name": "Cara",
+          "active": true,
+          "age": 23
+        }
+      ]
+    },
+    "expected": "1"
+  },
+  {
+    "name": "predicate-falsy-list",
+    "script": "{[{rows.Count(active)}].@Falsy(/yes/)}",
+    "data": {
+      "rows": [
+        {
+          "active": "yes"
+        },
+        {
+          "active": "no"
+        }
+      ]
+    },
+    "expected": "1"
+  },
+  {
+    "name": "predicate-falsy-single",
+    "script": "{[{rows.Count(active)}].@Falsy(/yes/)}",
+    "data": {
+      "rows": [
+        {
+          "active": "yes"
+        }
+      ]
+    },
+    "expected": "1"
+  },
+  {
+    "name": "predicate-dollar",
+    "script": "{rows.#older(20)}\nSubtemplates:\n{#older:[{$0.Count(age > $1)}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "Alice",
+          "active": true,
+          "age": 42
+        },
+        {
+          "name": "Bob",
+          "active": false,
+          "age": 17
+        },
+        {
+          "name": "Cara",
+          "active": true,
+          "age": 23
+        }
+      ]
+    },
+    "expected": "2"
+  },
+  {
+    "name": "predicate-unused-branch",
+    "script": "{absent=>[{rows.Count(name.ToJson())}],[safe]}",
+    "data": {
+      "rows": [
+        {
+          "name": "Alice",
+          "active": true,
+          "age": 42
+        },
+        {
+          "name": "Bob",
+          "active": false,
+          "age": 17
+        },
+        {
+          "name": "Cara",
+          "active": true,
+          "age": 23
+        }
+      ]
+    },
+    "expected": "safe"
+  },
+  {
+    "name": "predicate-extra-arguments",
+    "script": "{rows.Count(active,age)}",
+    "data": {
+      "rows": [
+        {
+          "name": "Alice",
+          "active": true,
+          "age": 42
+        },
+        {
+          "name": "Bob",
+          "active": false,
+          "age": 17
+        },
+        {
+          "name": "Cara",
+          "active": true,
+          "age": 23
+        }
+      ]
+    },
+    "expected": "2"
+  },
+  {
+    "name": "predicate-caller-error",
+    "script": "{rows.Count('x'.ToUpper('bad'))}",
+    "data": {
+      "rows": [
+        {
+          "active": true
+        },
+        {
+          "active": false
+        },
+        {
+          "active": true
+        }
+      ]
+    },
+    "expected": "0",
+    "exitCode": 1
+  },
+  {
+    "name": "predicate-extra-error",
+    "script": "{rows.Count(active,'x'.ToUpper('bad'))}",
+    "data": {
+      "rows": [
+        {
+          "active": true
+        },
+        {
+          "active": false
+        },
+        {
+          "active": true
+        }
+      ]
+    },
+    "expected": "2",
+    "exitCode": 1
+  }
+]

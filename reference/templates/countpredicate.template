@@ -1,0 +1,14 @@
+People: {people.Count()}
+Active: {people.Count(active)}
+Adults: {people.Count(age >= 18)}
+Active adults over 30: {people.Count(active & age > 30)}
+Inactive: {people.Count(!active)}
+Names starting with A: {people.Count(name.StartsWith('A'))}
+Missing predicate values: {people.Count(absent)}
+Empty list: {empty.Count(active)}
+Single accepted person: {single.Count(active)}
+Single rejected person: {rejected.Count(active)}
+Caller argument: {people.#older(20)}
+
+Subtemplates:
+{#older:[{$0.Count(age > $1)}]}

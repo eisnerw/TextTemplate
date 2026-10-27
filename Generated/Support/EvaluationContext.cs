@@ -557,6 +557,19 @@ internal sealed class EvaluationContext
         }
         return new EvaluationContext(this, data).Named(name);
     }
+    // Count(predicate) shares Where's filtering and $ binding behavior, but its
+    // final count is deliberately different from Count() for argument-list receivers.
+    internal object? CountWhere(object? value, Func<EvaluationContext, object?> predicate)
+    {
+        object? filtered = Where(value, predicate);
+        return filtered switch
+        {
+            null => null,
+            Missing => 0d,
+            Data { Items: { } items } => (double)items.Count,
+            _ => 1d
+        };
+    }
     // callMethod Where: predicates run against each item with the caller's $ bindings.
     internal object? Where(object? value, Func<EvaluationContext, object?>? predicate)
     {

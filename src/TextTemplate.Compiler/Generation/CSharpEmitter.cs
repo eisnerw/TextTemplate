@@ -779,12 +779,12 @@ public sealed class CSharpEmitter
                     expression = Fluent(input) + "\n            ." + node.Value + "(" + selector + ", " + Quote(keyText) + ", " +
                         "[" + string.Join(", ", groupArgs.Skip(1).Select(arg => "() => " + Call(arg))) + "], contextProbe: " + (contextProbe ? "true" : "false") + ").Raw";
                 }
-                else if (node.Value == "Where")
+                else if (node.Value == "Where" || node.Value == "Count" && node.Children.Skip(1).SelectMany(child => child.Children).Any())
                 {
                     var filterArgs = node.Children.Skip(1).SelectMany(child => child.Children).ToList();
                     string input = ReferenceEquals(node.Children[0], replayReceiver) ? "Context.Current" : node.Children[0].Kind == SyntaxKind.Call || receiver.Value?.StartsWith('^') == true ? Call(node.Children[0])
                         : Collected(node.Children[0]);
-                    expression = Fluent(input) + "\n            .Where(" + (filterArgs.Count == 0 ? "null" : RawChild(filterArgs[0])) +
+                    expression = Fluent(input) + "\n            ." + node.Value + "(" + (filterArgs.Count == 0 ? "null" : RawChild(filterArgs[0])) +
                         (filterArgs.Count <= 1 ? "" : ", " + string.Join(", ", filterArgs.Skip(1).Select(arg => "() => " + Call(arg)))) + ").Raw";
                 }
                 else if (node.Value == "Case")
@@ -816,7 +816,7 @@ public sealed class CSharpEmitter
                         expression = Fluent(input) + "\n            .Case(" + function + ", " + string.Join(", ", caseArgs.Select(arg => "() => " + Call(arg))) + ").Raw";
                     }
                 }
-                // TODO: Implement Count(predicate) with per-item predicate evaluation.
+                // No-argument Count retains its distinct legacy counting rules.
                 else if (node.Value!.StartsWith('#') || (node.Value == "Count" && !node.Children.Skip(1).SelectMany(child => child.Children).Any()) || node.Value is "EncodeFor" or "ToDate" or "Compose" or "IfMissing" or "Join" or "Align" or "Trim" or "StartsWith" or "EndsWith" or "Contains" or "Replace" or "Substr" or "IndexOf" or "LastIndexOf" or "EndIndexOf" or "ToUpper" or "ToLower" or "GreaterThan" or "LessThan" or "Matches" or "Assert")
                 {
                     string arguments = string.Join(", ", node.Children.Skip(1).SelectMany(child => child.Children).Select(arg => "() => " + Call(arg)));

@@ -85,6 +85,7 @@ public sealed class GenerationTests
                 ["group"] = "{name.GroupBy(name.ToJson(),name.ToJson())}",
                 ["where"] = "{name.Where(name.ToJson())}",
                 ["count"] = "{name.Count()}",
+                ["countPredicate"] = "{name.Count(name.ToJson())}",
                 ["named"] = "{name.#custom(name.ToJson())}",
                 ["repeated"] = "{name.twice(name.tick())}",
                 ["lookup"] = "{[{name}|{[{name}].@ValueFunction()}|{name}].@ValueFunction('custom')}|{name}",
@@ -124,7 +125,7 @@ public sealed class GenerationTests
                                 _ = lookup.ToString();
                                 return TemplateValue.From("[" + lookup.DefaultValue().Render() + "]");
                             });
-                        foreach (string name in new[] { "custom", "upper", "case", "shortCase", "group", "where", "count", "named", "repeated", "lookup" })
+                        foreach (string name in new[] { "custom", "upper", "case", "shortCase", "group", "where", "count", "countPredicate", "named", "repeated", "lookup" })
                             Console.WriteLine(GeneratedTemplates.Render(name, data.RootElement, extensions: extensions));
                         if (calls != 2) throw new Exception("Argument evaluation count");
                         var emptyContext = new EvaluationContext(null, new System.Collections.Generic.Dictionary<string, Func<EvaluationContext, object?>>(),
@@ -148,7 +149,7 @@ public sealed class GenerationTests
             Assert.True(build.Exit == 0, build.Output + build.Error);
             var actual = Run("dotnet", output, "bin/Debug/net10.0/GeneratedTemplates.dll");
             Assert.True(actual.Exit == 0, actual.Error);
-            Assert.Equal("Alice\noverride\ncase\ncase\ngroup\nwhere\ncount\nnamed\n12\n[Alice]|Alice|[Alice]|Alice\n1\nOK\n", actual.Output);
+            Assert.Equal("Alice\noverride\ncase\ncase\ngroup\nwhere\ncount\ncount\nnamed\n12\n[Alice]|Alice|[Alice]|Alice\n1\nOK\n", actual.Output);
             // Regeneration leaves the handwritten source intact and includes it again.
             string before = File.ReadAllText(Path.Combine(extensions, "Probe.cs"));
             Assert.Equal(0, Program.Main(["--root", input, "--output", output]));
@@ -301,6 +302,7 @@ public sealed class GenerationTests
     [InlineData("annotation")]
     [InlineData("ifmissing")]
     [InlineData("count")]
+    [InlineData("count-predicate")]
     [InlineData("named-data")]
     [InlineData("switch")]
     [InlineData("compose")]

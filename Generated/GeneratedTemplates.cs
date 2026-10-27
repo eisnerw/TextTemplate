@@ -13,6 +13,7 @@ public static class GeneratedTemplates
     {
         ["birthdays"] = context => new Birthdays(context).Evaluate(),
         ["bullets"] = context => new Bullets(context).Evaluate(),
+        ["countpredicate"] = context => new Countpredicate(context).Evaluate(),
         ["docs"] = context => new Docs(context).Evaluate(),
         ["elastic"] = context => new Elastic(context).Evaluate(),
         ["events"] = context => new Events(context).Evaluate(),

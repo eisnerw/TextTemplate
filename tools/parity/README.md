@@ -23,7 +23,7 @@ There is no whitespace or newline normalization. Exit status is 0 only when ever
 template matches; mismatches, execution failures, timeouts, and unavailable external
 resources return 1. Build failures abort with diagnostics.
 
-Current result: **11 exact matches; 3 external-resource cases**. The comparison
+Current result: **12 exact matches; 3 external-resource cases**. The comparison
 build includes the handwritten C# sources from `Extensions/`; `externals` now
 matches the Node golden. See [C# extensions](../../Extensions/README.md).
 `web`, `wikipedia`,

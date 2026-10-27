@@ -1,0 +1,10 @@
+{
+  "people": [
+    { "name": "Alice", "age": 42, "active": true },
+    { "name": "Bob", "age": 17, "active": false },
+    { "name": "Cara", "age": 23, "active": true }
+  ],
+  "empty": [],
+  "single": [{ "name": "Alice", "age": 42, "active": true }],
+  "rejected": [{ "name": "Bob", "age": 17, "active": false }]
+}

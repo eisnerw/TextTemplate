@@ -832,3 +832,33 @@ missing values, inherited list contexts, boolean values, Unicode casing, regex a
 and extra annotation arguments. Separate C# tests exercise runtime registration,
 overrides and selective/repeated evaluation without modifying the Node oracle.
 See Extensions/README.md for the authoring and deployment contract.
+
+
+### Count(predicate) compatibility increment (2026-10-27)
+
+`Count(predicate)` is now implemented; this supersedes earlier notes listing it as
+a stub. The unchanged Node interpreter was characterized first in 23 focused cases.
+The new `countpredicate` reference template provides a readable demonstration and
+its exact Node output is frozen with source/input hashes and oracle provenance.
+
+The implementation reuses Where's filtering and context handling, then applies
+Count's separate predicate-result rules: zero for missing matches, list length for
+multiple matches, otherwise one. Explicit null remains null. Scalar and argument
+receivers are not filtered, and argument receivers count as one in this form.
+Legacy singleton collapse and the list-only application of @Falsy are preserved.
+Caller `$` bindings reach predicates through the existing filtering implementation.
+
+Arguments are evaluated in caller scope before filtering (including extra
+arguments), then the predicate is evaluated in each relevant item context. External
+Count registrations still run first and control their own deferred arguments.
+Characterizations include invalid caller/extra argument evaluation: both hosts fail,
+but Node retains partial output whereas C# aborts rendering under its existing
+built-in error policy. These cases are failure-status checks, not rendered-output
+parity claims. Successful cases compare exact text.
+
+ToJson remains a separate design decision. The legacy implementation sometimes
+returns original inline or named template source as JSON data, and uses source
+expressions as object keys. Full compatibility for those forms conflicts with the
+current rule that original template source appears only in generated comments.
+Do not silently embed that source or replace the legacy output with different JSON;
+resolve the contract before implementing those forms.

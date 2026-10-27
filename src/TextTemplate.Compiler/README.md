@@ -374,8 +374,23 @@ arguments are ignored. Characterized against Node in `ifmissing-cases.json`.
 
 `Count()` returns a numeric list size (rendered as decimal text), zero for Missing,
 and one for scalar or dictionary receivers. Explicit null passes through. Argument
-lists count truthy, non-missing items. `Count(predicate)` remains unimplemented.
-Node comparisons are recorded in `count-cases.json`.
+lists count truthy, non-missing items. Node comparisons are recorded in
+`count-cases.json`.
+
+`Count(predicate)` now shares the legacy `Where` filtering rules, including caller
+`$` arguments and inherited annotations. Its final count differs from `Count()`:
+argument-list receivers count as one rather than counting their non-missing items.
+Arguments are evaluated in the caller before filtering, after extension dispatch;
+extra arguments are evaluated but do not select list items. List predicates run
+per item, and empty/missing matches count as zero. Explicit null passes through.
+See `count-predicate-cases.json` and `reference/templates/countpredicate.template`.
+
+Run the reference example in either host:
+
+```sh
+node tools/node-reference/cli.mjs --template countpredicate --template-root reference --data-file reference/data/countpredicate.json
+dotnet run --project Generated -- --template countpredicate --data-file reference/data/countpredicate.json
+```
 
 Named template methods accept object/list receivers as `$0` and object/list
 arguments as `$1`, `$2`, etc. These retain their existing data parent links; the
