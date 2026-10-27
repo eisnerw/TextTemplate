@@ -88,7 +88,7 @@ internal sealed partial class Outline(EvaluationContext context) : TemplateUnit<
         TemplateValue chooseChoice()
         {
             if (Context.TestCondition(Field("comment")
-            .Contains(() => ["\\n"]).Raw))
+            .Contains(() => "\\n").Raw))
             {
                 return Value(Each(itemContext => Line($"s")));
             }
@@ -102,7 +102,7 @@ internal sealed partial class Outline(EvaluationContext context) : TemplateUnit<
             .Call("Quoted");
         TemplateValue content_2 = Value(Context.CreateBullet("\n      \u0001{.} "));
         TemplateValue ifMissing = Field("lastName")
-            .IfMissing(() => ["No Last Name"]);
+            .IfMissing(() => "No Last Name");
         TemplateValue content_3 = Value(Context.CreateBullet("\n      \u0001{.} "));
         TemplateValue firstName = Read("firstName");
         TemplateValue content_4 = Value(Context.CreateBullet("\n      \u0001{.} "));
@@ -156,9 +156,9 @@ internal sealed partial class Outline(EvaluationContext context) : TemplateUnit<
     {
         TemplateValue lastName = Read("lastName");
         TemplateValue prepend = Field("firstName")
-            .Call("Prepend", () => [", "]);
+            .Call("Prepend", () => ", ");
         TemplateValue prepend_2 = Field("middleName")
-            .Call("Prepend", () => [" "]);
+            .Call("Prepend", () => " ");
 
         return Line($"{lastName}{prepend}{prepend_2}");
     }
@@ -245,7 +245,7 @@ internal sealed partial class Outline(EvaluationContext context) : TemplateUnit<
         }
 
         TemplateValue @case = Field("type")
-            .Apply(selectCase);
+            .Case(selectCase, () => "zebra", () => Each(ForItem(item => item.renderToLower())), () => "dog", () => "friskie", () => "cat", () => "fishy", () => "nice");
         TemplateValue type = Read("type");
         TemplateValue name = Read("name");
 
@@ -319,7 +319,7 @@ internal sealed partial class Outline(EvaluationContext context) : TemplateUnit<
     private TemplateContent IsDomesticated()
     {
         TemplateValue matches = Field("$0")
-            .Matches(() => ["dog", "cat"]);
+            .Matches(() => "dog", () => "cat");
 
         return Line($"{matches}");
     }
@@ -422,7 +422,7 @@ internal sealed partial class Outline(EvaluationContext context) : TemplateUnit<
     private TemplateContent renderSurround()
     {
         TemplateValue surround = Field("$0")
-            .Call("Surround", () => ["\""]);
+            .Call("Surround", () => "\"");
 
         return Line($"{surround}");
     }

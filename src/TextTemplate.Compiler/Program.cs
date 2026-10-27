@@ -81,9 +81,10 @@ public static class Program
                 <TargetFramework>net10.0</TargetFramework>
                 <Nullable>enable</Nullable>
                 <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+                <TemplateExtensionsDirectory Condition="'$(TemplateExtensionsDirectory)' == ''">../Extensions</TemplateExtensionsDirectory>
               </PropertyGroup>
               <ItemGroup>
-            """ + "\n" + items + "\n  </ItemGroup>\n</Project>\n", Path.Combine(output, "GeneratedTemplates.csproj"));
+            """ + "\n" + items + "\n    <Compile Include=\"$(TemplateExtensionsDirectory)/**/*.cs\" />\n  </ItemGroup>\n</Project>\n", Path.Combine(output, "GeneratedTemplates.csproj"));
     }
 
 }

@@ -29,7 +29,7 @@ internal sealed partial class Simplelist(EvaluationContext context) : TemplateUn
         TemplateValue chooseChoice()
         {
             if (Context.TestCondition(Field("firstName")
-            .Matches(() => [new TemplateRegex("/jo/i", SourceLocation())]).Raw))
+            .Matches(() => new TemplateRegex("/jo/i", SourceLocation())).Raw))
             {
                 return Value(Each(itemContext => Line($"Mr. ")));
             }
@@ -61,7 +61,7 @@ internal sealed partial class Simplelist(EvaluationContext context) : TemplateUn
         TemplateValue choice = chooseChoice();
         TemplateValue replace = Field("firstName")
             .ToLower()
-            .Replace(() => ["john", Each(ForItem(item => item.renderToUpper()))]);
+            .Replace(() => "john", () => Each(ForItem(item => item.renderToUpper())));
         TemplateValue petsResult = choosePetsResult();
 
         return Line($"Hello {lastName}, {choice}{replace} with {petsResult}!!");
@@ -106,7 +106,7 @@ internal sealed partial class Simplelist(EvaluationContext context) : TemplateUn
     private TemplateContent anded()
     {
         TemplateValue join = Field("$0")
-            .Join(() => [", ", " and "]);
+            .Join(() => ", ", () => " and ");
 
         return Line($"{join}");
     }

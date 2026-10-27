@@ -106,6 +106,27 @@ internal sealed class EvaluationContext
             ? $"Missing({JsonSerializer.Serialize(Key)})"
             : $"Missing({JsonSerializer.Serialize(Key)}, replacement: {JsonSerializer.Serialize(Replacement)})";
     }
+    internal readonly TemplateExtensions Extensions;
+    private readonly Action<string>? reportError;
+    private Func<ValueLookup, TemplateValue>? valueFunction;
+    internal static EvaluationContext Empty() => new((JsonElement?)null, new Dictionary<string, Func<EvaluationContext, object?>>(), extensions: new TemplateExtensions());
+    internal void ReportError(string message, string location)
+    {
+        if (reportError is null) throw new InvalidOperationException(location + ": " + message);
+        reportError(location + ": " + message);
+    }
+    internal EvaluationContext WithValueFunction(string location, params object?[] arguments)
+    {
+        EvaluationContext child = new(this, Current);
+        child.valueFunction = null;
+        if (arguments.Length != 0)
+        {
+            string name = Builtins.JsString(Intermediate(arguments[0]));
+            if (Extensions.TryValueFunction(name, out var function)) child.valueFunction = function;
+            else ReportError("Value Function not found: " + name, location);
+        }
+        return child;
+    }
     private readonly string? dataRoot;
     private string? missingText;
     private TemplateRegex? falsy;
@@ -133,6 +154,9 @@ internal sealed class EvaluationContext
     {
         Current = current;
         Shared = parent.Shared;
+        Extensions = parent.Extensions;
+        reportError = parent.reportError;
+        valueFunction = parent.valueFunction;
         dataRoot = parent.dataRoot;
         Locals = new(parent.Locals, StringComparer.Ordinal);
         imports = new(parent.imports, StringComparer.Ordinal);
@@ -165,8 +189,10 @@ internal sealed class EvaluationContext
     }
     internal static TemplateContent Text(StructuredText text) => new(text.ToFragments());
 
-    internal EvaluationContext(JsonElement? data, Dictionary<string, Func<EvaluationContext, object?>> shared, string? dataRoot = null, Dictionary<string, Func<EvaluationContext, EvaluationContext>>? imports = null)
+    internal EvaluationContext(JsonElement? data, Dictionary<string, Func<EvaluationContext, object?>> shared, string? dataRoot = null, Dictionary<string, Func<EvaluationContext, EvaluationContext>>? imports = null, TemplateExtensions? extensions = null, Action<string>? reportError = null)
     {
+        Extensions = (extensions ?? TemplateExtensionRegistration.Create()).Snapshot();
+        this.reportError = reportError;
         Shared = shared;
         if (imports is not null) this.imports = new(imports, StringComparer.Ordinal);
         this.dataRoot = dataRoot;
@@ -193,6 +219,8 @@ internal sealed class EvaluationContext
         return data;
     }
     internal object? Lookup(string path)
+        => valueFunction is null ? LookupDefault(path) : valueFunction(new ValueLookup(this, path)).Raw;
+    internal object? LookupDefault(string path)
     {
         object? Find(Data data, string key)
         {
@@ -786,7 +814,7 @@ internal sealed class EvaluationContext
         return text[..e] + "e" + (exponent >= 0 ? "+" : "-") + Math.Abs(exponent).ToString(CultureInfo.InvariantCulture);
     }
     // Retain the fragment hierarchy until rendering; a missing value removes its entire line.
-    internal static string? Compose(object? value, List<string>? bulletKeys = null)
+    internal static string? Compose(object? value, List<string>? bulletKeys = null, bool exposeMissing = false)
     {
         List<string> lines = new List<string> { "" };
         bool skipping = false;
@@ -908,7 +936,9 @@ internal sealed class EvaluationContext
                 if (trimmed) joined = Regex.Replace(Regex.Replace(joined, " *\n", "\n"), "\n{3,}", "\n\n");
                 item = (allButFirst ? "" : (offset ? "\n" : "") + padding) + joined + (padded ? "\n" : "");
             }
-            if (item is Missing missing) item = missing.Replacement;
+            if (item is Missing missing) item = exposeMissing
+                    ? "***Missing value for " + missing.Key + " which would " + (string.IsNullOrEmpty(missing.Replacement) ? "cause the line to be skipped" : "be replaced by '" + missing.Replacement + "'") + "***"
+                    : missing.Replacement;
             if (item is null) { lines[^1] = ""; skipping = true; return; }
             string[] parts = Scalar(item).Split('\n');
             for (int i = 0; i < parts.Length; i++)

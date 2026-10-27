@@ -42,3 +42,19 @@ for (const [script, message] of [
   assert.equal(report.result, 'Alice');
   assert.deepEqual(report.errors.map(error => error.message), [message]);
 });
+
+const extensionCases = JSON.parse(readFileSync(new URL('externals-cases.json', import.meta.url)));
+for (const item of extensionCases) test('external characterization: ' + item.name, async () => {
+  const { mkdtempSync, writeFileSync, rmSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const directory = mkdtempSync(tmpdir() + '/texttemplate-externals-');
+  try {
+    const data = directory + '/data.json';
+    writeFileSync(data, JSON.stringify(item.data));
+    const result = run(['--template-text', item.script, '--data-file', data, '--report-json']);
+    assert.equal(result.status, item.exitCode, result.stderr);
+    const report = JSON.parse(result.stdout);
+    assert.equal(report.result, item.expected, JSON.stringify(item));
+    assert.deepEqual(report.errors.map(error => error.message), item.errors);
+  } finally { rmSync(directory, { recursive: true, force: true }); }
+});

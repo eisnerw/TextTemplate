@@ -16,6 +16,7 @@ public static class GeneratedTemplates
         ["docs"] = context => new Docs(context).Evaluate(),
         ["elastic"] = context => new Elastic(context).Evaluate(),
         ["events"] = context => new Events(context).Evaluate(),
+        ["externals"] = context => new Externals(context).Evaluate(),
         ["outline"] = context => new Outline(context).Evaluate(),
         ["simple"] = context => new Simple(context).Evaluate(),
         ["simpledata"] = context => new Simpledata(context).Evaluate(),
@@ -43,10 +44,10 @@ public static class GeneratedTemplates
         ["xformatPet"] = context => new XformatPet(context).Import(),
         ["xformatPets"] = context => new XformatPets(context).Import(),
     };
-    public static string Render(string name, JsonElement? data = null, string? dataRoot = null)
+    public static string Render(string name, JsonElement? data = null, string? dataRoot = null, TemplateExtensions? extensions = null, Action<string>? reportError = null)
     {
         if (!Templates.TryGetValue(name, out Func<EvaluationContext, object?>? template)) throw new ArgumentException("Unknown template: " + name);
-        return (string)EvaluationContext.At(nameof(GeneratedTemplates), () => new EvaluationContext(data, Shared, dataRoot, Imports).Render(template) ?? "")!;
+        return (string)EvaluationContext.At(nameof(GeneratedTemplates), () => new EvaluationContext(data, Shared, dataRoot, Imports, extensions, reportError).Render(template) ?? "")!;
     }
 
 }

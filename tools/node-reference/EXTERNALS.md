@@ -90,7 +90,8 @@ is also frozen in `collection-golden/externals.txt`.
 
 Run all Node regressions with `npm test --prefix tools/node-reference`.
 
-C# external methods and value functions are not implemented yet. Adding this
-template intentionally exposes that gap in the collection parity comparison and
-`LocalReferenceTemplatesMatchNode`; neither comparison skips the example. The Node
-golden is a behavioral baseline for future C# implementation, not a parity claim.
+The handwritten C# implementations in `Extensions/` now match this template and
+the additional cases in `externals-cases.json`. The collection comparison includes
+those C# sources and does not skip the example. See
+[the C# extension guide](../../Extensions/README.md) for registration, deferred
+arguments, value lookup, and standalone deployment.

@@ -74,16 +74,8 @@ internal sealed partial class Wikipedia(EvaluationContext context) : TemplateUni
     // Source: "templates/wikipedia.template":5:33
     private TemplateContent renderReplace()
     {
-        // Template:
-        // *.ToJson()
-        // Source: "templates/wikipedia.template":5:35
-        object? applyToJson() => Unsupported(
-            "Call ToJson",
-            SourceLocation(),
-            () => Get("*"));
-
-        TemplateValue replace = Value(applyToJson())
-            .Replace(() => [new TemplateRegex("/\"\\d+\"/", SourceLocation()), "\"key\""]);
+        TemplateValue replace = External("ToJson", () => Field("*").Raw, [])
+            .Replace(() => new TemplateRegex("/\"\\d+\"/", SourceLocation()), () => "\"key\"");
 
         return Line($"{replace}");
     }

@@ -51,7 +51,7 @@ internal sealed partial class Elastic(EvaluationContext context) : TemplateUnit<
     private TemplateContent renderElasticSpec()
     {
         TemplateValue elasticSpec = Collect("fname,lname,isAlive")
-            .Call("elasticSpec", () => ["lname:c* AND fname:c*", EvaluationContext.ParseInteger("1000")]);
+            .Call("elasticSpec", () => "lname:c* AND fname:c*", () => EvaluationContext.ParseInteger("1000"));
 
         return Line($"{elasticSpec}");
     }
@@ -74,7 +74,7 @@ internal sealed partial class Elastic(EvaluationContext context) : TemplateUnit<
     private TemplateContent renderContent_2()
     {
         TemplateValue orderBy = Collect("fname,lname,isAlive")
-            .Call("elasticQuery", () => ["lname:c* AND fname:c*", EvaluationContext.ParseInteger("1000")])
+            .Call("elasticQuery", () => "lname:c* AND fname:c*", () => EvaluationContext.ParseInteger("1000"))
             .OrderBy(itemContext => itemContext.Lookup("lname"), "key", [], contextProbe: true)
             .Render(ForItem(item => item.renderFalsy()), null, replay: ForItem(item => item.orderLoadedData()));
 
@@ -90,7 +90,7 @@ internal sealed partial class Elastic(EvaluationContext context) : TemplateUnit<
     private TemplateValue orderLoadedData()
     {
         return Value(Context.Current)
-            .Call("elasticQuery", () => ["lname:c* AND fname:c*", EvaluationContext.ParseInteger("1000")])
+            .Call("elasticQuery", () => "lname:c* AND fname:c*", () => EvaluationContext.ParseInteger("1000"))
             .OrderBy(itemContext => itemContext.Lookup("lname"), "key", [], contextProbe: false);
     }
 

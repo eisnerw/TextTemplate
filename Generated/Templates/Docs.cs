@@ -223,7 +223,7 @@ internal sealed partial class Docs(EvaluationContext context) : TemplateUnit<Doc
         TemplateValue chooseChoice()
         {
             if (Context.TestCondition(Field("type")
-            .Matches(() => ["a", "The"]).Raw))
+            .Matches(() => "a", () => "The").Raw))
             {
                 return Value(Each(ForItem(item => item.renderType())));
             }
@@ -268,7 +268,7 @@ internal sealed partial class Docs(EvaluationContext context) : TemplateUnit<Doc
         TemplateValue title = Field("name")
             .Call("title");
         TemplateValue @case = Field("type")
-            .Apply(selectCase);
+            .Case(selectCase, () => "dash", () => " &#8212; ", () => "comma", () => ", ", () => "a", () => "", () => "The", () => "", () => "blank", () => " ", () => "none", () => "");
 
         return Line($"{choice}{title}{@case}");
     }

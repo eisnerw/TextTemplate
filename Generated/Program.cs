@@ -24,9 +24,10 @@ public static class GeneratedTemplateProgram
             }
             if (template is null) throw new ArgumentException("Specify --template NAME.");
             using JsonDocument? data = dataFile is null ? null : JsonDocument.Parse(File.ReadAllText(dataFile));
-            string result = GeneratedTemplates.Render(template, data?.RootElement, dataRoot);
+            int exitCode = 0;
+            string result = GeneratedTemplates.Render(template, data?.RootElement, dataRoot, reportError: message => { Console.Error.WriteLine(message); exitCode = 1; });
             Console.Write(result);
-            return 0;
+            return exitCode;
         }
         catch (Exception error) { Console.Error.WriteLine(error.Message); return 1; }
     }

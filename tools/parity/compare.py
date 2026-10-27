@@ -31,7 +31,7 @@ def main():
         binary = Path(work) / 'bin'
         for command in [
             ['dotnet', 'run', '--project', 'src/TextTemplate.Compiler', '--', '--root', 'reference', '--output', str(generated)],
-            ['dotnet', 'build', str(generated), '--nologo', '-o', str(binary)],
+            ['dotnet', 'build', str(generated), '--nologo', '-o', str(binary), '-p:TemplateExtensionsDirectory=' + str(REPO / 'Extensions')],
         ]:
             code, stdout, stderr = run(command)
             if code:
@@ -76,6 +76,8 @@ def main():
                   inputs={str(p.relative_to(REPO)): hashlib.sha256(p.read_bytes()).hexdigest()
                           for folder in ['reference/templates', 'reference/subtemplates', 'reference/data', 'reference/fixtures']
                           for p in sorted((REPO / folder).glob('*')) if p.is_file()})
+    report['extensionSources'] = {str(p.relative_to(REPO)): hashlib.sha256(p.read_bytes()).hexdigest()
+                                  for p in sorted((REPO / 'Extensions').rglob('*.cs'))}
     if provenance.exists():
         report['oracle'] = json.loads(provenance.read_text())
     (output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')

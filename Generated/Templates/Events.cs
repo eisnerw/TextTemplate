@@ -27,7 +27,7 @@ internal sealed partial class Events(EvaluationContext context) : TemplateUnit<E
     private TemplateContent renderEvents()
     {
         TemplateValue groupBy = Read("^")
-            .GroupBy(ForItem(item => item.Field("start").ToDate(() => ["YYYY-MM-DDT00:00:00"])), "<computed>", ["group", "start"], contextProbe: true)
+            .GroupBy(ForItem(item => item.Field("start").ToDate([() => "YYYY-MM-DDT00:00:00"])), "<computed>", [() => "group", () => "start"], contextProbe: true)
             .Render(ForItem(item => item.renderDateFormat()), null, replay: ForItem(item => item.groupLoadedData()));
 
         return Line($"{groupBy}");
@@ -39,7 +39,7 @@ internal sealed partial class Events(EvaluationContext context) : TemplateUnit<E
     private TemplateValue groupLoadedData()
     {
         return Value(Context.Current)
-            .GroupBy(ForItem(item => item.Field("start").ToDate(() => ["YYYY-MM-DDT00:00:00"])), "<computed>", ["group", "start"], contextProbe: false);
+            .GroupBy(ForItem(item => item.Field("start").ToDate([() => "YYYY-MM-DDT00:00:00"])), "<computed>", [() => "group", () => "start"], contextProbe: false);
     }
 
     // Template:
@@ -55,7 +55,7 @@ internal sealed partial class Events(EvaluationContext context) : TemplateUnit<E
         TemplateValue toUpper = Field("start")
             .ToUpper();
         TemplateValue orderBy = Field("group")
-            .OrderBy(ForItem(item => item.Field("start").ToDate(() => ["HHmm"])), "key", [], contextProbe: true)
+            .OrderBy(ForItem(item => item.Field("start").ToDate([() => "HHmm"])), "key", [], contextProbe: true)
             .Render(InScope(item => item.renderFormatTimes()), null, replay: ForItem(item => item.orderLoadedData()));
 
         return Line($$"""
@@ -90,7 +90,7 @@ internal sealed partial class Events(EvaluationContext context) : TemplateUnit<E
     private TemplateValue orderLoadedData()
     {
         return Value(Context.Current)
-            .OrderBy(ForItem(item => item.Field("start").ToDate(() => ["HHmm"])), "key", [], contextProbe: false);
+            .OrderBy(ForItem(item => item.Field("start").ToDate([() => "HHmm"])), "key", [], contextProbe: false);
     }
 
     // Template:
@@ -101,7 +101,7 @@ internal sealed partial class Events(EvaluationContext context) : TemplateUnit<E
     private TemplateContent renderFormatTimes()
     {
         TemplateValue formatTimes = Field("start")
-            .Call("formatTimes", () => [Get("end")]);
+            .Call("formatTimes", () => Get("end"));
         TemplateValue summary = Read("summary");
         TemplateValue content = Value(Context.CreateBullet("\n      \u0001{.} "));
         TemplateValue description = Read("description");
@@ -117,8 +117,8 @@ internal sealed partial class Events(EvaluationContext context) : TemplateUnit<E
     private TemplateContent SameDay()
     {
         bool content = EvaluationContext.Compare(Field("$0")
-            .ToDate(() => ["YYYYMMDD"]).Raw, "=", Field("$1")
-            .ToDate(() => ["YYYYMMDD"]).Raw);
+            .ToDate([() => "YYYYMMDD"]).Raw, "=", Field("$1")
+            .ToDate([() => "YYYYMMDD"]).Raw);
 
         return Line($"{content}");
     }
@@ -129,9 +129,9 @@ internal sealed partial class Events(EvaluationContext context) : TemplateUnit<E
     private TemplateContent SameAMPM()
     {
         bool content = (EvaluationContext.Compare(Field("$0")
-            .ToDate(() => ["a"]).Raw, "=", Field("$1")
-            .ToDate(() => ["a"]).Raw) && Context.TestCondition(Field("$0")
-            .Call("SameDay", () => [Get("$1")]).Raw));
+            .ToDate([() => "a"]).Raw, "=", Field("$1")
+            .ToDate([() => "a"]).Raw) && Context.TestCondition(Field("$0")
+            .Call("SameDay", () => Get("$1")).Raw));
 
         return Line($"{content}");
     }
@@ -142,7 +142,7 @@ internal sealed partial class Events(EvaluationContext context) : TemplateUnit<E
     private TemplateContent onHour()
     {
         bool content = EvaluationContext.Compare(Field("$0")
-            .ToDate(() => ["mm"]).Raw, "=", "00");
+            .ToDate([() => "mm"]).Raw, "=", "00");
 
         return Line($"{content}");
     }
@@ -165,7 +165,7 @@ internal sealed partial class Events(EvaluationContext context) : TemplateUnit<E
         TemplateValue chooseChoice()
         {
             if (!(Context.TestCondition(Field("$1")
-            .Call("SameDay", () => [Get("$0")]).Raw)))
+            .Call("SameDay", () => Get("$0")).Raw)))
             {
                 return Value(Each(ForItem(item => item.renderToUpper_2())));
             }
@@ -174,10 +174,10 @@ internal sealed partial class Events(EvaluationContext context) : TemplateUnit<E
         }
 
         TemplateValue toDate = Field("$0")
-            .ToDate(() => [Each(ForItem(item => item.renderChoice()))]);
+            .ToDate([() => Each(ForItem(item => item.renderChoice()))]);
         TemplateValue choice = chooseChoice();
         TemplateValue toDate_2 = Field("$1")
-            .ToDate(() => ["h:mma"]);
+            .ToDate([() => "h:mma"]);
 
         return Line($"{toDate}-{choice}{toDate_2}");
     }
@@ -207,7 +207,7 @@ internal sealed partial class Events(EvaluationContext context) : TemplateUnit<E
         TemplateValue chooseChoice_2()
         {
             if (!(Context.TestCondition(Field("$0")
-            .Call("SameAMPM", () => [Get("$1")]).Raw)))
+            .Call("SameAMPM", () => Get("$1")).Raw)))
             {
                 return Value(Each(itemContext => Line($"a")));
             }

@@ -4,7 +4,7 @@ This is Milestone 1's executable A-side oracle. It calls the preserved TypeScrip
 interpreter directly; it contains no C# implementation or replacement evaluation logic.
 
 See [the Externals example](EXTERNALS.md) for custom methods, value functions,
-annotation scope, observed JavaScript output, and the pending C# compatibility gap.
+annotation scope, observed JavaScript output, and matching handwritten C# extensions.
 
 ## Build and run
 

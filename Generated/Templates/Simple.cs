@@ -103,7 +103,7 @@ internal sealed partial class Simple(EvaluationContext context) : TemplateUnit<S
     private TemplateContent anded()
     {
         TemplateValue join = Field("$0")
-            .Join(() => [", ", " and "]);
+            .Join(() => ", ", () => " and ");
 
         return Line($"{join}");
     }

@@ -34,11 +34,11 @@ internal sealed partial class Web(EvaluationContext context) : TemplateUnit<Web>
     private TemplateContent renderWeb()
     {
         TemplateValue toHtml = Collect(ForItem(item => item.renderStyle()))
-            .Call("Style", () => ["normal", "blue"])
-            .Call("Tag", () => ["h2"])
+            .Call("Style", () => "normal", () => "blue")
+            .Call("Tag", () => "h2")
             .Call("ToHtml");
         TemplateValue click = Collect("Link")
-            .Call("Click", () => ["simple", "Click this to load a simple template", "link", "italic"]);
+            .Call("Click", () => "simple", () => "Click this to load a simple template", () => "link", () => "italic");
         TemplateValue external = Value(EvaluateSubtemplate("external"));
 
         return Line($$"""
@@ -57,9 +57,9 @@ internal sealed partial class Web(EvaluationContext context) : TemplateUnit<Web>
     private TemplateContent renderStyle()
     {
         TemplateValue style = Collect("test")
-            .Call("Style", () => ["outlined-red-dots"]);
+            .Call("Style", () => "outlined-red-dots");
         TemplateValue style_2 = Collect("World")
-            .Call("Style", () => ["italic", "bold", "red"]);
+            .Call("Style", () => "italic", () => "bold", () => "red");
 
         return Line($"Hello {style} {style_2}!!");
     }
@@ -72,7 +72,7 @@ internal sealed partial class Web(EvaluationContext context) : TemplateUnit<Web>
     private TemplateContent Style()
     {
         TemplateValue styleCases = Field("$1")
-            .Call("StyleCases", () => [Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9")]);
+            .Call("StyleCases", () => Get("$2"), () => Get("$3"), () => Get("$4"), () => Get("$5"), () => Get("$6"), () => Get("$7"), () => Get("$8"), () => Get("$9"));
         TemplateValue item0 = Read("$0");
 
         return Line($"<span style=\"{styleCases}\">{item0}</span>");
@@ -136,7 +136,7 @@ internal sealed partial class Web(EvaluationContext context) : TemplateUnit<Web>
     private TemplateValue Click()
     {
         return Collect(ForItem(item => item.renderItem2Result()))
-            .Call("OptionalStyle", () => ["link", Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9")]);
+            .Call("OptionalStyle", () => "link", () => Get("$2"), () => Get("$3"), () => Get("$4"), () => Get("$5"), () => Get("$6"), () => Get("$7"), () => Get("$8"), () => Get("$9"));
     }
 
     // Template:
@@ -227,7 +227,7 @@ internal sealed partial class Web(EvaluationContext context) : TemplateUnit<Web>
         }
 
         TemplateValue @case = Field("$0")
-            .Apply(selectCase);
+            .Case(selectCase, () => "italic", () => "font-style:italic", () => "normal", () => "font-weight:normal;white-space:normal", () => "bold", () => "font-weight:bold", () => "red", () => "color:red", () => "blue", () => "color:blue", () => "black", () => "color:black", () => "outlined-red-dots", () => "outline-color:red;outline-style:dotted", () => "underline", () => "text-decoration: underline", () => "link", () => "text-decoration: underline;color:blue");
         TemplateValue item1Result = chooseItem1Result();
 
         return Line($$"""
@@ -242,7 +242,7 @@ internal sealed partial class Web(EvaluationContext context) : TemplateUnit<Web>
     private TemplateContent renderStyleCases()
     {
         TemplateValue styleCases = Field("$1")
-            .Call("StyleCases", () => [Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9")]);
+            .Call("StyleCases", () => Get("$2"), () => Get("$3"), () => Get("$4"), () => Get("$5"), () => Get("$6"), () => Get("$7"), () => Get("$8"), () => Get("$9"));
 
         return Line($"{styleCases}");
     }
@@ -285,7 +285,7 @@ internal sealed partial class Web(EvaluationContext context) : TemplateUnit<Web>
     private TemplateContent renderStyle_2()
     {
         TemplateValue style = Field("$0")
-            .Call("Style", () => [Get("$2"), Get("$3"), Get("$4"), Get("$5"), Get("$6"), Get("$7"), Get("$8"), Get("$9")]);
+            .Call("Style", () => Get("$2"), () => Get("$3"), () => Get("$4"), () => Get("$5"), () => Get("$6"), () => Get("$7"), () => Get("$8"), () => Get("$9"));
 
         return Line($"{style}");
     }
@@ -297,7 +297,7 @@ internal sealed partial class Web(EvaluationContext context) : TemplateUnit<Web>
     private TemplateContent renderStyle_3()
     {
         TemplateValue style = Field("$0")
-            .Call("Style", () => [Get("$1")]);
+            .Call("Style", () => Get("$1"));
 
         return Line($"{style}");
     }

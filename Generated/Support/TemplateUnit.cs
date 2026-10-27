@@ -16,6 +16,14 @@ internal abstract class TemplateUnit<TUnit>(EvaluationContext context, Func<Eval
         [System.Runtime.CompilerServices.CallerLineNumber] int line = 0) => file + ":" + line;
     protected TemplateValue Value(object? value) => value is TemplateValue typed ? typed : new(context, value);
     private static object? Unwrap(object? value) => value is TemplateValue typed ? typed.Raw : value;
+    protected TemplateValue External(string name, Func<object?> receiver, Func<object?>[] arguments,
+        [System.Runtime.CompilerServices.CallerFilePath] string file = "",
+        [System.Runtime.CompilerServices.CallerLineNumber] int line = 0)
+    {
+        if (!context.Extensions.TryMethod(name, out var method))
+            throw new NotImplementedException(file + ":" + line + ": Execution is not implemented yet: Call " + name);
+        return Value(receiver()).Apply(value => method(new ExtensionCall(context, EvaluationContext.Intermediate(value), arguments)).Raw);
+    }
     protected TemplateValue Read(string path) => Value(context.Lookup(path));
     protected TemplateValue Collect(Func<EvaluationContext, object?> body) => Value(context.Receiver(body));
     protected TemplateValue Collect(object? literal) => Collect(_ => literal);

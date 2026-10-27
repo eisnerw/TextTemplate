@@ -1,0 +1,198 @@
+[
+  {
+    "name": "dynamic",
+    "script": "{[{name}].@ValueFunction(function)}",
+    "data": {
+      "name": "Alice",
+      "function": "test"
+    },
+    "exitCode": 0,
+    "expected": ">>Alice",
+    "errors": []
+  },
+  {
+    "name": "order",
+    "script": "{[{name}].@ValueFunction('test').@ValueFunction()}",
+    "data": {
+      "name": "Alice"
+    },
+    "exitCode": 0,
+    "expected": "Alice",
+    "errors": []
+  },
+  {
+    "name": "reverse",
+    "script": "{[{name}].@ValueFunction().@ValueFunction('test')}",
+    "data": {
+      "name": "Alice"
+    },
+    "exitCode": 0,
+    "expected": ">>Alice",
+    "errors": []
+  },
+  {
+    "name": "nested",
+    "script": "{[{person.name}].@ValueFunction('test')}",
+    "data": {
+      "person": {
+        "name": "Alice"
+      }
+    },
+    "exitCode": 0,
+    "expected": ">>Alice",
+    "errors": []
+  },
+  {
+    "name": "missing",
+    "script": "{absent.test('<','>')}",
+    "data": {},
+    "exitCode": 0,
+    "expected": "<***MISSING VALUE FOR ABSENT WHICH WOULD CAUSE THE LINE TO BE SKIPPED***>",
+    "errors": []
+  },
+  {
+    "name": "unicode",
+    "script": "{name.test('<','>')}",
+    "data": {
+      "name": "straße ı ﬃ"
+    },
+    "exitCode": 0,
+    "expected": "<STRASSE I FFI>",
+    "errors": []
+  },
+  {
+    "name": "regex",
+    "script": "{name.test(/a/i,42)}",
+    "data": {
+      "name": "Alice"
+    },
+    "exitCode": 0,
+    "expected": "/a/iALICE42",
+    "errors": []
+  },
+  {
+    "name": "combinedArguments",
+    "script": "{[{name.test(prefix,suffix)}].@ValueFunction('test')}",
+    "data": {
+      "name": "Alice",
+      "prefix": "<",
+      "suffix": ">"
+    },
+    "exitCode": 0,
+    "expected": ">><>>ALICE>>>",
+    "errors": []
+  },
+  {
+    "name": "few",
+    "script": "{name.test('<')}",
+    "data": {
+      "name": "Alice"
+    },
+    "exitCode": 1,
+    "expected": "Alice",
+    "errors": [
+      "Invalid parameters for test function"
+    ]
+  },
+  {
+    "name": "many",
+    "script": "{name.test('<','>','!')}",
+    "data": {
+      "name": "Alice"
+    },
+    "exitCode": 1,
+    "expected": "Alice",
+    "errors": [
+      "Invalid parameters for test function"
+    ]
+  },
+  {
+    "name": "unknownValueFunction",
+    "script": "{[{name}].@ValueFunction('unknown')}",
+    "data": {
+      "name": "Alice"
+    },
+    "exitCode": 1,
+    "expected": "Alice",
+    "errors": [
+      "Value Function not found: unknown"
+    ]
+  },
+  {
+    "name": "extraValueFunctionArguments",
+    "script": "{[{name}].@ValueFunction('test','ignored')}",
+    "data": {
+      "name": "Alice"
+    },
+    "exitCode": 0,
+    "expected": ">>Alice",
+    "errors": []
+  },
+  {
+    "name": "listContext",
+    "script": "{rows:[{name.test('<','>')}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "Alice"
+        },
+        {
+          "name": "Bob"
+        }
+      ]
+    },
+    "exitCode": 0,
+    "expected": "<ALICE>\n<BOB>",
+    "errors": []
+  },
+  {
+    "name": "inheritedListFunction",
+    "script": "{[{rows:[{name}]}].@ValueFunction('test')}",
+    "data": {
+      "rows": [
+        {
+          "name": "Alice"
+        },
+        {
+          "name": "Bob"
+        }
+      ]
+    },
+    "exitCode": 0,
+    "expected": ">>Alice\n>>Bob",
+    "errors": []
+  },
+  {
+    "name": "booleanFunction",
+    "script": "{[{flag}].@ValueFunction('test')}",
+    "data": {
+      "flag": true
+    },
+    "exitCode": 0,
+    "expected": true,
+    "errors": []
+  },
+  {
+    "name": "missingFunction",
+    "script": "before\n{[{missing}].@ValueFunction('test')}\nafter",
+    "data": {},
+    "exitCode": 0,
+    "expected": "before\nafter",
+    "errors": []
+  },
+  {
+    "name": "argumentReceiver",
+    "script": "{name.test('<','>')}",
+    "data": [
+      {
+        "name": "Alice"
+      },
+      {
+        "name": "Bob"
+      }
+    ],
+    "exitCode": 0,
+    "expected": "<ALICE\nBOB>",
+    "errors": []
+  }
+]

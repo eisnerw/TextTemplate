@@ -53,7 +53,7 @@ internal sealed partial class Birthdays(EvaluationContext context) : TemplateUni
         }
 
         TemplateValue @case = Field("$0")
-            .Apply(selectCase);
+            .Case(selectCase, () => EvaluationContext.ParseInteger("3"), () => Each(ForItem(item => item.renderUngrouped())), () => EvaluationContext.ParseInteger("2"), () => Each(ForItem(item => item.renderBySign())), () => Each(ForItem(item => item.renderByDate())));
 
         return Line($"{@case}");
     }
@@ -114,7 +114,7 @@ internal sealed partial class Birthdays(EvaluationContext context) : TemplateUni
     {
         TemplateValue groupBy = Collect("/data/famousBirthdays")
             .Where(itemContext => !itemContext.TestCondition(itemContext.Lookup("isAlive")))
-            .GroupBy(ForItem(item => item.Field("dob").ToDate(() => ["MM"])), "<computed>", ["group", "month"], contextProbe: true)
+            .GroupBy(ForItem(item => item.Field("dob").ToDate([() => "MM"])), "<computed>", [() => "group", () => "month"], contextProbe: true)
             .Render(InScope(item => item.renderToDate()), null, replay: ForItem(item => item.groupLoadedData()));
 
         return Line($"{groupBy}");
@@ -127,7 +127,7 @@ internal sealed partial class Birthdays(EvaluationContext context) : TemplateUni
     {
         return Value(Context.Current)
             .Where(itemContext => !itemContext.TestCondition(itemContext.Lookup("isAlive")))
-            .GroupBy(ForItem(item => item.Field("dob").ToDate(() => ["MM"])), "<computed>", ["group", "month"], contextProbe: false);
+            .GroupBy(ForItem(item => item.Field("dob").ToDate([() => "MM"])), "<computed>", [() => "group", () => "month"], contextProbe: false);
     }
 
     // Template:
@@ -141,9 +141,9 @@ internal sealed partial class Birthdays(EvaluationContext context) : TemplateUni
     private TemplateContent renderToDate()
     {
         TemplateValue toDate = Collect(ForItem(item => item.renderMonth()))
-            .ToDate(() => ["MMMM"]);
+            .ToDate([() => "MMMM"]);
         TemplateValue orderBy = Field("group")
-            .GroupBy(ForItem(item => item.Field("dob").ToDate(() => ["DD"])), "<computed>", ["daygroup", "day"], contextProbe: true)
+            .GroupBy(ForItem(item => item.Field("dob").ToDate([() => "DD"])), "<computed>", [() => "daygroup", () => "day"], contextProbe: true)
             .OrderBy(itemContext => itemContext.Lookup("day"), "key", [], contextProbe: true)
             .Render(InScope(item => item.renderDay()), null, replay: ForItem(item => item.orderLoadedData()));
 
@@ -167,7 +167,7 @@ internal sealed partial class Birthdays(EvaluationContext context) : TemplateUni
     private TemplateValue orderLoadedData()
     {
         return Value(Context.Current)
-            .GroupBy(ForItem(item => item.Field("dob").ToDate(() => ["DD"])), "<computed>", ["daygroup", "day"], contextProbe: false)
+            .GroupBy(ForItem(item => item.Field("dob").ToDate([() => "DD"])), "<computed>", [() => "daygroup", () => "day"], contextProbe: false)
             .OrderBy(itemContext => itemContext.Lookup("day"), "key", [], contextProbe: false);
     }
 
@@ -181,7 +181,7 @@ internal sealed partial class Birthdays(EvaluationContext context) : TemplateUni
     {
         TemplateValue day = Read("day");
         TemplateValue orderBy = Field("daygroup")
-            .OrderBy(itemContext => itemContext.Lookup("dob"), "key", ["D"], contextProbe: true)
+            .OrderBy(itemContext => itemContext.Lookup("dob"), "key", [() => "D"], contextProbe: true)
             .Render(InScope(item => item.renderName()), null, replay: ForItem(item => item.orderLoadedData_2()));
 
         return Line($$"""
@@ -197,7 +197,7 @@ internal sealed partial class Birthdays(EvaluationContext context) : TemplateUni
     private TemplateValue orderLoadedData_2()
     {
         return Value(Context.Current)
-            .OrderBy(itemContext => itemContext.Lookup("dob"), "key", ["D"], contextProbe: false);
+            .OrderBy(itemContext => itemContext.Lookup("dob"), "key", [() => "D"], contextProbe: false);
     }
 
     // Template:
@@ -222,7 +222,7 @@ internal sealed partial class Birthdays(EvaluationContext context) : TemplateUni
     private TemplateContent bySign()
     {
         TemplateValue groupBy = Collect("/data/famousBirthdays")
-            .GroupBy(itemContext => itemContext.Lookup("sign"), "sign", ["group"], contextProbe: true)
+            .GroupBy(itemContext => itemContext.Lookup("sign"), "sign", [() => "group"], contextProbe: true)
             .Render(InScope(item => item.renderSign()), null, replay: ForItem(item => item.groupLoadedData_2()));
 
         return Line($"{groupBy}");
@@ -234,7 +234,7 @@ internal sealed partial class Birthdays(EvaluationContext context) : TemplateUni
     private TemplateValue groupLoadedData_2()
     {
         return Value(Context.Current)
-            .GroupBy(itemContext => itemContext.Lookup("sign"), "sign", ["group"], contextProbe: false);
+            .GroupBy(itemContext => itemContext.Lookup("sign"), "sign", [() => "group"], contextProbe: false);
     }
 
     // Template:
@@ -248,8 +248,8 @@ internal sealed partial class Birthdays(EvaluationContext context) : TemplateUni
     {
         TemplateValue sign = Read("sign");
         TemplateValue orderBy = Field("group")
-            .GroupBy(ForItem(item => item.Field("dob").ToDate(() => ["yyyy"])), "<computed>", ["yeargroup", "year"], contextProbe: true)
-            .OrderBy(itemContext => itemContext.Lookup("year"), "key", ["D"], contextProbe: true)
+            .GroupBy(ForItem(item => item.Field("dob").ToDate([() => "yyyy"])), "<computed>", [() => "yeargroup", () => "year"], contextProbe: true)
+            .OrderBy(itemContext => itemContext.Lookup("year"), "key", [() => "D"], contextProbe: true)
             .Render(InScope(item => item.renderYear()), null, replay: ForItem(item => item.orderLoadedData_3()));
 
         return Line($"{sign}{orderBy}");
@@ -262,8 +262,8 @@ internal sealed partial class Birthdays(EvaluationContext context) : TemplateUni
     private TemplateValue orderLoadedData_3()
     {
         return Value(Context.Current)
-            .GroupBy(ForItem(item => item.Field("dob").ToDate(() => ["yyyy"])), "<computed>", ["yeargroup", "year"], contextProbe: false)
-            .OrderBy(itemContext => itemContext.Lookup("year"), "key", ["D"], contextProbe: false);
+            .GroupBy(ForItem(item => item.Field("dob").ToDate([() => "yyyy"])), "<computed>", [() => "yeargroup", () => "year"], contextProbe: false)
+            .OrderBy(itemContext => itemContext.Lookup("year"), "key", [() => "D"], contextProbe: false);
     }
 
     // Template:
@@ -276,7 +276,7 @@ internal sealed partial class Birthdays(EvaluationContext context) : TemplateUni
     {
         TemplateValue year = Read("year");
         TemplateValue orderBy = Field("yeargroup")
-            .OrderBy(itemContext => itemContext.Lookup("dob"), "key", ["A"], contextProbe: true)
+            .OrderBy(itemContext => itemContext.Lookup("dob"), "key", [() => "A"], contextProbe: true)
             .Render(InScope(item => item.renderFnameResult()), null, replay: ForItem(item => item.orderLoadedData_4()));
 
         return Line($$"""
@@ -292,7 +292,7 @@ internal sealed partial class Birthdays(EvaluationContext context) : TemplateUni
     private TemplateValue orderLoadedData_4()
     {
         return Value(Context.Current)
-            .OrderBy(itemContext => itemContext.Lookup("dob"), "key", ["A"], contextProbe: false);
+            .OrderBy(itemContext => itemContext.Lookup("dob"), "key", [() => "A"], contextProbe: false);
     }
 
     // Template:

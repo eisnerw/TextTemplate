@@ -413,3 +413,10 @@ all 13 templates and retain exact outputs and first-mismatch reports. Three HTTP
 fixtures remain unavailable to the offline hosts; they are not counted as matches.
 See [the comparison guide](../../tools/parity/README.md) for inputs, provenance,
 goldens, and the independent standalone regression test.
+
+## Handwritten extensions
+
+Generated executables support registered C# methods and scoped `@ValueFunction`.
+See [Extensions/README.md](../../../Extensions/README.md) for the typed API, runtime
+registration, deferred arguments, and build instructions. The parser does not
+need to know extension names. Handwritten sources stay outside Generated/.

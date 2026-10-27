@@ -31,6 +31,133 @@ public sealed class GenerationTests
     }
 
     [Fact]
+    public void ExternalExamplesMatchNodeIncludingErrors()
+    {
+        string repository = Repository();
+        string root = Path.Combine(Path.GetTempPath(), "texttemplate-externals-" + Guid.NewGuid().ToString("N"));
+        string input = Path.Combine(root, "input"), output = Path.Combine(root, "generated");
+        Directory.CreateDirectory(Path.Combine(input, "templates"));
+        Directory.CreateDirectory(Path.Combine(input, "subtemplates"));
+        try
+        {
+            using var cases = JsonDocument.Parse(File.ReadAllText(Path.Combine(repository, "tests/node-reference/externals-cases.json")));
+            foreach (var item in cases.RootElement.EnumerateArray())
+                File.WriteAllText(Path.Combine(input, "templates", item.GetProperty("name").GetString() + ".template"), item.GetProperty("script").GetString());
+            Assert.Equal(0, Program.Main(["--root", input, "--output", output]));
+            var build = Run("dotnet", output, "build", "--nologo", "-p:TemplateExtensionsDirectory=" + Path.Combine(repository, "Extensions"));
+            Assert.True(build.Exit == 0, build.Output + build.Error);
+            foreach (var item in cases.RootElement.EnumerateArray())
+            {
+                string name = item.GetProperty("name").GetString()!;
+                string data = Path.Combine(root, "data.json");
+                File.WriteAllText(data, item.GetProperty("data").GetRawText());
+                var node = Run("node", repository, "tools/node-reference/cli.mjs", "--template-text", item.GetProperty("script").GetString()!, "--data-file", data);
+                var actual = Run("dotnet", output, "bin/Debug/net10.0/GeneratedTemplates.dll", "--template", name, "--data-file", data);
+                Assert.Equal(item.GetProperty("exitCode").GetInt32(), node.Exit);
+                Assert.Equal(node.Exit, actual.Exit);
+                var expected = item.GetProperty("expected");
+                Match(expected.ValueKind == JsonValueKind.String ? expected.GetString()! : expected.GetRawText(), node.Output, name + " Node");
+                Match(node.Output, actual.Output, name + " " + item.GetRawText());
+                foreach (var error in item.GetProperty("errors").EnumerateArray())
+                    Assert.Contains(error.GetString()!, actual.Error);
+                if (actual.Exit != 0) Assert.Contains(".cs:", actual.Error);
+            }
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void HandwrittenExtensionsOverrideMethodsAndControlEvaluation()
+    {
+        string repository = Repository();
+        string root = Path.Combine(Path.GetTempPath(), "texttemplate-extension-api-" + Guid.NewGuid().ToString("N"));
+        string input = Path.Combine(root, "input"), output = Path.Combine(root, "generated");
+        Directory.CreateDirectory(Path.Combine(input, "templates"));
+        Directory.CreateDirectory(Path.Combine(input, "subtemplates"));
+        try
+        {
+            var scripts = new Dictionary<string, string>
+            {
+                ["custom"] = "{name.choose(name.ToJson())}",
+                ["upper"] = "{name.ToUpper(name.ToJson())}",
+                ["case"] = "{name.Case('a',name.ToJson(),'other')}",
+                ["shortCase"] = "{name.Case(name.ToJson())}",
+                ["group"] = "{name.GroupBy(name.ToJson(),name.ToJson())}",
+                ["where"] = "{name.Where(name.ToJson())}",
+                ["count"] = "{name.Count()}",
+                ["named"] = "{name.#custom(name.ToJson())}",
+                ["repeated"] = "{name.twice(name.tick())}",
+                ["lookup"] = "{[{name}|{[{name}].@ValueFunction()}|{name}].@ValueFunction('custom')}|{name}",
+                ["unknown"] = "{name.unregistered(name.ToJson())}"
+            };
+            foreach (var entry in scripts) File.WriteAllText(Path.Combine(input, "templates", entry.Key + ".template"), entry.Value);
+            Assert.Equal(0, Program.Main(["--root", input, "--output", output]));
+            string extensions = Path.Combine(root, "Extensions");
+            Directory.CreateDirectory(extensions);
+            File.WriteAllText(Path.Combine(extensions, "Probe.cs"), """
+                using System;
+                using System.Text.Json;
+                public static class Probe
+                {
+                    public static void Main()
+                    {
+                        using var data = JsonDocument.Parse("{\"name\":\"Alice\"}");
+                        int calls = 0;
+                        var extensions = new TemplateExtensions()
+                            .AddMethod("choose", call => call.Context.Lookup("name"))
+                            .AddMethod("ToUpper", call => TemplateValue.From("override"))
+                            .AddMethod("Case", call => TemplateValue.From("case"))
+                            .AddMethod("GroupBy", call => TemplateValue.From("group"))
+                            .AddMethod("Where", call => TemplateValue.From("where"))
+                            .AddMethod("Count", call => TemplateValue.From("count"))
+                            .AddMethod("#custom", call => TemplateValue.From("named"))
+                            .AddMethod("tick", call => TemplateValue.From((double)++calls))
+                            .AddMethod("twice", call => {
+                                _ = call.Arguments.ToString();
+                                _ = call.Receiver.ToString();
+                                _ = call.Context.ToString();
+                                if (calls != 0) throw new Exception("Debug inspection evaluated arguments");
+                                call.RequireArgumentCount(1);
+                                return TemplateValue.From(call.Arguments.Evaluate(0).Render() + call.Arguments.Evaluate(0).Render());
+                            })
+                            .AddValueFunction("custom", lookup => {
+                                _ = lookup.ToString();
+                                return TemplateValue.From("[" + lookup.DefaultValue().Render() + "]");
+                            });
+                        foreach (string name in new[] { "custom", "upper", "case", "shortCase", "group", "where", "count", "named", "repeated", "lookup" })
+                            Console.WriteLine(GeneratedTemplates.Render(name, data.RootElement, extensions: extensions));
+                        if (calls != 2) throw new Exception("Argument evaluation count");
+                        var emptyContext = new EvaluationContext(null, new System.Collections.Generic.Dictionary<string, Func<EvaluationContext, object?>>(),
+                            extensions: new TemplateExtensions()
+                                .AddMethod("GroupBy", call => { call.RequireArgumentCount(0); return TemplateValue.From("empty"); })
+                                .AddMethod("Where", call => { call.RequireArgumentCount(2); return TemplateValue.From("extra"); }));
+                        var value = new TemplateValue(emptyContext, "input");
+                        if (value.GroupBy(null, "key", []).Render() != "empty") throw new Exception("Empty arguments");
+                        if (value.Where(_ => throw new Exception("evaluated"), () => throw new Exception("evaluated")).Render() != "extra") throw new Exception("Extra arguments");
+                        // Registration is supplied per render, not global; defaults remain intact.
+                        Console.WriteLine(GeneratedTemplates.Render("count", data.RootElement, extensions: new TemplateExtensions()));
+                        try { GeneratedTemplates.Render("unknown", data.RootElement, extensions: extensions); throw new Exception("Missing registration accepted"); }
+                        catch (NotImplementedException error) {
+                            if (!error.Message.Contains("Call unregistered") || !error.Message.Contains(".cs:")) throw;
+                        }
+                        Console.WriteLine("OK");
+                    }
+                }
+                """);
+            var build = Run("dotnet", output, "build", "--nologo", "-p:StartupObject=Probe");
+            Assert.True(build.Exit == 0, build.Output + build.Error);
+            var actual = Run("dotnet", output, "bin/Debug/net10.0/GeneratedTemplates.dll");
+            Assert.True(actual.Exit == 0, actual.Error);
+            Assert.Equal("Alice\noverride\ncase\ncase\ngroup\nwhere\ncount\nnamed\n12\n[Alice]|Alice|[Alice]|Alice\n1\nOK\n", actual.Output);
+            // Regeneration leaves the handwritten source intact and includes it again.
+            string before = File.ReadAllText(Path.Combine(extensions, "Probe.cs"));
+            Assert.Equal(0, Program.Main(["--root", input, "--output", output]));
+            Assert.Equal(before, File.ReadAllText(Path.Combine(extensions, "Probe.cs")));
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
     public void LocalReferenceTemplatesMatchNode()
     {
         string repository = Repository();
@@ -49,6 +176,8 @@ public sealed class GenerationTests
                 File.WriteAllText(path, file.Value);
             }
             File.WriteAllText(Path.Combine(root, "GeneratedTemplates.csproj"), """<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable></PropertyGroup></Project>""");
+            foreach (string extension in Directory.GetFiles(Path.Combine(repository, "Extensions"), "*.cs"))
+                File.Copy(extension, Path.Combine(root, "Extension_" + Path.GetFileName(extension)));
             var build = Run("dotnet", root, "build", "--nologo", "-o", "output");
             Assert.True(build.Exit == 0, build.Output + build.Error);
             string emptyData = Path.Combine(root, "empty.json");
@@ -499,7 +628,7 @@ public sealed class GenerationTests
                             var context = new EvaluationContext(null, new());
                             var typed = new TemplateValue(context, data);
                             if (typed.ToString() != data.ToString()) throw new Exception("Typed JSON display differs.");
-                            if (new TemplateValue(context, "abc").Assert(() => [new TemplateValue(context, "abc"), "ok"]).Raw is not "ok")
+                            if (new TemplateValue(context, "abc").Assert(() => new TemplateValue(context, "abc"), () => "ok").Raw is not "ok")
                                 throw new Exception("Fluent methods did not accept typed arguments.");
                             if (new TemplateValue(context, nested).DebugView != "keep" || nested.DebugView != "keep")
                                 throw new Exception("Debugger did not preview evaluated content.");
@@ -676,7 +805,7 @@ public sealed class GenerationTests
             byte[] original = File.ReadAllBytes(output);
             File.WriteAllText(Path.Combine(root, "templates", "unsupported.template"), "{firstName.ToJson()}");
             Assert.Equal(0, Program.Main(["--root", root, "--output", output]));
-            Assert.Contains("Call ToJson", File.ReadAllText(output));
+            Assert.Contains("External(\"ToJson\",", File.ReadAllText(output));
             Assert.Equal(0, Program.Main(["--root", root, "--template", "hello", "--output", output]));
             Assert.Equal(original, File.ReadAllBytes(output));
             File.WriteAllText(Path.Combine(root, "templates", "unsupported.template"), "{");

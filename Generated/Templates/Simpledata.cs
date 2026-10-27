@@ -87,7 +87,7 @@ internal sealed partial class Simpledata(EvaluationContext context) : TemplateUn
     private TemplateContent anded()
     {
         TemplateValue join = Field("$0")
-            .Join(() => [", ", " and "]);
+            .Join(() => ", ", () => " and ");
 
         return Line($"{join}");
     }

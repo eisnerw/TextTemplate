@@ -794,3 +794,41 @@ ToDate/EncodeFor calls obtain C# caller locations automatically; regex, annotati
 and unsupported-operation diagnostics use the C# call site. Grouping retains inferred
 data keys and computed-key markers for legacy validation, not copied selector source.
 This supersedes earlier requirements to embed original locations in runtime errors.
+
+### 11.4 Handwritten C# extensions
+
+The generated syntax remains frozen: method names do not require parser registration.
+`TemplateExtensions` supplies case-sensitive runtime method and value-function maps.
+Handwritten `Extensions/Externals.cs` and a partial registration class compile into
+the executable; the emitter generates only the support API. The project links the
+sibling Extensions directory (overridable with `TemplateExtensionsDirectory`).
+Single-file generation exposes the same API. There are no runtime TextTemplate
+assembly dependencies and extension sources are outside disposable Generated/.
+
+Ordinary external methods precede built-ins and named subtemplate methods. Arguments
+are individually deferred in the caller scope; the extension controls whether and
+how often to evaluate them. Fluent built-ins retain their readable names and check
+registration inside their support methods. Unknown methods retain runtime stubs
+when unregistered, without eagerly evaluating their operands. Case branches and
+list selectors keep their existing deferred behavior. Annotation-method overrides
+are not implemented and registration rejects `@` names explicitly.
+
+`ExtensionCall`, `ExtensionArguments`, `ExtensionContext`, `TemplateValue`, and
+`ValueLookup` expose typed operations rather than syntax trees or visitors. Normal
+lookup bypass for value functions is explicit and does not mutate annotation state.
+Functions inherit into child contexts; clearing and restoration follow the verified
+Node behavior. Registry snapshots are per render, not process-global. Inspection
+must not evaluate argument delegates or perform lookup.
+
+The examples preserve legacy JavaScript casing/coercion and recoverable errors:
+CLI diagnostics identify maintained C# source, stdout retains the returned fallback,
+and exit status is nonzero. Embedded callers can collect diagnostics with a callback;
+without one, reported errors throw. Argument-count validation for new C# extensions
+can simply throw; the legacy example deliberately evaluates all arguments first.
+
+The original Externals template and seventeen additional Node-characterized cases cover
+method/value-function combination, dynamic names, annotation ordering, nested paths,
+missing values, inherited list contexts, boolean values, Unicode casing, regex arguments, invalid counts, unknown functions,
+and extra annotation arguments. Separate C# tests exercise runtime registration,
+overrides and selective/repeated evaluation without modifying the Node oracle.
+See Extensions/README.md for the authoring and deployment contract.

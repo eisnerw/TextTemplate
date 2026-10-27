@@ -166,7 +166,7 @@ internal sealed partial class Startup(EvaluationContext context) : TemplateUnit<
         TemplateValue chooseChoice()
         {
             if (Context.TestCondition(Collect("true")
-            .Matches(() => ["yes", "1", new TemplateRegex("/True/i", SourceLocation())]).Raw))
+            .Matches(() => "yes", () => "1", () => new TemplateRegex("/True/i", SourceLocation())).Raw))
             {
                 return Value(Each(itemContext => Line($"test")));
             }
@@ -187,13 +187,13 @@ internal sealed partial class Startup(EvaluationContext context) : TemplateUnit<
             .Render(ForItem(item => item.renderMissingValue()));
         TemplateValue content_7 = Value(Context.CreateBullet("\n   \u0001{.} "));
         TemplateValue replace = Collect("replacing")
-            .Replace(() => ["ing", "ement"]);
+            .Replace(() => "ing", () => "ement");
         TemplateValue trim = Collect(" trimming ")
             .Trim();
         TemplateValue substr = Collect(" substringy")
-            .Substr(() => [EvaluationContext.ParseInteger("1"), EvaluationContext.ParseInteger("9")]);
+            .Substr(() => EvaluationContext.ParseInteger("1"), () => EvaluationContext.ParseInteger("9"));
         TemplateValue align = Collect("padding")
-            .Align(() => [EvaluationContext.ParseInteger("9"), "C", "-"]);
+            .Align(() => EvaluationContext.ParseInteger("9"), () => "C", () => "-");
         TemplateValue toUpper = Collect("case")
             .ToUpper();
         TemplateValue choice = chooseChoice();
@@ -204,7 +204,7 @@ internal sealed partial class Startup(EvaluationContext context) : TemplateUnit<
         TemplateValue content_10 = Value(Context.CreateBullet("\n   \u0001{.} "));
         TemplateValue groupBy = Subtemplate("externalData")
             .Where(ForItem(item => item.renderContent()))
-            .GroupBy(itemContext => itemContext.Lookup("sign"), "sign", ["group"], contextProbe: true)
+            .GroupBy(itemContext => itemContext.Lookup("sign"), "sign", [() => "group"], contextProbe: true)
             .Render(ForItem(item => item.renderDateTest()), null, replay: ForItem(item => item.groupLoadedData()));
         TemplateValue content_11 = Value(Context.CreateBullet("\n   \u0001{.} "));
         TemplateValue where = Subtemplate("externalData")
@@ -221,25 +221,25 @@ internal sealed partial class Startup(EvaluationContext context) : TemplateUnit<
         TemplateValue content_16 = Value(Context.CreateBullet("\n\u0001{.} "));
         TemplateValue content_17 = Value(Context.CreateBullet("\n     \u0001{.} "));
         TemplateValue click = Collect("Microsoft's Monaco Editor")
-            .Call("Click", () => ["github.com/microsoft/monaco-editor"]);
+            .Call("Click", () => "github.com/microsoft/monaco-editor");
         TemplateValue content_18 = Value(Context.CreateBullet("\n     \u0001{.} "));
         TemplateValue click_2 = Collect("ANTLR (ANother Tool for Language Recognition)")
-            .Call("Click", () => ["www.antlr.org/", "click to go to the ANTLR website"]);
+            .Call("Click", () => "www.antlr.org/", () => "click to go to the ANTLR website");
         TemplateValue content_19 = Value(Context.CreateBullet("\n     \u0001{.} "));
         TemplateValue click_3 = Collect("The \"calc-monaco-editor\" project")
-            .Call("Click", () => ["github.com/Strumenta/calc-monaco-editor"]);
+            .Call("Click", () => "github.com/Strumenta/calc-monaco-editor");
         TemplateValue click_4 = Collect("article")
-            .Call("Click", () => ["tomassetti.me/writing-a-browser-based-editor-using-monaco-and-antlr/", "Click to go to the article"]);
+            .Call("Click", () => "tomassetti.me/writing-a-browser-based-editor-using-monaco-and-antlr/", () => "Click to go to the article");
         TemplateValue content_20 = Value(Context.CreateBullet("\n     \u0001{.} "));
         TemplateValue click_5 = Collect("Moment.js")
-            .Call("Click", () => ["momentjs.com", "Click to go to the website"]);
+            .Call("Click", () => "momentjs.com", () => "Click to go to the website");
         TemplateValue content_21 = Value(Context.CreateBullet("\n\u0001{.} "));
         TemplateValue click_6 = Collect("here")
-            .Call("Click", () => ["/load/docs", "Click to see the documentation using TextTemplate"]);
+            .Call("Click", () => "/load/docs", () => "Click to see the documentation using TextTemplate");
         TemplateValue click_7 = Collect("here")
-            .Call("Click", () => ["/runonserver/docs", "Click to see the documentation rendered on the server"]);
+            .Call("Click", () => "/runonserver/docs", () => "Click to see the documentation rendered on the server");
         TemplateValue click_8 = Collect("/runonserver/events")
-            .Call("Click", () => ["/runonserver/events", "Click to see the events template"]);
+            .Call("Click", () => "/runonserver/events", () => "Click to see the events template");
         TemplateValue examples = Value(EvaluateSubtemplate("examples"));
         TemplateValue notes = Value(EvaluateSubtemplate("notes"));
 
@@ -482,7 +482,7 @@ internal sealed partial class Startup(EvaluationContext context) : TemplateUnit<
     private TemplateValue renderJoin()
     {
         return Collect(ForItem(item => item.renderType()))
-            .Join(() => [", ", " and "]);
+            .Join(() => ", ", () => " and ");
     }
 
     // Template:
@@ -547,7 +547,7 @@ internal sealed partial class Startup(EvaluationContext context) : TemplateUnit<
         TemplateValue chooseChoice()
         {
             if (Context.TestCondition(Field("element1")
-            .LessThan(() => [Each(ForItem(item => item.renderElement2()))]).Raw))
+            .LessThan(() => Each(ForItem(item => item.renderElement2()))).Raw))
             {
                 return Value(Each(ForItem(item => item.renderElement1())));
             }
@@ -589,7 +589,7 @@ internal sealed partial class Startup(EvaluationContext context) : TemplateUnit<
     {
         return Value(Context.Current)
             .Where(ForItem(item => item.renderContent()))
-            .GroupBy(itemContext => itemContext.Lookup("sign"), "sign", ["group"], contextProbe: false);
+            .GroupBy(itemContext => itemContext.Lookup("sign"), "sign", [() => "group"], contextProbe: false);
     }
 
     // Template:
@@ -598,8 +598,8 @@ internal sealed partial class Startup(EvaluationContext context) : TemplateUnit<
     private bool renderContent()
     {
         return (EvaluationContext.Compare(Field("dob")
-            .ToDate(() => ["DD"]).Raw, "=", "27") && EvaluationContext.Compare(Field("lname")
-            .Substr(() => [EvaluationContext.ParseInteger("0"), EvaluationContext.ParseInteger("1")]).Raw, "=", "D"));
+            .ToDate([() => "DD"]).Raw, "=", "27") && EvaluationContext.Compare(Field("lname")
+            .Substr(() => EvaluationContext.ParseInteger("0"), () => EvaluationContext.ParseInteger("1")).Raw, "=", "D"));
     }
 
     // Template:
@@ -672,7 +672,7 @@ internal sealed partial class Startup(EvaluationContext context) : TemplateUnit<
     private bool renderContent_2()
     {
         return EvaluationContext.Compare(Field("dob")
-            .Substr(() => [EvaluationContext.ParseInteger("0"), EvaluationContext.ParseInteger("7")]).Raw, "=", "1967-10");
+            .Substr(() => EvaluationContext.ParseInteger("0"), () => EvaluationContext.ParseInteger("7")).Raw, "=", "1967-10");
     }
 
     // Template:
@@ -688,13 +688,13 @@ internal sealed partial class Startup(EvaluationContext context) : TemplateUnit<
         TemplateValue fname = Read("fname");
         TemplateValue lname = Read("lname");
         TemplateValue toDate = Field("dob")
-            .ToDate(() => ["MMMM"]);
+            .ToDate([() => "MMMM"]);
         TemplateValue toDate_2 = Field("dob")
-            .ToDate(() => ["YYYY"]);
+            .ToDate([() => "YYYY"]);
         TemplateValue toDate_3 = Field("dob")
-            .ToDate(() => ["dddd"]);
+            .ToDate([() => "dddd"]);
         TemplateValue toDate_4 = Field("dob")
-            .ToDate(() => ["do"]);
+            .ToDate([() => "do"]);
 
         return Line($"\"{dob}\", to show that {fname} {lname} was born in the month of {toDate} in {toDate_2} on {toDate_3} the {toDate_4}");
     }
@@ -716,7 +716,7 @@ internal sealed partial class Startup(EvaluationContext context) : TemplateUnit<
     private TemplateValue renderEncodeFor_2()
     {
         return Collect(ForItem(item => item.renderData()))
-            .EncodeFor(() => ["html"]);
+            .EncodeFor([() => "html"]);
     }
 
     // Template:
@@ -748,7 +748,7 @@ internal sealed partial class Startup(EvaluationContext context) : TemplateUnit<
     private bool renderContent_3()
     {
         return EvaluationContext.Compare(Field("dob")
-            .Substr(() => [EvaluationContext.ParseInteger("5"), EvaluationContext.ParseInteger("5")]).Raw, "=", "01-25");
+            .Substr(() => EvaluationContext.ParseInteger("5"), () => EvaluationContext.ParseInteger("5")).Raw, "=", "01-25");
     }
 
     // Template:
@@ -772,7 +772,7 @@ internal sealed partial class Startup(EvaluationContext context) : TemplateUnit<
     private TemplateValue renderJoin_2()
     {
         return Collect(ForItem(item => item.renderFalsy()))
-            .Join(() => [", ", " and "]);
+            .Join(() => ", ", () => " and ");
     }
 
     // Template:
@@ -895,7 +895,7 @@ internal sealed partial class Startup(EvaluationContext context) : TemplateUnit<
         TemplateValue chooseChoice()
         {
             if (!(Context.TestCondition(Field("$1")
-            .StartsWith(() => ["/"]).Raw)))
+            .StartsWith(() => "/").Raw)))
             {
                 return Value(Each(itemContext => Line($"https://")));
             }
@@ -942,28 +942,28 @@ internal sealed partial class Startup(EvaluationContext context) : TemplateUnit<
         TemplateValue content = Value(Context.CreateBullet("\u0001{.} "));
         TemplateValue content_2 = Value(Context.CreateBullet("\n   \u0001{.} "));
         TemplateValue click = Collect("A simple template")
-            .Call("Click", () => ["/load/simple", "Simple template"]);
+            .Call("Click", () => "/load/simple", () => "Simple template");
         TemplateValue content_3 = Value(Context.CreateBullet("\n   \u0001{.} "));
         TemplateValue click_2 = Collect("A demonstration of outlining")
-            .Call("Click", () => ["/load/outline", "Outline template"]);
+            .Call("Click", () => "/load/outline", () => "Outline template");
         TemplateValue content_4 = Value(Context.CreateBullet("\n   \u0001{.} "));
         TemplateValue click_3 = Collect("A demonstration of bullets")
-            .Call("Click", () => ["/load/bullets", "Bullets template"]);
+            .Call("Click", () => "/load/bullets", () => "Bullets template");
         TemplateValue content_5 = Value(Context.CreateBullet("\n   \u0001{.} "));
         TemplateValue click_4 = Collect("Use of Assert() for validating template output")
-            .Call("Click", () => ["/load/tests", "Tests template"]);
+            .Call("Click", () => "/load/tests", () => "Tests template");
         TemplateValue content_6 = Value(Context.CreateBullet("\n   \u0001{.} "));
         TemplateValue click_5 = Collect("Some interesting ways of using TextTemplate with the web")
-            .Call("Click", () => ["/load/web", "Web template"]);
+            .Call("Click", () => "/load/web", () => "Web template");
         TemplateValue content_7 = Value(Context.CreateBullet("\n   \u0001{.} "));
         TemplateValue click_6 = Collect("Date manipulation for a \"To Do\" list")
-            .Call("Click", () => ["/load/events", "Events template"]);
+            .Call("Click", () => "/load/events", () => "Events template");
         TemplateValue content_8 = Value(Context.CreateBullet("\n   \u0001{.} "));
         TemplateValue click_7 = Collect("A demonstration of grouping and order")
-            .Call("Click", () => ["/load/birthdays", "Birthdays template"]);
+            .Call("Click", () => "/load/birthdays", () => "Birthdays template");
         TemplateValue content_9 = Value(Context.CreateBullet("\n   \u0001{.} "));
         TemplateValue click_8 = Collect("Experimental application of a computed url to call ElasticSearch")
-            .Call("Click", () => ["/load/elastic", "Calling elastic"]);
+            .Call("Click", () => "/load/elastic", () => "Calling elastic");
 
         return Line($$"""
             {{content}}Examples
@@ -987,7 +987,7 @@ internal sealed partial class Startup(EvaluationContext context) : TemplateUnit<
     private TemplateContent notes()
     {
         TemplateValue click = Collect("licensed")
-            .Call("Click", () => ["https://github.com/eisnerw/texttemplate-editor/blob/texttemplate-editor/LICENSE.txt", "Click to see the license"]);
+            .Call("Click", () => "https://github.com/eisnerw/texttemplate-editor/blob/texttemplate-editor/LICENSE.txt", () => "Click to see the license");
 
         return Line($"Note: This software is copyrighted and {click} under the MIT license.  The software is beta and therefore subject to change.  In its current state, it is primarily useful for refining the language, building a reference implementation, and receiving feedback.  As noted above, implementations in other languages are anticipated.  The author welcomes comments, criticisms and suggestions.  ");
     }

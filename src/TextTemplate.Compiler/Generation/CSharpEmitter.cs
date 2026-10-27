@@ -20,7 +20,7 @@ public sealed class CSharpEmitter
     private string unitName = "";
     private sealed class MethodBody
     {
-        internal readonly HashSet<string> Names = new(StringComparer.Ordinal) { "item", "child", "TemplateDebug", "Builtins", "context", "itemContext", "dataContext", "definitionContext", "annotatedContext", "includedContext", "Get", "Line", "Named", "Unsupported", "InContext", "WithDefinitions", "MethodInput", "IsTruthy", "SubtemplateInput", "ApplySubtemplate", "SubtemplateDefinitions", "DefineSubtemplates", "Value", "Field", "Subtemplate", "EvaluateSubtemplate", "ForItem", "InScope", "TemplateValue", "Read", "Collect", "WithScope", "RegisterEach", "SourceLocation" };
+        internal readonly HashSet<string> Names = new(StringComparer.Ordinal) { "item", "child", "TemplateDebug", "Builtins", "context", "itemContext", "dataContext", "definitionContext", "annotatedContext", "includedContext", "Get", "Line", "Named", "Unsupported", "InContext", "WithDefinitions", "MethodInput", "IsTruthy", "SubtemplateInput", "ApplySubtemplate", "SubtemplateDefinitions", "DefineSubtemplates", "Value", "Field", "Subtemplate", "EvaluateSubtemplate", "ForItem", "InScope", "TemplateValue", "Read", "Collect", "WithScope", "RegisterEach", "SourceLocation", "External" };
         internal readonly List<string> Statements = new();
         internal readonly List<string> Functions = new();
     }
@@ -70,7 +70,7 @@ public sealed class CSharpEmitter
         var mainMap = new List<string>(); var sharedMap = new List<string>(); var importMap = new List<string>();
         var unitNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "TemplateDebug", "TemplateValue", "GeneratedTemplates", "EvaluationContext", "TemplateContent", "TemplateUnit", "Builtins", "NodeCasing", "TemplateRegex", "TemplateDate", "BulletIndent", "SubtemplateDefinitions", "GeneratedTemplateProgram", "Common",
+            "TemplateExtensions", "TemplateExtensionRegistration", "ExtensionCall", "ExtensionArguments", "ExtensionContext", "ValueLookup", "TemplateDebug", "TemplateValue", "GeneratedTemplates", "EvaluationContext", "TemplateContent", "TemplateUnit", "Builtins", "NodeCasing", "TemplateRegex", "TemplateDate", "BulletIndent", "SubtemplateDefinitions", "GeneratedTemplateProgram", "Common",
             "System", "StringComparer", "StringComparison", "JsonElement", "JsonDocument", "JsonValueKind",
             "Dictionary", "List", "Func", "Action", "Regex", "CultureInfo", "Math", "Console", "File",
             "Exception", "ArgumentException", "InvalidOperationException", "NotImplementedException"
@@ -82,7 +82,7 @@ public sealed class CSharpEmitter
             bodies.Clear(); plumbing.Clear();
             methodNames.Clear();
             unitName = units[key];
-            methodNames.UnionWith(new[] { unitName, "Get", "Line", "Named", "InContext", "WithDefinitions", "Unsupported", "Annotate", "Builtins", "Import", "Context", "Each", "MethodInput", "IsTruthy", "SubtemplateInput", "ApplySubtemplate", "SubtemplateDefinitions", "DefineSubtemplates", "Value", "Field", "Subtemplate", "EvaluateSubtemplate", "ForItem", "InScope", "TemplateValue", "Read", "Collect", "WithScope", "RegisterEach", "SourceLocation" });
+            methodNames.UnionWith(new[] { unitName, "Get", "Line", "Named", "InContext", "WithDefinitions", "Unsupported", "Annotate", "Builtins", "Import", "Context", "Each", "MethodInput", "IsTruthy", "SubtemplateInput", "ApplySubtemplate", "SubtemplateDefinitions", "DefineSubtemplates", "Value", "Field", "Subtemplate", "EvaluateSubtemplate", "ForItem", "InScope", "TemplateValue", "Read", "Collect", "WithScope", "RegisterEach", "SourceLocation", "External" });
             IndexDefinitions(source.Tree);
             if (source.Category == "subtemplates")
             {
@@ -111,13 +111,14 @@ public sealed class CSharpEmitter
             "    private static readonly Dictionary<string, Func<EvaluationContext, object?>> Templates = new(StringComparer.Ordinal)\n    {\n" + string.Join("\n", mainMap) + "\n    };\n" +
             "    private static readonly Dictionary<string, Func<EvaluationContext, object?>> Shared = new(StringComparer.Ordinal)\n    {\n" + string.Join("\n", sharedMap) + "\n    };\n" +
             "    private static readonly Dictionary<string, Func<EvaluationContext, EvaluationContext>> Imports = new(StringComparer.Ordinal)\n    {\n" + string.Join("\n", importMap) + "\n    };\n" +
-            "    public static string Render(string name, JsonElement? data = null, string? dataRoot = null)\n    {\n" +
+            "    public static string Render(string name, JsonElement? data = null, string? dataRoot = null, TemplateExtensions? extensions = null, Action<string>? reportError = null)\n    {\n" +
             "        if (!Templates.TryGetValue(name, out Func<EvaluationContext, object?>? template)) throw new ArgumentException(\"Unknown template: \" + name);\n" +
-            "        return (string)EvaluationContext.At(nameof(GeneratedTemplates), () => new EvaluationContext(data, Shared, dataRoot, Imports).Render(template) ?? \"\")!;\n    }\n\n" + "}\n");
+            "        return (string)EvaluationContext.At(nameof(GeneratedTemplates), () => new EvaluationContext(data, Shared, dataRoot, Imports, extensions, reportError).Render(template) ?? \"\")!;\n    }\n\n" + "}\n");
         int programStart = runtime.IndexOf("public static class GeneratedTemplateProgram", StringComparison.Ordinal);
         files.Add("Support/EvaluationContext.cs", Header + runtime[..programStart]);
         files.Add("Program.cs", Header + runtime[programStart..]);
         files.Add("Support/TemplateUnit.cs", Header + UnitSupport);
+        files.Add("Support/TemplateExtensions.cs", Header + ReadSupport("StandaloneExtensions.cs.txt"));
         files.Add("Support/TemplateValue.cs", Header + ReadSupport("StandaloneValue.cs.txt"));
         files.Add("Support/TemplateDebug.cs", Header + ReadSupport("StandaloneDebug.cs.txt"));
         files.Add("Support/Builtins.cs", Header + ReadSupport("StandaloneBuiltins.cs.txt"));
@@ -170,6 +171,14 @@ public sealed class CSharpEmitter
                 [System.Runtime.CompilerServices.CallerLineNumber] int line = 0) => file + ":" + line;
             protected TemplateValue Value(object? value) => value is TemplateValue typed ? typed : new(context, value);
             private static object? Unwrap(object? value) => value is TemplateValue typed ? typed.Raw : value;
+            protected TemplateValue External(string name, Func<object?> receiver, Func<object?>[] arguments,
+                [System.Runtime.CompilerServices.CallerFilePath] string file = "",
+                [System.Runtime.CompilerServices.CallerLineNumber] int line = 0)
+            {
+                if (!context.Extensions.TryMethod(name, out var method))
+                    throw new NotImplementedException(file + ":" + line + ": Execution is not implemented yet: Call " + name);
+                return Value(receiver()).Apply(value => method(new ExtensionCall(context, EvaluationContext.Intermediate(value), arguments)).Raw);
+            }
             protected TemplateValue Read(string path) => Value(context.Lookup(path));
             protected TemplateValue Collect(Func<EvaluationContext, object?> body) => Value(context.Receiver(body));
             protected TemplateValue Collect(object? literal) => Collect(_ => literal);
@@ -256,7 +265,7 @@ public sealed class CSharpEmitter
             return (lambda ? context + " => " : "") + context + ".WithDefaultIndent(" + (args.Count == 0 ? "null" : Quote(args[0].Kind == SyntaxKind.String ? DecodeString(args[0].Value!) : args[0].Value!)) + ")";
         if (call.Value == "@Falsy" && (args.Count == 0 || args.Count == 1 && args[0].Kind == SyntaxKind.Regex))
             return (lambda ? context + " => " : "") + context + ".WithFalsy(" + (args.Count == 0 ? "null" : "new TemplateRegex(" + Quote(args[0].Value!) + ", " + "SourceLocation()" + ")") + ")";
-        if (call.Value is "@DateTest" or "@DateFormat" or "@EncodeDataFor" && source is not null)
+        if (call.Value is "@DateTest" or "@DateFormat" or "@EncodeDataFor" or "@ValueFunction" && source is not null)
         {
             string AnnotationArgument(SyntaxNode arg) => arg.Kind switch
             {
@@ -266,7 +275,7 @@ public sealed class CSharpEmitter
                 SyntaxKind.Identifier => context + ".Lookup(" + Quote(arg.Value!) + ")",
                 _ => context + ".Each(ForItem(item => item." + Emit(arg, source) + "()))"
             };
-            return (lambda ? context + " => " : "") + context + (call.Value == "@DateTest" ? ".WithDateTest(" : call.Value == "@EncodeDataFor" ? ".WithEncoding(" : ".WithDateFormat(") +
+            return (lambda ? context + " => " : "") + context + (call.Value == "@ValueFunction" ? ".WithValueFunction(" : call.Value == "@DateTest" ? ".WithDateTest(" : call.Value == "@EncodeDataFor" ? ".WithEncoding(" : ".WithDateFormat(") +
                 "SourceLocation()" +
                 (args.Count == 0 ? "" : ", " + string.Join(", ", args.Select(AnnotationArgument))) + ")";
         }
@@ -579,8 +588,9 @@ public sealed class CSharpEmitter
             if (call.Value is not ("ToDate" or "ToUpper" or "ToLower" or "Count" or "Join")) return null;
             var args = call.Children.Skip(1).SelectMany(child => child.Children).ToList();
             if (args.Any(arg => arg.Kind != SyntaxKind.String) || call.Value == "Count" && args.Count > 0) return null;
-            result += "." + call.Value + "(" +
-                (args.Count == 0 ? "" : "() => [" + string.Join(", ", args.Select(arg => Quote(DecodeString(arg.Value!)))) + "]") + ")";
+            string arguments = string.Join(", ", args.Select(arg => "() => " + Quote(DecodeString(arg.Value!))));
+            if (call.Value == "ToDate" && arguments.Length > 0) arguments = "[" + arguments + "]";
+            result += "." + call.Value + "(" + arguments + ")";
         }
         return "ForItem(item => " + result + ")";
     }
@@ -763,24 +773,29 @@ public sealed class CSharpEmitter
                     string keyText = groupArgs.Count == 0 ? "" : node.Value == "OrderBy" ? "key" :
                         groupArgs.Count > 3 || System.Text.RegularExpressions.Regex.IsMatch(selectorText, @"^[a-zA-Z_][a-zA-Z0-9_]*$")
                             ? selectorText : "<computed>";
-                    string selector = groupArgs.Count == 0 ? "itemContext => null" : RawChild(groupArgs[0]);
+                    string selector = groupArgs.Count == 0 ? "null" : RawChild(groupArgs[0]);
                     string input = ReferenceEquals(node.Children[0], replayReceiver) ? "Context.Current" : node.Children[0].Kind == SyntaxKind.Call || receiver.Value?.StartsWith('^') == true ? Call(node.Children[0])
                         : Collected(node.Children[0]);
                     expression = Fluent(input) + "\n            ." + node.Value + "(" + selector + ", " + Quote(keyText) + ", " +
-                        "[" + string.Join(", ", groupArgs.Skip(1).Select(Call)) + "], contextProbe: " + (contextProbe ? "true" : "false") + ").Raw";
+                        "[" + string.Join(", ", groupArgs.Skip(1).Select(arg => "() => " + Call(arg))) + "], contextProbe: " + (contextProbe ? "true" : "false") + ").Raw";
                 }
                 else if (node.Value == "Where")
                 {
                     var filterArgs = node.Children.Skip(1).SelectMany(child => child.Children).ToList();
                     string input = ReferenceEquals(node.Children[0], replayReceiver) ? "Context.Current" : node.Children[0].Kind == SyntaxKind.Call || receiver.Value?.StartsWith('^') == true ? Call(node.Children[0])
                         : Collected(node.Children[0]);
-                    expression = Fluent(input) + "\n            .Where(" + (filterArgs.Count == 0 ? "null" : RawChild(filterArgs[0])) + ").Raw";
+                    expression = Fluent(input) + "\n            .Where(" + (filterArgs.Count == 0 ? "null" : RawChild(filterArgs[0])) +
+                        (filterArgs.Count <= 1 ? "" : ", " + string.Join(", ", filterArgs.Skip(1).Select(arg => "() => " + Call(arg)))) + ").Raw";
                 }
                 else if (node.Value == "Case")
                 {
                     var caseArgs = node.Children.Skip(1).SelectMany(child => child.Children).ToList();
                     // TODO: Characterize too-short Case argument forms (fewer than three arguments).
-                    if (caseArgs.Count < 3) expression = Stub();
+                    if (caseArgs.Count < 3)
+                    {
+                        string input = node.Children[0].Kind == SyntaxKind.Call ? Call(node.Children[0]) : Collected(node.Children[0]);
+                        expression = "External(\"Case\", () => " + input + ", [" + string.Join(", ", caseArgs.Select(arg => "() => " + Call(arg))) + "]).Raw";
+                    }
                     else
                     {
                         string function = Unique("selectCase", current.Names);
@@ -798,13 +813,13 @@ public sealed class CSharpEmitter
                         body.Append("                default:\n                    return ").Append(caseArgs.Count % 2 == 0 ? "value" : "EvaluationContext.Intermediate(" + Call(caseArgs[^1]) + ")").Append(";\n")
                             .Append("            }\n        }\n\n");
                         current.Functions.Add(body.ToString());
-                        expression = Fluent(input) + "\n            .Apply(" + function + ").Raw";
+                        expression = Fluent(input) + "\n            .Case(" + function + ", " + string.Join(", ", caseArgs.Select(arg => "() => " + Call(arg))) + ").Raw";
                     }
                 }
                 // TODO: Implement Count(predicate) with per-item predicate evaluation.
                 else if (node.Value!.StartsWith('#') || (node.Value == "Count" && !node.Children.Skip(1).SelectMany(child => child.Children).Any()) || node.Value is "EncodeFor" or "ToDate" or "Compose" or "IfMissing" or "Join" or "Align" or "Trim" or "StartsWith" or "EndsWith" or "Contains" or "Replace" or "Substr" or "IndexOf" or "LastIndexOf" or "EndIndexOf" or "ToUpper" or "ToLower" or "GreaterThan" or "LessThan" or "Matches" or "Assert")
                 {
-                    string arguments = string.Join(", ", node.Children.Skip(1).SelectMany(child => child.Children).Select(Call));
+                    string arguments = string.Join(", ", node.Children.Skip(1).SelectMany(child => child.Children).Select(arg => "() => " + Call(arg)));
                     string input = ReferenceEquals(node.Children[0], replayReceiver) ? "Context.Current" : node.Children[0].Kind == SyntaxKind.Call || receiver.Value?.StartsWith('^') == true ? Call(node.Children[0]) : node.Children[0].Kind == SyntaxKind.Identifier && !node.Children[0].Value!.StartsWith('@')
                         ? "Field(" + Quote(node.Children[0].Value!) + ").Raw"
                         : node.Children[0].Kind == SyntaxKind.NamedSubtemplate
@@ -812,11 +827,17 @@ public sealed class CSharpEmitter
                         : Collected(node.Children[0]);
                     string fluentInput = Fluent(input);
                     string prefix = node.Value.StartsWith('#') ? Quote(node.Value[1..]) : "";
-                    string deferredArguments = arguments.Length == 0 ? "" : "() => [" + arguments + "]";
+                    string deferredArguments = arguments.Length > 0 && node.Value is "ToDate" or "EncodeFor" ? "[" + arguments + "]" : arguments;
                     expression = fluentInput + "\n            ." + (node.Value.StartsWith('#') ? "Call" : node.Value) + "(" + prefix +
                         (prefix.Length > 0 && deferredArguments.Length > 0 ? ", " : "") + deferredArguments + ").Raw";
                 }
-                else expression = Stub();
+                else
+                {
+                    string input = node.Children[0].Kind == SyntaxKind.Call || receiver.Value?.StartsWith('^') == true
+                        ? Call(node.Children[0]) : Collected(node.Children[0]);
+                    string arguments = string.Join(", ", node.Children.Skip(1).SelectMany(child => child.Children).Select(arg => "() => " + Call(arg)));
+                    expression = "External(" + Quote(node.Value!) + ", () => " + input + ", [" + arguments + "]).Raw";
+                }
                 break;
             case SyntaxKind.Regex:
                 expression = "new TemplateRegex(" + Quote(node.Value!) + ", " + "SourceLocation()" + ")";

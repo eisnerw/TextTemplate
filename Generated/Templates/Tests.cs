@@ -21,7 +21,7 @@ internal sealed partial class Tests(EvaluationContext context) : TemplateUnit<Te
     private TemplateContent renderTests()
     {
         TemplateValue assert = Subtemplate("tests")
-            .Assert(() => [EvaluateSubtemplate("expected"), "ALL TESTS PASSED"]);
+            .Assert(() => EvaluateSubtemplate("expected"), () => "ALL TESTS PASSED");
 
         return Line($"{assert}");
     }
@@ -39,7 +39,7 @@ internal sealed partial class Tests(EvaluationContext context) : TemplateUnit<Te
         TemplateValue chooseChoice()
         {
             if (Context.TestCondition(Field("$0")
-            .Matches(() => [EvaluationContext.ParseInteger("1"), EvaluationContext.ParseInteger("2"), EvaluationContext.ParseInteger("3"), EvaluationContext.ParseInteger("4"), EvaluationContext.ParseInteger("5"), EvaluationContext.ParseInteger("6"), EvaluationContext.ParseInteger("7"), EvaluationContext.ParseInteger("8"), EvaluationContext.ParseInteger("9"), EvaluationContext.ParseInteger("10"), EvaluationContext.ParseInteger("11"), EvaluationContext.ParseInteger("12"), EvaluationContext.ParseInteger("13"), EvaluationContext.ParseInteger("14"), EvaluationContext.ParseInteger("15"), EvaluationContext.ParseInteger("16")]).Raw))
+            .Matches(() => EvaluationContext.ParseInteger("1"), () => EvaluationContext.ParseInteger("2"), () => EvaluationContext.ParseInteger("3"), () => EvaluationContext.ParseInteger("4"), () => EvaluationContext.ParseInteger("5"), () => EvaluationContext.ParseInteger("6"), () => EvaluationContext.ParseInteger("7"), () => EvaluationContext.ParseInteger("8"), () => EvaluationContext.ParseInteger("9"), () => EvaluationContext.ParseInteger("10"), () => EvaluationContext.ParseInteger("11"), () => EvaluationContext.ParseInteger("12"), () => EvaluationContext.ParseInteger("13"), () => EvaluationContext.ParseInteger("14"), () => EvaluationContext.ParseInteger("15"), () => EvaluationContext.ParseInteger("16")).Raw))
             {
                 return Value(Each(ForItem(item => item.renderItem0())));
             }
@@ -59,7 +59,7 @@ internal sealed partial class Tests(EvaluationContext context) : TemplateUnit<Te
     {
         TemplateValue item0 = Read("$0");
         TemplateValue assert = Field("$1")
-            .Assert(() => [Get("$2"), "passed"]);
+            .Assert(() => Get("$2"), () => "passed");
 
         return Line($"Test {item0} {assert}");
     }
@@ -2177,37 +2177,37 @@ internal sealed partial class Tests(EvaluationContext context) : TemplateUnit<Te
     private TemplateContent tests()
     {
         TemplateValue test = Collect("1")
-            .Call("test", () => [EvaluateSubtemplate("test1"), EvaluateSubtemplate("test1Result")]);
+            .Call("test", () => EvaluateSubtemplate("test1"), () => EvaluateSubtemplate("test1Result"));
         TemplateValue test_2 = Collect("2")
-            .Call("test", () => [EvaluateSubtemplate("test2"), EvaluateSubtemplate("test2Result")]);
+            .Call("test", () => EvaluateSubtemplate("test2"), () => EvaluateSubtemplate("test2Result"));
         TemplateValue test_3 = Collect("3")
-            .Call("test", () => [EvaluateSubtemplate("test3"), EvaluateSubtemplate("test3Result")]);
+            .Call("test", () => EvaluateSubtemplate("test3"), () => EvaluateSubtemplate("test3Result"));
         TemplateValue test_4 = Collect("4")
-            .Call("test", () => [EvaluateSubtemplate("test4"), EvaluateSubtemplate("test4Result")]);
+            .Call("test", () => EvaluateSubtemplate("test4"), () => EvaluateSubtemplate("test4Result"));
         TemplateValue test_5 = Collect("5")
-            .Call("test", () => [EvaluateSubtemplate("test5"), EvaluateSubtemplate("test5Result")]);
+            .Call("test", () => EvaluateSubtemplate("test5"), () => EvaluateSubtemplate("test5Result"));
         TemplateValue test_6 = Collect("6")
-            .Call("test", () => [EvaluateSubtemplate("test6"), EvaluateSubtemplate("test6Result")]);
+            .Call("test", () => EvaluateSubtemplate("test6"), () => EvaluateSubtemplate("test6Result"));
         TemplateValue test_7 = Collect("7")
-            .Call("test", () => [EvaluateSubtemplate("test7"), EvaluateSubtemplate("test7Result")]);
+            .Call("test", () => EvaluateSubtemplate("test7"), () => EvaluateSubtemplate("test7Result"));
         TemplateValue test_8 = Collect("8")
-            .Call("test", () => [EvaluateSubtemplate("test8"), EvaluateSubtemplate("test8Result")]);
+            .Call("test", () => EvaluateSubtemplate("test8"), () => EvaluateSubtemplate("test8Result"));
         TemplateValue test_9 = Collect("9")
-            .Call("test", () => [EvaluateSubtemplate("test9"), EvaluateSubtemplate("test9Result")]);
+            .Call("test", () => EvaluateSubtemplate("test9"), () => EvaluateSubtemplate("test9Result"));
         TemplateValue test_10 = Collect("10")
-            .Call("test", () => [EvaluateSubtemplate("test10"), EvaluateSubtemplate("test10Result")]);
+            .Call("test", () => EvaluateSubtemplate("test10"), () => EvaluateSubtemplate("test10Result"));
         TemplateValue test_11 = Collect("11")
-            .Call("test", () => [EvaluateSubtemplate("test11"), EvaluateSubtemplate("test11Result")]);
+            .Call("test", () => EvaluateSubtemplate("test11"), () => EvaluateSubtemplate("test11Result"));
         TemplateValue test_12 = Collect("12")
-            .Call("test", () => [EvaluateSubtemplate("test12"), EvaluateSubtemplate("test12Result")]);
+            .Call("test", () => EvaluateSubtemplate("test12"), () => EvaluateSubtemplate("test12Result"));
         TemplateValue test_13 = Collect("13")
-            .Call("test", () => [EvaluateSubtemplate("test13"), EvaluateSubtemplate("test13Result")]);
+            .Call("test", () => EvaluateSubtemplate("test13"), () => EvaluateSubtemplate("test13Result"));
         TemplateValue test_14 = Collect("14")
-            .Call("test", () => [EvaluateSubtemplate("test14"), EvaluateSubtemplate("test14Result")]);
+            .Call("test", () => EvaluateSubtemplate("test14"), () => EvaluateSubtemplate("test14Result"));
         TemplateValue test_15 = Collect("15")
-            .Call("test", () => [EvaluateSubtemplate("test15"), EvaluateSubtemplate("test15Result")]);
+            .Call("test", () => EvaluateSubtemplate("test15"), () => EvaluateSubtemplate("test15Result"));
         TemplateValue test_16 = Collect("16")
-            .Call("test", () => [EvaluateSubtemplate("test16"), EvaluateSubtemplate("test16Result")]);
+            .Call("test", () => EvaluateSubtemplate("test16"), () => EvaluateSubtemplate("test16Result"));
 
         return Line($$"""
             

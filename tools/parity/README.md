@@ -18,15 +18,14 @@ collection on Node and its equivalent individual files on C#.
 
 The output directory contains exact stdout, stderr, and `report.json`, including
 exit codes, byte lengths, first differing byte and escaped surrounding text,
-source/input hashes, and Node oracle provenance. Temporary build files are removed.
+source/input and handwritten extension hashes, and Node oracle provenance. Temporary build files are removed.
 There is no whitespace or newline normalization. Exit status is 0 only when every
 template matches; mismatches, execution failures, timeouts, and unavailable external
 resources return 1. Build failures abort with diagnostics.
 
-Current result: **10 exact matches; 1 unimplemented extension case; 3 external-resource cases**.
-The new `externals` template runs successfully in Node but reaches the generated
-C# `Call test` not-implemented stub. Its Node output is frozen for future extension
-support; see [the Externals example](../node-reference/EXTERNALS.md).
+Current result: **11 exact matches; 3 external-resource cases**. The comparison
+build includes the handwritten C# sources from `Extensions/`; `externals` now
+matches the Node golden. See [C# extensions](../../Extensions/README.md).
 `web`, `wikipedia`,
 and `elastic` require HTTP resources that both offline hosts reject. Matching
 failure categories are recorded separately and are not rendering parity. The tool
@@ -35,8 +34,7 @@ does not make network requests or change those templates.
 Frozen outputs and the evaluation-input manifest are in
 `tests/node-reference/collection-golden/`. `LocalReferenceTemplatesMatchNode`
 builds an independent executable and checks all local templates against both
-the live Node oracle and these goldens. It currently fails on `externals` until C#
-extension support is implemented. The legacy `tests` template deliberately
+the live Node oracle and these goldens. The legacy `tests` template deliberately
 renders `ALL TESTS PASSED`; byte equality with that result is tested too.
 
 ```sh

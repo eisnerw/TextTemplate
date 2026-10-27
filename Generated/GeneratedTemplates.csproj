@@ -4,6 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <TemplateExtensionsDirectory Condition="'$(TemplateExtensionsDirectory)' == ''">../Extensions</TemplateExtensionsDirectory>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="GeneratedTemplates.cs" />
@@ -36,6 +37,7 @@
     <Compile Include="Support/TemplateContent.cs" />
     <Compile Include="Support/TemplateDate.cs" />
     <Compile Include="Support/TemplateDebug.cs" />
+    <Compile Include="Support/TemplateExtensions.cs" />
     <Compile Include="Support/TemplateRegex.cs" />
     <Compile Include="Support/TemplateUnit.cs" />
     <Compile Include="Support/TemplateValue.cs" />
@@ -44,6 +46,7 @@
     <Compile Include="Templates/Docs.cs" />
     <Compile Include="Templates/Elastic.cs" />
     <Compile Include="Templates/Events.cs" />
+    <Compile Include="Templates/Externals.cs" />
     <Compile Include="Templates/Outline.cs" />
     <Compile Include="Templates/Simple.cs" />
     <Compile Include="Templates/Simpledata.cs" />
@@ -52,5 +55,6 @@
     <Compile Include="Templates/Tests.cs" />
     <Compile Include="Templates/Web.cs" />
     <Compile Include="Templates/Wikipedia.cs" />
+    <Compile Include="$(TemplateExtensionsDirectory)/**/*.cs" />
   </ItemGroup>
 </Project>
