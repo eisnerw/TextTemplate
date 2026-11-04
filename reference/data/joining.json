@@ -1,0 +1,20 @@
+{
+  "words": [
+    "red",
+    "green",
+    "blue"
+  ],
+  "numbers": [
+    "1",
+    "2",
+    "3"
+  ],
+  "people": [
+    {
+      "name": "Alice"
+    },
+    {
+      "name": "Bob"
+    }
+  ]
+}

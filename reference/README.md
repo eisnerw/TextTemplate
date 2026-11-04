@@ -1,15 +1,16 @@
 
 # Legacy TextTemplate Reference Materials
 
-This directory contains source files and test fixtures copied from
-the original `eisnerw/texttemplate-editor` repository.
+This directory contains preserved source files and fixtures from
+`eisnerw/texttemplate-editor`, plus new compatibility examples.
 
 These files are preserved to document the original TextTemplate
 syntax and behavior.
 
 ## Rules
 
-- Do not modify the reference files when implementing the new compiler.
+- Keep the preserved grammar, interpreter, and original JSON fixtures unchanged.
+- Add regression examples under `templates/` and `data/`, with Node golden outputs.
 - Make changes in the appropriate `src/` projects instead.
 - Preserve the original grammar until behavioral equivalence is achieved.
 - Use the reference implementation and fixtures to develop A/B tests.
@@ -37,7 +38,7 @@ for the development plan.
 
 ## Separate template files
 
-- `templates/*.template`: one file per entry in `fixtures/templates.json`, plus `startup.template`.
+- `templates/*.template`: extracted legacy templates, `startup.template`, and new compatibility examples.
 - `subtemplates/*.template`: one file per entry in `fixtures/subtemplates.json`.
 - `data/*.json`: one input value per named entry in `fixtures/data.json`.
 - `fixtures/data.json`: original named data collection, retained unchanged.
@@ -174,5 +175,35 @@ Compare it with the unchanged Node evaluator:
 node tools/node-reference/cli.mjs --template simpledata --template-root reference --data-file reference/data/nested.json
 ```
 
-Multi-element array contexts (for example `people.json`) also remain unfinished
-in the generated runtime. These limitations are independent of file loading.
+Multi-element array contexts are implemented and covered by the A/B suite.
+
+## New compatibility examples
+
+Each example below has a matching `data/NAME.json` file:
+
+| Template | Coverage |
+| --- | --- |
+| `externals` | Handwritten methods and value functions |
+| `countpredicate` | Predicate counting |
+| `indexing`, `joining` | Item positions, slices, and separators |
+| `dateforms`, `dateparsing` | Formatting, calendar/timestamp inputs, and date encoding |
+| `regexforms`, `regexnames` | JavaScript escapes, capture resets, and capture names |
+| `includescopes` | Literal versus computed include annotation scope |
+| `replacevalues` | String versus non-string replacement operands |
+
+Run either host with matching input, for example:
+
+```bash
+node tools/node-reference/cli.mjs --template dateparsing --template-root reference --data-file reference/data/dateparsing.json
+dotnet run --project Generated -- --template dateparsing --data-file reference/data/dateparsing.json
+```
+
+`MomentJSConverter.cs` is a supplied reference utility, not a compiler/runtime
+dependency. It translates a subset of format tokens; it does not implement Moment
+input parsing. The generated runtime uses its independently tested date helper.
+
+For the full workflow use `python3 tools/validate.py`.
+See [the root README](../README.md) and [the current completion checklist](../COMPLETION.md).
+
+Web-only demos are archived in `templates/Unimplemented/` and excluded from normal
+generation and comparison. They are not planned standalone features.

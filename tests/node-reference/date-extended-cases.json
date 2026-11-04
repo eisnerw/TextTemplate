@@ -1,0 +1,198 @@
+[
+  {
+    "name": "date-extended-weeks0",
+    "script": "{d.ToDate('YYYY-MM-DD w ww wo W WW Wo gg gggg ggggg GG GGGG GGGGG N NN NNN NNNN NNNNN','GMT')}",
+    "data": {
+      "d": "2015-12-31"
+    },
+    "expected": "2015-12-31 1 01 1st 53 53 53rd 16 2016 02016 15 2015 02015 AD AD AD Anno Domini AD"
+  },
+  {
+    "name": "date-extended-weeks1",
+    "script": "{d.ToDate('YYYY-MM-DD w ww wo W WW Wo gg gggg ggggg GG GGGG GGGGG N NN NNN NNNN NNNNN','GMT')}",
+    "data": {
+      "d": "2016-01-01"
+    },
+    "expected": "2016-01-01 1 01 1st 53 53 53rd 16 2016 02016 15 2015 02015 AD AD AD Anno Domini AD"
+  },
+  {
+    "name": "date-extended-weeks2",
+    "script": "{d.ToDate('YYYY-MM-DD w ww wo W WW Wo gg gggg ggggg GG GGGG GGGGG N NN NNN NNNN NNNNN','GMT')}",
+    "data": {
+      "d": "2016-01-03"
+    },
+    "expected": "2016-01-03 2 02 2nd 53 53 53rd 16 2016 02016 15 2015 02015 AD AD AD Anno Domini AD"
+  },
+  {
+    "name": "date-extended-weeks3",
+    "script": "{d.ToDate('YYYY-MM-DD w ww wo W WW Wo gg gggg ggggg GG GGGG GGGGG N NN NNN NNNN NNNNN','GMT')}",
+    "data": {
+      "d": "2016-01-04"
+    },
+    "expected": "2016-01-04 2 02 2nd 1 01 1st 16 2016 02016 16 2016 02016 AD AD AD Anno Domini AD"
+  },
+  {
+    "name": "date-extended-weeks4",
+    "script": "{d.ToDate('YYYY-MM-DD w ww wo W WW Wo gg gggg ggggg GG GGGG GGGGG N NN NNN NNNN NNNNN','GMT')}",
+    "data": {
+      "d": "2019-12-29"
+    },
+    "expected": "2019-12-29 1 01 1st 52 52 52nd 20 2020 02020 19 2019 02019 AD AD AD Anno Domini AD"
+  },
+  {
+    "name": "date-extended-weeks5",
+    "script": "{d.ToDate('YYYY-MM-DD w ww wo W WW Wo gg gggg ggggg GG GGGG GGGGG N NN NNN NNNN NNNNN','GMT')}",
+    "data": {
+      "d": "2020-12-31"
+    },
+    "expected": "2020-12-31 1 01 1st 53 53 53rd 21 2021 02021 20 2020 02020 AD AD AD Anno Domini AD"
+  },
+  {
+    "name": "date-extended-weeks6",
+    "script": "{d.ToDate('YYYY-MM-DD w ww wo W WW Wo gg gggg ggggg GG GGGG GGGGG N NN NNN NNNN NNNNN','GMT')}",
+    "data": {
+      "d": "2021-01-01"
+    },
+    "expected": "2021-01-01 1 01 1st 53 53 53rd 21 2021 02021 20 2020 02020 AD AD AD Anno Domini AD"
+  },
+  {
+    "name": "date-extended-weeks7",
+    "script": "{d.ToDate('YYYY-MM-DD w ww wo W WW Wo gg gggg ggggg GG GGGG GGGGG N NN NNN NNNN NNNNN','GMT')}",
+    "data": {
+      "d": "2021-01-04"
+    },
+    "expected": "2021-01-04 2 02 2nd 1 01 1st 21 2021 02021 21 2021 02021 AD AD AD Anno Domini AD"
+  },
+  {
+    "name": "date-extended-weeks8",
+    "script": "{d.ToDate('YYYY-MM-DD w ww wo W WW Wo gg gggg ggggg GG GGGG GGGGG N NN NNN NNNN NNNNN','GMT')}",
+    "data": {
+      "d": "0001-01-01"
+    },
+    "expected": "0001-01-01 1 01 1st 1 01 1st 01 0001 00001 01 0001 00001 AD AD AD Anno Domini AD"
+  },
+  {
+    "name": "date-extended-weeks9",
+    "script": "{d.ToDate('YYYY-MM-DD w ww wo W WW Wo gg gggg ggggg GG GGGG GGGGG N NN NNN NNNN NNNNN','GMT')}",
+    "data": {
+      "d": "2024-02-29"
+    },
+    "expected": "2024-02-29 9 09 9th 9 09 9th 24 2024 02024 24 2024 02024 AD AD AD Anno Domini AD"
+  },
+  {
+    "name": "date-extended-parse10",
+    "script": "{d.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "d": "2020-060"
+    },
+    "expected": "2020-02-29 00:00:00 +00:00"
+  },
+  {
+    "name": "date-extended-parse11",
+    "script": "{d.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "d": "2019-366"
+    },
+    "expected": "Invalid date"
+  },
+  {
+    "name": "date-extended-parse12",
+    "script": "{d.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "d": "2020-W01-1"
+    },
+    "expected": "2019-12-30 00:00:00 +00:00"
+  },
+  {
+    "name": "date-extended-parse13",
+    "script": "{d.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "d": "2020W011"
+    },
+    "expected": "2019-12-30 00:00:00 +00:00"
+  },
+  {
+    "name": "date-extended-parse14",
+    "script": "{d.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "d": "20200102"
+    },
+    "expected": "2020-01-02 00:00:00 +00:00"
+  },
+  {
+    "name": "date-extended-parse15",
+    "script": "{d.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "d": "2020-W53-7"
+    },
+    "expected": "2021-01-03 00:00:00 +00:00"
+  },
+  {
+    "name": "date-extended-parse16",
+    "script": "{d.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "d": "2021-W53-1"
+    },
+    "expected": "Invalid date"
+  },
+  {
+    "name": "date-extended-parse17",
+    "script": "{d.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "d": "Fri, 21 Nov 1997 09:55:06 GMT"
+    },
+    "expected": "1997-11-21 09:55:06 +00:00"
+  },
+  {
+    "name": "date-extended-parse18",
+    "script": "{d.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "d": "2020-01-02T12:30:00+15:30"
+    },
+    "expected": "2020-01-01 21:00:00 +00:00"
+  },
+  {
+    "name": "date-extended-parse19",
+    "script": "{d.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "d": "2020-01-02T12:30:00-16:00"
+    },
+    "expected": "2020-01-03 04:30:00 +00:00"
+  },
+  {
+    "name": "date-extended-dst20",
+    "script": "{d.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "d": "2021-03-14T02:30:00"
+    },
+    "expected": "2021-03-14 07:30:00 +00:00",
+    "timezone": "America/New_York"
+  },
+  {
+    "name": "date-extended-dst21",
+    "script": "{d.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "d": "2021-11-07T01:30:00"
+    },
+    "expected": "2021-11-07 05:30:00 +00:00",
+    "timezone": "America/New_York"
+  },
+  {
+    "name": "date-extended-dst22",
+    "script": "{d.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "d": "2021-03-28T02:30:00"
+    },
+    "expected": "2021-03-28 01:30:00 +00:00",
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "name": "date-extended-dst23",
+    "script": "{d.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "d": "2021-10-03T02:15:00"
+    },
+    "expected": "2021-10-02 15:45:00 +00:00",
+    "timezone": "Australia/Lord_Howe"
+  }
+]

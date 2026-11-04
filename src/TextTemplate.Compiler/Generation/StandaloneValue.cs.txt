@@ -33,9 +33,12 @@ public sealed class TemplateValue
     internal TemplateValue Apply(Func<object?, object?> method)
         => new(context, EvaluationContext.Invoke(Raw, method));
     internal TemplateValue Dispatch(string name, Func<object?>[] arguments, Func<object?, object?> fallback)
-        => Apply(value => context.Extensions.TryMethod(name, out var method)
+    {
+        context.NoteInvocation();
+        return Apply(value => context.Extensions.TryMethod(name, out var method)
             ? method(new ExtensionCall(context, EvaluationContext.Intermediate(value), arguments)).Raw
             : fallback(value));
+    }
     internal TemplateValue Case(Func<object?, object?> select, params Func<object?>[] arguments)
         => Dispatch("Case", arguments, select);
     internal TemplateValue Call(string name, params Func<object?>[] arguments)
@@ -71,8 +74,14 @@ public sealed class TemplateValue
         => Dispatch("Compose", arguments, value => Builtins.Compose(context, value, Arguments(arguments)));
     internal TemplateValue IfMissing(params Func<object?>[] arguments)
         => Dispatch("IfMissing", arguments, value => Builtins.IfMissing(value, Arguments(arguments)));
-    internal TemplateValue Join(params Func<object?>[] arguments)
-        => Dispatch("Join", arguments, value => Builtins.Join(value, Arguments(arguments)));
+    internal TemplateValue Join(Func<object?>[]? arguments = null,
+        [System.Runtime.CompilerServices.CallerFilePath] string file = "",
+        [System.Runtime.CompilerServices.CallerLineNumber] int line = 0)
+        => Dispatch("Join", arguments ?? [], value => Builtins.Join(context, file + ":" + line, value, Arguments(arguments ?? [])));
+    internal TemplateValue Index(Func<object?>[]? arguments = null,
+        [System.Runtime.CompilerServices.CallerFilePath] string file = "",
+        [System.Runtime.CompilerServices.CallerLineNumber] int line = 0)
+        => Dispatch("Index", arguments ?? [], value => context.Index(file + ":" + line, value, Arguments(arguments ?? [])));
     internal TemplateValue Align(params Func<object?>[] arguments)
         => Dispatch("Align", arguments, value => Builtins.Align(value, Arguments(arguments)));
     internal TemplateValue Trim(params Func<object?>[] arguments)

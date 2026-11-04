@@ -1,0 +1,22 @@
+{
+  "people": [
+    {
+      "name": "Alice",
+      "details": {
+        "active": true
+      }
+    },
+    {
+      "name": "Bob",
+      "details": {
+        "active": true
+      }
+    },
+    {
+      "name": "Carol",
+      "details": {
+        "active": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+Compact timestamp: {compact.ToDate('YYYY-MM-DD HH:mm:ss','GMT')}
+Ordinal timestamp: {ordinal.ToDate('YYYY-MM-DD HH:mm:ss','GMT')}
+Week timestamp: {week.ToDate('YYYY-MM-DD HH:mm:ss','GMT')}
+RFC offset: {rfc.ToDate('YYYY-MM-DD HH:mm:ss','GMT')}
+Slash date: {slash.ToDate('YYYY-MM-DD','GMT')}
+Named month: {named.ToDate('YYYY-MM-DD','GMT')}
+Legacy rollover: {rollover.ToDate('YYYY-MM-DD','GMT')}
+Encoded date: {[{compact.EncodeFor('json')}].@DateTest(/^compact$/)}

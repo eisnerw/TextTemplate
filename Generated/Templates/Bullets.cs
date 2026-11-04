@@ -87,7 +87,7 @@ internal sealed partial class Bullets(EvaluationContext context) : TemplateUnit<
         return Value(Annotate(
             new Func<EvaluationContext, EvaluationContext>[]
             {
-                annotatedContext => annotatedContext.Include(EvaluationContext.Compose(annotatedContext.Each(ForItem(item => item.renderContent()))))
+                annotatedContext => annotatedContext.Include(() => annotatedContext.Each(ForItem(item => item.renderContent())))
             },
             annotatedContext => annotatedContext.Receiver(ForItem(item => item.renderPeople()))));
     }

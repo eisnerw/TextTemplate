@@ -1,0 +1,6 @@
+Forward numeric: {letters.Replace(/\2(a)(b)/,'$2$1')}
+Octal: {letters.Replace(/\141/,'A')}
+Class range: {mixed.Replace(/[a-\d]+/,'matched')}
+Forward named: {letter.Replace(/\k<x>(?<x>a)/,'<$<x>>')}
+Unicode name: {double.Replace(/(?<café>a)\k<café>/,'<$<café>>')}
+Repeated captures: {repeated.Replace(/(a|(b))+/,'<$1|$2>')}

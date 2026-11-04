@@ -1,0 +1,727 @@
+[
+  {
+    "name": "index-position",
+    "script": "{rows:[{*.Index()}:{name}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        },
+        {
+          "name": "B",
+          "details": {
+            "x": "b"
+          }
+        },
+        {
+          "name": "C",
+          "details": {
+            "x": "c"
+          }
+        }
+      ]
+    },
+    "expected": "1:A\n2:B\n3:C"
+  },
+  {
+    "name": "index-nested",
+    "script": "{rows:[{details:[{*.Index()}]}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        },
+        {
+          "name": "B",
+          "details": {
+            "x": "b"
+          }
+        },
+        {
+          "name": "C",
+          "details": {
+            "x": "c"
+          }
+        }
+      ]
+    },
+    "expected": "1\n2\n3"
+  },
+  {
+    "name": "index-root",
+    "script": "{*.Index()}",
+    "data": {},
+    "expected": "1"
+  },
+  {
+    "name": "index-singleton",
+    "script": "{rows:[{*.Index()}:{name}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        }
+      ]
+    },
+    "expected": "1:A"
+  },
+  {
+    "name": "index-slice4",
+    "script": "{rows.Index(1):[{*.Index()}:{name}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        },
+        {
+          "name": "B",
+          "details": {
+            "x": "b"
+          }
+        },
+        {
+          "name": "C",
+          "details": {
+            "x": "c"
+          }
+        }
+      ]
+    },
+    "expected": "1:A"
+  },
+  {
+    "name": "index-slice5",
+    "script": "{rows.Index(2):[{*.Index()}:{name}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        },
+        {
+          "name": "B",
+          "details": {
+            "x": "b"
+          }
+        },
+        {
+          "name": "C",
+          "details": {
+            "x": "c"
+          }
+        }
+      ]
+    },
+    "expected": "1:B"
+  },
+  {
+    "name": "index-slice6",
+    "script": "{rows.Index(3):[{*.Index()}:{name}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        },
+        {
+          "name": "B",
+          "details": {
+            "x": "b"
+          }
+        },
+        {
+          "name": "C",
+          "details": {
+            "x": "c"
+          }
+        }
+      ]
+    },
+    "expected": "1:C"
+  },
+  {
+    "name": "index-slice7",
+    "script": "{rows.Index(4):[{*.Index()}:{name}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        },
+        {
+          "name": "B",
+          "details": {
+            "x": "b"
+          }
+        },
+        {
+          "name": "C",
+          "details": {
+            "x": "c"
+          }
+        }
+      ]
+    },
+    "expected": ""
+  },
+  {
+    "name": "index-slice8",
+    "script": "{rows.Index(-1):[{*.Index()}:{name}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        },
+        {
+          "name": "B",
+          "details": {
+            "x": "b"
+          }
+        },
+        {
+          "name": "C",
+          "details": {
+            "x": "c"
+          }
+        }
+      ]
+    },
+    "expected": "1:B"
+  },
+  {
+    "name": "index-slice9",
+    "script": "{rows.Index(-2):[{*.Index()}:{name}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        },
+        {
+          "name": "B",
+          "details": {
+            "x": "b"
+          }
+        },
+        {
+          "name": "C",
+          "details": {
+            "x": "c"
+          }
+        }
+      ]
+    },
+    "expected": "1:A"
+  },
+  {
+    "name": "index-slice10",
+    "script": "{rows.Index(-3):[{*.Index()}:{name}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        },
+        {
+          "name": "B",
+          "details": {
+            "x": "b"
+          }
+        },
+        {
+          "name": "C",
+          "details": {
+            "x": "c"
+          }
+        }
+      ]
+    },
+    "expected": ""
+  },
+  {
+    "name": "index-slice11",
+    "script": "{rows.Index(-4):[{*.Index()}:{name}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        },
+        {
+          "name": "B",
+          "details": {
+            "x": "b"
+          }
+        },
+        {
+          "name": "C",
+          "details": {
+            "x": "c"
+          }
+        }
+      ]
+    },
+    "expected": ""
+  },
+  {
+    "name": "index-slice12",
+    "script": "{rows.Index(1,2):[{*.Index()}:{name}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        },
+        {
+          "name": "B",
+          "details": {
+            "x": "b"
+          }
+        },
+        {
+          "name": "C",
+          "details": {
+            "x": "c"
+          }
+        }
+      ]
+    },
+    "expected": "1:A\n2:B"
+  },
+  {
+    "name": "index-slice13",
+    "script": "{rows.Index(2,9):[{*.Index()}:{name}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        },
+        {
+          "name": "B",
+          "details": {
+            "x": "b"
+          }
+        },
+        {
+          "name": "C",
+          "details": {
+            "x": "c"
+          }
+        }
+      ]
+    },
+    "expected": "1:B\n2:C"
+  },
+  {
+    "name": "index-slice14",
+    "script": "{rows.Index(2,-1):[{*.Index()}:{name}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        },
+        {
+          "name": "B",
+          "details": {
+            "x": "b"
+          }
+        },
+        {
+          "name": "C",
+          "details": {
+            "x": "c"
+          }
+        }
+      ]
+    },
+    "expected": ""
+  },
+  {
+    "name": "index-slice15",
+    "script": "{rows.Index(0):[{*.Index()}:{name}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        },
+        {
+          "name": "B",
+          "details": {
+            "x": "b"
+          }
+        },
+        {
+          "name": "C",
+          "details": {
+            "x": "c"
+          }
+        }
+      ]
+    },
+    "expected": "",
+    "exitCode": 1,
+    "preserveErrorOutput": true
+  },
+  {
+    "name": "index-slice16",
+    "script": "{rows.Index(1,0):[{*.Index()}:{name}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        },
+        {
+          "name": "B",
+          "details": {
+            "x": "b"
+          }
+        },
+        {
+          "name": "C",
+          "details": {
+            "x": "c"
+          }
+        }
+      ]
+    },
+    "expected": "",
+    "exitCode": 1,
+    "preserveErrorOutput": true
+  },
+  {
+    "name": "index-slice17",
+    "script": "{rows.Index('2tail'):[{*.Index()}:{name}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        },
+        {
+          "name": "B",
+          "details": {
+            "x": "b"
+          }
+        },
+        {
+          "name": "C",
+          "details": {
+            "x": "c"
+          }
+        }
+      ]
+    },
+    "expected": "1:B"
+  },
+  {
+    "name": "index-slice18",
+    "script": "{rows.Index('0x2'):[{*.Index()}:{name}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        },
+        {
+          "name": "B",
+          "details": {
+            "x": "b"
+          }
+        },
+        {
+          "name": "C",
+          "details": {
+            "x": "c"
+          }
+        }
+      ]
+    },
+    "expected": "1:B"
+  },
+  {
+    "name": "index-slice19",
+    "script": "{rows.Index('bad'):[{*.Index()}:{name}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        },
+        {
+          "name": "B",
+          "details": {
+            "x": "b"
+          }
+        },
+        {
+          "name": "C",
+          "details": {
+            "x": "c"
+          }
+        }
+      ]
+    },
+    "expected": "",
+    "exitCode": 1,
+    "preserveErrorOutput": true
+  },
+  {
+    "name": "index-slice20",
+    "script": "{rows.Index(1,2,3):[{*.Index()}:{name}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        },
+        {
+          "name": "B",
+          "details": {
+            "x": "b"
+          }
+        },
+        {
+          "name": "C",
+          "details": {
+            "x": "c"
+          }
+        }
+      ]
+    },
+    "expected": "",
+    "exitCode": 1,
+    "preserveErrorOutput": true
+  },
+  {
+    "name": "index-receiver21",
+    "script": "{rows.Index()}",
+    "data": {
+      "rows": {
+        "name": "A"
+      }
+    },
+    "expected": "1"
+  },
+  {
+    "name": "index-receiver22",
+    "script": "{rows.Index(1)}",
+    "data": {
+      "rows": {
+        "name": "A"
+      }
+    },
+    "expected": ""
+  },
+  {
+    "name": "index-receiver23",
+    "script": "{rows.Index(2)}",
+    "data": {
+      "rows": {
+        "name": "A"
+      }
+    },
+    "expected": ""
+  },
+  {
+    "name": "index-receiver24",
+    "script": "{rows.Index()}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        }
+      ]
+    },
+    "expected": "1"
+  },
+  {
+    "name": "index-receiver25",
+    "script": "{rows.Index(1)}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        }
+      ]
+    },
+    "expected": ""
+  },
+  {
+    "name": "index-receiver26",
+    "script": "{rows.Index(2)}",
+    "data": {
+      "rows": [
+        {
+          "name": "A",
+          "details": {
+            "x": "a"
+          }
+        }
+      ]
+    },
+    "expected": ""
+  },
+  {
+    "name": "index-receiver27",
+    "script": "{rows.Index()}",
+    "data": {
+      "rows": []
+    },
+    "expected": ""
+  },
+  {
+    "name": "index-receiver28",
+    "script": "{rows.Index(1)}",
+    "data": {
+      "rows": []
+    },
+    "expected": ""
+  },
+  {
+    "name": "index-receiver29",
+    "script": "{rows.Index(2)}",
+    "data": {
+      "rows": []
+    },
+    "expected": ""
+  },
+  {
+    "name": "index-receiver30",
+    "script": "{rows.Index()}",
+    "data": {
+      "rows": null
+    },
+    "expected": ""
+  },
+  {
+    "name": "index-receiver31",
+    "script": "{rows.Index(1)}",
+    "data": {
+      "rows": null
+    },
+    "expected": ""
+  },
+  {
+    "name": "index-receiver32",
+    "script": "{rows.Index(2)}",
+    "data": {
+      "rows": null
+    },
+    "expected": ""
+  },
+  {
+    "name": "index-receiver33",
+    "script": "{rows.Index()}",
+    "data": {
+      "rows": "text"
+    },
+    "expected": "",
+    "exitCode": 1,
+    "preserveErrorOutput": true
+  },
+  {
+    "name": "index-receiver34",
+    "script": "{rows.Index(1)}",
+    "data": {
+      "rows": "text"
+    },
+    "expected": "",
+    "exitCode": 1,
+    "preserveErrorOutput": true
+  },
+  {
+    "name": "index-receiver35",
+    "script": "{rows.Index(2)}",
+    "data": {
+      "rows": "text"
+    },
+    "expected": "",
+    "exitCode": 1,
+    "preserveErrorOutput": true
+  },
+  {
+    "name": "index-receiver36",
+    "script": "{rows.Index()}",
+    "data": {
+      "rows": 42
+    },
+    "expected": "",
+    "exitCode": 1,
+    "preserveErrorOutput": true
+  },
+  {
+    "name": "index-receiver37",
+    "script": "{rows.Index(1)}",
+    "data": {
+      "rows": 42
+    },
+    "expected": "",
+    "exitCode": 1,
+    "preserveErrorOutput": true
+  },
+  {
+    "name": "index-receiver38",
+    "script": "{rows.Index(2)}",
+    "data": {
+      "rows": 42
+    },
+    "expected": "",
+    "exitCode": 1,
+    "preserveErrorOutput": true
+  }
+]

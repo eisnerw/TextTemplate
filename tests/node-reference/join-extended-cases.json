@@ -1,0 +1,238 @@
+[
+  {
+    "name": "join-extended-0",
+    "script": "{v.Join('|',' and ','ignored')}",
+    "data": {
+      "v": [
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    "expected": "a|b and c",
+    "exitCode": 1,
+    "preserveErrorOutput": true
+  },
+  {
+    "name": "join-extended-1",
+    "script": "{v.Join('|')}",
+    "data": {
+      "v": {
+        "name": "A"
+      }
+    },
+    "expected": "",
+    "exitCode": 1,
+    "preserveErrorOutput": true
+  },
+  {
+    "name": "join-extended-2",
+    "script": "{v.Join('|')}",
+    "data": {
+      "v": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "\n",
+    "exitCode": 1,
+    "preserveErrorOutput": true
+  },
+  {
+    "name": "join-extended-3",
+    "script": "{v.Join('|')}",
+    "data": {
+      "v": [
+        "",
+        "b"
+      ]
+    },
+    "expected": "\n",
+    "exitCode": 1,
+    "preserveErrorOutput": true
+  },
+  {
+    "name": "join-extended-4",
+    "script": "{v.Join('|')}",
+    "data": {
+      "v": [
+        "a",
+        ""
+      ]
+    },
+    "expected": "\n",
+    "exitCode": 1,
+    "preserveErrorOutput": true
+  },
+  {
+    "name": "join-extended-5",
+    "script": "{v.Join('|')}",
+    "data": {
+      "v": [
+        "a"
+      ]
+    },
+    "expected": "",
+    "exitCode": 1,
+    "preserveErrorOutput": true
+  },
+  {
+    "name": "join-extended-6",
+    "script": "{v.Join()}",
+    "data": {
+      "v": []
+    },
+    "expected": ""
+  },
+  {
+    "name": "join-extended-8",
+    "script": "{v.Join(absent)}",
+    "data": {
+      "v": [
+        "a",
+        "b"
+      ]
+    },
+    "expected": "a[object Object]b"
+  },
+  {
+    "name": "join-extended-9",
+    "script": "{v.Join(0,2)}",
+    "data": {
+      "v": [
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    "expected": "a0b2c"
+  },
+  {
+    "name": "join-extended-10",
+    "script": "{v.Join('|',' and ','ignored')}",
+    "data": {
+      "v": "a"
+    },
+    "expected": "a",
+    "exitCode": 1,
+    "preserveErrorOutput": true
+  },
+  {
+    "name": "join-extended-11",
+    "script": "{v.Join('|')}",
+    "data": {
+      "v": [
+        0,
+        2
+      ]
+    },
+    "expected": "\n",
+    "exitCode": 1,
+    "preserveErrorOutput": true
+  },
+  {
+    "name": "join-extended-12",
+    "script": "{v.Join('|')}",
+    "data": {
+      "v": [
+        {
+          "_": "a"
+        },
+        {
+          "_": "b",
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "a|b"
+  },
+  {
+    "name": "join-extended-13",
+    "script": "{v.Join('|')}",
+    "data": {
+      "v": null
+    },
+    "expected": ""
+  },
+  {
+    "name": "join-extended-14",
+    "script": "{v.Join('|')}",
+    "data": {},
+    "expected": ""
+  },
+  {
+    "name": "join-extra-0",
+    "script": "{v.Join('|').Index(1):[{_}]}",
+    "data": {
+      "v": [
+        "",
+        "b"
+      ]
+    },
+    "expected": "",
+    "exitCode": 1,
+    "preserveErrorOutput": true
+  },
+  {
+    "name": "join-extra-1",
+    "script": "{v.Join('|').Count()}",
+    "data": {
+      "v": [
+        "",
+        "b"
+      ]
+    },
+    "expected": "2",
+    "exitCode": 1,
+    "preserveErrorOutput": true
+  },
+  {
+    "name": "join-extra-2",
+    "script": "{v.Join('|')}",
+    "data": {
+      "v": [
+        1,
+        2
+      ]
+    },
+    "expected": "\n",
+    "exitCode": 1,
+    "preserveErrorOutput": true
+  },
+  {
+    "name": "join-extra-3",
+    "script": "{v.Join('|')}",
+    "data": {
+      "v": [
+        {
+          "_": 1
+        },
+        {
+          "_": 2
+        }
+      ]
+    },
+    "expected": "1|2"
+  },
+  {
+    "name": "join-identity-position",
+    "script": "{rows:[{*.Join().Index()}]}",
+    "data": {
+      "rows": [
+        {
+          "name": "A"
+        },
+        {
+          "name": "B"
+        }
+      ]
+    },
+    "expected": "1\n2",
+    "exitCode": 1,
+    "preserveErrorOutput": true
+  }
+]

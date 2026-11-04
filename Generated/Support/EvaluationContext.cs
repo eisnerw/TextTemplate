@@ -20,6 +20,9 @@ internal sealed class EvaluationContext
         internal Data? Parent { get; } = parent;
         // Null denotes a dictionary; a list keeps its children and their parent links.
         internal List<Data>? Items { get; set; }
+        // An invalid Join returns raw data: composition retains list layout but
+        // does not interpolate scalar dictionaries. Keep the source data unmodified.
+        internal Data? UninterpolatedSource { get; init; }
         internal string DebugView => TemplateDebug.Json(this);
         public override string ToString() => DebugView;
     }
@@ -148,6 +151,8 @@ internal sealed class EvaluationContext
     private Dictionary<string, Func<EvaluationContext, EvaluationContext>> imports = new(StringComparer.Ordinal);
     internal Dictionary<string, Func<EvaluationContext, object?>> Locals = new(StringComparer.Ordinal);
     private sealed class CallDepth { internal int Value; }
+    private readonly CallDepth invocations = new();
+    internal void NoteInvocation() => invocations.Value++;
     private readonly CallDepth recursion = new();
 
     private EvaluationContext(EvaluationContext parent, Data? current)
@@ -161,6 +166,7 @@ internal sealed class EvaluationContext
         Locals = new(parent.Locals, StringComparer.Ordinal);
         imports = new(parent.imports, StringComparer.Ordinal);
         recursion = parent.recursion;
+        invocations = parent.invocations;
         missingText = parent.missingText;
         falsy = parent.falsy;
         dateTest = parent.dateTest;
@@ -361,7 +367,7 @@ internal sealed class EvaluationContext
                 return loadedContext.Context(replay(loadedContext), body, fallback);
             }
         }
-        if (value is Missing) return fallback is null ? value : fallback();
+        if (value is null or Missing) return fallback is null ? value : fallback();
         if (value is not Data) throw new NotImplementedException("Expected an object data context.");
         return body(new EvaluationContext(this, (Data)value));
     }
@@ -527,9 +533,34 @@ internal sealed class EvaluationContext
         EvaluationContext child = new EvaluationContext(this, Current);
         foreach (Func<EvaluationContext, EvaluationContext> annotation in annotations) child = annotation(child);
         object? result = body(child);
+        NoteInvocation();
         if (JsonSerializer.Serialize(bulletStyles) != JsonSerializer.Serialize(child.bulletStyles))
             return child.RenderValue(result);
         return result;
+    }
+    internal EvaluationContext Include(Func<object?> name)
+    {
+        int before = invocations.Value;
+        string? selected = Compose(name());
+        bool detachedAnnotations = before != invocations.Value;
+        EvaluationContext included = Include(selected);
+        if (!detachedAnnotations) return included;
+        // Legacy restores a copied annotation object after evaluating a method in
+        // the name argument. Include still exports definitions, but mutates the
+        // detached original annotations. Preserve the active annotations here.
+        included.missingText = missingText;
+        included.falsy = falsy;
+        included.dateTest = dateTest;
+        included.encoding = encoding;
+        included.dateFormat = dateFormat;
+        included.dateFormatMode = dateFormatMode;
+        included.dateLocation = dateLocation;
+        included.bulletStyles = bulletStyles;
+        included.bulletMode = bulletMode;
+        included.defaultIndent = defaultIndent;
+        included.MultilineStyle = MultilineStyle;
+        included.valueFunction = valueFunction;
+        return included;
     }
     internal EvaluationContext Include(string? name)
     {
@@ -733,27 +764,63 @@ internal sealed class EvaluationContext
             }
         return copy;
     }
-    internal static object? JoinValues(object? value, params object?[] arguments)
+    internal object? Index(string location, object? value, params object?[] arguments)
     {
-        if (arguments.Length > 2) throw new NotImplementedException("Join with more than two arguments is not implemented.");
         value = Intermediate(value);
+        if (value is null or Missing) return value;
+        double start = 0, length = 1;
+        bool valid = arguments.Length <= 2 && value is Data;
+        try
+        {
+            if (arguments.Length > 0) { start = Builtins.ParseInteger(arguments[0], "Index"); valid &= start != 0; }
+            if (arguments.Length > 1) { length = Builtins.ParseInteger(arguments[1], "Index"); valid &= length != 0; }
+        }
+        catch (InvalidOperationException) { valid = false; }
+        if (!valid) { ReportError("Invalid argument for Index", location); return null; }
+        Data data = ((Data)value).UninterpolatedSource ?? (Data)value;
+        if (arguments.Length > 0)
+        {
+            start -= 1;
+            // Preserve the legacy dictionary off-by-one behavior.
+            if (data.Items is null) return start == 1 ? data : null;
+            int Bound(double index) => (int)Math.Clamp(index < 0 ? data.Items.Count + index : index, 0, data.Items.Count);
+            int first = Bound(start), end = Bound(start + length);
+            if (end <= first) return null;
+            if (end - first == 1) return CloneGroupData(data.Items[first], data);
+            Data result = new(new(StringComparer.Ordinal), data) { Items = new() };
+            for (int i = first; i < end; i++) result.Items.Add(CloneGroupData(data.Items[i], result));
+            return result;
+        }
+        Data child = data;
+        Data? parent = child.Parent;
+        while (parent is not null && parent.Items is null) { child = parent; parent = parent.Parent; }
+        if (parent?.Items is not null)
+            for (int i = 0; i < parent.Items.Count; i++) if (ReferenceEquals(child, parent.Items[i])) return (double)i + 1;
+        return 1d;
+    }
+    internal object? JoinValues(string location, object? value, params object?[] arguments)
+    {
+        value = Intermediate(value);
+        if (value is null or Missing) return value;
+        if (arguments.Length > 2) ReportError("Too many arguments for the Join method", location);
         List<object?>? items = value is Arguments argumentsList ? argumentsList.Items : null;
         if (value is Data data)
         {
-            if (data.Items is null) throw new NotImplementedException("Join requires a scalar list.");
+            if (data.Items is null || data.Items.Count == 0)
+            { ReportError("Invalid data for Join", location); return new Data(data.Values, data.Parent) { Items = data.Items, UninterpolatedSource = data.UninterpolatedSource ?? data }; }
             items = new();
             foreach (Data item in data.Items)
             {
-                if (!item.Values.TryGetValue("_", out object? scalar) || !Condition(scalar))
-                    throw new NotImplementedException("Join requires a scalar list.");
-                items.Add(scalar);
+                if (!item.Values.TryGetValue("_", out object? scalar) || !Condition(Materialize(scalar, item)))
+                { ReportError("Invalid data for Join", location); return new Data(data.Values, data.Parent) { Items = data.Items, UninterpolatedSource = data.UninterpolatedSource ?? data }; }
+                items.Add(Builtins.JsString(Materialize(scalar, item)));
             }
         }
         if (items is null) return value;
         List<string> kept = new List<string>();
         foreach (object? item in items) if (Condition(item)) kept.Add(Compose(item) ?? "");
-        string separator = arguments.Length > 0 ? Compose(arguments[0]) ?? "" : ", ";
-        string lastSeparator = arguments.Length > 1 ? Compose(arguments[1]) ?? "" : separator;
+        string separator = arguments.Length > 0 ? Builtins.JsString(arguments[0]) : ", ";
+        string lastSeparator = arguments.Length > 1 ? Builtins.JsString(arguments[1]) : separator;
         if (kept.Count < 2) return string.Join("", kept);
         return string.Join(separator, kept.GetRange(0, kept.Count - 1)) + lastSeparator + kept[^1];
     }
@@ -862,7 +929,11 @@ internal sealed class EvaluationContext
             if (item is Bullet bullet) { Visit(bullet.Marker); return; }
             if (item is Data data)
             {
-                if (data.Items is not null)
+                if (data.UninterpolatedSource is not null)
+                {
+                    item = data.Items is null ? "" : new RenderedList(data.Items.ConvertAll(_ => (object?)""));
+                }
+                else if (data.Items is not null)
                 {
                     List<string> scalars = new();
                     bool scalarList = true;

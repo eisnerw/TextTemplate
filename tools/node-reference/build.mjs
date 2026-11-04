@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile, copyFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import ts from 'typescript';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
@@ -12,6 +12,16 @@ const output = path.join(build, 'src/main-generated/javascript');
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const jar = path.join(build, 'antlr-4.9.3-complete.jar');
 const jarHash = 'afcd40946d3de4d81e28d7c88d467289e0587285d27adb172aecc5494a17df36';
+// Honor explicit configuration; otherwise check PATH and this workspace's JDK.
+const javaCandidates = process.env.JAVA ? [process.env.JAVA]
+  : process.env.JAVA_HOME ? [path.join(process.env.JAVA_HOME, 'bin', 'java')]
+  : ['java', '/usr/share/elasticsearch/jdk/bin/java'];
+const java = javaCandidates.find(candidate => spawnSync(candidate, ['-version'], { stdio: 'ignore' }).status === 0);
+if (!java) {
+  console.error('Java is required to generate the Node reference parser. Set JAVA to a working java executable or JAVA_HOME to its JDK directory. Tried: ' + javaCandidates.join(', '));
+  process.exit(1);
+}
+console.error('Using Java: ' + java);
 await mkdir(output, { recursive: true });
 await mkdir(path.join(build, 'grammar'), { recursive: true });
 try { await readFile(jar); } catch (error) {
@@ -29,7 +39,7 @@ for (const name of ['TextTemplateLexer.g4', 'TextTemplateParser.g4']) {
   sources['reference/grammar/' + name] = sha256(await readFile(source));
   await copyFile(source, path.join(build, 'grammar', name));
 }
-execFileSync(process.env.JAVA || 'java', ['-jar', jar, '-Dlanguage=JavaScript',
+execFileSync(java, ['-jar', jar, '-Dlanguage=JavaScript',
   '-no-listener', '-visitor', '-o', output, 'TextTemplateLexer.g4', 'TextTemplateParser.g4'],
 { cwd: path.join(build, 'grammar'), stdio: 'inherit' });
 for (const [name, source] of [

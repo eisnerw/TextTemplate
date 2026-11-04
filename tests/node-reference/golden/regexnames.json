@@ -1,0 +1,44 @@
+{
+  "args": [
+    "--template",
+    "regexnames",
+    "--template-root",
+    "reference",
+    "--data-file",
+    "reference/data/regexnames.json"
+  ],
+  "report": {
+    "type": "result",
+    "result": "Escaped name: <a>\nSupplementary name: <a>\nDuplicate alternatives: <a><b>\nRepeated alternatives: <b>\n",
+    "errors": [],
+    "hoverPositions": null,
+    "debugLog": [],
+    "events": [
+      "status",
+      "status",
+      "result"
+    ],
+    "resources": []
+  },
+  "inputs": {
+    "reference/templates/regexnames.template": "ffdc6d21de266ede0c273042c1fee14fd96791e999ad5d110cfd5fc2b1270ad4",
+    "reference/data/regexnames.json": "d32ff73db845daabbe53ca2b36acd82053712c1d3691d61c38b1b502d6cd38af",
+    "tests/node-reference/regex-names-cases.json": "f6122ec38cc82102b7e8a5cf0067ed628651ae0f9f5f9cdac2327d1421b99e50"
+  },
+  "oracle": {
+    "sourceCommit": "ccedefd87b012ff1173ee2f43323b6eb7c8bd268",
+    "sources": {
+      "reference/grammar/TextTemplateLexer.g4": "aa8614f927f341ab70f1f14e3bf12015885b32c3a0466bdcc33cde40877c7fa0",
+      "reference/grammar/TextTemplateParser.g4": "2fb5ed2b2969da011308184fa0980b1abce9da352975bf3da71ac84c985a04aa",
+      "TextTemplateInterpreter": "876e98aec8adf32983d046087ac85a3b7ca742d6da6c911c52ea18c03955a94e",
+      "Externals": "3cc6091f4a9e124dfa8c38c6a5557ca1324bc0468fe91c41f5d5540f1411ad66",
+      "reference/fixtures/data.json": "2fa69d14e4bc5459aba9cad8dd3cbe5ed4b5ab8937777e84c321f83aad0f8ff4",
+      "reference/fixtures/templates.json": "90fc3829a08c0fae9fb68d86c8af5a6792ec7468113e93a0489f499014e0379f",
+      "reference/fixtures/subtemplates.json": "c0d80b35a704619335f9f212de4dfc4e6be958936bd73ef42346fcace624ed1d"
+    },
+    "antlrGenerator": "4.9.3",
+    "antlrRuntime": "4.11.0",
+    "moment": "2.29.4",
+    "typescript": "5.6.3"
+  }
+}

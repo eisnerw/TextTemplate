@@ -1,0 +1,4 @@
+Escaped name: {pair.Replace(/(?<\u0061>a)\k<a>/,'<$<a>>')}
+Supplementary name: {pair.Replace(/(?<𝒜>a)\k<𝒜>/,'<$<𝒜>>')}
+Duplicate alternatives: {letters.Replace(/(?<x>a)|(?<x>b)/g,'<$<x>>')}
+Repeated alternatives: {repeated.Replace(/(?:(?<x>a)|(?<x>b))+\k<x>/,'<$<x>>')}

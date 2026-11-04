@@ -86,6 +86,8 @@ public sealed class GenerationTests
                 ["where"] = "{name.Where(name.ToJson())}",
                 ["count"] = "{name.Count()}",
                 ["countPredicate"] = "{name.Count(name.ToJson())}",
+                ["index"] = "{name.Index(name.ToJson())}",
+                ["join"] = "{name.Join(name.ToJson())}",
                 ["named"] = "{name.#custom(name.ToJson())}",
                 ["repeated"] = "{name.twice(name.tick())}",
                 ["lookup"] = "{[{name}|{[{name}].@ValueFunction()}|{name}].@ValueFunction('custom')}|{name}",
@@ -111,6 +113,8 @@ public sealed class GenerationTests
                             .AddMethod("GroupBy", call => TemplateValue.From("group"))
                             .AddMethod("Where", call => TemplateValue.From("where"))
                             .AddMethod("Count", call => TemplateValue.From("count"))
+                            .AddMethod("Index", call => TemplateValue.From("index"))
+                            .AddMethod("Join", call => TemplateValue.From("join"))
                             .AddMethod("#custom", call => TemplateValue.From("named"))
                             .AddMethod("tick", call => TemplateValue.From((double)++calls))
                             .AddMethod("twice", call => {
@@ -125,7 +129,7 @@ public sealed class GenerationTests
                                 _ = lookup.ToString();
                                 return TemplateValue.From("[" + lookup.DefaultValue().Render() + "]");
                             });
-                        foreach (string name in new[] { "custom", "upper", "case", "shortCase", "group", "where", "count", "countPredicate", "named", "repeated", "lookup" })
+                        foreach (string name in new[] { "custom", "upper", "case", "shortCase", "group", "where", "count", "countPredicate", "index", "join", "named", "repeated", "lookup" })
                             Console.WriteLine(GeneratedTemplates.Render(name, data.RootElement, extensions: extensions));
                         if (calls != 2) throw new Exception("Argument evaluation count");
                         var emptyContext = new EvaluationContext(null, new System.Collections.Generic.Dictionary<string, Func<EvaluationContext, object?>>(),
@@ -149,7 +153,7 @@ public sealed class GenerationTests
             Assert.True(build.Exit == 0, build.Output + build.Error);
             var actual = Run("dotnet", output, "bin/Debug/net10.0/GeneratedTemplates.dll");
             Assert.True(actual.Exit == 0, actual.Error);
-            Assert.Equal("Alice\noverride\ncase\ncase\ngroup\nwhere\ncount\ncount\nnamed\n12\n[Alice]|Alice|[Alice]|Alice\n1\nOK\n", actual.Output);
+            Assert.Equal("Alice\noverride\ncase\ncase\ngroup\nwhere\ncount\ncount\nindex\njoin\nnamed\n12\n[Alice]|Alice|[Alice]|Alice\n1\nOK\n", actual.Output);
             // Regeneration leaves the handwritten source intact and includes it again.
             string before = File.ReadAllText(Path.Combine(extensions, "Probe.cs"));
             Assert.Equal(0, Program.Main(["--root", input, "--output", output]));
@@ -187,9 +191,6 @@ public sealed class GenerationTests
             foreach (string source in Directory.GetFiles(Path.Combine(repository, "reference/templates"), "*.template").Order())
             {
                 string name = Path.GetFileNameWithoutExtension(source);
-                // Both offline hosts reject these external HTTP dependencies. The full
-                // collection report runs them too and records them as unavailable.
-                if (name is "elastic" or "web" or "wikipedia") continue;
                 string data = Path.Combine(repository, "reference/data", name + ".json");
                 if (!File.Exists(data)) data = emptyData;
                 var expected = Run("node", repository, "tools/node-reference/cli.mjs", "--template", name,
@@ -288,7 +289,16 @@ public sealed class GenerationTests
     }
 
     [Theory]
-    [InlineData("computed-include-annotation-gap", Skip = "Preexisting annotation-scope mismatch; see DESIGN.md section 11.3.")]
+    [InlineData("computed-include-annotation-gap")]
+    [InlineData("include-scope")]
+    [InlineData("replace-coercion")]
+    [InlineData("index")]
+    [InlineData("join-extended")]
+    [InlineData("date-extended")]
+    [InlineData("date-parsing")]
+    [InlineData("date-encoding")]
+    [InlineData("regex-extended")]
+    [InlineData("regex-names")]
     [InlineData("where")]
     [InlineData("order")]
     [InlineData("date")]
@@ -363,7 +373,7 @@ public sealed class GenerationTests
                 Match(item.GetProperty("expected").GetString()!, reference.Output, name + " reference");
                 var actual = RunCase("dotnet", root, "output/GeneratedTemplates.dll", "--template", name, "--data-file", dataFile, "--data-root", resourceRoot);
                 Assert.True(actual.Exit == expectedExit, name + ": " + actual.Error);
-                Match(expectedExit == 0 ? reference.Output : "", actual.Output, name + " " + item.GetProperty("data").GetRawText());
+                Match(expectedExit == 0 || item.TryGetProperty("preserveErrorOutput", out var preserve) && preserve.GetBoolean() ? reference.Output : "", actual.Output, name + " " + item.GetProperty("data").GetRawText());
             }
         }
         finally { Directory.Delete(root, true); }
@@ -546,12 +556,7 @@ public sealed class GenerationTests
             Assert.Contains("TemplateValue petsResult =", simpledata);
             Assert.DoesNotContain("new Dictionary", simpledata);
             Assert.DoesNotContain("CallNamed(", simpledata);
-            string wikipedia = generated.Files["Templates/Wikipedia.cs"];
-            Assert.Contains("private TemplateContent getWiki()", wikipedia);
-            Assert.DoesNotContain("EvaluationContext.At(", wikipedia);
-            Assert.Contains(".Replace(", wikipedia);
-            Assert.Contains("new TemplateRegex(", wikipedia);
-            Assert.Contains("TemplateValue extract = Read(\"key.extract\");", wikipedia);
+            Assert.DoesNotContain(parsed.Document!.Sources.Keys, key => key.Contains("/Unimplemented/"));
             File.WriteAllText(Path.Combine(root, "Generated.cs"), generated.Source);
             File.WriteAllText(Path.Combine(root, "Standalone.csproj"), """<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><StartupObject>Probe</StartupObject></PropertyGroup></Project>""");
             // Compile every legacy template and subtemplate, including unfinished features.
@@ -578,11 +583,22 @@ public sealed class GenerationTests
                                 try { _ = new TemplateRegex(literal, "sample.template:2:3"); throw new Exception("Invalid regex accepted."); }
                                 catch (InvalidOperationException e) { if (!e.Message.Contains("sample.template:2:3")) throw; }
                             }
-                            try { _ = new TemplateRegex("/(a(b))+/", "sample.template:2:3"); throw new Exception("Unsupported regex accepted."); }
-                            catch (NotImplementedException e) { if (!e.Message.Contains("sample.template:2:3")) throw; }
+                            try { _ = new TemplateRegex("/(?<x>a)(?<x>b)/", "sample.cs:2"); throw new Exception("Invalid duplicate name accepted."); }
+                            catch (InvalidOperationException e) { if (!e.Message.Contains("sample.cs:2")) throw; }
                             foreach (var method in new Func<object, object[], object>[] { Builtins.Contains, Builtins.StartsWith, Builtins.EndsWith }) {
                                 try { method("abc", new object[] { new TemplateRegex("/a/", "probe") }); throw new Exception("Regex argument accepted."); }
                                 catch (InvalidOperationException) { }
+                            }
+                            foreach (string mode in new[] { "html", "xml" }) {
+                                var date = TemplateDate.Create("2024-03-15", null, true, "sample.cs:2");
+                                try { Builtins.EncodeFor("sample.cs:2", date, mode); throw new Exception("Date accepted as a string encoder receiver."); }
+                                catch (InvalidOperationException e) { if (!e.Message.Contains("string receiver")) throw; }
+                            }
+                            foreach (object input in new object[] { "0000-01-01", "0000-W01-1", "0000-001", "00000101", "+010000-01-01", "9999-12-31T24:00:00Z", "0001-01-01T00:00:00+01:00", "9999-W52-7", "uncharacterized date", -62135596800001d, 253402300800000d, new object[] { 2024d, 1d }, new System.Collections.Generic.Dictionary<string, object>() }) {
+                                try { TemplateDate.Create(input, null, true, "sample.cs:2"); throw new Exception("Unsupported date accepted."); }
+                                catch (NotImplementedException e) {
+                                    if (!e.Message.Contains("NOTYETIMPLEMENTED") || !e.Message.Contains("sample.cs:2")) throw;
+                                }
                             }
                             Console.Write("regex-errors-ok"); return;
                         }
@@ -591,7 +607,7 @@ public sealed class GenerationTests
                             for (int code = 0; code <= 0x10ffff; code++) {
                                 if (code >= 0xd800 && code <= 0xdfff) continue;
                                 string text = char.ConvertFromUtf32(code);
-                                string result = Builtins.ToUpper(text) + "|" + Builtins.ToLower(text) + "\n";
+                                string result = Builtins.ToUpper(text) + "|" + Builtins.ToLower(text) + "|" + (NodeIdentifiers.IsStart(code) ? "1" : "0") + (NodeIdentifiers.IsContinue(code) ? "1" : "0") + "\n";
                                 hash.AppendData(System.Text.Encoding.UTF8.GetBytes(result));
                             }
                             Console.Write(Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant());
@@ -689,7 +705,7 @@ public sealed class GenerationTests
                 for (let code = 0; code <= 0x10ffff; code++) {
                     if (code >= 0xd800 && code <= 0xdfff) continue;
                     const text = String.fromCodePoint(code);
-                    hash.update(text.toUpperCase() + '|' + text.toLowerCase() + '\n');
+                    hash.update(text.toUpperCase() + '|' + text.toLowerCase() + '|' + (/[$_\p{ID_Start}]/u.test(text) ? '1' : '0') + (/[$_\u200c\u200d\p{ID_Continue}]/u.test(text) ? '1' : '0') + '\n');
                 }
                 process.stdout.write(hash.digest('hex'));
                 """);

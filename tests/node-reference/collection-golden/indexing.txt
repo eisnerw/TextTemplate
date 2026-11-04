@@ -1,0 +1,8 @@
+Positions:
+1. Alice
+2. Bob
+3. Carol
+Second person: Bob
+First two: Alice and Bob
+Negative start: Bob
+Nested position: 1, 2, 3

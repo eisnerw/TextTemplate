@@ -1,0 +1,5 @@
+Default: {words.Join()}
+Separators: {words.Join(', ', ' and ')}
+Numbers: {numbers.Join(' / ')}
+Templates: {people:[{name}].Join(' | ')}
+Numeric separators: {words.Join(0,2)}

@@ -13,7 +13,7 @@ internal sealed class TemplateRegex
 {
     private readonly Regex regex;
     private readonly bool global, ignoreCase;
-    private readonly Dictionary<string, int> names = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, List<int>> names = new(StringComparer.Ordinal);
     private readonly string literal;
     private int lastIndex;
     internal TemplateRegex(string literal, string location)
@@ -66,6 +66,22 @@ internal sealed class TemplateRegex
         output.Append(text, end, text.Length - end);
         return output.ToString();
     }
+    internal static string ReplaceLiteral(string text, int start, int length, string replacement)
+    {
+        var output = new System.Text.StringBuilder();
+        for (int i = 0; i < replacement.Length; i++)
+        {
+            if (replacement[i] != '$' || i + 1 == replacement.Length) { output.Append(replacement[i]); continue; }
+            string? expansion = replacement[i + 1] switch
+            {
+                '$' => "$", '&' => text.Substring(start, length),
+                '`' => text[..start], '\'' => text[(start + length)..], _ => null
+            };
+            if (expansion is null) output.Append('$');
+            else { output.Append(expansion); i++; }
+        }
+        return output.ToString();
+    }
     private string Replacement(string text, Match match, string replacement)
     {
         string Capture(int n) => match.Groups[n].Success ? text.Substring(match.Groups[n].Index, match.Groups[n].Length) : "";
@@ -82,7 +98,9 @@ internal sealed class TemplateRegex
             else if (next == '<' && names.Count > 0 && replacement.IndexOf('>', i + 2) is int close && close >= 0)
             {
                 string name = replacement[(i + 2)..close];
-                if (names.TryGetValue(name, out int group)) output.Append(Capture(group));
+                if (names.TryGetValue(name, out var namedGroups))
+                    foreach (int group in namedGroups)
+                        if (match.Groups[group].Success) { output.Append(Capture(group)); break; }
                 i = close;
             }
             else if (next is >= '0' and <= '9')
@@ -124,7 +142,7 @@ internal sealed class TemplateRegex
         return any ? output.Append(']').ToString() : negate ? "[\\s\\S]" : "(?!)";
     }
     private static bool IsWord(char c) => c is >= 'A' and <= 'Z' or >= 'a' and <= 'z' or >= '0' and <= '9' or '_';
-    private bool[] Atom(string pattern, ref int position)
+    private bool[] Atom(string pattern, ref int position, bool inClass = false)
     {
         bool[] set = new bool[65536];
         char c = pattern[position++];
@@ -150,22 +168,95 @@ internal sealed class TemplateRegex
             }
             else if (c == 'c')
             {
-                if (position == pattern.Length || !char.IsAsciiLetter(pattern[position])) throw new NotImplementedException("Regex control escape form is not implemented.");
-                c = (char)(pattern[position++] % 32);
+                if (position < pattern.Length && (char.IsAsciiLetter(pattern[position]) || inClass && (char.IsAsciiDigit(pattern[position]) || pattern[position] == '_')))
+                    c = (char)(pattern[position++] % 32);
+                else { set['\\'] = true; set['c'] = true; return set; }
             }
             else if (c is >= '0' and <= '9')
             {
-                if (c != '0' || position < pattern.Length && char.IsAsciiDigit(pattern[position])) throw new NotImplementedException("Regex octal/forward numeric escapes are not implemented.");
-                c = '\0';
+                if (c <= '7')
+                {
+                    int number = c - '0', remaining = c <= '3' ? 2 : 1;
+                    while (remaining-- > 0 && position < pattern.Length && pattern[position] is >= '0' and <= '7')
+                        number = number * 8 + pattern[position++] - '0';
+                    c = (char)number;
+                }
             }
             set[c] = true;
         }
         return set;
     }
+    private static string CaptureName(string spelling)
+    {
+        string name = Regex.Replace(spelling, @"\\u(?:\{([0-9a-fA-F]+)\}|([0-9a-fA-F]{4}))", match =>
+        {
+            string hex = match.Groups[1].Success ? match.Groups[1].Value : match.Groups[2].Value;
+            if (!int.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int value) || value > 0x10ffff)
+                throw new ArgumentException("Invalid capture name escape.");
+            return value <= 0xffff ? ((char)value).ToString() : char.ConvertFromUtf32(value);
+        });
+        bool first = true;
+        foreach (var rune in name.EnumerateRunes())
+        {
+            int value = rune.Value;
+            if (!(first ? NodeIdentifiers.IsStart(value) : NodeIdentifiers.IsContinue(value)))
+                throw new ArgumentException("Invalid capture name.");
+            first = false;
+        }
+        if (first) throw new ArgumentException("Empty capture name.");
+        return name;
+    }
     private string Translate(string pattern, bool multiline, bool dotAll)
     {
         var output = new System.Text.StringBuilder();
-        var groups = new Stack<(int Before, bool Capture)>();
+        var groups = new Stack<(int Before, bool Capture, int Start)>();
+        // Count captures before translating decimal escapes: JavaScript recognizes
+        // forward references; larger decimals instead use Annex B octal escapes.
+        int total = 0, nextScope = 0;
+        bool inClass = false;
+        var scopes = new List<(int Id, int Branch)> { (0, 0) };
+        var nameBranches = new Dictionary<string, List<Dictionary<int, int>>>(StringComparer.Ordinal);
+        for (int scan = 0; scan < pattern.Length; scan++)
+        {
+            char next = pattern[scan];
+            if (next == '\\') { scan++; continue; }
+            if (next == '[') inClass = true;
+            else if (next == ']') inClass = false;
+            else if (!inClass && next == '|') scopes[^1] = (scopes[^1].Id, scopes[^1].Branch + 1);
+            else if (!inClass && next == ')')
+            {
+                if (scopes.Count == 1) throw new ArgumentException("Unmatched group.");
+                scopes.RemoveAt(scopes.Count - 1);
+            }
+            else if (next == '(' && !inClass)
+            {
+                if (scan + 1 >= pattern.Length || pattern[scan + 1] != '?') total++;
+                else if (scan + 3 < pattern.Length && pattern[scan + 2] == '<' && pattern[scan + 3] is not ('=' or '!'))
+                {
+                    int close = pattern.IndexOf('>', scan + 3);
+                    if (close < 0) throw new ArgumentException("Invalid named capture.");
+                    string name = CaptureName(pattern[(scan + 3)..close]);
+                    var path = new Dictionary<int, int>();
+                    foreach (var scope in scopes) path[scope.Id] = scope.Branch;
+                    if (!names.TryGetValue(name, out var numbered))
+                    {
+                        names[name] = numbered = new();
+                        nameBranches[name] = new();
+                    }
+                    foreach (var previous in nameBranches[name])
+                    {
+                        bool disjoint = false;
+                        foreach (var scope in path)
+                            if (previous.TryGetValue(scope.Key, out int branch) && branch != scope.Value) { disjoint = true; break; }
+                        if (!disjoint) throw new ArgumentException("Duplicate capture names must occupy separate alternatives.");
+                    }
+                    numbered.Add(++total);
+                    nameBranches[name].Add(path);
+                    scan = close;
+                }
+                scopes.Add((++nextScope, 0));
+            }
+        }
         int captures = 0;
         const string boundary = "(?:(?<=[A-Za-z0-9_])(?![A-Za-z0-9_])|(?<![A-Za-z0-9_])(?=[A-Za-z0-9_]))";
         for (int i = 0; i < pattern.Length;)
@@ -177,14 +268,21 @@ internal sealed class TemplateRegex
                 bool[] set = new bool[65536];
                 while (i < pattern.Length && pattern[i] != ']')
                 {
-                    bool[] atom = Atom(pattern, ref i);
+                    bool[] atom = Atom(pattern, ref i, true);
                     if (i + 1 < pattern.Length && pattern[i] == '-' && pattern[i + 1] != ']')
                     {
-                        i++; bool[] end = Atom(pattern, ref i);
+                        i++; bool[] end = Atom(pattern, ref i, true);
                         int a = Array.IndexOf(atom, true), b = Array.IndexOf(end, true);
-                        if (a < 0 || b < a || Array.LastIndexOf(atom, true) != a || Array.LastIndexOf(end, true) != b)
-                            throw new NotImplementedException("Regex character-class range form is not implemented.");
-                        for (int n = a; n <= b; n++) atom[n] = true;
+                        if (a < 0 || b < 0 || Array.LastIndexOf(atom, true) != a || Array.LastIndexOf(end, true) != b)
+                        {
+                            atom['-'] = true;
+                            for (int n = 0; n < atom.Length; n++) atom[n] |= end[n];
+                        }
+                        else
+                        {
+                            if (b < a) throw new ArgumentException("Reversed character-class range.");
+                            for (int n = a; n <= b; n++) atom[n] = true;
+                        }
                     }
                     for (int n = 0; n < set.Length; n++) set[n] |= atom[n];
                 }
@@ -206,14 +304,16 @@ internal sealed class TemplateRegex
                         int close = pattern.IndexOf('>', i);
                         if (close < 0) throw new ArgumentException("Invalid named capture.");
                         string name = pattern[i..close];
-                        if (!Regex.IsMatch(name, @"^[A-Za-z_$][A-Za-z0-9_$]*$")) throw new NotImplementedException("Unicode regex capture names are not implemented.");
-                        if (!names.TryAdd(name, captures + 1)) throw new NotImplementedException("Duplicate regex capture names are not implemented.");
                         i = close + 1; capture = true;
                     }
                     else throw new ArgumentException("Invalid JavaScript group.");
                 }
-                groups.Push((captures, capture)); if (capture) captures++;
+                groups.Push((captures, capture, output.Length + prefix.Length)); if (capture) captures++;
                 output.Append(prefix);
+                // Keep one capture per group, including self-references in repetitions.
+                // Clearing is mandatory once entered; only backing out of the whole
+                // group may restore the previous iteration's capture.
+                if (capture) output.Append("(?>(?(").Append(captures).Append(")(?<-").Append(captures).Append(">)))(?:");
             }
             else if (c == ')')
             {
@@ -230,7 +330,16 @@ internal sealed class TemplateRegex
                     }
                 }
                 if (repeats && captures - group.Before > (group.Capture ? 1 : 0))
-                    throw new NotImplementedException("Regex quantified nested captures require JavaScript capture-reset semantics.");
+                {
+                    // .NET retains captures from prior iterations. Balancing groups
+                    // clear nested captures at each entry and restore them on backtracking.
+                    var reset = new System.Text.StringBuilder();
+                    for (int nested = group.Before + (group.Capture ? 2 : 1); nested <= captures; nested++)
+                        reset.Append("(?>(?<-").Append(nested).Append(">)*)");
+                    output.Insert(group.Start, reset.Append("(?:"));
+                    output.Append(')');
+                }
+                if (group.Capture) output.Append(')');
                 output.Append(')');
             }
             else if (c == '\\')
@@ -239,15 +348,21 @@ internal sealed class TemplateRegex
                 else if (i < pattern.Length && pattern[i] is >= '1' and <= '9')
                 {
                     int start = i; while (i < pattern.Length && char.IsAsciiDigit(pattern[i])) i++;
-                    if (!int.TryParse(pattern[start..i], out int group) || group > captures) throw new NotImplementedException("Regex forward/octal backreferences are not implemented.");
-                    output.Append("(?:\\").Append(group).Append(')');
+                    if (int.TryParse(pattern[start..i], out int group) && group <= total)
+                        output.Append("(?(").Append(group).Append(")\\k<").Append(group).Append(">|)");
+                    else { i = start - 1; output.Append(Set(Atom(pattern, ref i), false)); }
                 }
-                else if (i + 1 < pattern.Length && pattern[i] == 'k' && pattern[i + 1] == '<')
+                else if (names.Count > 0 && i + 1 < pattern.Length && pattern[i] == 'k' && pattern[i + 1] == '<')
                 {
                     int close = pattern.IndexOf('>', i + 2);
-                    if (close < 0 || !names.TryGetValue(pattern[(i + 2)..close], out int group)) throw new NotImplementedException("Regex forward named backreferences are not implemented.");
-                    output.Append("(?:\\").Append(group).Append(')'); i = close + 1;
+                    if (close < 0 || !names.TryGetValue(CaptureName(pattern[(i + 2)..close]), out var numbered)) throw new ArgumentException("Invalid named backreference.");
+                    output.Append("(?:");
+                    foreach (int group in numbered)
+                        output.Append("(?(").Append(group).Append(")\\k<").Append(group).Append(">|)");
+                    output.Append(')'); i = close + 1;
                 }
+                else if (i < pattern.Length && pattern[i] == 'c' && (i + 1 == pattern.Length || !char.IsAsciiLetter(pattern[i + 1])))
+                    output.Append(Escape('\\')); // Annex B leaves the following c literal.
                 else { i--; output.Append(Set(Atom(pattern, ref i), false)); }
             }
             else if (c == '.') output.Append(dotAll ? "[\\s\\S]" : "[^\\r\\n\\u2028\\u2029]");

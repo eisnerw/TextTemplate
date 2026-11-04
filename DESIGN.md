@@ -390,6 +390,9 @@ refinements can follow without changing the verified evaluation algorithms.
 
 ### 11.3 Known compatibility gap found during fluent boundary testing
 
+**Resolved:** the original case below is now enabled, with additional cases in
+`include-scope-cases.json`. The following description records the original failure.
+
 The newly characterized input in
 `tests/node-reference/computed-include-annotation-gap-cases.json` renders empty text
 under the unchanged Node interpreter, but `inside` under both the pre-fluent generator
@@ -404,8 +407,8 @@ Subtemplates:
 This is a preexisting annotation-scope mismatch for a computed include argument
 containing a method invocation. The interpreter saves/restores annotation objects
 around nested invocations; a faithful fix needs separate characterization of that
-interaction. The A/B suite records this exact expected Node output as an explicitly
-skipped regression, not as a passing parity case. Include arguments containing calls
+interaction. The A/B suite originally recorded this exact expected Node output as an explicitly
+skipped regression; it now passes without changing that expected output. Include arguments containing calls
 that export definitions are separately exercised by the fluent tests and pass.
 Do not change the golden output to match C# when addressing this gap.
 
@@ -862,3 +865,96 @@ expressions as object keys. Full compatibility for those forms conflicts with th
 current rule that original template source appears only in generated comments.
 Do not silently embed that source or replace the legacy output with different JSON;
 resolve the contract before implementing those forms.
+
+### Index, Join, date and regex compatibility increment (2026-10-27)
+
+The new `indexing`, `joining`, `dateforms`, and `regexforms` reference templates
+have exact Node outputs, input hashes, and oracle provenance under
+`tests/node-reference/golden/`. Focused cases live in `index-cases.json`,
+`join-extended-cases.json`, `date-extended-cases.json`, and
+`regex-extended-cases.json`. The interpreter and grammar remain unchanged.
+
+- `Index()` traverses parents to find the nearest list and uses item identity for
+  its one-based position. Slicing uses JavaScript `parseInt` and `slice`, including
+  negative starts and lengths. New slice contexts preserve the legacy parent and
+  singleton behavior. A dictionary is returned by `Index(2)`, not `Index(1)`; this
+  off-by-one behavior is intentional compatibility. Empty slices return null, and
+  a null context produces no body output. Invalid arguments report through the
+  host callback and return null.
+- `Join` validates scalar lists (truthy `_` fields), preserves scalar receivers,
+  and uses JavaScript string coercion for separators. Extra arguments report an
+  error but joining continues; invalid data reports an error and retains raw-data
+  layout. A shallow rendering wrapper prevents scalar interpolation in this error
+  path without mutating the receiver. Subsequent methods can still consume its
+  data. Both Index and Join use the normal deferred extension dispatch, so custom
+  registrations take precedence and can avoid evaluating arguments.
+- Dates now support English Sunday-based and ISO week numbers/week-years,
+  ordinals, CE era tokens, ISO ordinal/week/basic calendar dates, and the
+  characterized RFC GMT form. Explicit offsets beyond .NET's 14-hour constructor
+  limit are applied as UTC arithmetic. Local overlaps select the earlier instant;
+  gaps use the offset before the transition, matching JavaScript rollover. Tests
+  include New York, Berlin, and Lord Howe's half-hour transition.
+- Regex translation counts captures before resolving numeric references, separates
+  references from Annex B octal escapes, and makes unmatched references empty.
+  Legacy class ranges containing class escapes become unions with a literal
+  hyphen. Control escapes and BMP Unicode capture names are supported. Balancing
+  groups clear nested captures on each quantified-group entry, retaining .NET's
+  backtracking restoration while matching JavaScript capture resets. Tests cover
+  alternatives, repeated optional captures, bounds, and backtracking.
+
+Runtime diagnostic cases explicitly marked `preserveErrorOutput` compare both
+exit status and exact continuation output. Invalid regex syntax still prevents
+C# output publication: its test compares failure status and separately freezes
+Node's partial output, not error-output parity.
+
+This supersedes earlier stub lists for the forms above. Remaining date stubs cover
+year zero, non-scalar inputs, and uncharacterized parsing forms; duplicate and
+escaped/supplementary regex capture names are also unfinished. Inline-template
+calls remain deferred because the attempted form does not work in the legacy
+interpreter; named templates provide the substitute. Log/@Debug await the logging
+design, and ToJson retains the source-metadata conflict described above. Other
+existing stubs (including HTTP resources and recognized-date EncodeFor) are not
+claimed as implemented by this increment.
+
+
+### Include scope and remaining practical forms (2026-10-27)
+
+Computed include names preserve a legacy annotation-object identity effect.
+`invokeMethods` restores a copy of the annotations after a nested invocation.
+When this happens while evaluating an Include argument, Include subsequently
+mutates the detached original object: definitions export, but its annotation
+changes do not reach the caller. Shared invocation tracking records actual method
+execution, not merely syntax containing calls, so an unselected argument branch
+has no effect. The Include overload evaluates its name lazily, imports definitions,
+and restores active annotation fields when the name evaluation detached them.
+
+Non-string Replace searches now follow JS replace: coerce the search, replace
+only the first match, and expand $$, $&, $`, and $'. String searches still use the
+legacy split/join behavior, including literal replacement dollars.
+
+Date parsing adds compact times to basic/ordinal/week ISO dates, RFC numeric and
+characterized named zones with weekday validation, and common English/slash dates.
+The fallback forms retain Node's February-30 rollover and two-digit-year pivot;
+ISO dates retain their separate validity rules. Date EncodeFor(uri) sees an object
+string, while EncodeFor(json) serializes the date wrapper and strips its braces.
+These behaviors are intentional compatibility, not formatting recommendations.
+HTML/XML date encoding is an invalid string operation, not an unfinished feature.
+
+Regex capture names now decode Unicode escapes and accept supplementary letters.
+Duplicate names are accepted only where their captures occupy different branches
+of a shared disjunction. Each name retains its numeric capture alternatives for
+backreferences and replacement; overlapping duplicate names fail compilation.
+This supersedes the earlier capture-name stub list. New names, date parsing,
+date encoding, replacement, and include-scope cases are frozen under
+`tests/node-reference/`, with runnable reference templates and provenance snapshots.
+
+The current remaining work is tracked in COMPLETION.md. Log/@Debug, ToJson, and
+external-resource hosting remain separate design items, not silently substituted
+implementations. The new tools/validate.py runs generation, builds, both test
+suites, and collection comparison; offline exceptions require its explicit flag.
+
+Capture-name identifier properties are frozen from the same Node 24.22.0 / Unicode
+17.0 oracle as casing, using tools/unicode/capture-node-identifiers.mjs. Generated
+NodeIdentifiers.cs performs range lookups independently of .NET's Unicode version.
+The standalone Unicode probe compares identifier-start/continue classification and
+casing against Node for every Unicode scalar value.

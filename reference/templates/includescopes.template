@@ -1,0 +1,6 @@
+Literal: {[{absent}].@MissingValue('before').@Include('#style')}
+Computed: {[{absent}].@MissingValue('before').@Include('#STYLE'.ToLower())}
+Override: {[{absent}].@Include('#STYLE'.ToLower()).@MissingValue('after')}
+
+Subtemplates:
+{#style:[].@MissingValue('inside')}

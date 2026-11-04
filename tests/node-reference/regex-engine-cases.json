@@ -100,5 +100,65 @@
     "flags": "g",
     "text": "abcdefghijkl",
     "replacement": "$12|$1|$2|$<first>|$$|$&|$`|$'"
+  },
+  {
+    "pattern": "(a|\\1b)+",
+    "text": "ab",
+    "flags": "g",
+    "replacement": "<$&|$1|$2|$3>"
+  },
+  {
+    "pattern": "((a)?b)+\\2c",
+    "text": "abbac",
+    "flags": "g",
+    "replacement": "<$&|$1|$2|$3>"
+  },
+  {
+    "pattern": "^((a)*b)+\\2$",
+    "text": "aabb",
+    "flags": "g",
+    "replacement": "<$&|$1|$2|$3>"
+  },
+  {
+    "pattern": "^((a)*b)+\\2$",
+    "text": "aabba",
+    "flags": "g",
+    "replacement": "<$&|$1|$2|$3>"
+  },
+  {
+    "pattern": "((a)*b)+",
+    "text": "aabb",
+    "flags": "g",
+    "replacement": "<$&|$1|$2|$3>"
+  },
+  {
+    "pattern": "((a)|(b))+",
+    "text": "abba",
+    "flags": "g",
+    "replacement": "<$&|$1|$2|$3>"
+  },
+  {
+    "pattern": "(?:(a)|(b))+",
+    "text": "aabb",
+    "flags": "g",
+    "replacement": "<$&|$1|$2|$3>"
+  },
+  {
+    "pattern": "\\1(a)",
+    "text": "a",
+    "flags": "g",
+    "replacement": "<$&|$1|$2|$3>"
+  },
+  {
+    "pattern": "(?<x>a\\k<x>)+",
+    "text": "aa",
+    "flags": "g",
+    "replacement": "<$&|$1|$2|$3>"
+  },
+  {
+    "pattern": "(a|(b))+?c",
+    "text": "abbc",
+    "flags": "g",
+    "replacement": "<$&|$1|$2|$3>"
   }
 ]

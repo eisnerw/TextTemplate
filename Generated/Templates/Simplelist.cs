@@ -49,7 +49,7 @@ internal sealed partial class Simplelist(EvaluationContext context) : TemplateUn
                 return Value(Annotate(
             new Func<EvaluationContext, EvaluationContext>[]
             {
-                annotatedContext => annotatedContext.Include(EvaluationContext.Compose("#doInclude"))
+                annotatedContext => annotatedContext.Include(() => "#doInclude")
             },
             annotatedContext => annotatedContext.Receiver(ForItem(item => item.renderContent()))));
             }
@@ -106,7 +106,7 @@ internal sealed partial class Simplelist(EvaluationContext context) : TemplateUn
     private TemplateContent anded()
     {
         TemplateValue join = Field("$0")
-            .Join(() => ", ", () => " and ");
+            .Join([() => ", ", () => " and "]);
 
         return Line($"{join}");
     }

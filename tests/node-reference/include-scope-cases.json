@@ -1,0 +1,142 @@
+[
+  {
+    "name": "include-scope-0",
+    "script": "{[{absent}].@MissingValue('before').@Include('#style')}\nSubtemplates:\n{#style:[].@MissingValue('inside')}",
+    "data": {
+      "target": "#style"
+    },
+    "expected": "inside"
+  },
+  {
+    "name": "include-scope-1",
+    "script": "{[{absent}].@MissingValue('before').@Include('#style').@MissingValue('after')}\nSubtemplates:\n{#style:[].@MissingValue('inside')}",
+    "data": {
+      "target": "#style"
+    },
+    "expected": "after"
+  },
+  {
+    "name": "include-scope-2",
+    "script": "{[{absent}].@MissingValue('before').@Include(target)}\nSubtemplates:\n{#style:[].@MissingValue('inside')}",
+    "data": {
+      "target": "#style"
+    },
+    "expected": "inside"
+  },
+  {
+    "name": "include-scope-3",
+    "script": "{[{absent}].@MissingValue('before').@Include(target).@MissingValue('after')}\nSubtemplates:\n{#style:[].@MissingValue('inside')}",
+    "data": {
+      "target": "#style"
+    },
+    "expected": "after"
+  },
+  {
+    "name": "include-scope-4",
+    "script": "{[{absent}].@MissingValue('before').@Include('#STYLE'.ToLower())}\nSubtemplates:\n{#style:[].@MissingValue('inside')}",
+    "data": {
+      "target": "#style"
+    },
+    "expected": "before"
+  },
+  {
+    "name": "include-scope-5",
+    "script": "{[{absent}].@MissingValue('before').@Include('#STYLE'.ToLower()).@MissingValue('after')}\nSubtemplates:\n{#style:[].@MissingValue('inside')}",
+    "data": {
+      "target": "#style"
+    },
+    "expected": "after"
+  },
+  {
+    "name": "include-scope-6",
+    "script": "{[{absent}].@MissingValue('before').@Include(target.ToLower())}\nSubtemplates:\n{#style:[].@MissingValue('inside')}",
+    "data": {
+      "target": "#style"
+    },
+    "expected": "before"
+  },
+  {
+    "name": "include-scope-7",
+    "script": "{[{absent}].@MissingValue('before').@Include(target.ToLower()).@MissingValue('after')}\nSubtemplates:\n{#style:[].@MissingValue('inside')}",
+    "data": {
+      "target": "#style"
+    },
+    "expected": "after"
+  },
+  {
+    "name": "include-scope-8",
+    "script": "{[{absent}].@MissingValue('before').@Include([{'#STYLE'.ToLower()}])}\nSubtemplates:\n{#style:[].@MissingValue('inside')}",
+    "data": {
+      "target": "#style"
+    },
+    "expected": "before"
+  },
+  {
+    "name": "include-scope-9",
+    "script": "{[{absent}].@MissingValue('before').@Include([{'#STYLE'.ToLower()}]).@MissingValue('after')}\nSubtemplates:\n{#style:[].@MissingValue('inside')}",
+    "data": {
+      "target": "#style"
+    },
+    "expected": "after"
+  },
+  {
+    "name": "include-scope-10",
+    "script": "{[{absent}].@MissingValue('before').@Include([{'#style'}])}\nSubtemplates:\n{#style:[].@MissingValue('inside')}",
+    "data": {
+      "target": "#style"
+    },
+    "expected": "inside"
+  },
+  {
+    "name": "include-scope-11",
+    "script": "{[{absent}].@MissingValue('before').@Include([{'#style'}]).@MissingValue('after')}\nSubtemplates:\n{#style:[].@MissingValue('inside')}",
+    "data": {
+      "target": "#style"
+    },
+    "expected": "after"
+  },
+  {
+    "name": "include-scope-12",
+    "script": "{[{absent}].@MissingValue('before').@Include('#style'.IfMissing('x'))}\nSubtemplates:\n{#style:[].@MissingValue('inside')}",
+    "data": {
+      "target": "#style"
+    },
+    "expected": "before"
+  },
+  {
+    "name": "include-scope-13",
+    "script": "{[{absent}].@MissingValue('before').@Include('#style'.IfMissing('x')).@MissingValue('after')}\nSubtemplates:\n{#style:[].@MissingValue('inside')}",
+    "data": {
+      "target": "#style"
+    },
+    "expected": "after"
+  },
+  {
+    "name": "include-scope-14",
+    "script": "{[{#hello}|{absent}].@Include('#STYLE'.ToLower())}\nSubtemplates:\n{#style:[\nSubtemplates:\n{#hello:[exported]}].@MissingValue('inside')}",
+    "data": {},
+    "expected": ""
+  },
+  {
+    "name": "include-scope-extra-0",
+    "script": "{[{#hello}].@Include('#STYLE'.ToLower())}\nSubtemplates:\n{#style:[\nSubtemplates:\n{#hello:[exported]}].@MissingValue('inside')}",
+    "data": {},
+    "expected": "exported"
+  },
+  {
+    "name": "include-scope-extra-1",
+    "script": "{[{absent}].@MissingValue('before').@Include([{flag=>[{'#STYLE'.ToLower()}],[#style]}])}\nSubtemplates:\n{#style:[].@MissingValue('inside')}",
+    "data": {
+      "flag": false
+    },
+    "expected": "inside"
+  },
+  {
+    "name": "include-scope-extra-2",
+    "script": "{[{absent}].@MissingValue('before').@Include([{flag=>[{'#STYLE'.ToLower()}],[#style]}])}\nSubtemplates:\n{#style:[].@MissingValue('inside')}",
+    "data": {
+      "flag": true
+    },
+    "expected": "before"
+  }
+]

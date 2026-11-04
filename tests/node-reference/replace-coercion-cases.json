@@ -1,0 +1,82 @@
+[
+  {
+    "name": "replace-coercion-0",
+    "script": "{value.Replace(search,replacement)}",
+    "data": {
+      "value": "1212",
+      "search": 12,
+      "replacement": "x"
+    },
+    "expected": "x12"
+  },
+  {
+    "name": "replace-coercion-1",
+    "script": "{value.Replace(search,replacement)}",
+    "data": {
+      "value": "true true",
+      "search": true,
+      "replacement": "x"
+    },
+    "expected": "x true"
+  },
+  {
+    "name": "replace-coercion-2",
+    "script": "{value.Replace(search,replacement)}",
+    "data": {
+      "value": "00",
+      "search": 0,
+      "replacement": "$&!"
+    },
+    "expected": "0!0"
+  },
+  {
+    "name": "replace-coercion-3",
+    "script": "{value.Replace(search,replacement)}",
+    "data": {
+      "value": "1212",
+      "search": 12,
+      "replacement": "<$&|$`|$'|$$|$1>"
+    },
+    "expected": "<12||12|$|$1>12"
+  },
+  {
+    "name": "replace-coercion-4",
+    "script": "{value.Replace(search,replacement)}",
+    "data": {
+      "value": "[object Object] [object Object]",
+      "search": {},
+      "replacement": "x"
+    },
+    "expected": "x [object Object]"
+  },
+  {
+    "name": "replace-coercion-5",
+    "script": "{value.Replace(search,replacement)}",
+    "data": {
+      "value": "nothing",
+      "search": 12,
+      "replacement": "x"
+    },
+    "expected": "nothing"
+  },
+  {
+    "name": "replace-coercion-6",
+    "script": "{value.Replace(search,replacement)}",
+    "data": {
+      "value": "1212",
+      "search": 12,
+      "replacement": false
+    },
+    "expected": "false12"
+  },
+  {
+    "name": "replace-coercion-7",
+    "script": "{value.Replace(search,replacement)}",
+    "data": {
+      "value": "1212",
+      "search": "12",
+      "replacement": "$&"
+    },
+    "expected": "$&$&"
+  }
+]

@@ -18,7 +18,7 @@ internal sealed partial class Bullets
     internal EvaluationContext includeShowStyles()
     {
         EvaluationContext included = Context;
-        included = included.Include(EvaluationContext.Compose(included.Each(ForItem(item => item.renderContent()))));
+        included = included.Include(() => included.Each(ForItem(item => item.renderContent())));
         _ = new Bullets(included).renderPeople();
         return included;
     }

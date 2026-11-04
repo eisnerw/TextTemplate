@@ -1,0 +1,5 @@
+Default: red, green, blue
+Separators: red, green and blue
+Numbers: 1 / 2 / 3
+Templates: Alice | Bob
+Numeric separators: red0green2blue

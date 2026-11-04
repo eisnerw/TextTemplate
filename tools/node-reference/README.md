@@ -20,7 +20,8 @@ node tools/node-reference/cli.mjs --template simple
 npm test --prefix tools/node-reference
 ```
 
-If Java is not on PATH, set JAVA to its executable. In this environment:
+The build honors `JAVA` or `JAVA_HOME`; otherwise it checks `PATH` and
+`/usr/share/elasticsearch/jdk/bin/java`. To override discovery:
 
 ```sh
 JAVA=/usr/share/elasticsearch/jdk/bin/java npm run build --prefix tools/node-reference

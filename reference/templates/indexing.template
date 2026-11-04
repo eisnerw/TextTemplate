@@ -1,0 +1,6 @@
+Positions:
+{people:[{*.Index()}. {name}]}
+Second person: {people.Index(2):[{name}]}
+First two: {people.Index(1,2):[{name}].Join(' and ')}
+Negative start: {people.Index(-1):[{name}]}
+Nested position: {people:[{details:[{*.Index()}]}].Join(', ')}

@@ -1,0 +1,4 @@
+Escaped name: <a>
+Supplementary name: <a>
+Duplicate alternatives: <a><b>
+Repeated alternatives: <b>

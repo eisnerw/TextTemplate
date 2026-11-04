@@ -1,0 +1,4 @@
+Number: {numberText.Replace(search,'x')}
+Boolean: {booleanText.Replace(flag,'x')}
+Substitution: {numberText.Replace(search,'<$&|$$>')}
+String replaces all: {numberText.Replace('12','x')}

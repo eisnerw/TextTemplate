@@ -9,7 +9,7 @@
       "program": "${workspaceFolder}/Generated/bin/Debug/net10.0/GeneratedTemplates.dll",
       "args": [
         "--template",
-        "externals",
+        "outline",
         "--data-root",
         "reference/data/"
       ],

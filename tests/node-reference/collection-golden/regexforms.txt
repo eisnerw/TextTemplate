@@ -1,0 +1,6 @@
+Forward numeric: ba
+Octal: Ab
+Class range: matchedz
+Forward named: <a>
+Unicode name: <a>
+Repeated captures: <a|>

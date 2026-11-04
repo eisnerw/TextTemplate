@@ -1,0 +1,83 @@
+[
+  {
+    "name": "regex-names-0",
+    "script": "{value.Replace(/(?<\\u0061>a)\\k<a>/,'<$&|$<x>|$<a>|$<𝒜>>')}",
+    "data": {
+      "value": "aa"
+    },
+    "expected": "<aa||a|>"
+  },
+  {
+    "name": "regex-names-1",
+    "script": "{value.Replace(/(?<𝒜>a)\\k<𝒜>/,'<$&|$<x>|$<a>|$<𝒜>>')}",
+    "data": {
+      "value": "aa"
+    },
+    "expected": "<aa|||a>"
+  },
+  {
+    "name": "regex-names-2",
+    "script": "{value.Replace(/(?<\\u{1d49c}>a)\\k<𝒜>/,'<$&|$<x>|$<a>|$<𝒜>>')}",
+    "data": {
+      "value": "aa"
+    },
+    "expected": "<aa|||a>"
+  },
+  {
+    "name": "regex-names-3",
+    "script": "{value.Replace(/(?<x>a)|(?<x>b)/g,'<$&|$<x>|$<a>|$<𝒜>>')}",
+    "data": {
+      "value": "ab"
+    },
+    "expected": "<a|a||><b|b||>"
+  },
+  {
+    "name": "regex-names-4",
+    "script": "{value.Replace(/(?:(?<x>a)|(?<x>b))+\\k<x>/,'<$&|$<x>|$<a>|$<𝒜>>')}",
+    "data": {
+      "value": "abb"
+    },
+    "expected": "<abb|b||>"
+  },
+  {
+    "name": "regex-names-5",
+    "script": "{value.Replace(/(?<x>a)(?<x>b)/,'<$&|$<x>|$<a>|$<𝒜>>')}",
+    "data": {
+      "value": "ab"
+    },
+    "expected": "ab",
+    "exitCode": 1
+  },
+  {
+    "name": "regex-names-6",
+    "script": "{value.Replace(/(?<x>a)|(?:(?<x>b)|(?<x>c))/g,'<$&|$<x>|$<a>|$<𝒜>>')}",
+    "data": {
+      "value": "abc"
+    },
+    "expected": "<a|a||><b|b||><c|c||>"
+  },
+  {
+    "name": "regex-names-7",
+    "script": "{value.Replace(/(?<x>a)|b(?<x>c)/,'<$&|$<x>|$<a>|$<𝒜>>')}",
+    "data": {
+      "value": "bc"
+    },
+    "expected": "<bc|c||>"
+  },
+  {
+    "name": "regex-names-8",
+    "script": "{value.Replace(/(?<x>a)|(?<\\u0078>b)/g,'<$&|$<x>|$<a>|$<𝒜>>')}",
+    "data": {
+      "value": "ab"
+    },
+    "expected": "<a|a||><b|b||>"
+  },
+  {
+    "name": "regex-names-9",
+    "script": "{value.Replace(/(?<á>a)\\k<á>/,'<$&|$<x>|$<a>|$<𝒜>>')}",
+    "data": {
+      "value": "aa"
+    },
+    "expected": "<aa|||>"
+  }
+]

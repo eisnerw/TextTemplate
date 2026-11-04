@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 // Date annotations/composition adapted from TextTemplateInterpreter.ts (Apache-2.0),
 // eisnerw/texttemplate-editor ccedefd87b012ff1173ee2f43323b6eb7c8bd268.
 // Preserve a date value until composition; method coercion still sees a JS object.
-internal sealed class TemplateDate(DateTimeOffset value, object? original, string? format, bool utc, string location)
+internal sealed class TemplateDate(DateTimeOffset value, object? original, string? format, bool utc)
 {
     internal object? Original { get; } = original;
     private static readonly CultureInfo English = CultureInfo.GetCultureInfo("en-US");
@@ -20,17 +20,53 @@ internal sealed class TemplateDate(DateTimeOffset value, object? original, strin
         try
         {
             if (raw is double milliseconds)
+                {
+                if (double.IsFinite(milliseconds) && (milliseconds < -62135596800000d || milliseconds >= 253402300800000d))
+                    throw new NotImplementedException(location + ": NOTYETIMPLEMENTED: Date is outside the supported calendar range.");
                 parsed = DateTimeOffset.FromUnixTimeMilliseconds(checked((long)Math.Truncate(milliseconds)));
+            }
             else if (raw is string text)
             {
+                if (Regex.IsMatch(text, @"^0000(?:$|[-WT\d])"))
+                    throw new NotImplementedException(location + ": NOTYETIMPLEMENTED: Year zero dates.");
+                text = NormalizeText(text);
+                // Normalize Moment's ISO ordinal, week and basic calendar forms first.
+                int timeStart = text.IndexOf('T');
+                string datePart = timeStart < 0 ? text : text[..timeStart];
+                string timePart = timeStart < 0 ? "" : text[timeStart..];
+                Match alternate = Regex.Match(datePart, @"^(\d{4})(?:-?W(\d{2})(?:-?([1-7]))?|-?(\d{3})|(\d{2})(\d{2}))$");
+                if (alternate.Success)
+                {
+                    int year = int.Parse(alternate.Groups[1].Value, CultureInfo.InvariantCulture);
+                    int PartValue(int n) => int.Parse(alternate.Groups[n].Value, CultureInfo.InvariantCulture);
+                    DateTime day;
+                    if (alternate.Groups[2].Success)
+                    {
+                        int week = PartValue(2);
+                        if (week < 1 || week > ISOWeek.GetWeeksInYear(year)) throw new InvalidOperationException("Invalid date.");
+                        int weekday = alternate.Groups[3].Success ? PartValue(3) : 1;
+                        try { day = ISOWeek.ToDateTime(year, week, weekday == 7 ? DayOfWeek.Sunday : (DayOfWeek)weekday); }
+                        catch (ArgumentOutOfRangeException error) { throw new NotImplementedException(location + ": NOTYETIMPLEMENTED: Date is outside the supported calendar range.", error); }
+                    }
+                    else if (alternate.Groups[4].Success)
+                    {
+                        int ordinal = PartValue(4);
+                        if (ordinal < 1 || ordinal > (DateTime.IsLeapYear(year) ? 366 : 365)) throw new InvalidOperationException("Invalid date.");
+                        day = new DateTime(year, 1, 1).AddDays(ordinal - 1);
+                    }
+                    else day = new DateTime(year, PartValue(5), PartValue(6));
+                    text = day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + timePart;
+                }
+                text = Regex.Replace(text, @"T(\d{2})(\d{2})(\d{2})?(?=[.,Z+-]|$)",
+                    m => "T" + m.Groups[1].Value + ":" + m.Groups[2].Value + (m.Groups[3].Success ? ":" + m.Groups[3].Value : ""));
                 // ISO calendar dates and timestamps. Do not delegate unknown formats to
                 // .NET's culture-dependent parser: Moment and Date.parse accept different inputs.
                 Match match = Regex.Match(text, @"^(\d{4})(?:-(\d{2})(?:-(\d{2}))?)?(?:[T ](\d{2})(?::(\d{2})(?::(\d{2})(?:[.,](\d+))?)?)?(Z|[+-]\d{2}(?::?\d{2})?)?)?$");
                 if (!match.Success)
-                    throw new NotImplementedException(location + ": Date parsing for this input form is not implemented yet.");
+                    throw new NotImplementedException(location + ": NOTYETIMPLEMENTED: Date parsing for this input form.");
                 int Part(int index, int fallback) => match.Groups[index].Success ? int.Parse(match.Groups[index].Value, CultureInfo.InvariantCulture) : fallback;
                 if (Part(1, 1) == 0)
-                    throw new NotImplementedException(location + ": Year zero dates are not implemented yet.");
+                    throw new NotImplementedException(location + ": NOTYETIMPLEMENTED: Year zero dates.");
                 if (match.Groups[4].Success && !match.Groups[3].Success)
                     throw new InvalidOperationException(location + ": Invalid date.");
                 int hour = Part(4, 0), minute = Part(5, 0), second = Part(6, 0);
@@ -38,7 +74,12 @@ internal sealed class TemplateDate(DateTimeOffset value, object? original, strin
                 int millis = fraction.Length == 0 ? 0 : int.Parse((fraction + "000")[..3], CultureInfo.InvariantCulture);
                 bool nextDay = hour == 24 && minute == 0 && second == 0 && millis == 0;
                 DateTime calendar = new(Part(1, 1), Part(2, 1), Part(3, 1), nextDay ? 0 : hour, minute, second, millis, DateTimeKind.Unspecified);
-                if (nextDay) calendar = calendar.AddDays(1);
+                if (nextDay)
+                {
+                    if (calendar.Date == DateTime.MaxValue.Date)
+                        throw new NotImplementedException(location + ": NOTYETIMPLEMENTED: Date is outside the supported calendar range.");
+                    calendar = calendar.AddDays(1);
+                }
                 string zone = match.Groups[8].Value;
                 TimeSpan offset;
                 if (zone == "Z") offset = TimeSpan.Zero;
@@ -48,23 +89,90 @@ internal sealed class TemplateDate(DateTimeOffset value, object? original, strin
                     offset = TimeSpan.FromMinutes(int.Parse(digits[..2], CultureInfo.InvariantCulture) * 60 +
                         (digits.Length == 4 ? int.Parse(digits[2..], CultureInfo.InvariantCulture) : 0));
                     if (zone[0] == '-') offset = -offset;
-                    if (offset.Duration() > TimeSpan.FromHours(14))
-                        throw new NotImplementedException(location + ": Date offsets beyond 14 hours are not implemented yet.");
+
                 }
                 else
                 {
-                    if (TimeZoneInfo.Local.IsAmbiguousTime(calendar) || TimeZoneInfo.Local.IsInvalidTime(calendar))
-                        throw new NotImplementedException(location + ": Ambiguous or nonexistent local date times are not implemented yet.");
-                    offset = TimeZoneInfo.Local.GetUtcOffset(calendar);
+                    // JavaScript chooses the earlier occurrence during an overlap and
+                    // advances through a gap using the offset preceding the transition.
+                    DateTime valid = calendar;
+                    while (TimeZoneInfo.Local.IsInvalidTime(valid)) valid = valid.AddMinutes(-1);
+                    offset = TimeZoneInfo.Local.IsAmbiguousTime(valid)
+                        ? EarlierOffset(valid)
+                        : TimeZoneInfo.Local.GetUtcOffset(valid);
                 }
-                parsed = new DateTimeOffset(calendar, offset);
+                long utcTicks = calendar.Ticks - offset.Ticks;
+                if (utcTicks < DateTime.MinValue.Ticks || utcTicks > DateTime.MaxValue.Ticks)
+                    throw new NotImplementedException(location + ": NOTYETIMPLEMENTED: Date is outside the supported calendar range.");
+                parsed = new DateTimeOffset(calendar, TimeSpan.Zero).Subtract(offset);
             }
             else if (raw is null or bool) throw new InvalidOperationException(location + ": Invalid date.");
-            else throw new NotImplementedException(location + ": Non-scalar date parsing is not implemented yet.");
+            else throw new NotImplementedException(location + ": NOTYETIMPLEMENTED: Non-scalar date parsing.");
         }
         catch (ArgumentOutOfRangeException error) { throw new InvalidOperationException(location + ": Invalid date.", error); }
         catch (OverflowException error) { throw new InvalidOperationException(location + ": Date is outside the supported range.", error); }
-        return new TemplateDate(utc ? parsed.ToUniversalTime() : parsed.ToLocalTime(), raw, format, utc, location);
+        return new TemplateDate(utc ? parsed.ToUniversalTime() : parsed.ToLocalTime(), raw, format, utc);
+    }
+    // These are characterized Moment/Node forms, not culture-dependent .NET parsing.
+    private static string NormalizeText(string text)
+    {
+        int Number(string value) => int.Parse(value, CultureInfo.InvariantCulture);
+        int Year(string value)
+        {
+            int year = Number(value);
+            return year < 50 ? year + 2000 : year < 100 ? year + 1900 : year;
+        }
+        int Month(string value)
+        {
+            for (int month = 1; month <= 12; month++)
+                if (string.Equals(value, English.DateTimeFormat.GetMonthName(month), StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(value, English.DateTimeFormat.GetAbbreviatedMonthName(month), StringComparison.OrdinalIgnoreCase)) return month;
+            throw new InvalidOperationException("Invalid date.");
+        }
+        string Iso(DateTime date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        Match rfc = Regex.Match(text, @"^(?:(Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\s+)?(\d{1,2})\s+([A-Za-z]{3})\s+(\d{2,4})\s+(\d{2}:\d{2}(?::\d{2})?)\s+(UT|UTC|GMT|[ECMP][SD]T|Z|[+-]\d{4})$");
+        if (rfc.Success)
+        {
+            DateTime date = new(Year(rfc.Groups[4].Value), Month(rfc.Groups[3].Value), Number(rfc.Groups[2].Value));
+            if (rfc.Groups[1].Success && date.ToString("ddd", English) != rfc.Groups[1].Value)
+                throw new InvalidOperationException("Invalid date.");
+            string zone = rfc.Groups[6].Value switch
+            {
+                "UT" or "UTC" or "GMT" or "Z" => "Z",
+                "EST" or "CDT" => "-0500", "EDT" => "-0400", "CST" or "MDT" => "-0600",
+                "MST" or "PDT" => "-0700", "PST" => "-0800", _ => rfc.Groups[6].Value
+            };
+            return Iso(date) + "T" + rfc.Groups[5].Value + zone;
+        }
+        Match slash = Regex.Match(text, @"^(\d{1,4})/(\d{1,2})/(\d{1,4})(?: (\d{1,2}:\d{2}(?::\d{2})?))?$");
+        Match words = Regex.Match(text, @"^(?:([A-Za-z]+) (\d{1,2}),?|(\d{1,2}) ([A-Za-z]+)) (\d{2,4})(?: (\d{1,2}:\d{2}(?::\d{2})?))?(?: (GMT|UTC))?$", RegexOptions.IgnoreCase);
+        if (slash.Success || words.Success)
+        {
+            int year, month, day;
+            string time, zone = "";
+            if (slash.Success)
+            {
+                bool yearFirst = slash.Groups[1].Length == 4;
+                year = Year(slash.Groups[yearFirst ? 1 : 3].Value);
+                month = Number(slash.Groups[yearFirst ? 2 : 1].Value);
+                day = Number(slash.Groups[yearFirst ? 3 : 2].Value);
+                time = slash.Groups[4].Value;
+            }
+            else
+            {
+                year = Year(words.Groups[5].Value);
+                month = Month(words.Groups[1].Success ? words.Groups[1].Value : words.Groups[4].Value);
+                day = Number(words.Groups[2].Success ? words.Groups[2].Value : words.Groups[3].Value);
+                time = words.Groups[6].Value;
+                if (words.Groups[7].Success) zone = "Z";
+            }
+            if (day is < 1 or > 31) throw new InvalidOperationException("Invalid date.");
+            // Node's fallback parser rolls February 30 into March, unlike ISO parsing.
+            DateTime date = new DateTime(year, month, 1).AddDays(day - 1);
+            if (time.Length > 0 && time.IndexOf(':') == 1) time = "0" + time;
+            return Iso(date) + (time.Length > 0 ? "T" + time + zone : zone.Length > 0 ? "T00:00:00Z" : "");
+        }
+        return text;
     }
     // ToDate reconstructs recognized dates from Moment.toObject(): wall-clock fields
     // become local time before the optional GMT conversion, even for UTC wrappers.
@@ -91,12 +199,36 @@ internal sealed class TemplateDate(DateTimeOffset value, object? original, strin
         else throw new InvalidOperationException(location + ": ToDate format must be a string.");
         return parsed.WithFormat(pattern, utc, location).Render();
     }
+    private static TimeSpan EarlierOffset(DateTime calendar)
+    {
+        TimeSpan[] offsets = TimeZoneInfo.Local.GetAmbiguousTimeOffsets(calendar);
+        return offsets[0] > offsets[1] ? offsets[0] : offsets[1];
+    }
     private string CalendarFields() => value.ToString("yyyy-MM-dd'T'HH:mm:ss.fff", CultureInfo.InvariantCulture);
     private TemplateDate WithFormat(string? pattern, bool useUtc, string source)
-        => new(value, Original, pattern, useUtc, source);
+        => new(value, Original, pattern, useUtc);
 
+    internal string EncodeJson()
+    {
+        string Quote(string text) => "\"" + Builtins.EncodeText(text, "json", component: true) + "\"";
+        string original = Original is string text ? Quote(text) : Builtins.JsString(Original);
+        string iso = value.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", CultureInfo.InvariantCulture);
+        // EncodeFor(json) strips the first/last character of JSON.stringify even
+        // for an object, so the legacy date wrapper loses its surrounding braces.
+        return "\"type\":\"date\",\"moment\":" + Quote(iso) + ",\"string\":" + original +
+            (format is null ? "" : ",\"format\":" + Quote(format));
+    }
     private static string Ordinal(int number) => number.ToString(CultureInfo.InvariantCulture) +
         (number % 100 is >= 11 and <= 13 ? "th" : (number % 10) switch { 1 => "st", 2 => "nd", 3 => "rd", _ => "th" });
+    private static (int Year, int Week) LocalWeek(DateTime date)
+    {
+        // Moment's English locale: Sunday starts the week containing January 1.
+        int year = date.Year;
+        long Start(int y) { DateTime first = new(y, 1, 1); return first.Ticks / TimeSpan.TicksPerDay - (int)first.DayOfWeek; }
+        long day = date.Ticks / TimeSpan.TicksPerDay;
+        if (year < 9999 && day >= Start(year + 1)) year++;
+        return (year, (int)((day - Start(year)) / 7) + 1);
+    }
     internal string Render()
     {
         // JS toLocaleDateString uses local time even if the Moment wrapper is UTC.
@@ -115,6 +247,8 @@ internal sealed class TemplateDate(DateTimeOffset value, object? original, strin
             if (token.StartsWith('[') && token.EndsWith(']')) return token[1..^1];
             if (token.StartsWith('\\')) return token[1..];
             string Number(int number, int digits = 1) => number.ToString(new string('0', digits), CultureInfo.InvariantCulture);
+            var localWeek = LocalWeek(value.DateTime);
+            int isoWeek = ISOWeek.GetWeekOfYear(value.DateTime), isoYear = ISOWeek.GetYear(value.DateTime);
             int hour12 = value.Hour % 12 == 0 ? 12 : value.Hour % 12;
             string zone = (value.Offset < TimeSpan.Zero ? "-" : "+") + Number(Math.Abs((int)value.Offset.TotalMinutes) / 60, 2) + ":" + Number(Math.Abs(value.Offset.Minutes), 2);
             return token switch
@@ -137,7 +271,11 @@ internal sealed class TemplateDate(DateTimeOffset value, object? original, strin
                 "X" => Math.Floor(value.ToUnixTimeMilliseconds() / 1000d).ToString(CultureInfo.InvariantCulture), "x" => value.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture),
                 "Q" => Number((value.Month + 2) / 3), "Qo" => Ordinal((value.Month + 2) / 3),
                 _ when token[0] == 'S' => (Number(value.Millisecond, 3) + "000000")[..token.Length],
-                _ when "wWgGN".Contains(token[0]) => throw new NotImplementedException(location + ": Date format token " + token + " is not implemented yet."),
+                "w" => Number(localWeek.Week), "ww" => Number(localWeek.Week, 2), "wo" => Ordinal(localWeek.Week),
+                "W" => Number(isoWeek), "WW" => Number(isoWeek, 2), "Wo" => Ordinal(isoWeek),
+                "gg" => Number(localWeek.Year % 100, 2), "gggg" => Number(localWeek.Year, 4), "ggggg" => Number(localWeek.Year, 5),
+                "GG" => Number(isoYear % 100, 2), "GGGG" => Number(isoYear, 4), "GGGGG" => Number(isoYear, 5),
+                "N" or "NN" or "NNN" or "NNNNN" => "AD", "NNNN" => "Anno Domini",
                 _ => token
             };
         });

@@ -70,7 +70,7 @@ public sealed class CSharpEmitter
         var mainMap = new List<string>(); var sharedMap = new List<string>(); var importMap = new List<string>();
         var unitNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "TemplateExtensions", "TemplateExtensionRegistration", "ExtensionCall", "ExtensionArguments", "ExtensionContext", "ValueLookup", "TemplateDebug", "TemplateValue", "GeneratedTemplates", "EvaluationContext", "TemplateContent", "TemplateUnit", "Builtins", "NodeCasing", "TemplateRegex", "TemplateDate", "BulletIndent", "SubtemplateDefinitions", "GeneratedTemplateProgram", "Common",
+            "TemplateExtensions", "TemplateExtensionRegistration", "ExtensionCall", "ExtensionArguments", "ExtensionContext", "ValueLookup", "TemplateDebug", "TemplateValue", "GeneratedTemplates", "EvaluationContext", "TemplateContent", "TemplateUnit", "Builtins", "NodeCasing", "NodeIdentifiers", "TemplateRegex", "TemplateDate", "BulletIndent", "SubtemplateDefinitions", "GeneratedTemplateProgram", "Common",
             "System", "StringComparer", "StringComparison", "JsonElement", "JsonDocument", "JsonValueKind",
             "Dictionary", "List", "Func", "Action", "Regex", "CultureInfo", "Math", "Console", "File",
             "Exception", "ArgumentException", "InvalidOperationException", "NotImplementedException"
@@ -126,6 +126,7 @@ public sealed class CSharpEmitter
         files.Add("Support/TemplateContent.cs", Header + ContentSupport);
         files.Add("Support/BulletIndent.cs", Header + ReadSupport("StandaloneBullets.cs.txt"));
         files.Add("Support/TemplateRegex.cs", Header + ReadSupport("StandaloneRegex.cs.txt"));
+        files.Add("Support/NodeIdentifiers.cs", Header + ReadSupport("StandaloneIdentifiers.cs.txt"));
         files.Add("Support/NodeCasing.cs", Header + ReadSupport("StandaloneCasing.cs.txt") + ReadSupport("StandaloneCasingData.cs.txt"));
         string result = Header + string.Join("\n", files.Values.Select(file => file[Header.Length..]));
         return new(result, diagnostics) { Files = files };
@@ -284,7 +285,7 @@ public sealed class CSharpEmitter
             string argument = args[0].Kind == SyntaxKind.String ? Quote(DecodeString(args[0].Value!))
                 : args[0].Kind == SyntaxKind.Identifier ? context + ".Lookup(" + Quote(args[0].Value!) + ")"
                 : context + ".Each(ForItem(item => item." + Emit(args[0], source) + "()))";
-            return (lambda ? context + " => " : "") + context + ".Include(EvaluationContext.Compose(" + argument + "))";
+            return (lambda ? context + " => " : "") + context + ".Include(() => " + argument + ")";
         }
         if (args.Count != 1 || args[0].Kind != SyntaxKind.String) return null;
         string value = DecodeString(args[0].Value!);
@@ -589,7 +590,7 @@ public sealed class CSharpEmitter
             var args = call.Children.Skip(1).SelectMany(child => child.Children).ToList();
             if (args.Any(arg => arg.Kind != SyntaxKind.String) || call.Value == "Count" && args.Count > 0) return null;
             string arguments = string.Join(", ", args.Select(arg => "() => " + Quote(DecodeString(arg.Value!))));
-            if (call.Value == "ToDate" && arguments.Length > 0) arguments = "[" + arguments + "]";
+            if (call.Value is "ToDate" or "Join" && arguments.Length > 0) arguments = "[" + arguments + "]";
             result += "." + call.Value + "(" + arguments + ")";
         }
         return "ForItem(item => " + result + ")";
@@ -817,7 +818,7 @@ public sealed class CSharpEmitter
                     }
                 }
                 // No-argument Count retains its distinct legacy counting rules.
-                else if (node.Value!.StartsWith('#') || (node.Value == "Count" && !node.Children.Skip(1).SelectMany(child => child.Children).Any()) || node.Value is "EncodeFor" or "ToDate" or "Compose" or "IfMissing" or "Join" or "Align" or "Trim" or "StartsWith" or "EndsWith" or "Contains" or "Replace" or "Substr" or "IndexOf" or "LastIndexOf" or "EndIndexOf" or "ToUpper" or "ToLower" or "GreaterThan" or "LessThan" or "Matches" or "Assert")
+                else if (node.Value!.StartsWith('#') || (node.Value == "Count" && !node.Children.Skip(1).SelectMany(child => child.Children).Any()) || node.Value is "Index" or "EncodeFor" or "ToDate" or "Compose" or "IfMissing" or "Join" or "Align" or "Trim" or "StartsWith" or "EndsWith" or "Contains" or "Replace" or "Substr" or "IndexOf" or "LastIndexOf" or "EndIndexOf" or "ToUpper" or "ToLower" or "GreaterThan" or "LessThan" or "Matches" or "Assert")
                 {
                     string arguments = string.Join(", ", node.Children.Skip(1).SelectMany(child => child.Children).Select(arg => "() => " + Call(arg)));
                     string input = ReferenceEquals(node.Children[0], replayReceiver) ? "Context.Current" : node.Children[0].Kind == SyntaxKind.Call || receiver.Value?.StartsWith('^') == true ? Call(node.Children[0]) : node.Children[0].Kind == SyntaxKind.Identifier && !node.Children[0].Value!.StartsWith('@')
@@ -827,7 +828,7 @@ public sealed class CSharpEmitter
                         : Collected(node.Children[0]);
                     string fluentInput = Fluent(input);
                     string prefix = node.Value.StartsWith('#') ? Quote(node.Value[1..]) : "";
-                    string deferredArguments = arguments.Length > 0 && node.Value is "ToDate" or "EncodeFor" ? "[" + arguments + "]" : arguments;
+                    string deferredArguments = arguments.Length > 0 && node.Value is "ToDate" or "EncodeFor" or "Join" or "Index" ? "[" + arguments + "]" : arguments;
                     expression = fluentInput + "\n            ." + (node.Value.StartsWith('#') ? "Call" : node.Value) + "(" + prefix +
                         (prefix.Length > 0 && deferredArguments.Length > 0 ? ", " : "") + deferredArguments + ").Raw";
                 }

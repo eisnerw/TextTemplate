@@ -1,0 +1,250 @@
+[
+  {
+    "name": "date-parsing-0",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "20240315T123000Z"
+    },
+    "expected": "2024-03-15 12:30:00 +00:00"
+  },
+  {
+    "name": "date-parsing-1",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "20240315T1230+0230"
+    },
+    "expected": "2024-03-15 10:00:00 +00:00"
+  },
+  {
+    "name": "date-parsing-2",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "2024075T123000Z"
+    },
+    "expected": "2024-03-15 12:30:00 +00:00"
+  },
+  {
+    "name": "date-parsing-3",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "2024-075T12:30:00Z"
+    },
+    "expected": "2024-03-15 12:30:00 +00:00"
+  },
+  {
+    "name": "date-parsing-4",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "2024-W11-5T12:30:00Z"
+    },
+    "expected": "2024-03-15 12:30:00 +00:00"
+  },
+  {
+    "name": "date-parsing-5",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "2024W115T123000Z"
+    },
+    "expected": "2024-03-15 12:30:00 +00:00"
+  },
+  {
+    "name": "date-parsing-6",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "2023-366T12:30:00Z"
+    },
+    "expected": "Invalid date"
+  },
+  {
+    "name": "date-parsing-7",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "2024-W54-1T12:30:00Z"
+    },
+    "expected": "Invalid date"
+  },
+  {
+    "name": "date-parsing-8",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "20240315T246000Z"
+    },
+    "expected": "Invalid date"
+  },
+  {
+    "name": "date-parsing-9",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "Fri, 15 Mar 2024 12:30:00 +0200"
+    },
+    "expected": "2024-03-15 10:30:00 +00:00"
+  },
+  {
+    "name": "date-parsing-10",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "Fri, 15 Mar 2024 12:30:00 EST"
+    },
+    "expected": "2024-03-15 17:30:00 +00:00"
+  },
+  {
+    "name": "date-parsing-11",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "Fri, 15 Mar 2024 12:30:00 UTC"
+    },
+    "expected": "2024-03-15 12:30:00 +00:00"
+  },
+  {
+    "name": "date-parsing-12",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "Fri, 15 Mar 24 12:30 GMT"
+    },
+    "expected": "2024-03-15 12:30:00 +00:00"
+  },
+  {
+    "name": "date-parsing-13",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "Sat, 15 Mar 2024 12:30:00 GMT"
+    },
+    "expected": "Invalid date"
+  },
+  {
+    "name": "date-parsing-14",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "03/15/2024"
+    },
+    "expected": "2024-03-15 00:00:00 +00:00"
+  },
+  {
+    "name": "date-parsing-15",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "3/5/2024"
+    },
+    "expected": "2024-03-05 00:00:00 +00:00"
+  },
+  {
+    "name": "date-parsing-16",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "2024/03/15"
+    },
+    "expected": "2024-03-15 00:00:00 +00:00"
+  },
+  {
+    "name": "date-parsing-17",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "03/15/2024 12:30:45"
+    },
+    "expected": "2024-03-15 12:30:45 +00:00"
+  },
+  {
+    "name": "date-parsing-18",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "03/15/24"
+    },
+    "expected": "2024-03-15 00:00:00 +00:00"
+  },
+  {
+    "name": "date-parsing-19",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "03/15/49"
+    },
+    "expected": "2049-03-15 00:00:00 +00:00"
+  },
+  {
+    "name": "date-parsing-20",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "03/15/50"
+    },
+    "expected": "1950-03-15 00:00:00 +00:00"
+  },
+  {
+    "name": "date-parsing-21",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "02/30/2024"
+    },
+    "expected": "2024-03-01 00:00:00 +00:00"
+  },
+  {
+    "name": "date-parsing-22",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "13/01/2024"
+    },
+    "expected": "Invalid date"
+  },
+  {
+    "name": "date-parsing-23",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "00/15/2024"
+    },
+    "expected": "Invalid date"
+  },
+  {
+    "name": "date-parsing-24",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "March 15, 2024"
+    },
+    "expected": "2024-03-15 00:00:00 +00:00"
+  },
+  {
+    "name": "date-parsing-25",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "15 March 2024"
+    },
+    "expected": "2024-03-15 00:00:00 +00:00"
+  },
+  {
+    "name": "date-parsing-26",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "Mar 15 2024 12:30:45 GMT"
+    },
+    "expected": "2024-03-15 12:30:45 +00:00"
+  },
+  {
+    "name": "date-parsing-27",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "February 30, 2024"
+    },
+    "expected": "2024-03-01 00:00:00 +00:00"
+  },
+  {
+    "name": "date-parsing-28",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "February 31, 2023"
+    },
+    "expected": "2023-03-03 00:00:00 +00:00"
+  },
+  {
+    "name": "date-parsing-29",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "April 31, 2024"
+    },
+    "expected": "2024-05-01 00:00:00 +00:00"
+  },
+  {
+    "name": "date-parsing-30",
+    "script": "{value.ToDate('YYYY-MM-DD HH:mm:ss Z','GMT')}",
+    "data": {
+      "value": "March 32, 2024"
+    },
+    "expected": "Invalid date"
+  }
+]

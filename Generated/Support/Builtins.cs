@@ -20,8 +20,8 @@ internal static class Builtins
         string actual = JsString(value);
         return string.Equals(actual, expected, StringComparison.Ordinal) || CompareStrings(actual, expected) == 0;
     }
-    internal static object? Join(object? value, params object?[] arguments)
-        => EvaluationContext.JoinValues(value, arguments);
+    internal static object? Join(EvaluationContext context, string location, object? value, params object?[] arguments)
+        => context.JoinValues(location, value, arguments);
 
     // Adapted from TextTemplateInterpreter.ts, callMethod (Apache-2.0).
     // eisnerw/texttemplate-editor, ccedefd87b012ff1173ee2f43323b6eb7c8bd268.
@@ -85,8 +85,14 @@ internal static class Builtins
         value = EvaluationContext.Intermediate(value);
         if (value is null or EvaluationContext.Missing) return value;
         Require(arguments, 1, 1);
-        if (value is TemplateDate)
-            throw new NotImplementedException("EncodeFor with a recognized date receiver is not implemented yet.");
+        if (value is TemplateDate date)
+        {
+            string? dateMode = EvaluationContext.Intermediate(arguments[0]) as string;
+            if (dateMode == "uri") return EncodeText("[object Object]", "uri", component: true);
+            if (dateMode == "json") return date.EncodeJson();
+            // Legacy html/xml call string.replace on the date wrapper and fail.
+            throw new InvalidOperationException("EncodeFor requires a string receiver for html/xml.");
+        }
         if (value is not string text) throw new InvalidOperationException("EncodeFor requires a string receiver.");
         if (EvaluationContext.Intermediate(arguments[0]) is not string mode || mode is not ("html" or "xml" or "uri" or "json"))
             throw new InvalidOperationException("EncodeFor requires html, xml, uri or json.");
@@ -249,7 +255,7 @@ internal static class Builtins
             ? "[object Object]" : EvaluationContext.Compose(value) ?? "null";
     }
     // JavaScript parseInt accepts a sign, hexadecimal prefix, and trailing text.
-    private static double ParseInteger(object? value, string method = "Substr")
+    internal static double ParseInteger(object? value, string method = "Substr")
     {
         string text = JsString(value).TrimStart(Whitespace.ToCharArray());
         int position = 0, sign = 1, radix = 10;
@@ -295,7 +301,14 @@ internal static class Builtins
                 if (EvaluationContext.Intermediate(arguments[0]) is TemplateRegex pattern)
                     return pattern.Replace(text, JsString(arguments[1]));
                 if (EvaluationContext.Intermediate(arguments[0]) is not string)
-                    throw new NotImplementedException("Non-string Replace search operands are not implemented yet.");
+                {
+                    // JS replace coerces a non-regex search to text and replaces only
+                    // its first occurrence, with replacement-pattern substitution.
+                    int found = text.IndexOf(argument, StringComparison.Ordinal);
+                    if (found < 0) return text;
+                    string insert = TemplateRegex.ReplaceLiteral(text, found, argument.Length, JsString(arguments[1]));
+                    return text[..found] + insert + text[(found + argument.Length)..];
+                }
                 string replacement = JsString(arguments[1]);
                 if (argument.Length != 0) return text.Replace(argument, replacement, StringComparison.Ordinal);
                 return string.Join(replacement, text.ToCharArray());

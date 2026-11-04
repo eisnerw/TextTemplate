@@ -482,7 +482,7 @@ internal sealed partial class Startup(EvaluationContext context) : TemplateUnit<
     private TemplateValue renderJoin()
     {
         return Collect(ForItem(item => item.renderType()))
-            .Join(() => ", ", () => " and ");
+            .Join([() => ", ", () => " and "]);
     }
 
     // Template:
@@ -772,7 +772,7 @@ internal sealed partial class Startup(EvaluationContext context) : TemplateUnit<
     private TemplateValue renderJoin_2()
     {
         return Collect(ForItem(item => item.renderFalsy()))
-            .Join(() => ", ", () => " and ");
+            .Join([() => ", ", () => " and "]);
     }
 
     // Template:

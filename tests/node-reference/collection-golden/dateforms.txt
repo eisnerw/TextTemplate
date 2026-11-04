@@ -1,0 +1,8 @@
+Boundary: 2016-01-03 week 2 ISO 53 year 2016 2015
+Ordinals: 2nd 53rd
+Era: AD Anno Domini AD
+Ordinal date: 2020-02-29
+ISO week date: 2019-12-30
+Basic date: 2020-01-02
+RFC date: 1997-11-21 09:55:06
+Large offset: 2020-01-01 21:00:00

@@ -1,0 +1,4 @@
+Number: x12
+Boolean: x true
+Substitution: <12|$>12
+String replaces all: xx

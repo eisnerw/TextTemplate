@@ -1,0 +1,323 @@
+[
+  {
+    "name": "regex-extended-0",
+    "script": "{text.Replace(/\\1(a)/,'<$&|$1|$2>')}",
+    "data": {
+      "text": "a"
+    },
+    "expected": "<a|a|$2>"
+  },
+  {
+    "name": "regex-extended-1",
+    "script": "{text.Replace(/(a)\\2(b)/,'<$&|$1|$2>')}",
+    "data": {
+      "text": "ab"
+    },
+    "expected": "<ab|a|b>"
+  },
+  {
+    "name": "regex-extended-2",
+    "script": "{text.Replace(/\\2(a)(b)/,'<$&|$1|$2>')}",
+    "data": {
+      "text": "ab"
+    },
+    "expected": "<ab|a|b>"
+  },
+  {
+    "name": "regex-extended-3",
+    "script": "{text.Replace(/\\141/,'<$&|$1|$2>')}",
+    "data": {
+      "text": "a"
+    },
+    "expected": "<a|$1|$2>"
+  },
+  {
+    "name": "regex-extended-4",
+    "script": "{text.Replace(/[\\141-\\143]+/,'<$&|$1|$2>')}",
+    "data": {
+      "text": "abc"
+    },
+    "expected": "<abc|$1|$2>"
+  },
+  {
+    "name": "regex-extended-5",
+    "script": "{text.Replace(/\\8/,'<$&|$1|$2>')}",
+    "data": {
+      "text": "8"
+    },
+    "expected": "<8|$1|$2>"
+  },
+  {
+    "name": "regex-extended-6",
+    "script": "{text.Replace(/\\9/,'<$&|$1|$2>')}",
+    "data": {
+      "text": "9"
+    },
+    "expected": "<9|$1|$2>"
+  },
+  {
+    "name": "regex-extended-7",
+    "script": "{text.Replace(/\\1234/,'<$&|$1|$2>')}",
+    "data": {
+      "text": "S4"
+    },
+    "expected": "<S4|$1|$2>"
+  },
+  {
+    "name": "regex-extended-8",
+    "script": "{text.Replace(/\\400/,'<$&|$1|$2>')}",
+    "data": {
+      "text": " 0"
+    },
+    "expected": "< 0|$1|$2>"
+  },
+  {
+    "name": "regex-extended-9",
+    "script": "{text.Replace(/\\08/,'<$&|$1|$2>')}",
+    "data": {
+      "text": "\u00008"
+    },
+    "expected": "<\u00008|$1|$2>"
+  },
+  {
+    "name": "regex-extended-10",
+    "script": "{text.Replace(/[a-\\d]+/,'<$&|$1|$2>')}",
+    "data": {
+      "text": "a-5z"
+    },
+    "expected": "<a-5|$1|$2>z"
+  },
+  {
+    "name": "regex-extended-11",
+    "script": "{text.Replace(/[\\d-a]+/,'<$&|$1|$2>')}",
+    "data": {
+      "text": "a-5z"
+    },
+    "expected": "<a-5|$1|$2>z"
+  },
+  {
+    "name": "regex-extended-12",
+    "script": "{text.Replace(/[z-a]/,'<$&|$1|$2>')}",
+    "data": {
+      "text": "abc"
+    },
+    "expected": "abc",
+    "exitCode": 1
+  },
+  {
+    "name": "regex-extended-13",
+    "script": "{text.Replace(/\\k<x>(?<x>a)/,'<$&|$1|$2>')}",
+    "data": {
+      "text": "a"
+    },
+    "expected": "<a|a|$2>"
+  },
+  {
+    "name": "regex-extended-14",
+    "script": "{text.Replace(/(?<café>a)\\k<café>/,'<$&|$1|$2>')}",
+    "data": {
+      "text": "aa"
+    },
+    "expected": "<aa|a|$2>"
+  },
+  {
+    "name": "regex-extended-15",
+    "script": "{text.Replace(/[\\c0]/,'<$&|$1|$2>')}",
+    "data": {
+      "text": "\u0010"
+    },
+    "expected": "<\u0010|$1|$2>"
+  },
+  {
+    "name": "regex-extended-16",
+    "script": "{text.Replace(/\\c1/,'<$&|$1|$2>')}",
+    "data": {
+      "text": "\\c1"
+    },
+    "expected": "<\\c1|$1|$2>"
+  },
+  {
+    "name": "regex-extended-17",
+    "script": "{text.Replace(/[\\c_]/,'<$&|$1|$2>')}",
+    "data": {
+      "text": "\u001f"
+    },
+    "expected": "<\u001f|$1|$2>"
+  },
+  {
+    "name": "regex-extended-18",
+    "script": "{text.Replace(/(a|(b))+/,'<$&|$1|$2>')}",
+    "data": {
+      "text": "aba"
+    },
+    "expected": "<aba|a|>"
+  },
+  {
+    "name": "regex-extra-0",
+    "script": "{text.Replace(/(a|(b))+/,'<$&|$1|$2|$3>')}",
+    "data": {
+      "text": "abb"
+    },
+    "expected": "<abb|b|b|$3>"
+  },
+  {
+    "name": "regex-extra-1",
+    "script": "{text.Replace(/(?:(a)|(b))+/,'<$&|$1|$2|$3>')}",
+    "data": {
+      "text": "aba"
+    },
+    "expected": "<aba|a||$3>"
+  },
+  {
+    "name": "regex-extra-2",
+    "script": "{text.Replace(/(?:(a)|(b))+/,'<$&|$1|$2|$3>')}",
+    "data": {
+      "text": "abb"
+    },
+    "expected": "<abb||b|$3>"
+  },
+  {
+    "name": "regex-extra-3",
+    "script": "{text.Replace(/((a)?b)+/,'<$&|$1|$2|$3>')}",
+    "data": {
+      "text": "abb"
+    },
+    "expected": "<abb|b||$3>"
+  },
+  {
+    "name": "regex-extra-4",
+    "script": "{text.Replace(/((a)?b)+\\2/,'<$&|$1|$2|$3>')}",
+    "data": {
+      "text": "abba"
+    },
+    "expected": "<abb|b||$3>a"
+  },
+  {
+    "name": "regex-extra-5",
+    "script": "{text.Replace(/((a)?b){2}/,'<$&|$1|$2|$3>')}",
+    "data": {
+      "text": "abb"
+    },
+    "expected": "<abb|b||$3>"
+  },
+  {
+    "name": "regex-extra-6",
+    "script": "{text.Replace(/((a)?b)*ab/,'<$&|$1|$2|$3>')}",
+    "data": {
+      "text": "abbab"
+    },
+    "expected": "<abbab|b||$3>"
+  },
+  {
+    "name": "regex-extra-7",
+    "script": "{text.Replace(/(a\\1)/,'<$&|$1|$2|$3>')}",
+    "data": {
+      "text": "a"
+    },
+    "expected": "<a|a|$2|$3>"
+  },
+  {
+    "name": "regex-extra-8",
+    "script": "{text.Replace(/\\1(a)+/,'<$&|$1|$2|$3>')}",
+    "data": {
+      "text": "aa"
+    },
+    "expected": "<aa|a|$2|$3>"
+  },
+  {
+    "name": "regex-extra-9",
+    "script": "{text.Replace(/(?<x>a\\k<x>)/,'<$&|$1|$2|$3>')}",
+    "data": {
+      "text": "a"
+    },
+    "expected": "<a|a|$2|$3>"
+  },
+  {
+    "name": "regex-extra-10",
+    "script": "{text.Replace(/[\\8\\9]+/,'<$&|$1|$2|$3>')}",
+    "data": {
+      "text": "89"
+    },
+    "expected": "<89|$1|$2|$3>"
+  },
+  {
+    "name": "regex-extra-11",
+    "script": "{text.Replace(/\\777/,'<$&|$1|$2|$3>')}",
+    "data": {
+      "text": "?7"
+    },
+    "expected": "<?7|$1|$2|$3>"
+  },
+  {
+    "name": "regex-extra-12",
+    "script": "{text.Replace(/\\18/,'<$&|$1|$2|$3>')}",
+    "data": {
+      "text": "\u00018"
+    },
+    "expected": "<\u00018|$1|$2|$3>"
+  },
+  {
+    "name": "regex-extra-13",
+    "script": "{text.Replace(/[\\c-]/,'<$&|$1|$2|$3>')}",
+    "data": {
+      "text": "\\c-"
+    },
+    "expected": "<\\|$1|$2|$3>c-"
+  },
+  {
+    "name": "regex-extra-14",
+    "script": "{text.Replace(/\\c/,'<$&|$1|$2|$3>')}",
+    "data": {
+      "text": "\\c"
+    },
+    "expected": "<\\c|$1|$2|$3>"
+  },
+  {
+    "name": "regex-extra-15",
+    "script": "{text.Replace(/((a)|(b))+/,'<$&|$1|$2|$3>')}",
+    "data": {
+      "text": "abba"
+    },
+    "expected": "<abba|a|a|>"
+  },
+  {
+    "name": "regex-reset-0",
+    "script": "{text.Replace(/^((a)?b)+\\2c$/,'<$&|$1|$2>')}",
+    "data": {
+      "text": "abbac"
+    },
+    "expected": "abbac"
+  },
+  {
+    "name": "regex-reset-1",
+    "script": "{text.Replace(/^((a)*b)+\\2$/,'<$&|$1|$2>')}",
+    "data": {
+      "text": "aabb"
+    },
+    "expected": "<aabb|b|>"
+  },
+  {
+    "name": "regex-reset-2",
+    "script": "{text.Replace(/^((a)*b)+\\2$/,'<$&|$1|$2>')}",
+    "data": {
+      "text": "aabba"
+    },
+    "expected": "aabba"
+  },
+  {
+    "name": "regex-reset-3",
+    "script": "{text.Replace(/((a)*b)+/,'<$&|$1|$2>')}",
+    "data": {
+      "text": "aabb"
+    },
+    "expected": "<aabb|b|>"
+  },
+  {
+    "name": "regex-identity-named",
+    "script": "{text.Replace(/\\k<x>/,'matched')}",
+    "data": {
+      "text": "k<x>"
+    },
+    "expected": "matched"
+  }
+]

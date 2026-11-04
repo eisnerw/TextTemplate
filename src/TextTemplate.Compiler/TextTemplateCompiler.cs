@@ -27,6 +27,8 @@ public sealed class TextTemplateCompiler
             if (!Directory.Exists(directory)) throw new DirectoryNotFoundException("Required directory not found: " + directory);
             foreach (string file in Directory.EnumerateFiles(directory, "*.template", SearchOption.AllDirectories).Order(StringComparer.Ordinal))
             {
+                // Archived reference demos are outside the standalone feature scope.
+                if (category == "templates" && Path.GetRelativePath(directory, file).Replace('\\', '/').StartsWith("Unimplemented/", StringComparison.Ordinal)) continue;
                 string key = Path.GetRelativePath(root, file).Replace('\\', '/');
                 string name = Path.GetRelativePath(directory, file).Replace('\\', '/')[..^".template".Length];
                 string text = File.ReadAllText(file, new UTF8Encoding(false, true));

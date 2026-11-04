@@ -26,7 +26,10 @@ reference collection compiles, but templates that reach unfinished features thro
 resolution still have stubs. Supported additions include local/shared `@Include` with computed names,
 literal `@MissingValue`, named subtemplate methods with scalar arguments, and
 list contexts and per-item inline/named evaluation, and `Join` with an optional
-final separator (scalar input remains unchanged). String methods now include
+final separator (scalar input remains unchanged). `Index()` reports one-based item
+positions; `Index(start, count)` slices data with JavaScript integer parsing and
+legacy singleton/dictionary behavior. Join reports invalid inputs through the host
+diagnostic callback, preserving legacy continuation output. String methods now include
 `Trim`, `StartsWith`, `EndsWith`, `Contains`, string-search `Replace`, `Substr`,
 `IndexOf`, `LastIndexOf`, and `EndIndexOf`. These preserve JavaScript whitespace,
 UTF-16 indexing, `parseInt` substring offsets, and split/join replacement behavior.
@@ -38,16 +41,21 @@ string comparison with relational operators. Regex literals support the frozen g
 `@Falsy()`). Regex replacement follows JavaScript capture/substitution rules;
 string replacement retains its existing split/join behavior. `EncodeFor` and scoped
 `@EncodeDataFor` implement the characterized HTML, XML, URI, and JSON escaping
-behavior, including legacy XML quirks. Recognized date receivers remain stubs. `Contains`,
+behavior, including legacy XML quirks. Recognized dates support URI/JSON encoding with legacy object semantics; HTML/XML
+encoding requires strings. `Contains`,
 `StartsWith`, and `EndsWith` reject regex arguments, as Node does.
 The emitted `Support/TemplateRegex.cs` adapts .NET matching with JavaScript
-character classes, anchors, non-Unicode case folding, and global state. Repeated
-groups containing nested captures, forward/octal backreferences, Unicode capture
-names, duplicate capture names, and some legacy character-class/control escapes
-remain source-located runtime stubs. `@DateTest`, `@DateFormat`, and `ToDate` support the characterized ISO/numeric
-date parsing and English formatting subset, including explicit GMT conversion.
-Other date input forms and some format tokens remain runtime stubs; see DESIGN.md. No grammar changes or runtime Node dependency are introduced. Exceptions from
-emitted template logic identify the feature and original file, line, and column.
+character classes, anchors, non-Unicode case folding, and global state. It also
+supports repeated nested-capture resets, forward references, octal escapes, BMP
+Unicode capture names, and legacy character-class/control escapes. Escaped/supplementary capture names and duplicate names in separate alternatives
+are supported; overlapping duplicate names are invalid.
+`@DateTest`, `@DateFormat`, and `ToDate` support characterized ISO/numeric dates,
+ISO ordinal/week/basic timestamps, characterized RFC offsets/zones and common
+English/slash inputs, English week/week-year/era tokens,
+large numeric offsets, and daylight-saving overlaps/gaps. Year zero, non-scalar
+inputs, and uncharacterized date forms remain stubs; see DESIGN.md. No grammar
+changes or runtime Node dependency are introduced. Runtime diagnostics identify
+the maintained C# call site.
 Stubs do not run their operands; an unselected conditional branch does not throw.
 These are temporary implementation points, not language restrictions or successful
 renderings. Full reference-output parity remains future work.
@@ -435,3 +443,6 @@ Generated executables support registered C# methods and scoped `@ValueFunction`.
 See [Extensions/README.md](../../../Extensions/README.md) for the typed API, runtime
 registration, deferred arguments, and build instructions. The parser does not
 need to know extension names. Handwritten sources stay outside Generated/.
+
+See [COMPLETION.md](../../COMPLETION.md) for the current remaining work and
+[the root README](../../README.md) for the single-command validation workflow.

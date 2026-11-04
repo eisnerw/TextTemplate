@@ -1,0 +1,44 @@
+{
+  "args": [
+    "--template",
+    "replacevalues",
+    "--template-root",
+    "reference",
+    "--data-file",
+    "reference/data/replacevalues.json"
+  ],
+  "report": {
+    "type": "result",
+    "result": "Number: x12\nBoolean: x true\nSubstitution: <12|$>12\nString replaces all: xx\n",
+    "errors": [],
+    "hoverPositions": null,
+    "debugLog": [],
+    "events": [
+      "status",
+      "status",
+      "result"
+    ],
+    "resources": []
+  },
+  "inputs": {
+    "reference/templates/replacevalues.template": "f3fe1da794eccbd23abac1431cdecd5b6aef6a55a8a711d7626480cb595d4bff",
+    "reference/data/replacevalues.json": "8fea82934d192735095479f26222708da1a7560b39a7abc19c47b79c74348c3a",
+    "tests/node-reference/replace-coercion-cases.json": "e58315083c52060e04b7a06414e05435fcadea534bd6d42ee9cfb42e18000848"
+  },
+  "oracle": {
+    "sourceCommit": "ccedefd87b012ff1173ee2f43323b6eb7c8bd268",
+    "sources": {
+      "reference/grammar/TextTemplateLexer.g4": "aa8614f927f341ab70f1f14e3bf12015885b32c3a0466bdcc33cde40877c7fa0",
+      "reference/grammar/TextTemplateParser.g4": "2fb5ed2b2969da011308184fa0980b1abce9da352975bf3da71ac84c985a04aa",
+      "TextTemplateInterpreter": "876e98aec8adf32983d046087ac85a3b7ca742d6da6c911c52ea18c03955a94e",
+      "Externals": "3cc6091f4a9e124dfa8c38c6a5557ca1324bc0468fe91c41f5d5540f1411ad66",
+      "reference/fixtures/data.json": "2fa69d14e4bc5459aba9cad8dd3cbe5ed4b5ab8937777e84c321f83aad0f8ff4",
+      "reference/fixtures/templates.json": "90fc3829a08c0fae9fb68d86c8af5a6792ec7468113e93a0489f499014e0379f",
+      "reference/fixtures/subtemplates.json": "c0d80b35a704619335f9f212de4dfc4e6be958936bd73ef42346fcace624ed1d"
+    },
+    "antlrGenerator": "4.9.3",
+    "antlrRuntime": "4.11.0",
+    "moment": "2.29.4",
+    "typescript": "5.6.3"
+  }
+}

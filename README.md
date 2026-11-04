@@ -34,8 +34,8 @@ adjacent checkout. Grammar files and the interpreter are preserved locally under
 does not modify the reference checkout. Once built, the Node evaluator runs without
 that checkout.
 
-If Java is not on `PATH`, set `JAVA` to its executable. In the current Ubuntu
-development environment:
+The build honors `JAVA` or `JAVA_HOME`; otherwise it checks `PATH` and the
+current environment's `/usr/share/elasticsearch/jdk/bin/java`. To override discovery:
 
 ```bash
 export JAVA=/usr/share/elasticsearch/jdk/bin/java
@@ -58,8 +58,17 @@ not overwrite those extension files.
 
 ## Full generation and validation workflow
 
-After first-time setup, run the following sequence. There is currently no single
-master script that wraps all these steps.
+After first-time setup, run the complete workflow with:
+
+```bash
+python3 tools/validate.py
+```
+
+This builds the Node oracle, regenerates and builds `Generated/`, runs both test
+suites, and compares every reference template. Reports go to `artifacts/validation`
+(or `--output DIRECTORY`). Mismatches and test failures fail the run.
+
+The equivalent individual steps are:
 
 ```bash
 # Build the unchanged JavaScript reference interpreter and ANTLR-generated parser.
@@ -93,15 +102,12 @@ The output directory contains `report.json`, each host's exact output, and separ
 stderr diagnostics. The report records exit codes, byte counts, the first output
 mismatch, input and extension hashes, and Node oracle provenance.
 
-The latest verified collection result is **12 exact matches and 3 unavailable
-external-resource cases**. `elastic`, `web`, and `wikipedia` require HTTP resources
-that both offline hosts reject. Consequently, the comparison currently returns
-**exit code 1**, even when every local template matches. Check `report.json` to
-distinguish unavailable resources from mismatches or other execution failures;
-do not treat all nonzero exits as expected. Matching failures are not output parity.
+The active collection contains 20 templates. The web-only demos `elastic`, `web`,
+and `wikipedia` are archived under `reference/templates/Unimplemented/` and excluded
+from normal generation and comparison. They are outside the standalone scope.
 
-The C# suite also has an existing skipped computed-include annotation-scope case,
-documented in [DESIGN.md section 11.3](DESIGN.md#113-known-compatibility-gap-found-during-fluent-boundary-testing).
+The previously skipped computed-include annotation-scope case is now enabled and
+covered by additional regressions; see [DESIGN.md section 11.3](DESIGN.md#113-known-compatibility-gap-found-during-fluent-boundary-testing).
 Passing the available tests does not establish parity for every language feature.
 
 ## Run a single example in JavaScript
@@ -131,6 +137,37 @@ dotnet run --project Generated -- --template countpredicate --data-file referenc
 Focused Node cases are in `tests/node-reference/count-predicate-cases.json` and are
 also consumed by the C# A/B tests. Other unfinished features remain documented in
 [DESIGN.md](DESIGN.md).
+
+## Index, Join, date and regex examples
+
+Four additional reference templates exercise the implemented forms: `indexing`,
+`joining`, `dateforms`, and `regexforms`. For example:
+
+```bash
+node tools/node-reference/cli.mjs --template indexing --template-root reference --data-file reference/data/indexing.json
+dotnet run --project Generated -- --template indexing --data-file reference/data/indexing.json
+```
+
+Substitute another example name in both the template and data arguments. Regenerate
+`Generated/` first after changing the compiler. The focused A/B regressions are:
+
+```bash
+dotnet test tests/TextTemplate.Tests --filter 'DisplayName~index|DisplayName~join-extended|DisplayName~date-extended|DisplayName~regex-extended'
+```
+
+`Index()` reports an item's one-based position; `Index(start, count)` slices data.
+The examples also cover Join separators, week-based dates, ISO ordinal/week/basic
+inputs, and JavaScript regex escapes and capture behavior. Legacy quirks are retained,
+including singleton collapse and the dictionary `Index(2)` behavior.
+
+Additional examples are `dateparsing`, `regexnames`, `includescopes`, and
+`replacevalues`; each has a matching file in `reference/data/`. They demonstrate
+expanded date inputs and date encoding, capture-name forms, computed include
+scope, and non-string replacement operands.
+
+See [COMPLETION.md](COMPLETION.md) for the current implementation checklist,
+remaining execution gaps, and the deferred diagnostics, ToJson, and resource-hosting
+decisions. This increment does not remove every runtime stub.
 
 ## Repository guide
 

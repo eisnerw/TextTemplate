@@ -1,0 +1,98 @@
+[
+  {
+    "name": "date-encoding-0",
+    "script": "{[{value.EncodeFor('json')}].@DateTest(/^value$/)}",
+    "data": {
+      "value": "2024-03-15T12:30:00+0200"
+    },
+    "expected": "\"type\":\"date\",\"moment\":\"2024-03-15T10:30:00.000Z\",\"string\":\"2024-03-15T12:30:00+0200\""
+  },
+  {
+    "name": "date-encoding-1",
+    "script": "{[{value.EncodeFor('json')}].@DateTest(/^value$/).@DateFormat('YYYY-MM-DD')}",
+    "data": {
+      "value": "2024-03-15T12:30:00+0200"
+    },
+    "expected": "\"type\":\"date\",\"moment\":\"2024-03-15T10:30:00.000Z\",\"string\":\"2024-03-15T12:30:00+0200\",\"format\":\"YYYY-MM-DD\""
+  },
+  {
+    "name": "date-encoding-2",
+    "script": "{[{value.EncodeFor('json')}].@DateTest(/^value$/).@DateFormat('').@DateFormat()}",
+    "data": {
+      "value": "2024-03-15T12:30:00+0200"
+    },
+    "expected": "\"type\":\"date\",\"moment\":\"2024-03-15T10:30:00.000Z\",\"string\":\"2024-03-15T12:30:00+0200\""
+  },
+  {
+    "name": "date-encoding-3",
+    "script": "{[{value.EncodeFor('json')}].@DateTest(/^value$/)}",
+    "data": {
+      "value": 0
+    },
+    "expected": "\"type\":\"date\",\"moment\":\"1970-01-01T00:00:00.000Z\",\"string\":0"
+  },
+  {
+    "name": "date-encoding-4",
+    "script": "{[{value.EncodeFor('json')}].@DateTest(/^value$/).@DateFormat('YYYY-MM-DD')}",
+    "data": {
+      "value": 0
+    },
+    "expected": "\"type\":\"date\",\"moment\":\"1970-01-01T00:00:00.000Z\",\"string\":0,\"format\":\"YYYY-MM-DD\""
+  },
+  {
+    "name": "date-encoding-5",
+    "script": "{[{value.EncodeFor('json')}].@DateTest(/^value$/).@DateFormat('').@DateFormat()}",
+    "data": {
+      "value": 0
+    },
+    "expected": "\"type\":\"date\",\"moment\":\"1970-01-01T00:00:00.000Z\",\"string\":0"
+  },
+  {
+    "name": "date-encoding-6",
+    "script": "{[{value.EncodeFor('uri')}].@DateTest(/^value$/)}",
+    "data": {
+      "value": "2024-03-15T12:30:00+0200"
+    },
+    "expected": "%5Bobject%20Object%5D"
+  },
+  {
+    "name": "date-encoding-7",
+    "script": "{[{value.EncodeFor('uri')}].@DateTest(/^value$/).@DateFormat('YYYY-MM-DD')}",
+    "data": {
+      "value": "2024-03-15T12:30:00+0200"
+    },
+    "expected": "%5Bobject%20Object%5D"
+  },
+  {
+    "name": "date-encoding-8",
+    "script": "{[{value.EncodeFor('uri')}].@DateTest(/^value$/).@DateFormat('').@DateFormat()}",
+    "data": {
+      "value": "2024-03-15T12:30:00+0200"
+    },
+    "expected": "%5Bobject%20Object%5D"
+  },
+  {
+    "name": "date-encoding-9",
+    "script": "{[{value.EncodeFor('uri')}].@DateTest(/^value$/)}",
+    "data": {
+      "value": 0
+    },
+    "expected": "%5Bobject%20Object%5D"
+  },
+  {
+    "name": "date-encoding-10",
+    "script": "{[{value.EncodeFor('uri')}].@DateTest(/^value$/).@DateFormat('YYYY-MM-DD')}",
+    "data": {
+      "value": 0
+    },
+    "expected": "%5Bobject%20Object%5D"
+  },
+  {
+    "name": "date-encoding-11",
+    "script": "{[{value.EncodeFor('uri')}].@DateTest(/^value$/).@DateFormat('').@DateFormat()}",
+    "data": {
+      "value": 0
+    },
+    "expected": "%5Bobject%20Object%5D"
+  }
+]

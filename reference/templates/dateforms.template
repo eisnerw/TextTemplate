@@ -1,0 +1,8 @@
+Boundary: {boundary.ToDate('YYYY-MM-DD [week] w [ISO] W [year] gggg GGGG','GMT')}
+Ordinals: {boundary.ToDate('wo Wo','GMT')}
+Era: {boundary.ToDate('N NNNN NNNNN','GMT')}
+Ordinal date: {ordinal.ToDate('YYYY-MM-DD','GMT')}
+ISO week date: {week.ToDate('YYYY-MM-DD','GMT')}
+Basic date: {basic.ToDate('YYYY-MM-DD','GMT')}
+RFC date: {rfc.ToDate('YYYY-MM-DD HH:mm:ss','GMT')}
+Large offset: {offset.ToDate('YYYY-MM-DD HH:mm:ss','GMT')}
