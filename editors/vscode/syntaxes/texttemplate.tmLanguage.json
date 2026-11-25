@@ -1,0 +1,94 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "TextTemplate",
+  "scopeName": "source.texttemplate",
+  "patterns": [
+    { "include": "#block-comment" },
+    { "include": "#line-comment" },
+    { "include": "#interpolation" }
+  ],
+  "repository": {
+    "block-comment": {
+      "name": "comment.block.texttemplate",
+      "begin": "/\\*",
+      "end": "\\*/"
+    },
+    "line-comment": {
+      "name": "comment.line.double-slash.texttemplate",
+      "match": "^[ \\t]*//.*$"
+    },
+    "interpolation": {
+      "name": "meta.interpolation.texttemplate",
+      "begin": "\\{",
+      "beginCaptures": { "0": { "name": "punctuation.section.interpolation.begin.texttemplate" } },
+      "end": "\\}",
+      "endCaptures": { "0": { "name": "punctuation.section.interpolation.end.texttemplate" } },
+      "patterns": [
+        { "include": "#block-comment" },
+        { "include": "#line-comment" },
+        { "include": "#string-double" },
+        { "include": "#string-single" },
+        { "include": "#regex" },
+        { "include": "#method" },
+        { "include": "#subtemplate" },
+        { "include": "#inline-template" },
+        { "include": "#operators" },
+        { "match": "\\b[0-9]+\\b", "name": "constant.numeric.texttemplate" },
+        { "match": "[A-Za-z_$@^*][A-Za-z0-9_]*", "name": "variable.other.texttemplate" }
+      ]
+    },
+    "inline-template": {
+      "name": "meta.template.inline.texttemplate",
+      "begin": "\\[",
+      "beginCaptures": { "0": { "name": "punctuation.section.brackets.begin.texttemplate" } },
+      "end": "\\]",
+      "endCaptures": { "0": { "name": "punctuation.section.brackets.end.texttemplate" } },
+      "patterns": [
+        { "include": "#interpolation" },
+        { "include": "#block-comment" },
+        { "include": "#line-comment" },
+        { "include": "#string-double" },
+        { "include": "#string-single" },
+        { "include": "#method" },
+        { "include": "#subtemplate" }
+      ]
+    },
+    "method": {
+      "match": "(\\.)([#@]?[A-Za-z_][A-Za-z0-9_]*)(?=\\()",
+      "captures": {
+        "1": { "name": "punctuation.accessor.dot.texttemplate" },
+        "2": { "name": "entity.name.function.texttemplate" }
+      }
+    },
+    "subtemplate": {
+      "match": "#([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "0": { "name": "entity.name.function.subtemplate.texttemplate" }
+      }
+    },
+    "string-double": {
+      "name": "string.quoted.double.texttemplate",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [{ "match": "\\\\.", "name": "constant.character.escape.texttemplate" }]
+    },
+    "string-single": {
+      "name": "string.quoted.single.texttemplate",
+      "begin": "'",
+      "end": "'",
+      "patterns": [{ "match": "\\\\.", "name": "constant.character.escape.texttemplate" }]
+    },
+    "regex": {
+      "match": "(/)([^/\\\\]|\\\\.)+(/)[gims]*",
+      "captures": {
+        "0": { "name": "string.regexp.texttemplate" },
+        "1": { "name": "punctuation.definition.regexp.begin.texttemplate" },
+        "3": { "name": "punctuation.definition.regexp.end.texttemplate" }
+      }
+    },
+    "operators": {
+      "match": "=>|->|==|!=|<=|>=|[&|!<>=:,]",
+      "name": "keyword.operator.texttemplate"
+    }
+  }
+}
