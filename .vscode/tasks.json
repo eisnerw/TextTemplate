@@ -14,6 +14,35 @@
       ],
       "problemMatcher": "$msCompile",
       "group": "build"
-    }
+    },
+    {
+      "label": "TextTemplate: Generate",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project", "src/TextTemplate.Compiler",
+        "--",
+        "--root", "reference",
+        "--output", "Generated"
+      ],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "TextTemplate: Build generated project",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "Generated/GeneratedTemplates.csproj",
+        "--configuration", "Debug",
+        "--nologo"
+      ],
+      "options": { "cwd": "${workspaceFolder}" },
+      "dependsOn": "TextTemplate: Generate",
+      "dependsOrder": "sequence",
+      "problemMatcher": "$msCompile"
+    }    
   ]
 }
