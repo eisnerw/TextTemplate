@@ -3,15 +3,27 @@
 This extension provides basic TextTemplate language support for `.template`
 files. It associates the file type, applies lexical syntax coloring, and starts
 the C# language server to report parser errors in open and edited documents.
+F12 navigates from a subtemplate reference to its local definition or shared
+subtemplate file.
 
 The language server reuses `TextTemplate.Compiler` and parses the unsaved buffer
-provided by VS Code. Files beneath a workspace `subtemplates/` directory use the
-compiler's shared-template parsing mode. Diagnostics appear as editor markers
-and in the Problems panel.
+provided by VS Code. It detects a template root by finding sibling `templates/`
+and `subtemplates/` directories under the workspace, including nested layouts
+such as `reference/templates/`. Diagnostics appear as editor markers and in the
+Problems panel.
 
-The initial version does not provide subtemplate navigation, completions,
-runtime-value hovers, rendering, or generated-C# source mapping. Coloring is a
-lightweight TextMate grammar; parser-based semantic coloring is not included.
+F12 resolves local definitions in the current file before matching shared files
+by filename. Nested local scopes are searched from the nearest scope outward.
+When multiple definitions remain possible, VS Code receives all candidate
+locations rather than an arbitrary choice. Open buffers override on-disk text
+for navigation. This initial index is built when F12 is requested.
+
+Unresolved references do not yet produce diagnostics. The index is a foundation
+for that check, but dynamic includes and runtime-loaded resources require extra
+handling. Method names, including built-ins and registered extensions, are not
+yet semantically validated or distinguished by color. Coloring is a lightweight
+TextMate grammar. Completions, runtime-value hovers, rendering, and generated-C#
+source mapping are not included.
 
 ## Requirements
 
@@ -54,8 +66,12 @@ runtime available as `dotnet` on `PATH`.
 To install from a terminal when the `code` command is available:
 
 ```sh
-code --install-extension texttemplate-0.0.1.vsix
+code --install-extension texttemplate-0.0.2.vsix
 ```
+
+To refresh an earlier local installation, package again and install the new
+`texttemplate-0.0.2.vsix` from the Extensions view. Reload the VS Code window
+when prompted.
 
 The current publisher is a local-development placeholder. Set the intended
 publisher before publishing to the Visual Studio Marketplace.
@@ -63,9 +79,10 @@ publisher before publishing to the Visual Studio Marketplace.
 ## MVP boundary
 
 The language server supports initialization, full-document synchronization,
-syntax diagnostics, and clearing diagnostics when a document closes. It does
-not execute templates. A later Preview command can invoke generation and run the
-generated C# separately from this editor-language service.
+syntax diagnostics, clearing diagnostics when a document closes, and F12
+definition requests. It does not execute templates. A later Preview command can
+invoke generation and run the generated C# separately from this editor-language
+service.
 
 Run the server protocol smoke test with:
 

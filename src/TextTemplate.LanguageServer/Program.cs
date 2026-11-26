@@ -5,6 +5,7 @@ using TextTemplate.Compiler.Parsing;
 internal static class Program
 {
     private static readonly SemaphoreSlim OutputLock = new(1, 1);
+    private static readonly Dictionary<string, string> OpenDocuments = new(StringComparer.Ordinal);
     private static string? workspaceRoot;
 
     private static async Task Main()
@@ -59,7 +60,8 @@ internal static class Program
                     {
                         capabilities = new
                         {
-                            textDocumentSync = new { openClose = true, change = 1 }
+                            textDocumentSync = new { openClose = true, change = 1 },
+                            definitionProvider = true
                         }
                     }
                 });
@@ -77,6 +79,9 @@ internal static class Program
                 break;
             case "textDocument/didClose":
                 await CloseDocumentAsync(parameters, output);
+                break;
+            case "textDocument/definition":
+                await DefinitionAsync(id, parameters, output);
                 break;
             default:
                 if (hasId)
@@ -114,7 +119,10 @@ internal static class Program
     private static async Task OpenDocumentAsync(JsonElement parameters, Stream output)
     {
         JsonElement document = parameters.GetProperty("textDocument");
-        await PublishDiagnosticsAsync(document.GetProperty("uri").GetString()!, document.GetProperty("text").GetString() ?? "", output);
+        string uri = document.GetProperty("uri").GetString()!;
+        string text = document.GetProperty("text").GetString() ?? "";
+        OpenDocuments[uri] = text;
+        await PublishDiagnosticsAsync(uri, text, output);
     }
 
     private static async Task ChangeDocumentAsync(JsonElement parameters, Stream output)
@@ -123,18 +131,37 @@ internal static class Program
         JsonElement changes = parameters.GetProperty("contentChanges");
         if (changes.GetArrayLength() == 0) return;
         string text = changes[changes.GetArrayLength() - 1].GetProperty("text").GetString() ?? "";
+        OpenDocuments[uri] = text;
         await PublishDiagnosticsAsync(uri, text, output);
     }
 
     private static async Task CloseDocumentAsync(JsonElement parameters, Stream output)
     {
         string uri = parameters.GetProperty("textDocument").GetProperty("uri").GetString()!;
+        OpenDocuments.Remove(uri);
         await SendAsync(output, new
         {
             jsonrpc = "2.0",
             method = "textDocument/publishDiagnostics",
             @params = new { uri, diagnostics = Array.Empty<object>() }
         });
+    }
+
+    private static async Task DefinitionAsync(JsonElement id, JsonElement parameters, Stream output)
+    {
+        JsonElement document = parameters.GetProperty("textDocument");
+        string uri = document.GetProperty("uri").GetString()!;
+        string? text = OpenDocuments.GetValueOrDefault(uri);
+        string? path = FilePath(uri);
+        if (text is null && path is not null && File.Exists(path)) text = await File.ReadAllTextAsync(path);
+        object[] locations = [];
+        if (workspaceRoot is not null && text is not null)
+        {
+            JsonElement position = parameters.GetProperty("position");
+            locations = new WorkspaceIndex(workspaceRoot, OpenDocuments).FindDefinitions(
+                uri, text, position.GetProperty("line").GetInt32(), position.GetProperty("character").GetInt32());
+        }
+        await SendAsync(output, new { jsonrpc = "2.0", id, result = locations });
     }
 
     private static async Task PublishDiagnosticsAsync(string uri, string text, Stream output)
@@ -144,14 +171,11 @@ internal static class Program
         bool sharedTemplate = false;
         string? filePath = FilePath(uri);
 
-        if (filePath is not null && workspaceRoot is not null)
+        if (filePath is not null && workspaceRoot is not null
+            && WorkspaceIndex.TryFindTemplateRoot(workspaceRoot, filePath, out string templateRoot, out string category))
         {
-            string relative = Path.GetRelativePath(workspaceRoot, filePath).Replace('\\', '/');
-            if (!relative.StartsWith("../", StringComparison.Ordinal) && relative != "..")
-            {
-                sourceName = relative;
-                sharedTemplate = relative.StartsWith("subtemplates/", StringComparison.Ordinal);
-            }
+            sourceName = Path.GetRelativePath(templateRoot, filePath).Replace('\\', '/');
+            sharedTemplate = category == "subtemplates";
         }
 
         try

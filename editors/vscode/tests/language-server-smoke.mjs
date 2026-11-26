@@ -1,11 +1,17 @@
 import assert from 'node:assert/strict';
+import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
+import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const extensionRoot = process.cwd();
-const repositoryRoot = path.resolve(extensionRoot, '../..');
 const serverPath = path.join(extensionRoot, 'server', 'dist', 'TextTemplate.LanguageServer.dll');
+const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), 'texttemplate-lsp-'));
+const templateRoot = path.join(workspaceRoot, 'reference');
+await mkdir(path.join(templateRoot, 'templates'), { recursive: true });
+await mkdir(path.join(templateRoot, 'subtemplates'), { recursive: true });
+await writeFile(path.join(templateRoot, 'subtemplates', 'sharedPet.template'), '[Shared pet]');
 const processHandle = spawn('dotnet', [serverPath], { stdio: ['pipe', 'pipe', 'pipe'] });
 let stdout = Buffer.alloc(0);
 let stderr = '';
@@ -67,13 +73,14 @@ function send(message) {
 }
 
 try {
-	send({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { rootUri: pathToFileURL(repositoryRoot).href } });
+	send({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { rootUri: pathToFileURL(workspaceRoot).href } });
 	const initialized = await nextMessage();
 	assert.equal(initialized.id, 1);
 	assert.deepEqual(initialized.result.capabilities.textDocumentSync, { openClose: true, change: 1 });
+	assert.equal(initialized.result.capabilities.definitionProvider, true);
 	send({ jsonrpc: '2.0', method: 'initialized', params: {} });
 
-	const documentUri = pathToFileURL(path.join(repositoryRoot, 'templates', 'sample.template')).href;
+	const documentUri = pathToFileURL(path.join(templateRoot, 'templates', 'sample.template')).href;
 	send({
 		jsonrpc: '2.0',
 		method: 'textDocument/didOpen',
@@ -86,13 +93,39 @@ try {
 	assert.equal(invalidResult.params.diagnostics[0].source, 'TextTemplate');
 	assert.match(invalidResult.params.diagnostics[0].message, /Expected RBRACE/);
 
+	const validTemplate = 'Call {#sharedPet} and {#localPet}\nSubtemplates:\n{#localPet:[Local]}';
 	send({
 		jsonrpc: '2.0',
 		method: 'textDocument/didChange',
-		params: { textDocument: { uri: documentUri, version: 2 }, contentChanges: [{ text: 'Hello {name}' }] }
+		params: { textDocument: { uri: documentUri, version: 2 }, contentChanges: [{ text: validTemplate }] }
 	});
 	const validResult = await nextMessage();
 	assert.equal(validResult.params.diagnostics.length, 0);
+
+	send({
+		jsonrpc: '2.0',
+		id: 3,
+		method: 'textDocument/definition',
+		params: { textDocument: { uri: documentUri }, position: { line: 0, character: 9 } }
+	});
+	const sharedDefinition = await nextMessage();
+	assert.equal(sharedDefinition.id, 3);
+	assert.equal(sharedDefinition.result.length, 1);
+	assert.equal(sharedDefinition.result[0].uri, pathToFileURL(path.join(templateRoot, 'subtemplates', 'sharedPet.template')).href);
+
+	const localNameOffset = validTemplate.indexOf('#localPet') + 3;
+	send({
+		jsonrpc: '2.0',
+		id: 4,
+		method: 'textDocument/definition',
+		params: { textDocument: { uri: documentUri }, position: { line: 0, character: localNameOffset } }
+	});
+	const localDefinition = await nextMessage();
+	assert.equal(localDefinition.id, 4);
+	assert.equal(localDefinition.result.length, 1);
+	assert.equal(localDefinition.result[0].uri, documentUri);
+	assert.equal(localDefinition.result[0].range.start.line, 2);
+	assert.equal(localDefinition.result[0].range.start.character, 1);
 
 	send({ jsonrpc: '2.0', id: 2, method: 'shutdown', params: null });
 	assert.equal((await nextMessage()).id, 2);
@@ -105,4 +138,5 @@ try {
 	console.log('Language-server smoke test passed.');
 } finally {
 	if (processHandle.exitCode === null) processHandle.kill();
+	await rm(workspaceRoot, { recursive: true, force: true });
 }
