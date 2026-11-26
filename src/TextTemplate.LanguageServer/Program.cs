@@ -61,7 +61,8 @@ internal static class Program
                         capabilities = new
                         {
                             textDocumentSync = new { openClose = true, change = 1 },
-                            definitionProvider = true
+                            definitionProvider = true,
+                            foldingRangeProvider = true
                         }
                     }
                 });
@@ -82,6 +83,9 @@ internal static class Program
                 break;
             case "textDocument/definition":
                 await DefinitionAsync(id, parameters, output);
+                break;
+            case "textDocument/foldingRange":
+                await FoldingRangeAsync(id, parameters, output);
                 break;
             default:
                 if (hasId)
@@ -162,6 +166,108 @@ internal static class Program
                 uri, text, position.GetProperty("line").GetInt32(), position.GetProperty("character").GetInt32());
         }
         await SendAsync(output, new { jsonrpc = "2.0", id, result = locations });
+    }
+
+    private static async Task FoldingRangeAsync(JsonElement id, JsonElement parameters, Stream output)
+    {
+        JsonElement document = parameters.GetProperty("textDocument");
+        string uri = document.GetProperty("uri").GetString()!;
+        string? text = OpenDocuments.GetValueOrDefault(uri);
+        string? path = FilePath(uri);
+        if (text is null && path is not null && File.Exists(path)) text = await File.ReadAllTextAsync(path);
+
+        object[] ranges = [];
+        if (text is not null)
+        {
+            bool sharedTemplate = false;
+            if (path is not null && workspaceRoot is not null
+                && WorkspaceIndex.TryFindTemplateRoot(workspaceRoot, path, out _, out string category))
+            {
+                sharedTemplate = category == "subtemplates";
+            }
+
+            string sourceName = path is null ? uri : Path.GetRelativePath(workspaceRoot ?? ".", path).Replace('\\', '/');
+            var source = new SourceText(sourceName, text);
+            var parser = new TemplateParser(source, sharedTemplate);
+            try
+            {
+                var tree = parser.Parse(sharedTemplate);
+                ranges = FoldingRanges(source, tree);
+            }
+            catch (SyntaxException)
+            {
+                ranges = [];
+            }
+        }
+
+        await SendAsync(output, new { jsonrpc = "2.0", id, result = ranges });
+    }
+
+    private static object[] FoldingRanges(SourceText source, SyntaxNode tree)
+    {
+        var ranges = new List<object>();
+
+        void Visit(SyntaxNode node)
+        {
+            if (node.Kind is SyntaxKind.SubtemplateSection or SyntaxKind.InlineTemplate)
+            {
+                AddRange(node.Span);
+            }
+
+            if (node.Kind == SyntaxKind.SubtemplateSection)
+            {
+                foreach (SyntaxNode child in node.Children)
+                    if (child.Kind == SyntaxKind.Context && child.Value == "explicit")
+                        AddRange(child.Span);
+            }
+
+            foreach (SyntaxNode child in node.Children) Visit(child);
+        }
+
+        void AddRange(SourceSpan span)
+        {
+            var start = PositionAtSource(source.Original, span.Offset);
+            var end = PositionAtSource(source.Original, span.Offset + span.Length);
+            int startLine = ((Position)start).Line;
+            int endLine = ((Position)end).Line;
+            if (endLine > startLine)
+            {
+                ranges.Add(new
+                {
+                    startLine,
+                    endLine,
+                    kind = "region"
+                });
+            }
+        }
+
+        Visit(tree);
+        return ranges.DistinctBy(range => JsonSerializer.Serialize(range)).ToArray();
+    }
+
+    private readonly record struct Position(int Line, int Character);
+
+    private static Position PositionAtSource(string text, int offset)
+    {
+        int line = 0;
+        int character = 0;
+        int limit = Math.Clamp(offset, 0, text.Length);
+        for (int index = 0; index < limit; index++)
+        {
+            if (text[index] == '\r')
+            {
+                if (index + 1 < limit && text[index + 1] == '\n') index++;
+                line++;
+                character = 0;
+            }
+            else if (text[index] == '\n')
+            {
+                line++;
+                character = 0;
+            }
+            else character++;
+        }
+        return new Position(line, character);
     }
 
     private static async Task PublishDiagnosticsAsync(string uri, string text, Stream output)

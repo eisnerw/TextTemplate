@@ -78,6 +78,7 @@ try {
 	assert.equal(initialized.id, 1);
 	assert.deepEqual(initialized.result.capabilities.textDocumentSync, { openClose: true, change: 1 });
 	assert.equal(initialized.result.capabilities.definitionProvider, true);
+	assert.equal(initialized.result.capabilities.foldingRangeProvider, true);
 	send({ jsonrpc: '2.0', method: 'initialized', params: {} });
 
 	const documentUri = pathToFileURL(path.join(templateRoot, 'templates', 'sample.template')).href;
@@ -93,7 +94,7 @@ try {
 	assert.equal(invalidResult.params.diagnostics[0].source, 'TextTemplate');
 	assert.match(invalidResult.params.diagnostics[0].message, /Expected RBRACE/);
 
-	const validTemplate = 'Call {#sharedPet} and {#localPet}\nSubtemplates:\n{#localPet:[Local]}';
+	const validTemplate = 'Call {#sharedPet} and {#localPet}\nSubtemplates:\n{#localPet:[\nLocal\npet\n]\n}';
 	send({
 		jsonrpc: '2.0',
 		method: 'textDocument/didChange',
@@ -126,6 +127,20 @@ try {
 	assert.equal(localDefinition.result[0].uri, documentUri);
 	assert.equal(localDefinition.result[0].range.start.line, 2);
 	assert.equal(localDefinition.result[0].range.start.character, 1);
+
+	send({
+		jsonrpc: '2.0',
+		id: 5,
+		method: 'textDocument/foldingRange',
+		params: { textDocument: { uri: documentUri } }
+	});
+	const foldingResult = await nextMessage();
+	assert.equal(foldingResult.id, 5);
+	assert.ok(foldingResult.result.length >= 3);
+	assert.ok(foldingResult.result.every(range => range.kind === 'region' && range.endLine > range.startLine));
+	assert.ok(foldingResult.result.some(range => range.startLine === 0 && range.endLine === 6));
+	assert.ok(foldingResult.result.some(range => range.startLine === 2 && range.endLine === 6));
+	assert.ok(foldingResult.result.some(range => range.startLine === 2 && range.endLine === 5));
 
 	send({ jsonrpc: '2.0', id: 2, method: 'shutdown', params: null });
 	assert.equal((await nextMessage()).id, 2);

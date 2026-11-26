@@ -5,6 +5,8 @@ files. It associates the file type, applies lexical syntax coloring, and starts
 the C# language server to report parser errors in open and edited documents.
 F12 navigates from a subtemplate reference to its local definition or shared
 subtemplate file.
+Multiline subtemplate sections, local subtemplate definitions, and inline
+templates can be folded.
 
 The language server reuses `TextTemplate.Compiler` and parses the unsaved buffer
 provided by VS Code. It detects a template root by finding sibling `templates/`
@@ -66,11 +68,11 @@ runtime available as `dotnet` on `PATH`.
 To install from a terminal when the `code` command is available:
 
 ```sh
-code --install-extension texttemplate-0.0.2.vsix
+code --install-extension texttemplate-0.0.3.vsix
 ```
 
 To refresh an earlier local installation, package again and install the new
-`texttemplate-0.0.2.vsix` from the Extensions view. Reload the VS Code window
+`texttemplate-0.0.3.vsix` from the Extensions view. Reload the VS Code window
 when prompted.
 
 The current publisher is a local-development placeholder. Set the intended
@@ -79,8 +81,9 @@ publisher before publishing to the Visual Studio Marketplace.
 ## MVP boundary
 
 The language server supports initialization, full-document synchronization,
-syntax diagnostics, clearing diagnostics when a document closes, and F12
-definition requests. It does not execute templates. A later Preview command can
+syntax diagnostics, clearing diagnostics when a document closes, F12 definition
+requests, and parser-based folding ranges for multiline sections, definitions,
+and inline templates. It does not execute templates. A later Preview command can
 invoke generation and run the generated C# separately from this editor-language
 service.
 
